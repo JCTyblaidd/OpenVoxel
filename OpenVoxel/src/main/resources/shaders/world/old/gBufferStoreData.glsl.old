@@ -1,0 +1,110 @@
+/**
+    Shader For Storing Block Data to the gBuffer
+
+    Limitation: Must Be Using GL_NEAREST to prevent problems with the alpha-switch
+**/
+/*[Vertex]*/
+#version 330 core
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 uv_coord;
+layout(location = 2) in vec3 normal;
+layout(location = 3) in vec3 color;
+layout(location = 4) in vec3 light_strength;//The Colour and power of the normal light
+
+uniform MatrixBlock {
+    mat4 perspMatrix;
+    mat4 inversePerspMatrix;
+    vec2 depthRange;
+    vec2 halfSizeNearPlane;
+    mat4 playerMatrix;
+    mat4 objMatrix;
+} frameDat;
+
+out vec3 CameraPos;
+out vec2 UV;
+out vec3 Normal;
+out vec3 Color;
+out vec3 Light;
+
+void main() {
+    Normal = normalize(frameDat.playerMatrix * frameDat.objMatrix * vec4(normal,0.0));
+    Light = light_strength;
+    UV = uv_coord;
+    Color = color;
+    gl_Position = frameDat.perspMatrix * frameDat.playerMatrix * frameDat.objMatrix * vec4(position,1.0);
+}
+/*[Fragment]*/
+#version 330 core
+
+in vec3 CameraPos;
+in vec2 UV;
+in vec3 Normal;
+in vec3 Color;
+in vec3 Light;
+
+uniform TextureAtlas {
+    sampler2D tex_diffuse;//diffuse+alpha
+    sampler2D tex_normal;//xyz_norm,flags
+    sampler2D tex_pbr;//smooth,reflect,ambient,height
+} tAtlas;
+
+uniform bool isDrawingTransparent = false;
+uniform bool disableDiscard = false;
+
+layout(location = 0) out vec3 diffuse_out;
+layout(location = 1) out vec3 normal_out;
+layout(location = 2) out vec3 pbr_out;
+layout(location = 3) out vec3 light_out;
+
+
+vec3 getNormal(in vec4 normalRaw) {
+    if(Normal.x == 0 && Normal.z == 0) {
+        if(Normal.y > 0) {
+            return normalRaw.xyz;
+        }else{
+            return -normalRaw.xyz;
+        }
+    }else{
+        //More Complicated Calculation: TODO check optimization + code  ?Improve: precalc the 3 vec3s in vertex shader
+        vec2 n2 = dot(Normal.xz,Normal.xz);
+        float xz = Normal.x * Normal.z;
+        float scale = (1 - Normal.y) / (n2.x + n2.y);
+        float xz_scaled = -xz * scale;
+        n2 *= scale;
+        vec3 row_x=vec3(1-n2.x,Normal.x,xz_scaled);
+        vec3 row_y=vec3(-Normal.x,1-n2.x-n2.z,-Normal.z);
+        vec3 row_z=vec3(xz_scaled,Normal.z,1-n2.z);
+        return vec3(dot(normalRaw,row_x),dot(normalRaw,row_y),dot(normalRaw,row_z));
+    }
+}
+
+void main() {
+    //Sample//
+    vec4 diffuse = texture(tAtlas.tex_diffuse,UV);
+    if(diffuse.a == 0.0) {
+        discard;
+    }
+    if(!disableDiscard) {
+        if(isDrawingTransparent) {//THIS ONLY WORKS BECAUSE OF GL_NEAREST
+            if(diffuse.a == 1.0) {
+                discard;
+            }
+        }else{
+            if(diffuse.a != 1.0) {
+                discard;
+            }
+        }
+    }
+    vec4 normal_raw = texture(tAtlas.tex_normal,UV);
+    vec4 pbr_raw = texture(tAtlas.tex_pbr,UV);
+    vec3 real_normal = getNormal(normal_raw);
+
+    //Parallax Occlusion Mapping//
+
+    diffuse_out = diffuse.rgb;
+    normal_out = real_normal;
+    pbr_out = pbr.rgb;
+    light_out = Light;
+}
+
+/*[End]*/

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/JavaUtilities/JavaUtilities.iml" filepath="$PROJECT_DIR$/JavaUtilities/JavaUtilities.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OpenVoxel/OpenVoxel.iml" filepath="$PROJECT_DIR$/OpenVoxel/OpenVoxel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OpenVoxel Launcher/OpenVoxel Launcher.iml" filepath="$PROJECT_DIR$/OpenVoxel Launcher/OpenVoxel Launcher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OpenVoxel TextureCreator/OpenVoxelTextureCreator.iml" filepath="$PROJECT_DIR$/OpenVoxel TextureCreator/OpenVoxelTextureCreator.iml" />
+    </modules>
+  </component>
+</project>

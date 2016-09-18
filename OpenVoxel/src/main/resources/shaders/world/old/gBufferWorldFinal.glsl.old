@@ -1,0 +1,107 @@
+/*[Vertex]*/
+#version 330 core
+
+layout(location = 0) in vec2 position;
+layout(location = 1) in vec2 uv_coord;
+
+uniform MatrixBlock {
+    mat4 perspMatrix;
+    mat4 inversePerspMatrix;
+    vec2 depthRange;
+    vec2 halfSizeNearPlane;//{tan(fovy/2.0) * aspect, tan(fovy/2.0) }//
+    mat4 playerMatrix;
+    mat4 objMatrix;
+} frameDat;
+
+out vec2 UV;
+out vec3 eyeDir;
+
+void main() {
+    UV = uv_coord;
+    eyeDir = vec3((2.0 * frameDat.halfSizeNearPlane * UV) - frameDat.halfSizeNearPlane , -1.0);
+    gl_Position = vec4(position,0,1);
+}
+
+/*[Fragment]*/
+#version 330 core
+
+in vec2 UV;
+in vec3 eyeDir;
+
+layout(location = 0) out vec3 color;
+
+uniform GBufferDat {
+    /**Rendered Data Main**/
+    sampler2D depth;//Depth Buffer//
+    sampler2D diffuse;//Diffuse Data, RGB: consists of the opaque stuff W/ the sky color in the background//
+    sampler2D normal;//Normal Data, RGB//                   #noFlags since they are used in previous shader code
+    sampler2D pbr_data;//smooth,reflect,ambient_occulsion//   #No Height Map Since That is used for generation instead
+    sampler2D light_data;//Light Data Information//
+
+    /**Rendered Data Transparency**/
+    sampler2D depth_transparent;
+    sampler2D diffuse_transparent;
+    sampler2D normal_transparent;
+    sampler2D pbr_data_transparent;
+    sampler2D light_data_transparent;
+
+    /**Cascade Shadow Map**/
+    sampler2D cascade1;
+    sampler2D cascade2;
+    sampler2D cascade3;
+
+    /**Additional Data: used for reflections: Orthogonal w/ same depth range**/
+    sampler2D backwards_diffuse;
+    sampler2D backwards_depth;
+} gbuffer;
+
+uniform MatrixBlock {
+    mat4 perspMatrix;
+    mat4 inversePerspMatrix;
+    vec2 depthRange;
+    vec2 halfSizeNearPlane;
+    mat4 playerMatrix;
+    mat4 objMatrix;
+} frameDat;
+
+uniform CascadeConfigBlock {
+    mat4 cmat1;
+    mat4 cmat2;
+    mat4 cmat3;
+} cascadeConfig;
+
+
+vec4 CameraPosition(in float depth) {//Get The Position In Camera Space//
+    float ndcZ = (2.0 * depth - frameDat.depthRange.x - frameDat.depthRange.y) /(frameDat.depthRange.y - frameDat.depthRange.x);
+    float eyeZ = frameDat.perspMatrix[3][2] / ((frameDat.perspMatrix[2][3] * ndcZ) - frameDat.perspMatrix[2][2]);
+    return vec4(eyeDir * eyeZ, 1);
+}
+
+vec3 getMainColor(in float depth, in vec4 worldpos) {
+    vec3 diffuse = texture(gbuffer.diffuse,UV).rgb;
+    vec3 normal = texture(gbuffer.normal,UV).rgb;
+    vec3 pbr_dat = texture(gbuffer.pbr_dat,UV).rgb;
+    vec3 light_dat = texture(gbuffer.light_dat,UV).rgb;
+    //Apply Effects...//
+    return diffuse;
+}
+
+void applyTransparentColor(inout vec3 color, in float depth_t, in float depth) {
+    vec3 diffuse = texture(gbuffer.diffuse,UV).rgb;
+    //Apply Effects...//
+}
+
+void main() {
+    float depth = texture(gbuffer.depth,UV).z;
+    vec4 worldPosition = CameraPosition(depth);
+    vec3 current_color = getMainColor(depth,worldPosition);
+    /**Transparency**/
+    float depth_t = texture(gbuffer.depth_transparent,UV).z;
+    if(depth_t != 1.0) {//Transparency Exists: Handle//
+        applyTransparentColor(current_color,depth_t,depth);
+    }
+    color = current_color;
+}
+
+
+/*[End]*/

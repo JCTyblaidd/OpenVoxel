@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Main-Class: net.openvoxel.launchwrapper.ClientLauncher
+Implementation-Version: 0.0.1
+Implementation-Title: Open Voxel
+Created-By: James Clifton
+

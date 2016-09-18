@@ -1,0 +1,27 @@
+/**[Vertex]**/
+#version 330 core
+
+layout(location = 0) in vec4 position;
+layout(location = 1) in vec2 uv_coord;
+layout(location = 2) in vec3 normal;
+layout(location = 3) in vec3 colour_mask;
+layout(location = 4) in vec4 light_data;
+
+
+void main() {
+
+}
+
+
+/**[Fragment]**/
+#version 330 core
+
+
+
+layout(location = 0) out vec2 BlockUV;
+layout(location = 1) out vec3 Normal;
+layout(location = 2) out vec3 Colour_Mask;//Colour Mask over the diffuse - contains lighting and the other colour value
+
+void main() {
+
+}
