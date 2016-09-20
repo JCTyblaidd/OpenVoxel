@@ -6,7 +6,7 @@ package net.openvoxel.lauch.handler;
 public class JVMHandler {
 
 	public static void addRecommendedJVM(LaunchBuilder launch) {
-		launch.addJVM
+		//launch.addJVM
 	}
 
 }
