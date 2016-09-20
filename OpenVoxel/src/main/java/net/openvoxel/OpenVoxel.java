@@ -38,22 +38,63 @@ import java.net.SocketAddress;
 @SuppressWarnings("unused")
 public class OpenVoxel implements EventListener{
 
+	/**
+	 * The current Vesion of the Game
+	 */
 	public static final Version currentVersion = new Version(0,0,1);
 
+	/**
+	 * Is the game currently Running
+	 */
 	public volatile boolean isRunning = true;
-	public EventBus eventBus;
+	/**
+	 * The Global EventBus
+	 */
+	public final EventBus eventBus;
 
+	/**
+	 * Parsed Reference to the main arguments
+	 */
 	private static ArgumentParser args;
+	/**
+	 * The Main Instance of the Game Class
+	 */
 	private static OpenVoxel instance;
 
 	public Server currentServer = null;
+	/**
+	 * The ID <-> Name <-> Packet Registry,
+	 * Automatically Synchronised on connection to a (non-local) server
+	 */
 	public PacketRegistry packetRegistry = PacketRegistry.CreateWithDefaults();
+	/**
+	 * The ID <-> Name <-> Block Instance Registry
+	 * Automatically Synchronised on connection to a (non-local) server
+	 */
 	public RegistryBlocks blockRegistry;
+	/**
+	 * The ID <-> Name <-> Item Instance Registry
+	 * Automatically Synchronised on connection to a (non-local) server
+	 */
 	public RegistryItems itemRegistry;
+	/**
+	 * The Name <-> Entity Class Registry
+	 * No Synchronisation Required
+	 */
 	public RegistryEntities entityRegistry;
 
+	/**
+	 * Information about the current User: Currently Unused
+	 */
 	public UserData userData;
 
+	/**
+	 * Tells the game to bootstrap a server instance
+	 * Local Server => Host + Connect
+	 * Remote Server => Host
+	 * Client Server => Connect
+	 * @param server
+	 */
 	public void HostServer(Server server) {
 		if(currentServer != null) {
 			//Kill// // TODO: 04/09/2016
@@ -75,31 +116,55 @@ public class OpenVoxel implements EventListener{
 
 	}
 
+	/**
+	 * @return the current instance
+	 */
 	public static OpenVoxel getInstance() {
 		return instance;
 	}
 
+	/**
+	 * @return the argument parser
+	 */
 	public static ArgumentParser getLaunchParameters() {
 		return args;
 	}
 
+	/**
+	 * @return the current server, NULL if it doesn't exist
+	 */
 	public static Server getServer() {
 		return instance.currentServer;
 	}
 
+	/**
+	 * @param event call an event through the eventBus
+	 */
 	public static void pushEvent(AbstractEvent event) {
 		instance.eventBus.push(event);
 	}
 
-	public static void registerEvents(EventListener l) {
-		instance.eventBus.register(l);
+	/**
+	 * @param listener The Event Listener to register for events
+	 */
+	public static void registerEvents(EventListener listener) {
+		instance.eventBus.register(listener);
 	}
 
+	/**
+	 * @param report a crash, DOESN'T Call the shutdown method, the caller must do it themselves
+	 */
 	public static void reportCrash(CrashReport report) {
 		//TODO: implement
 	}
 
-	/**MAIN CLASS ENTRY POINT**/
+	/**
+	 * Main OpenVoxel ClassLoader Entry Location
+	 * @param arguments the main class args variable
+	 * @param modClasses the class names of the mod classes to load
+	 * @param asmHandles the class names of asm handlers as reference
+	 * @param isClient are we launching as the client? Yes / No
+	 */
 	public OpenVoxel(String[] arguments,String[] modClasses,String[] asmHandles,boolean isClient) {
 		instance = this;
 		args = new ArgumentParser(arguments);
@@ -163,6 +228,10 @@ public class OpenVoxel implements EventListener{
 		}
 	}
 
+	/**
+	* Start the Shutdown Sequence, Can be cancelled
+	* @param isCrash is the shutdown unexpected
+	**/
 	public void AttemptShutdownSequence(boolean isCrash) {
 		WindowCloseRequestedEvent e1 = new WindowCloseRequestedEvent();
 		eventBus.push(e1);

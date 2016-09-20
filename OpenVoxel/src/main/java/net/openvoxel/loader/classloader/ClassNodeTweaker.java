@@ -6,6 +6,8 @@ import org.objectweb.asm.tree.ClassNode;
 
 /**
  * Created by James on 01/08/2016.
+ *
+ * Generic ClassLoader Modifier that uses the ASM ClassNode
  */
 public abstract class ClassNodeTweaker implements TweakableClassLoader.IASMTransformer{
 

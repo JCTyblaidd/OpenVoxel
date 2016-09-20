@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by James on 31/07/2016.
  *
- * Applies the side specific tweaks to functions
+ * Applies the side specific tweaks to functions, include code removal of entire function removal
  */
 public class SideSpecificTweaker extends ClassNodeTweaker {
 

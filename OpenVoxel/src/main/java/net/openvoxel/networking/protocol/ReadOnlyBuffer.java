@@ -13,6 +13,9 @@ import java.util.function.Consumer;
 
 /**
  * Created by James on 01/09/2016.
+ *
+ * Read Only Buffer Reference,
+ * With some utility functions to handle dynamically sized data types
  */
 public class ReadOnlyBuffer {
 

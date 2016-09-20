@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Thread That Handles Game Logic
  */
 public class GameThread implements Runnable{
 

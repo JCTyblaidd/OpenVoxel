@@ -48,9 +48,11 @@ public class RenderThread implements Runnable{
 
 			//Render World + entity(included)//
 			try {
-				World world = OpenVoxel.getInstance().currentServer.getMyWorld();
-				if(world != null) {//IGNORE IF WORLD DOESN'T EXIST
-					worldRenderer.renderWorld(world);// TODO: 25/08/2016 Work Out Chunk Unload and Load
+				if(OpenVoxel.getInstance().currentServer != null) {
+					World world = OpenVoxel.getInstance().currentServer.getMyWorld();
+					if (world != null) {//IGNORE IF WORLD DOESN'T EXIST
+						worldRenderer.renderWorld(world);// TODO: 25/08/2016 Work Out Chunk Unload and Load
+					}
 				}
 			}catch (Exception e) {
 				e.printStackTrace();

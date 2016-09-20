@@ -10,6 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Created by James on 01/09/2016.
+ *
+ * Keeps a connection alive,
+ *
+ * after X seconds have passed since the last message was sent, send a keep alive message to prevent loss of connection
  */
 public class KeepAliveHandler extends IdleStateHandler {
 

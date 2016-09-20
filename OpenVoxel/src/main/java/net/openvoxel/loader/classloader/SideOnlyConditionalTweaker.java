@@ -9,6 +9,8 @@ import java.util.List;
 
 /**
  * Created by James on 04/08/2016.
+ *
+ * TODO: should i implement?
  */
 public class SideOnlyConditionalTweaker extends ClassNodeTweaker{
 
@@ -43,7 +45,7 @@ public class SideOnlyConditionalTweaker extends ClassNodeTweaker{
 		}
 	}
 
-	//
+	//TEST CLASS FOR LOOKING AT BYTECODE
 	public void fun() {
 		if(Side.isClient) {
 			//Section A//

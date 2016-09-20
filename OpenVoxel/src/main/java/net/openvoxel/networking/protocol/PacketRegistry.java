@@ -16,6 +16,8 @@ import java.util.Set;
 
 /**
  * Created by James on 01/09/2016.
+ *
+ * Handles Mapping of Packet Classes to IDs
  */
 public class PacketRegistry {
 
@@ -76,9 +78,21 @@ public class PacketRegistry {
 		defaultPackets = new TIntObjectHashMap<>();
 	}
 
+	/**
+	 * Register a dynamically mapped packet
+	 * @param packetID a unique ID for the packet type
+	 * @param pkt the packet type
+	 */
 	public void registerPacket(String packetID,Class<? extends AbstractPacket> pkt) {
 		registeredPackets.put(packetID,pkt);
 	}
+
+	/**
+	 * Register a statically mapped packet
+	 * Should only be used for protocol packets
+	 * @param value the id of the packet
+	 * @param pkt the packet type
+	 */
 	public void registerDefaultPacket(int value,Class<? extends AbstractPacket> pkt) {
 		defaultPackets.put(value,pkt);
 		classToIntMap.put(pkt,value);

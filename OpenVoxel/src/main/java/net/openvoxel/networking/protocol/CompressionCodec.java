@@ -9,6 +9,10 @@ import java.util.List;
 
 /**
  * Created by James on 01/09/2016.
+ *
+ * Length Variable Packet Compressor
+ *
+ * Uses Snappy Compression Framework
  */
 public class CompressionCodec extends ByteToMessageCodec<ByteBuf>{
 

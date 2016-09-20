@@ -1,9 +1,7 @@
 package net.openvoxel.client.gui.menu;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.logger.Logger;
-import net.openvoxel.client.control.AsyncRenderCacheManager;
-import net.openvoxel.client.control.Renderer;
+import net.openvoxel.client.gui.menu.settings.ScreenSettings;
 import net.openvoxel.client.gui_framework.*;
 import net.openvoxel.server.LocalServer;
 

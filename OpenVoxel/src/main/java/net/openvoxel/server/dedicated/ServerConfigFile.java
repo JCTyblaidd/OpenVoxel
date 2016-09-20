@@ -10,6 +10,10 @@ import java.io.FileOutputStream;
 
 /**
  * Created by James on 04/09/2016.
+ *
+ * TODO: FINISH IMPLEMENTATION
+ *
+ * Configuration File for the server
  */
 public class ServerConfigFile {
 

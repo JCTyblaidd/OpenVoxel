@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  *
  * Compatible with ReadOnlyBuffer
  *
- * Wraps A ByteBuffer
+ * Wraps A ByteBuf with utility functions for storing data
  *
  */
 public class WriteOnlyBuffer {

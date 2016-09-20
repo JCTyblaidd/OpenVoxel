@@ -6,7 +6,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.networking.protocol.AbstractPacket;
-import net.openvoxel.networking.protocol.PacketChannelInitialiser;
+import net.openvoxel.networking.protocol.PacketChannelInitializer;
 import net.openvoxel.server.LocalServer;
 
 import java.net.SocketAddress;
@@ -32,7 +32,7 @@ public class ClientNetworkHandler extends NetworkHandler {
 		NETTY.channel(NioSocketChannel.class);
 		NETTY.group(workerGroup);
 		clientMessageHandle = new ClientMessageHandler(this);
-		NETTY.handler(new PacketChannelInitialiser(Handle.packetRegistry,() -> clientMessageHandle));//TODO: HANDLER
+		NETTY.handler(new PacketChannelInitializer(Handle.packetRegistry,() -> clientMessageHandle));//TODO: HANDLER
 	}
 
 	public void sendJoinServerRequest() {

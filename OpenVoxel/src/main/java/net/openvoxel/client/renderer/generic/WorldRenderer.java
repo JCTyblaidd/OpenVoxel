@@ -47,6 +47,22 @@ import net.openvoxel.common.world.World;
  *      1. Draw Block Data => Colour (no effects):
  *      2. Draw Entity Data => Colour (no effects):
  *      3.[?] Post Processing Pass
+ *
+ *
+ *  World Renderer Process Consideration #3[] {pre=cull + gen uniforms}:
+ *      0. For All Pixels: Generate Final Resolve Image
+ *      1. For All Visible Chunks + Entities(post) => Iterate from near to far => Output(Diffuse,Normal,Lighting,PBR,Depth)(Opaque Only)
+ *          >> Apply: Parallax + Calc Real Normals
+ *      2. For All Relevant Chunks + Entities(post) => Iterate from near sun to far => Output(x3 via GEOM + 2DTex?) => Cascade Shadow Map
+ *      3. For All Visible Chunks => Iterate from near to far => Output(Diffuse Only)(Transparent Only)(Depth test against opaque)
+ *          >> Using Approximate Transparency + shadow_map?
+ *      3.5?: If Enabled => Generate Behind Player Diffuse Map (Diffuse + Depth):
+ *      5. Finalize Pass #1: Calculate Opaque Final Diffuse From Lighting Value
+ *      4. Finalize Pass #2: Resolve HDR Lighting Convert To Glow Map
+ *      6. Finalize Pass #3: Apply Effects Then Blend Inversely Transparency Value
+ *          >> Effects: SSR, (SSAO?), GodRays, Glow Data
+ *      6. Post Processing #1 Anti-Alias Pass => Final Framebuffer
+ *
  */
 public interface WorldRenderer {
 

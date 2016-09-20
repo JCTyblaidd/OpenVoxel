@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer.gl3;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.renderer.generic.*;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.gl3.font.OGL3FontRenderer;
@@ -20,6 +21,8 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_BGRA;
+import static org.lwjgl.opengl.GL30.GL_MAJOR_VERSION;
+import static org.lwjgl.opengl.GL30.GL_MINOR_VERSION;
 
 /**
  * Created by James on 25/08/2016.
@@ -100,7 +103,7 @@ public class OGL3Renderer implements GlobalRenderer{
 	@Override
 	public void loadPreRenderThread() {
 		boolean glDebug = OpenVoxel.getLaunchParameters().hasFlag("glDebug");
-		requestedRefreshRate = glfwGetVideoMode(glfwGetPrimaryMonitor()).refreshRate() / 2;
+		requestedRefreshRate = glfwGetVideoMode(glfwGetPrimaryMonitor()).refreshRate();
 		gl3Log.Info("Refresh Rate Defaulted: " + requestedRefreshRate);
 		try {
 			glfwDefaultWindowHints();
@@ -118,7 +121,7 @@ public class OGL3Renderer implements GlobalRenderer{
 			System.exit(-1);
 		}
 		glfwMakeContextCurrent(window);
-		//glfwSwapInterval(1);//Enable VSync : Disabled -> Refresh Rate Used Instead//
+		glfwSwapInterval(1);//Enable VSync : Disabled -> Refresh Rate Used Instead//
 		createCapabilities();
 		glViewport(0,0,ClientInput.currentWindowWidth,ClientInput.currentWindowHeight);
 		glEnable (GL_CULL_FACE); // cull face
@@ -127,6 +130,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		guiRenderer = new OGL3GUIRenderer();
 		worldRenderer = new OGL3WorldRenderer();
 		displayHandle = new OGL3DisplayHandle(window,this);
+		updateDebug();
 		OGL3FontRenderer.Init();
 		GL_Caps.Load();
 		if(glDebug) {
@@ -136,6 +140,16 @@ public class OGL3Renderer implements GlobalRenderer{
 		glfwMaximizeWindow(window);
 		glfwMakeContextCurrent(0);
 		capabilities = getCapabilities();
+	}
+
+	private void updateDebug() {
+		int maj = glGetInteger(GL_MAJOR_VERSION);
+		int min = glGetInteger(GL_MINOR_VERSION);
+		String vendorString = glGetString(GL_VENDOR);
+		String rendererName = glGetString(GL_RENDERER);
+		ScreenDebugInfo.RendererType = "OpenGL "+maj+"."+min;
+		ScreenDebugInfo.RendererDriver = rendererName;
+		ScreenDebugInfo.RendererVendor = vendorString;
 	}
 
 	private GLCapabilities capabilities;

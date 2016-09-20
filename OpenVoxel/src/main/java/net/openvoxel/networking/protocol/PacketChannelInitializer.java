@@ -9,13 +9,15 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 
 /**
  * Created by James on 01/09/2016.
+ *
+ * Channel Pipeline Initializer
  */
-public class PacketChannelInitialiser extends ChannelInitializer<SocketChannel>{
+public class PacketChannelInitializer extends ChannelInitializer<SocketChannel>{
 
 	private PacketRegistry registry;
 	private Producer<SimpleChannelInboundHandler<AbstractPacket>> handler;
 
-	public PacketChannelInitialiser(PacketRegistry registry,Producer<SimpleChannelInboundHandler<AbstractPacket>> handler) {
+	public PacketChannelInitializer(PacketRegistry registry, Producer<SimpleChannelInboundHandler<AbstractPacket>> handler) {
 		this.registry = registry;
 		this.handler = handler;
 	}

@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Thread to handle server console commands asynchronously
  */
 public class CommandInputThread implements Runnable{
 

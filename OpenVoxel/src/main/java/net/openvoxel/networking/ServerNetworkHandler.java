@@ -3,7 +3,7 @@ package net.openvoxel.networking;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.networking.protocol.PacketChannelInitialiser;
+import net.openvoxel.networking.protocol.PacketChannelInitializer;
 import net.openvoxel.server.Server;
 
 /**
@@ -21,7 +21,7 @@ public class ServerNetworkHandler extends NetworkHandler{
 		NETTY = new ServerBootstrap();
 		NETTY.channel(NioServerSocketChannel.class);
 		NETTY.group(controlGroup,workerGroup);
-		NETTY.childHandler(new PacketChannelInitialiser(OpenVoxel.getInstance().packetRegistry,null));
+		NETTY.childHandler(new PacketChannelInitializer(OpenVoxel.getInstance().packetRegistry,null));
 	}
 
 

@@ -1,9 +1,12 @@
 package net.openvoxel.client.gui;
 
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
+
+import java.util.List;
 
 /**
  * Created by James on 10/09/2016.
@@ -14,6 +17,11 @@ public class ScreenDebugInfo extends Screen{
 
 	public static final ScreenDebugInfo instance = new ScreenDebugInfo();
 	public static volatile GUIDebugLevel debugLevel = GUIDebugLevel.EXTREME_DETAIL;
+
+	public static String RendererType   = "Unknown Renderer";
+	public static String RendererVendor = "Unknown Vendor";
+	public static String RendererDriver = "Unknown Driver";
+
 
 	private static String _limit(float f) {
 		//return Float.toString(Math.round(f * 10.0F) / 10.0F);
@@ -55,24 +63,41 @@ public class ScreenDebugInfo extends Screen{
 	public void DrawScreen(GUIRenderer.GUITessellator tess) {
 		int debug = debugLevel.getVal();
 		int h = ClientInput.currentWindowHeight;
-		int w = ClientInput.currentWindowWidth;
+		//int w = ClientInput.currentWindowWidth;
 		float height = 50.0F / h;
-		float x_pos = -1.0F;
+		final float x_pos = -1.0F;
 		float y_pos = 1.0F- height;
+		float y_pos2 = 1.0F - height;
+		if(debug > 1) {
+			tess.DrawText(x_pos,y_pos,height,"Open Voxel " + OpenVoxel.currentVersion.getValString());
+			y_pos -= height;
+		}
 		if(debug > 0) {//At Least Level::FPS
 			float val = RenderThread.getFrameRate();
 			String str = _limit(val);
 			tess.DrawText(x_pos,y_pos,height,str);
+			y_pos -= height;
 		}
 		if(debug > 1) {//At Least Level::FPS_BONUS
+			//RUNTIME INFO//
 			Runtime runtime = Runtime.getRuntime();
-			y_pos -= height;
 			long totalMem = runtime.totalMemory();
 			tess.DrawText(x_pos,y_pos,height,"Total memory: " + _memory(totalMem));
 			y_pos -= height;
 			tess.DrawText(x_pos,y_pos,height,"Used memory: " + _memory(totalMem-runtime.freeMemory()));
 			y_pos -= height;
 			tess.DrawText(x_pos,y_pos,height,"Processor Count: " + runtime.availableProcessors());
+			y_pos -= height;
+			//RENDERER INFO//
+			float width1 = tess.GetTextWidthRatio(RendererType) * height;
+			float width2 = tess.GetTextWidthRatio(RendererVendor) * height;
+			float width3 = tess.GetTextWidthRatio(RendererDriver) * height;
+			tess.DrawText(1.0F-width1,y_pos2,height,RendererType);
+			y_pos2 -= height;
+			tess.DrawText(1.0F-width2,y_pos2,height,RendererVendor);
+			y_pos2 -= height;
+			tess.DrawText(1.0F-width3,y_pos2,height,RendererDriver);
+			y_pos2 -= height;
 		}
 		if(debug > 2) {//Contains Extreme Detail
 

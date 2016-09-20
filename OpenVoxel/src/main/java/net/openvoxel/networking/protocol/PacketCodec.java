@@ -8,6 +8,8 @@ import java.util.List;
 
 /**
  * Created by James on 01/09/2016.
+ *
+ * Converter between packet instances and bytes VIA a packet registry instance
  */
 public class PacketCodec extends ByteToMessageCodec<AbstractPacket>{
 

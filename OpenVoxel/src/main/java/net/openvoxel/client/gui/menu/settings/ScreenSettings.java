@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui.menu;
+package net.openvoxel.client.gui.menu.settings;
 
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.*;
