@@ -106,8 +106,9 @@ public class OGL3Renderer implements GlobalRenderer{
 		requestedRefreshRate = glfwGetVideoMode(glfwGetPrimaryMonitor()).refreshRate();
 		gl3Log.Info("Refresh Rate Defaulted: " + requestedRefreshRate);
 		try {
-			glfwDefaultWindowHints();
-			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+			glfwDefaultWindowHints();//Setup OpenGL Profile w/ Version >= 3.3
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT,GLFW_TRUE);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_REFRESH_RATE,requestedRefreshRate);
@@ -122,7 +123,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		}
 		glfwMakeContextCurrent(window);
 		glfwSwapInterval(1);//Enable VSync : Disabled -> Refresh Rate Used Instead//
-		createCapabilities();
+		createCapabilities(true);
 		glViewport(0,0,ClientInput.currentWindowWidth,ClientInput.currentWindowHeight);
 		glEnable (GL_CULL_FACE); // cull face
 		glCullFace (GL_BACK); // cull back face
