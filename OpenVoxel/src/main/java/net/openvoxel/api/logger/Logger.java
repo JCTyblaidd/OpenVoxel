@@ -4,6 +4,8 @@ import java.io.PrintStream;
 
 /**
  * Created by James on 01/08/2016.
+ *
+ * Logging Framework
  */
 public class Logger {
 

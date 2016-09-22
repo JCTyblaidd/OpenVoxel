@@ -5,7 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/JavaUtilities/JavaUtilities.iml" filepath="$PROJECT_DIR$/JavaUtilities/JavaUtilities.iml" />
       <module fileurl="file://$PROJECT_DIR$/OpenVoxel/OpenVoxel.iml" filepath="$PROJECT_DIR$/OpenVoxel/OpenVoxel.iml" />
       <module fileurl="file://$PROJECT_DIR$/OpenVoxel Launcher/OpenVoxel Launcher.iml" filepath="$PROJECT_DIR$/OpenVoxel Launcher/OpenVoxel Launcher.iml" />
-      <module fileurl="file://$PROJECT_DIR$/OpenVoxel TextureCreator/OpenVoxelTextureCreator.iml" filepath="$PROJECT_DIR$/OpenVoxel TextureCreator/OpenVoxelTextureCreator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OpenVoxel TextureCreator/OpenVoxel TextureCreator.iml" filepath="$PROJECT_DIR$/OpenVoxel TextureCreator/OpenVoxel TextureCreator.iml" />
     </modules>
   </component>
 </project>

@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * Created by James on 10/09/2016.
  *
- * Folder Information
+ * Folder Information Cache
  */
 public class FolderUtils {
 
@@ -38,12 +38,12 @@ public class FolderUtils {
 
 	/**
 	 * TODO: Convert BufferedImage Save -> STBIImageWrite Save Function
-	 * @param w
-	 * @param h
-	 * @param pixels
+	 * @param w the width of the pixel data
+	 * @param h the height of the pixel data
+	 * @param pixels the pixel data (size = w * h)
 	 */
 	public static void saveScreenshot(int w, int h,int[] pixels) {
-		BufferedImage IMG = new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);
+		BufferedImage IMG = new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);//Use BufferedImage for ImageIO
 		for (int x = 0; x < w; x++) {//Set with Y-Invert
 			for (int y = 0; y < h; y++) {
 				IMG.setRGB(x,h-y-1, pixels[y * w + x]);

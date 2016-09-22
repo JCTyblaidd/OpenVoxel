@@ -6,6 +6,8 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Created by James on 01/08/2016.
+ *
+ * Wrapper to convert Netty Logger To Use MyLogging Framework
  */
 public class NettyLogWrapper extends InternalLoggerFactory{
 

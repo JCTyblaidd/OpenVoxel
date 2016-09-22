@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Created by James on 02/08/2016.
+ *
+ * Smart OutputStream that relays information to a logger
  */
 public class LoggerOutputStream extends OutputStream{
 
