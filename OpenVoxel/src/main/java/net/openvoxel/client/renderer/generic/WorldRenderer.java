@@ -50,7 +50,7 @@ import net.openvoxel.common.world.World;
  *
  *
  *  World Renderer Process Consideration #3[] {pre=cull + gen uniforms}:
- *      0. For All Pixels: Generate Final Resolve Image
+ *      0. For All Pixels: Generate Final Resolve Image //#Convert to PostProcess w/ depth check
  *      1. For All Visible Chunks + Entities(post) => Iterate from near to far => Output(Diffuse,Normal,Lighting,PBR,Depth)(Opaque Only)
  *          >> Apply: Parallax + Calc Real Normals
  *      2. For All Relevant Chunks + Entities(post) => Iterate from near sun to far => Output(x3 via GEOM + 2DTex?) => Cascade Shadow Map

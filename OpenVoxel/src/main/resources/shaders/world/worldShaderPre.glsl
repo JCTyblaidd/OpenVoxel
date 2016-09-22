@@ -1,32 +1,33 @@
 //Monolithic Utility Class//
 
 uniform Settings {//Uniform Based Shader Configuration//
-    bool parallax;
-    bool cloudVolumetric;
-    bool drawCloud;
-    bool cloudShadows;
-    bool enableFog;
-    bool godRays;
-    bool accurateNormal;
-    bool fastTransparency;
-    bool highQualityLight;
-    bool cascadeShadows;
-    bool enableShadows;
-    bool reflections;
-    bool bonusReflections;
-    bool depthOfField;
-    bool waveAnim;
-    bool windAnim;
+    bool parallax;          //Changes: Block Draw
+    bool cloudVolumetric;   //Changes: BG Fill
+    bool drawCloud;         //Changes: BG Fill
+    bool cloudShadows;      //Changes: Shadow Out
+    bool enableFog;         //Changes: Post
+    bool godRays;           //Changes: Post
+    //bool accurateNormal;
+    bool fastTransparency;  //Changes: ?
+    bool highQualityLight;  //Changes: ?
+    bool cascadeShadows;    //Changes: ?
+    bool enableShadows;     //Changes: ?
+    bool reflections;       //Changes: Post
+    bool bonusReflections;  //Changes: Post
+    bool depthOfField;      //Changes: Post
+    bool waveAnim;          //Changes: Block Draw -> Bonus Parallax
+    bool windAnim;          //Changes: Block Draw -> Vertex Diff
 } config;
 
 uniform FinalFrame {
     //Animation Information//
-    int animIndex;//Current Animation Index//
+    int animIndex;//Current Animation Index //Endless Counter//
+    int worldTick;//Loop 0->128
     //Draw Information//
     mat4 projMatrix;//Perspective Matrix
     mat4 invProjMatrix;//Inverse
-    vec2 zLimits;
-    mat4 camMatrix;
+    vec2 zLimits;//Z Limits of the Frame
+    mat4 camMatrix;//The Camera Matrix
     mat3 camNormMatrix;//Similar to camMatrix//
     mat3 invCamNormMatrix;//Inverse
 
