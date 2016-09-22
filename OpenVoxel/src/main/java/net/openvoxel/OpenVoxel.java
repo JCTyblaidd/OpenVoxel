@@ -39,7 +39,7 @@ import java.net.SocketAddress;
 public class OpenVoxel implements EventListener{
 
 	/**
-	 * The current Vesion of the Game
+	 * The current Version of the Game
 	 */
 	public static final Version currentVersion = new Version(0,0,1);
 

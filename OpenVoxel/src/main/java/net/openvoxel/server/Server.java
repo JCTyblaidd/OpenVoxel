@@ -5,7 +5,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import io.netty.channel.SimpleChannelInboundHandler;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
-import net.openvoxel.common.entity.living.player.EntityPlayer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.World;
 import net.openvoxel.networking.ServerNetworkHandler;

@@ -4,11 +4,8 @@ import net.openvoxel.client.renderer.generic.config.CompressionLevel;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.resources.ResourceHandle;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.KHRTextureCompressionASTCLDR;
-import org.lwjgl.opengles.AMDCompressedATCTexture;
-import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

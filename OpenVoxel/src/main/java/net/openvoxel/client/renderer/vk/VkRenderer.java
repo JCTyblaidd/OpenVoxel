@@ -3,7 +3,10 @@ package net.openvoxel.client.renderer.vk;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
-import net.openvoxel.client.renderer.generic.*;
+import net.openvoxel.client.renderer.generic.DisplayHandle;
+import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.generic.GlobalRenderer;
+import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
 
 import static org.lwjgl.glfw.GLFW.*;

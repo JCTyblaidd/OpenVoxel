@@ -2,8 +2,6 @@ package net.openvoxel.client.gui_framework;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by James on 25/08/2016.

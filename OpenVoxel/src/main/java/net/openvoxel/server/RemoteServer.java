@@ -1,7 +1,6 @@
 package net.openvoxel.server;
 
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.common.entity.living.player.EntityPlayer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.World;
 

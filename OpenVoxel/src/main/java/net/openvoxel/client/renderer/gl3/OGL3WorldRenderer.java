@@ -1,7 +1,7 @@
 package net.openvoxel.client.renderer.gl3;
 
-import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
+import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.common.world.Chunk;
 import net.openvoxel.common.world.World;
 

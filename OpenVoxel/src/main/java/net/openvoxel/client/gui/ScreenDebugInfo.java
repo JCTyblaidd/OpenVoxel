@@ -6,8 +6,6 @@ import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 
-import java.util.List;
-
 /**
  * Created by James on 10/09/2016.
  *
