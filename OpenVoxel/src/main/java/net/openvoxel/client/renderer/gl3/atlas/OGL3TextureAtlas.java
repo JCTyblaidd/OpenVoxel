@@ -1,15 +1,20 @@
 package net.openvoxel.client.renderer.gl3.atlas;
 
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
+import net.openvoxel.client.renderer.gl3.util.OGL3Texture;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.resources.ResourceHandle;
+import net.openvoxel.files.FolderUtils;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.KHRTextureCompressionASTCLDR;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
+import java.util.function.IntBinaryOperator;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
@@ -124,6 +129,65 @@ public class OGL3TextureAtlas implements IconAtlas{
 
 
 	private retVal generate(int img_size,boolean enableAnim) {
+		icons.forEach(OGL3Icon::reload);
+		int lim = icons.stream().mapToInt(OGL3Icon::getIconSize).sum();
+		int maxH = icons.stream().mapToInt(OGL3Icon::getIconSize).max().orElse(0);
+		if(!enableAnim) maxH = 0;
+		int tileWidth;
+		int tileHeight;
+		int maxGet = (int)Math.ceil(Math.sqrt(lim));
+		int bestW = 0,bestH = 0,bestLeft = 1000000;
+		for(int i = maxH; i < maxGet; i++) {
+			int width = (int)Math.ceil((float)lim / (float)i);
+			int size = lim - (i * width);
+			if(size < bestLeft) {
+				bestLeft = size;
+				bestH = i;
+				bestW = width;
+			}
+		}
+		Logger log = Logger.getLogger("Texture Atlas");
+		log.Info("Block Atlas Generated: " + bestW + "x" + bestH);
+		tileHeight = bestH;
+		tileWidth = bestW;
+		if(tileHeight == 0 || tileWidth == 0) {
+			retVal v = new retVal();
+			v.height = 0;
+			v.width = 0;
+			v.imgNorm = new int[0];
+			v.imgDiff = v.imgNorm;
+			v.imgPBR = v.imgNorm;
+			return v;
+		}
+		//Generate//
+		int[] DataDiff = new int[tileWidth * tileHeight];
+		int[] DataNorm = new int[tileWidth * tileHeight];
+		int[] DataPBR = new int[tileWidth * tileHeight];
+		//TODO: Improve Allocation Algorithm//
+		for(int i = 0; i < lim; i++) {
+			OGL3Icon toPlace = icons.get(i);
+			int xOff = img_size * (i / tileWidth);
+			int yOff = img_size * (i - ((i / tileWidth) * tileWidth));
+			for(int x = 0; x < img_size; x++) {
+				for(int y = 0; y < img_size; y++) {
+					int Index = (xOff + x) + ((img_size * tileWidth) * (y + yOff));
+					int Index2 = 4 * (x + (y * img_size));
+					DataDiff[Index] = toPlace.tex_diff.pixels.getInt(Index2);
+					DataNorm[Index] = toPlace.tex_norm.pixels.getInt(Index2);
+					DataPBR[Index] = toPlace.tex_pbr.pixels.getInt(Index2);
+				}
+			}
+		}
+		retVal val = new retVal();
+		val.width = tileWidth * img_size;
+		val.height = tileHeight * img_size;
+		val.imgNorm = DataNorm;
+		val.imgDiff = DataDiff;
+		val.imgPBR = DataPBR;
+		icons.forEach(OGL3Icon::cleanup);
+		FolderUtils.saveScreenshot(val.width,val.height,val.imgDiff);
+		FolderUtils.saveScreenshot(val.width,val.height,val.imgNorm);
+		FolderUtils.saveScreenshot(val.width,val.height,val.imgPBR);
 		return null;
 	}
 
@@ -142,6 +206,11 @@ public class OGL3TextureAtlas implements IconAtlas{
 		icon.pbr_dat = handle_pbr;
 		icons.add(icon);
 		return icon;
+	}
+
+	@Override
+	public void performStitch() {
+		//update(128,false,CompressionLevel.NO_COMPRESSION);
 	}
 
 }

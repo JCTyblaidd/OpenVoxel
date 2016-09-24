@@ -8,6 +8,7 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
+import net.openvoxel.client.textureatlas.IconAtlas;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -84,5 +85,10 @@ public class VkRenderer implements GlobalRenderer {
 	@Override
 	public void kill() {
 
+	}
+
+	@Override
+	public IconAtlas getBlockAtlas() {
+		return null;
 	}
 }

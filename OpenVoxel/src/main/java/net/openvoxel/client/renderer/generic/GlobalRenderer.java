@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.generic;
 
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
+import net.openvoxel.client.textureatlas.IconAtlas;
 
 /**
  * Created by James on 25/08/2016.
@@ -22,4 +23,6 @@ public interface GlobalRenderer {
 	void nextFrame();
 
 	void kill();
+
+	IconAtlas getBlockAtlas();
 }

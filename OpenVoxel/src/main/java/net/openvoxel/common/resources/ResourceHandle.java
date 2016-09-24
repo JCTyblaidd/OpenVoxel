@@ -63,4 +63,7 @@ public class ResourceHandle {
 		return new String(getByteData());
 	}
 
+	public String getResourceID() {
+		return ID;
+	}
 }

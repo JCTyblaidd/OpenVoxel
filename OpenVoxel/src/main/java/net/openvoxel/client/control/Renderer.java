@@ -5,6 +5,7 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import net.openvoxel.client.renderer.vk.VkRenderer;
+import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.utility.AsyncRunnablePool;
 
 import static org.lwjgl.glfw.GLFW.glfwInit;
@@ -49,5 +50,14 @@ public class Renderer {
 		renderCacheManager = new AsyncRunnablePool("Renderer Worker Group",AsyncRunnablePool.getWorkerCount("renderWorkerCount",4));
 		renderCacheManager.start();
 		renderer.loadPreRenderThread();
+	}
+
+	public static IconAtlas getBlockTextureAtlas() {
+		if(renderer != null) {
+			return renderer.getBlockAtlas();
+		}else{
+			logger.Severe("Attempted to get IconAtlas From Non-Existent Renderer");
+			return null;
+		}
 	}
 }

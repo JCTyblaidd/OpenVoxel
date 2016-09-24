@@ -3,10 +3,12 @@ package net.openvoxel.vanilla;
 import net.openvoxel.api.mods.Mod;
 import net.openvoxel.api.mods.ModInitEventHandler;
 import net.openvoxel.api.mods.ModInstance;
+import net.openvoxel.common.GameRegistry;
 import net.openvoxel.common.event.init.ModFinalizeInitialisationEvent;
 import net.openvoxel.common.event.init.ModInitialisationEvent;
 import net.openvoxel.common.event.init.ModPostInitialisationEvent;
 import net.openvoxel.common.event.init.ModPreInitialisationEvent;
+import net.openvoxel.vanilla.block.BlockBricks;
 
 /**
  * Created by James on 25/08/2016.
@@ -22,7 +24,8 @@ public class Vanilla {
 
 	@ModInitEventHandler
 	public void preInit(ModPreInitialisationEvent e) {
-
+		VanillaBlocks.Load();
+		VanillaBlocks.Register();
 	}
 
 	@ModInitEventHandler

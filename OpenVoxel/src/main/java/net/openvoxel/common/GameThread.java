@@ -4,6 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.util.PerSecondTimer;
+import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui.menu.ScreenMainMenu;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.common.event.init.ModFinalizeInitialisationEvent;
@@ -72,7 +73,7 @@ public class GameThread implements Runnable{
 	private void initSide() {
 		if(Side.isClient) {
 			gameLogger.Info("Starting Texture Stitching");
-
+			Renderer.getBlockTextureAtlas().performStitch();
 			gameLogger.Info("Finished");
 			GUI.removeAllScreens();
 			GUI.addScreen(new ScreenMainMenu());

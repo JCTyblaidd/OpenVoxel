@@ -9,9 +9,11 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
+import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
 import net.openvoxel.client.renderer.gl3.font.OGL3FontRenderer;
 import net.openvoxel.client.renderer.gl3.util.OGL3ErrorLogger;
 import net.openvoxel.client.renderer.gl3.worldrender.GL_Caps;
+import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.event.input.WindowResizeEvent;
 import net.openvoxel.files.FolderUtils;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -47,6 +49,8 @@ public class OGL3Renderer implements GlobalRenderer{
 	volatile boolean stateRequestedFullscreen = false;
 	volatile int requestedRefreshRate = 60;
 	volatile boolean screenshotRequested = false;
+
+	public OGL3TextureAtlas blockAtlas;
 
 	public OGL3Renderer() {
 		instance = this;
@@ -133,6 +137,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		guiRenderer = new OGL3GUIRenderer();
 		worldRenderer = new OGL3WorldRenderer();
 		displayHandle = new OGL3DisplayHandle(window,this);
+		blockAtlas = new OGL3TextureAtlas();
 		updateDebug();
 		OGL3FontRenderer.Init();
 		GL_Caps.Load();
@@ -209,5 +214,10 @@ public class OGL3Renderer implements GlobalRenderer{
 	@Override
 	public void kill() {
 		glfwDestroyWindow(window);
+	}
+
+	@Override
+	public IconAtlas getBlockAtlas() {
+		return blockAtlas;
 	}
 }
