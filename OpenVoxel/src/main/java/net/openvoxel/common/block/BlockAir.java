@@ -12,6 +12,9 @@ import net.openvoxel.common.util.BlockFace;
  * The Only Constant Value Block That Exists
  */
 public class BlockAir extends Block{
+
+	public static final BlockAir BLOCK_AIR = new BlockAir();
+
 	@Override
 	public AABB getBlockBounds() {
 		return EMPTY_BLOCK_AABB;

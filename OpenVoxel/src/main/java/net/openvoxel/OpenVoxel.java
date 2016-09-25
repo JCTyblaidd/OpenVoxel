@@ -155,7 +155,8 @@ public class OpenVoxel implements EventListener{
 	 * @param report a crash, DOESN'T Call the shutdown method, the caller must do it themselves
 	 */
 	public static void reportCrash(CrashReport report) {
-		//TODO: implement
+		report.printStackTrace();
+		System.exit(-1);
 	}
 
 	/**

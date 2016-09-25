@@ -3,15 +3,19 @@ package net.openvoxel.server;
 import com.jc.util.stream.utils.Producer;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import io.netty.channel.SimpleChannelInboundHandler;
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.World;
+import net.openvoxel.common.world.generation.DebugWorldGenerator;
 import net.openvoxel.networking.ServerNetworkHandler;
 import net.openvoxel.networking.protocol.AbstractPacket;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Base Server Class
  */
 public abstract class Server implements Producer<SimpleChannelInboundHandler<AbstractPacket>> {
 
@@ -28,6 +32,12 @@ public abstract class Server implements Producer<SimpleChannelInboundHandler<Abs
 
 	public Server() {
 		dimensionMap = new TIntObjectHashMap<>();
+		//LOAD:
+
+		//Generate Mappings
+		OpenVoxel.getInstance().blockRegistry.generateMappingsFromRaw();
+
+		//DEBUG Launch:
 	}
 
 	public World getWorldAtDimension(int dimensionID) {

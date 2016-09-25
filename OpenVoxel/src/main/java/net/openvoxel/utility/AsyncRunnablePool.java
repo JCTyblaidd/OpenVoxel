@@ -3,6 +3,7 @@ package net.openvoxel.utility;
 import com.lmax.disruptor.*;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;

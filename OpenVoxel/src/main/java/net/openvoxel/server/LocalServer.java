@@ -22,7 +22,11 @@ public class LocalServer extends RemoteServer {
 		//DEBUG CODE//
 		thePlayer = new EntityPlayerSP();
 		this.dimensionMap.put(0,new World(new DebugWorldGenerator()));
-		this.dimensionMap.get(0).loadChunk(new ChunkCoordinate(0,0));
+		for(int x = -10; x <= 10; x++) {
+			for(int z = -10; z <= 10; z++) {
+				this.dimensionMap.get(0).loadChunk(new ChunkCoordinate(x,z));
+			}
+		}
 		this.dimensionMap.get(0).addEntityToWorld(thePlayer);
 	}
 

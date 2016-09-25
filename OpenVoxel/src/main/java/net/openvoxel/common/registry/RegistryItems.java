@@ -17,9 +17,14 @@ public class RegistryItems {
 	private TIntObjectHashMap<Item> itemMap;
 	private TObjectIntHashMap<Item> reverseMap;
 	private HashMap<String,Item> idMap;
+	private HashMap<Item,String> registerMap;
 
 	public RegistryItems(RegistryBlocks linked) {
 		linked_registry = linked;
+		itemMap = new TIntObjectHashMap<>();
+		reverseMap = new TObjectIntHashMap<>();
+		idMap = new HashMap<>();
+		registerMap = new HashMap<>();
 	}
 
 	public void register(String ID, Item item) {

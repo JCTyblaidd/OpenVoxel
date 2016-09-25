@@ -26,9 +26,8 @@ public class ScreenDebugInfo extends Screen{
 		String val = Integer.toString(Math.round(f));
 		int res = val.length();
 		StringBuilder build = new StringBuilder();
-		res = 4 - res;
+		res = 3 - res;
 		for(int i = 0; i < res; i++) {
-			build.append(' ');
 			build.append(' ');
 		}
 		build.append(val);

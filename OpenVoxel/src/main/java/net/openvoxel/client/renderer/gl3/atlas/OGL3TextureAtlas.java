@@ -131,13 +131,16 @@ public class OGL3TextureAtlas implements IconAtlas{
 	private retVal generate(int img_size,boolean enableAnim) {
 		icons.forEach(OGL3Icon::reload);
 		int lim = icons.stream().mapToInt(OGL3Icon::getIconSize).sum();
+		if(!enableAnim) {
+			lim = icons.size();
+		}
 		int maxH = icons.stream().mapToInt(OGL3Icon::getIconSize).max().orElse(0);
 		if(!enableAnim) maxH = 0;
 		int tileWidth;
 		int tileHeight;
 		int maxGet = (int)Math.ceil(Math.sqrt(lim));
 		int bestW = 0,bestH = 0,bestLeft = 1000000;
-		for(int i = maxH; i < maxGet; i++) {
+		for(int i = maxH; i <= maxGet; i++) {
 			int width = (int)Math.ceil((float)lim / (float)i);
 			int size = lim - (i * width);
 			if(size < bestLeft) {
@@ -147,7 +150,8 @@ public class OGL3TextureAtlas implements IconAtlas{
 			}
 		}
 		Logger log = Logger.getLogger("Texture Atlas");
-		log.Info("Block Atlas Generated: " + bestW + "x" + bestH);
+		log.Info("Block Atlas Information: "+lim + ", minH="+maxH);
+		log.Info("Block Atlas Size: " + bestW + "x" + bestH);
 		tileHeight = bestH;
 		tileWidth = bestW;
 		if(tileHeight == 0 || tileWidth == 0) {
@@ -160,9 +164,9 @@ public class OGL3TextureAtlas implements IconAtlas{
 			return v;
 		}
 		//Generate//
-		int[] DataDiff = new int[tileWidth * tileHeight];
-		int[] DataNorm = new int[tileWidth * tileHeight];
-		int[] DataPBR = new int[tileWidth * tileHeight];
+		int[] DataDiff = new int[tileWidth * tileHeight * img_size * img_size];
+		int[] DataNorm = new int[tileWidth * tileHeight * img_size * img_size];
+		int[] DataPBR = new int[tileWidth * tileHeight * img_size * img_size];
 		//TODO: Improve Allocation Algorithm//
 		for(int i = 0; i < lim; i++) {
 			OGL3Icon toPlace = icons.get(i);
@@ -185,10 +189,11 @@ public class OGL3TextureAtlas implements IconAtlas{
 		val.imgDiff = DataDiff;
 		val.imgPBR = DataPBR;
 		icons.forEach(OGL3Icon::cleanup);
-		FolderUtils.saveScreenshot(val.width,val.height,val.imgDiff);
-		FolderUtils.saveScreenshot(val.width,val.height,val.imgNorm);
-		FolderUtils.saveScreenshot(val.width,val.height,val.imgPBR);
-		return null;
+		//TESTED: Works
+		//FolderUtils.saveScreenshot(val.width,val.height,val.imgDiff,true);
+		//FolderUtils.saveScreenshot(val.width,val.height,val.imgNorm,true);
+		//FolderUtils.saveScreenshot(val.width,val.height,val.imgPBR,true);
+		return val;
 	}
 
 	private static class retVal {
@@ -208,9 +213,9 @@ public class OGL3TextureAtlas implements IconAtlas{
 		return icon;
 	}
 
-	@Override
+	@Override//TODO: convert to run => ASYNC
 	public void performStitch() {
-		//update(128,false,CompressionLevel.NO_COMPRESSION);
+
 	}
 
 }

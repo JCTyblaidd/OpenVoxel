@@ -56,7 +56,11 @@ public class GameThread implements Runnable{
 		gameLogger.Info("====Post Init====");
 		ModLoader.getInstance().propagateInitEvent(new ModPostInitialisationEvent(),"Post Init","Sending Post-Initialisation Event to ");
 		gameLogger.Info("===Final Init====");
-		ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(),"Final Init","Sending Final-Initialisation Event to ");;
+		ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(),"Final Init","Sending Final-Initialisation Event to ");
+		if(Side.isClient) {
+			gameLogger.Info("===Load Textures===");
+			OpenVoxel.getInstance().blockRegistry.clientRegisterAll(Renderer.getBlockTextureAtlas());
+		}
 		hasLoadedMods.set(true);
 	}
 
@@ -72,8 +76,6 @@ public class GameThread implements Runnable{
 
 	private void initSide() {
 		if(Side.isClient) {
-			gameLogger.Info("Starting Texture Stitching");
-			Renderer.getBlockTextureAtlas().performStitch();
 			gameLogger.Info("Finished");
 			GUI.removeAllScreens();
 			GUI.addScreen(new ScreenMainMenu());

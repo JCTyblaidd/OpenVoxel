@@ -17,7 +17,7 @@ public class BlockBricks extends Block{
 
 	@Override
 	public void loadTextureAtlasData(IconAtlas texAtlas) {
-		icon = texAtlas.register("block/brick.diff.png","block/brick.normals.png","block/brick.pbr.png");
+		icon = texAtlas.register("block/brick.diff","block/brick.normals","block/brick.pbr");
 	}
 
 	@Override

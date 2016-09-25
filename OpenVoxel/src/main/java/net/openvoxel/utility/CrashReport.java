@@ -1,5 +1,7 @@
 package net.openvoxel.utility;
 
+import net.openvoxel.api.logger.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,5 +43,12 @@ public class CrashReport extends RuntimeException{
 	private CrashReport _report(String str) {
 		state.add(str);
 		return this;
+	}
+
+	@Override
+	public void printStackTrace() {
+		Logger.INSTANCE.Severe("==Reported Crash===");
+		state.forEach(Logger.INSTANCE::Severe);
+		super.printStackTrace();
 	}
 }

@@ -1,19 +1,42 @@
 package net.openvoxel.client;
 
+import net.openvoxel.OpenVoxel;
+import net.openvoxel.utility.CrashReport;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
+import org.lwjgl.stb.STBImageResize;
+import org.lwjgl.system.jemalloc.JEmalloc;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
+import static org.lwjgl.stb.STBImage.nstbi_load_from_memory;
+import static org.lwjgl.system.Checks.CHECKS;
+import static org.lwjgl.system.Checks.checkBuffer;
+import static org.lwjgl.system.MemoryUtil.memAddress;
+import static org.lwjgl.system.MemoryUtil.memByteBuffer;
+
 /**
  * Created by James on 28/08/2016.
+ *
+ * STBI Texture
  */
 public class STBITexture {
 	public int width;
 	public int height;
 	public int componentCount;
 	public ByteBuffer pixels;
+
+
+	private ByteBuffer _correctSTBIMem(ByteBuffer buffer,IntBuffer x,IntBuffer y, IntBuffer comp,int req_comp) {
+		if ( CHECKS ) {
+			checkBuffer(x, 1);
+			checkBuffer(y, 1);
+			checkBuffer(comp, 1);
+		}
+		long __result = nstbi_load_from_memory(memAddress(buffer), buffer.remaining(), memAddress(x), memAddress(y), memAddress(comp), req_comp);
+		return memByteBuffer(__result, x.get(x.position()) * y.get(y.position()) * req_comp);//FIX:
+	}
 
 	public STBITexture(byte[] array) {
 		//STBImage.stbi_load_from_memory()
@@ -23,13 +46,19 @@ public class STBITexture {
 		IntBuffer xBuffer = BufferUtils.createIntBuffer(1);
 		IntBuffer yBuffer = BufferUtils.createIntBuffer(1);
 		IntBuffer compBuffer = BufferUtils.createIntBuffer(1);
-		pixels = STBImage.stbi_load_from_memory(buffer,xBuffer,yBuffer,compBuffer,4);
+		pixels = _correctSTBIMem(buffer,xBuffer,yBuffer,compBuffer,STBImage.STBI_rgb_alpha);
 		xBuffer.position(0);
 		yBuffer.position(0);
 		compBuffer.position(0);
 		width = xBuffer.get();
 		height = yBuffer.get();
 		componentCount = compBuffer.get();
+		//FIX//
+		pixels.position(0);
+		if(pixels.capacity() != 4*width*height) {
+			CrashReport crashReport = new CrashReport("Image Load Error").invalidState("componentCount != 4").invalidState("Capacity = "+pixels.capacity()).invalidState("Expected Capacity = " + (4 * width * height));
+			OpenVoxel.reportCrash(crashReport);
+		}
 	}
 
 

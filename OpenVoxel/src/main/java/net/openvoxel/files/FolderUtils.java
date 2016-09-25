@@ -1,11 +1,16 @@
 package net.openvoxel.files;
 
+import org.lwjgl.stb.STBImageWrite;
+import org.lwjgl.system.MemoryUtil;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.Random;
 
 /**
  * Created by James on 10/09/2016.
@@ -36,25 +41,41 @@ public class FolderUtils {
 		return f;
 	}
 
+	public static void saveScreenshot(int w, int h,int[] pixels) {
+		saveScreenshot(w,h,pixels,false);
+	}
+
 	/**
 	 * TODO: Convert BufferedImage Save -> STBIImageWrite Save Function
 	 * @param w the width of the pixel data
 	 * @param h the height of the pixel data
 	 * @param pixels the pixel data (size = w * h)
 	 */
-	public static void saveScreenshot(int w, int h,int[] pixels) {
-		BufferedImage IMG = new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);//Use BufferedImage for ImageIO
-		for (int x = 0; x < w; x++) {//Set with Y-Invert
-			for (int y = 0; y < h; y++) {
-				IMG.setRGB(x,h-y-1, pixels[y * w + x]);
-			}
-		}
-		try {
+	public static void saveScreenshot(int w, int h,int[] pixels,boolean flag) {
+		if(flag) {
 			Date d = new Date();
+			Random rand = new Random();
 			DateFormat format = DateFormat.getDateTimeInstance();
-			ImageIO.write(IMG, "PNG", new File(ScreenshotsDir, "screenshot" + format.format(d).replace(':','-') +".png"));
-		}catch(IOException e) {
-			//TODO: Handle
+			File f = new File(ScreenshotsDir, "screenshot" + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png");
+			ByteBuffer DATA = MemoryUtil.memAlloc(4 * w * h);
+			DATA.asIntBuffer().put(pixels);
+			DATA.position(0);
+			STBImageWrite.stbi_write_png(f.getAbsolutePath(),w,h,4,DATA,0);
+		}else {
+			BufferedImage IMG = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);//Use BufferedImage for ImageIO
+			for (int x = 0; x < w; x++) {//Set with Y-Invert
+				for (int y = 0; y < h; y++) {
+					IMG.setRGB(x, h - y - 1, pixels[y * w + x]);
+				}
+			}
+			try {
+				Date d = new Date();
+				Random rand = new Random();
+				DateFormat format = DateFormat.getDateTimeInstance();
+				ImageIO.write(IMG, "PNG", new File(ScreenshotsDir, "screenshot" + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png"));
+			} catch (IOException e) {
+				//TODO: Handle
+			}
 		}
 	}
 
