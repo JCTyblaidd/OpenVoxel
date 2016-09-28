@@ -43,11 +43,11 @@ layout(std140) uniform FinalFrame {
     bool isThunder;
 } frame;
 
-uniform chunkConstants {
+layout(std140) uniform chunkConstants {
     mat4 chunkPos;
 } chunkdata;
 
-uniform TextureAtlas {
+layout(std140) uniform TextureAtlas {
     sampler2D tDiffuse;//Block Diffuse//
     sampler2D tNormal;//Normal Diffuse//
     sampler2D tPBR;//Physically Based Rendering Information//
@@ -56,7 +56,7 @@ uniform TextureAtlas {
     vec2 tileSize;
 } atlas;
 
-uniform ShadowMap {
+layout(std140) uniform ShadowMap {
     sampler2D shadow1;
     sampler2D shadow2;
     sampler2D shadow3;
