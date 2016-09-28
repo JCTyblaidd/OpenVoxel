@@ -7,17 +7,19 @@ package net.openvoxel.api.util;
  *
  */
 public class PerSecondTimer {
-
+	/**Running Average*/
 	private long[] array;
 	private int currentLoc = 0;
 	private long last_notify = 0;
 	private long current_total = 0;
 
 	public PerSecondTimer() {
-		array = new long[256];
-		_setZero();
+		this(256);
 	}
 
+	/**
+	 * @param alloc the size of the variable cache
+	 */
 	public PerSecondTimer(int alloc) {
 		array = new long[alloc];
 		_setZero();
@@ -41,14 +43,23 @@ public class PerSecondTimer {
 		return current;
 	}
 
+	/**
+	 * @return the average time period
+	 */
 	public float getDelaySecond() {
 		return current_total / (array.length * 1000.0F);
 	}
 
+	/**
+	 * @return the average frequency
+	 */
 	public float getPerSecond() {
 		return (array.length * 1000.0F)/ current_total;
 	}
 
+	/**
+	 * @return return the frequency of the first value in the timer
+	 */
 	public float getFirstDelayValue() {
 		return 1000.0F / array[0];
 	}

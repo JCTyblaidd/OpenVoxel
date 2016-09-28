@@ -8,9 +8,12 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.common.world.World;
+import net.openvoxel.utility.CrashReport;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Render Thread, async from game thread
  */
 public class RenderThread implements Runnable{
 
@@ -19,8 +22,13 @@ public class RenderThread implements Runnable{
 	private PerSecondTimer FPS_TIMER;
 
 	public static void Start() {
-		INSTANCE = new RenderThread();
-		INSTANCE.start();
+		if(INSTANCE != null) {
+			INSTANCE = new RenderThread();
+			INSTANCE.start();
+		}else{
+			CrashReport crashReport = new CrashReport("Error With RenderThread::Start").invalidState("Attempted to Start an existing Thread");
+			OpenVoxel.reportCrash(crashReport);
+		}
 	}
 	private RenderThread() {
 		thread = new Thread(this,"OpenVoxel: Render Thread");
@@ -28,6 +36,9 @@ public class RenderThread implements Runnable{
 		thread.setPriority(Thread.MAX_PRIORITY);//EXTREMELY IMPORTANT
 	}
 
+	/**
+	 * @return the current frame-rate
+	 */
 	public static float getFrameRate() {
 		return INSTANCE.FPS_TIMER.getPerSecond();
 	}
@@ -66,7 +77,8 @@ public class RenderThread implements Runnable{
 				}
 				guiRenderer.DisplayScreen(ScreenDebugInfo.instance);
 			}catch (Exception e) {
-				e.printStackTrace();
+				CrashReport crashReport = new CrashReport("Exception Drawing GUI").caughtException(e);
+				OpenVoxel.reportCrash(crashReport);
 			}
 
 			//Finish//

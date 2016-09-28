@@ -152,11 +152,11 @@ public class OpenVoxel implements EventListener{
 	}
 
 	/**
-	 * @param report a crash, DOESN'T Call the shutdown method, the caller must do it themselves
+	 * @param report a crash
 	 */
 	public static void reportCrash(CrashReport report) {
 		report.printStackTrace();
-		System.exit(-1);
+		instance.AttemptShutdownSequence(true);
 	}
 
 	/**
@@ -172,7 +172,6 @@ public class OpenVoxel implements EventListener{
 		Side.isClient = isClient;
 		eventBus = new EventBus();
 		eventBus.register(this);
-
 
 		//Configure Debug Settings//
 		if(args.hasFlag("noChecks")) {//Tiny Performance Improvement
@@ -224,7 +223,10 @@ public class OpenVoxel implements EventListener{
 				handle.pollEvents();
 				try {
 					Thread.sleep(16);//RoundDown from 1000 / 60 (60 Polls Per Second)
-				} catch (InterruptedException e) {}
+				} catch (InterruptedException e) {
+					//Thread Interrupted
+					Logger.getLogger("Poll Thread").Warning("Thread Interrupted");
+				}
 			}
 		}
 	}
@@ -234,9 +236,12 @@ public class OpenVoxel implements EventListener{
 	* @param isCrash is the shutdown unexpected
 	**/
 	public void AttemptShutdownSequence(boolean isCrash) {
-		WindowCloseRequestedEvent e1 = new WindowCloseRequestedEvent();
+		WindowCloseRequestedEvent e1 = new WindowCloseRequestedEvent(isCrash);
 		eventBus.push(e1);
-		if(!e1.isCancelled()) {
+		if(!e1.isCancelled() || isCrash) {
+			if(e1.isCancelled()) {
+				Logger.getLogger("OpenVoxel").Warning("Window Close Requested Event for Crash Stopped, Invalid Behaviour");
+			}
 			//notifyEvent Main Loops Of Shutdown//
 			isRunning = false;
 			try{

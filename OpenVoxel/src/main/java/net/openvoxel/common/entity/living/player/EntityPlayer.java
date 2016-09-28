@@ -12,8 +12,8 @@ public class EntityPlayer extends EntityLiving{
 
 	protected AABB boundingBox;
 	protected float eyeHeight;
-	protected float yaw;
-	protected float pitch;
+	protected float yaw;//0 = X+Direction
+	protected float pitch;//+ = up, - = down
 
 	public EntityPlayer() {
 		this.maxHealth = 20;

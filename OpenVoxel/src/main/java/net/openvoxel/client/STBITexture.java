@@ -19,7 +19,7 @@ import static org.lwjgl.system.MemoryUtil.memByteBuffer;
 /**
  * Created by James on 28/08/2016.
  *
- * STBI Texture
+ * STB Image Texture (Loading Utility Function)
  */
 public class STBITexture {
 	public int width;
@@ -27,7 +27,9 @@ public class STBITexture {
 	public int componentCount;
 	public ByteBuffer pixels;
 
-
+	/**
+	 * Fix for stbi_load_from_memory since the buffer size repoted is incorrect
+	 */
 	private ByteBuffer _correctSTBIMem(ByteBuffer buffer,IntBuffer x,IntBuffer y, IntBuffer comp,int req_comp) {
 		if ( CHECKS ) {
 			checkBuffer(x, 1);
