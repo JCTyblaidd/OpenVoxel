@@ -1,6 +1,6 @@
 //Monolithic Utility Class//
 
-uniform Settings {//Uniform Based Shader Configuration//
+layout(std140) uniform Settings {//Uniform Based Shader Configuration//
     bool parallax;          //Changes: Block Draw
     bool cloudVolumetric;   //Changes: BG Fill
     bool drawCloud;         //Changes: BG Fill
@@ -19,7 +19,7 @@ uniform Settings {//Uniform Based Shader Configuration//
     bool windAnim;          //Changes: Block Draw -> Vertex Diff
 } config;
 
-uniform FinalFrame {
+layout(std140) uniform FinalFrame {
     //Animation Information//
     int animIndex;//Current Animation Index //Endless Counter//
     int worldTick;//Loop 0->128

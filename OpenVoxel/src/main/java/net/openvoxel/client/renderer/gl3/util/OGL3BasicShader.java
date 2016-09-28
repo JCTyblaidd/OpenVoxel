@@ -32,7 +32,10 @@ public class OGL3BasicShader {
 	private static final String PRE_FLAG = "/**[";
 	private static final String POST_FLAG = "]**/";
 
+	protected final String DEBUG;
+
 	public OGL3BasicShader(String shaderSource,String debugID) {
+		DEBUG = debugID;
 		String[] lines = shaderSource.split("\n");
 		int last_index = 0;
 		int last_loading = -1;
@@ -140,7 +143,7 @@ public class OGL3BasicShader {
 		glGetShaderiv(id,GL_COMPILE_STATUS,buffer);
 		if(buffer.get(0) == GL_FALSE) {
 			String reason = glGetShaderInfoLog(id);
-			OGL3Renderer.gl3Log.Severe("Shader Failed to Compile: ");
+			OGL3Renderer.gl3Log.Severe("Shader Failed to Compile["+DEBUG+"]: ");
 			String[] lines = reason.split("\n");
 			for(String line : lines) {
 				OGL3Renderer.gl3Log.Severe("\t" + line);
