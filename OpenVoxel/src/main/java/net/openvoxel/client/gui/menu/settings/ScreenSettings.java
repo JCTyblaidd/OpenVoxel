@@ -59,6 +59,11 @@ public class ScreenSettings extends Screen{
 		backButton.setAction(this::onBack);
 		setting_foV.setUpdateFunc(this::onFPSChange);
 		setting_debugmode.setToggleAction(this::onDebugChange);
+		settings_input.setAction(this::gotoInputSettings);
+	}
+
+	private void gotoInputSettings(GUIButton guiButton) {
+		GUI.addScreen(new ScreenInputSettings());
 	}
 
 	private void onFPSChange(GUISlider slider,int value) {

@@ -5,6 +5,7 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.control.Renderer;
+import net.openvoxel.client.gui.menu.ScreenLoading;
 import net.openvoxel.client.gui.menu.ScreenMainMenu;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.common.event.init.ModFinalizeInitialisationEvent;
@@ -46,20 +47,38 @@ public class GameThread implements Runnable{
 	}
 
 	private void initMods() {
-		//debug//
-		gameLogger.Info("Starting Mod Loading");
-		ModLoader.getInstance().generateDependencyOrder();
-		gameLogger.Info("====Pre Init=====");
-		ModLoader.getInstance().propagateInitEvent(new ModPreInitialisationEvent(),"Pre Init","Sending Pre-Initialisation Event to ");
-		gameLogger.Info("======Init======");
-		ModLoader.getInstance().propagateInitEvent(new ModInitialisationEvent(),"Init","Sending Initialisation Event to ");
-		gameLogger.Info("====Post Init====");
-		ModLoader.getInstance().propagateInitEvent(new ModPostInitialisationEvent(),"Post Init","Sending Post-Initialisation Event to ");
-		gameLogger.Info("===Final Init====");
-		ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(),"Final Init","Sending Final-Initialisation Event to ");
 		if(Side.isClient) {
+			ScreenLoading loadingScreen = new ScreenLoading(6, ModLoader.getInstance().getModCount());
+			GUI.addScreen(loadingScreen);
+			gameLogger.Info("Starting Mod Loading");
+			loadingScreen.startSection("Generate Dependencies");
+			ModLoader.getInstance().generateDependencyOrder();
+			gameLogger.Info("====Pre Init=====");
+			loadingScreen.startSection("Pre Initialization");
+			ModLoader.getInstance().propagateInitEvent(new ModPreInitialisationEvent(), "Pre Init", "Sending Pre-Initialisation Event to ");
+			gameLogger.Info("======Init======");
+			loadingScreen.startSection("Initialization");
+			ModLoader.getInstance().propagateInitEvent(new ModInitialisationEvent(), "Init", "Sending Initialisation Event to ");
+			gameLogger.Info("====Post Init====");
+			loadingScreen.startSection("Post Initialization");
+			ModLoader.getInstance().propagateInitEvent(new ModPostInitialisationEvent(), "Post Init", "Sending Post-Initialisation Event to ");
+			gameLogger.Info("===Final Init====");
+			loadingScreen.startSection("Final Initialization");
+			ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(), "Final Init", "Sending Final-Initialisation Event to ");
 			gameLogger.Info("===Load Textures===");
+			loadingScreen.startSection("Texture Loading");
 			OpenVoxel.getInstance().blockRegistry.clientRegisterAll(Renderer.getBlockTextureAtlas());
+		}else{
+			gameLogger.Info("Starting Mod Loading");
+			ModLoader.getInstance().generateDependencyOrder();
+			gameLogger.Info("====Pre Init=====");
+			ModLoader.getInstance().propagateInitEvent(new ModPreInitialisationEvent(), "Pre Init", "Sending Pre-Initialisation Event to ");
+			gameLogger.Info("======Init======");
+			ModLoader.getInstance().propagateInitEvent(new ModInitialisationEvent(), "Init", "Sending Initialisation Event to ");
+			gameLogger.Info("====Post Init====");
+			ModLoader.getInstance().propagateInitEvent(new ModPostInitialisationEvent(), "Post Init", "Sending Post-Initialisation Event to ");
+			gameLogger.Info("===Final Init====");
+			ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(), "Final Init", "Sending Final-Initialisation Event to ");
 		}
 		hasLoadedMods.set(true);
 	}
@@ -99,7 +118,7 @@ public class GameThread implements Runnable{
 		initSide();
 		long last_time = System.currentTimeMillis();
 		long current_time, time_taken, wait_time;
-		while(openVoxel.isRunning) {
+		while(openVoxel.isRunning.get()) {
 			//Run Game Logic//
 			try{
 				runGameLogic();

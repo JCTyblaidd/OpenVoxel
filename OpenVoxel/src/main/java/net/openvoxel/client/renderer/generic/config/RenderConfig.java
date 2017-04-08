@@ -47,7 +47,7 @@ public class RenderConfig {
 
 ////////////////SECTION: world rendering///////////////////////////////////
 
-	public boolean useDeferredPipeline = true;
+	public boolean useDeferredPipeline = false;//TODO: change back to true
 
 /////////////////SECTION: deferred rendering//////////////////////////////////
 

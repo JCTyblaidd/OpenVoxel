@@ -1,9 +1,12 @@
 package net.openvoxel.server;
 
+import net.openvoxel.common.entity.living.player.EntityPlayerMP;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.ChunkCoordinate;
 import net.openvoxel.common.world.World;
 import net.openvoxel.common.world.generation.DebugWorldGenerator;
+import net.openvoxel.files.GameSave;
+import net.openvoxel.networking.ClientNetworkHandler;
 
 /**
  * Created by James on 25/08/2016.
@@ -17,9 +20,14 @@ import net.openvoxel.common.world.generation.DebugWorldGenerator;
 public class LocalServer extends RemoteServer {
 
 	public EntityPlayerSP thePlayer;
+	private boolean allowOtherConnections;
+	private ClientNetworkHandler handler;
 
-	public LocalServer() {
-		//DEBUG CODE//
+	public LocalServer(GameSave save, boolean allowOtherConnections) {
+		super(save);
+		this.allowOtherConnections = allowOtherConnections;
+
+		//DEBUG CODE// TODO: remove and update
 		thePlayer = new EntityPlayerSP();
 		this.dimensionMap.put(0,new World(new DebugWorldGenerator()));
 		for(int x = -10; x <= 10; x++) {
@@ -28,6 +36,7 @@ public class LocalServer extends RemoteServer {
 			}
 		}
 		this.dimensionMap.get(0).addEntityToWorld(thePlayer);
+
 	}
 
 	@Override
@@ -37,7 +46,7 @@ public class LocalServer extends RemoteServer {
 
 	@Override
 	public World getMyWorld() {
-		return dimensionMap.get(0);
+		return thePlayer.currentWorld;
 	}
 
 	@Override

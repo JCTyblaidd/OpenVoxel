@@ -2,11 +2,13 @@ package net.openvoxel.common.world;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Loaded Chunk Coordinate
  */
 public class ChunkCoordinate {
 
-	public int X;
-	public int Z;
+	public final int X;
+	public final int Z;
 
 	public ChunkCoordinate(int X, int Z) {
 		this.X = X;
@@ -14,7 +16,7 @@ public class ChunkCoordinate {
 	}
 
 
-	@Override//// TODO: 25/08/2016 Check Hash Code Works
+	@Override
 	public int hashCode() {
 		return 31 * (31 + X) + Z;
 	}

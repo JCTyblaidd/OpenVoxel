@@ -1,9 +1,12 @@
 package net.openvoxel.client.gui.menu;
 
-import net.openvoxel.client.gui_framework.GUIButton;
-import net.openvoxel.client.gui_framework.GUIColour;
-import net.openvoxel.client.gui_framework.GUIObjectImage;
-import net.openvoxel.client.gui_framework.Screen;
+import net.openvoxel.OpenVoxel;
+import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.files.FolderUtils;
+import net.openvoxel.files.GameSave;
+import net.openvoxel.server.LocalServer;
+
+import java.io.File;
 
 /**
  * Created by James on 11/09/2016.
@@ -19,22 +22,31 @@ public class ScreenSinglePlayer extends Screen{
 
 	public GUIButton playSelectedGame;
 	public GUIButton createNewGame;
+	public GUIButton debugGame;
 
 	public ScreenSinglePlayer() {
 		bottomBar = new GUIColour(0xFF00FF00);
 		loadGameBG = new GUIColour(0x99000000);
 		background = new GUIObjectImage("gui/BG");
+		debugGame = new GUIButton("Debug Game");
 
 		background.setupFullscreen();
 		bottomBar.setPosition(0,1,0,-150);
 		bottomBar.setSize(1,0,0,150);
 		loadGameBG.setPosition(0,0,0,100);
 		loadGameBG.setSize(1,1,0,-100);
+		debugGame.setCentered(400,30);
+		debugGame.setAction(e -> {
+			LocalServer myServer = new LocalServer(FolderUtils.newSave("debug55"),false);
+			OpenVoxel.getInstance().HostServer(myServer);
+			GUI.removeAllScreens();
+		});
 
 		guiObjects.add(background);
 		///////////////////////////
 		guiObjects.add(loadGameBG);
 		guiObjects.add(bottomBar);
+		guiObjects.add(debugGame);
 	}
 
 

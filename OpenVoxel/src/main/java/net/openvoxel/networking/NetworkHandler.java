@@ -8,10 +8,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
  * Cache for the Netty Network Handlers
  *
  */
-public abstract class NetworkHandler {
+abstract class NetworkHandler {
 
-	public static NioEventLoopGroup workerGroup;
-	public static NioEventLoopGroup controlGroup;
+	static NioEventLoopGroup workerGroup;
+	static NioEventLoopGroup controlGroup;
 	static {
 		workerGroup = new NioEventLoopGroup();
 		controlGroup = new NioEventLoopGroup();

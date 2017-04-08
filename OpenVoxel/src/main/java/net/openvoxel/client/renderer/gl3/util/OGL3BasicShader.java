@@ -14,6 +14,8 @@ import static org.lwjgl.opengl.GL40.GL_TESS_EVALUATION_SHADER;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Standard Shader Refernce
  */
 public class OGL3BasicShader {
 
@@ -152,7 +154,7 @@ public class OGL3BasicShader {
 		}
 	}
 
-	protected void _store(int last_id,int last_index,int curr_index,String[] lines) {
+	private void _store(int last_id,int last_index,int curr_index,String[] lines) {
 		if(last_id == -1) return;
 		StringBuilder builder = new StringBuilder();
 		for(int i = last_index+1; i < curr_index; i++) {

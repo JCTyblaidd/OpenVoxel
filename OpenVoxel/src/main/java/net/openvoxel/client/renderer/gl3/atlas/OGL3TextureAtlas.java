@@ -2,19 +2,15 @@ package net.openvoxel.client.renderer.gl3.atlas;
 
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
-import net.openvoxel.client.renderer.gl3.util.OGL3Texture;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.resources.ResourceHandle;
-import net.openvoxel.files.FolderUtils;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.KHRTextureCompressionASTCLDR;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalInt;
-import java.util.function.IntBinaryOperator;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
@@ -189,10 +185,6 @@ public class OGL3TextureAtlas implements IconAtlas{
 		val.imgDiff = DataDiff;
 		val.imgPBR = DataPBR;
 		icons.forEach(OGL3Icon::cleanup);
-		//TESTED: Works
-		//FolderUtils.saveScreenshot(val.width,val.height,val.imgDiff,true);
-		//FolderUtils.saveScreenshot(val.width,val.height,val.imgNorm,true);
-		//FolderUtils.saveScreenshot(val.width,val.height,val.imgPBR,true);
 		return val;
 	}
 
@@ -213,9 +205,9 @@ public class OGL3TextureAtlas implements IconAtlas{
 		return icon;
 	}
 
-	@Override//TODO: convert to run => ASYNC
+	@Override
 	public void performStitch() {
-
+		update(100,true,CompressionLevel.NO_COMPRESSION);
 	}
 
 }

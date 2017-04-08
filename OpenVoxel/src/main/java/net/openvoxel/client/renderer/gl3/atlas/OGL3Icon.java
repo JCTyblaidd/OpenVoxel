@@ -1,11 +1,9 @@
 package net.openvoxel.client.renderer.gl3.atlas;
 
-import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.common.resources.ResourceHandle;
-import net.openvoxel.utility.CrashReport;
 
 /**
  * Created by James on 16/09/2016.

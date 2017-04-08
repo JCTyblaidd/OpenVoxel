@@ -45,16 +45,10 @@ public abstract class GUIObjectSizable extends GUIObject{
 		final float Y2 = Y1 + getHeight(screenHeight);
 		drawHandle.Begin();
 		drawHandle.EnableColour(true);
-		drawHandle.EnableTexture(true);
-		drawHandle.SetTexture(Image);
-		/**
-		drawHandle.VertexWithUV(X1,Y1,0,0);
-		drawHandle.VertexWithUV(X1,Y2,0,1);
-		drawHandle.VertexWithUV(X2,Y2,1,1);
-		drawHandle.VertexWithUV(X1,Y1,0,0);
-		drawHandle.VertexWithUV(X2,Y2,1,1);
-		drawHandle.VertexWithUV(X2,Y1,1,0);
-		 **/
+		drawHandle.EnableTexture(Image != null);
+		if(Image != null) {
+			drawHandle.SetTexture(Image);
+		}
 		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
 		drawHandle.VertexWithColUV(X1,Y2,0,1,col);
 		drawHandle.VertexWithColUV(X1,Y1,0,0,col);

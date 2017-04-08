@@ -4,9 +4,14 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
-import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
+import net.openvoxel.client.renderer.gl3.worldutil.OGL3CacheManager;
 import net.openvoxel.common.world.Chunk;
 import net.openvoxel.common.world.World;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by James on 25/08/2016.
@@ -16,21 +21,26 @@ import net.openvoxel.common.world.World;
 public final class OGL3WorldRenderer implements WorldRenderer{
 
 
-	public RenderConfig currentSettings;
-	public boolean settingsDirty;
+	private RenderConfig currentSettings;
+	private AtomicBoolean settingsDirty = new AtomicBoolean(true);
+	private OGL3GBufferManager gBufferManager;
+	private Map<World,List<Chunk>> availableChunks;
+	private OGL3CacheManager cacheManager;
 
-	public OGL3WorldRenderer() {
+	OGL3WorldRenderer() {
 		currentSettings = new RenderConfig();
+		availableChunks = new HashMap<>();
+		cacheManager = new OGL3CacheManager();
 	}
 
-	private void pollAndRequestUpdatesForNearbyChunks() {
-		//Request Chunk Updates//
+	private List<Chunk> pollAndRequestUpdatesForNearbyChunks(World world) {
+		return null;
 	}
 
 	private void checkForSettingsChange() {
-		if(settingsDirty) {
-			settingsDirty = false;
-			//Handle:
+		if(settingsDirty.get()) {
+			settingsDirty.set(false);
+			//Handle: settings change
 			OGL3Renderer.instance.blockAtlas.update(128,false, CompressionLevel.NO_COMPRESSION);
 		}
 	}
@@ -38,12 +48,14 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 
 	@Override
 	public void renderWorld(World world) {
-		pollAndRequestUpdatesForNearbyChunks();
+		List<Chunk> toRender = pollAndRequestUpdatesForNearbyChunks(world);
 		checkForSettingsChange();
 		if(currentSettings.useDeferredPipeline) {
 			//Deferred//
-		}else{
 
+		}else{
+			//Standard Pipeline//
+			
 		}
 	}
 
@@ -59,6 +71,6 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 
 	public void onSettingsChanged(RenderConfig settingChangeRequested) {
 		currentSettings = settingChangeRequested;
-		settingsDirty = true;
+		settingsDirty.set(true);
 	}
 }

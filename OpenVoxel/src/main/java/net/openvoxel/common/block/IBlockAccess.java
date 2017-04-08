@@ -4,6 +4,8 @@ import net.openvoxel.common.util.BlockFace;
 
 /**
  * Created by James on 28/08/2016.
+ *
+ * Block Access Interface
  */
 public interface IBlockAccess {
 

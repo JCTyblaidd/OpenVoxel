@@ -11,6 +11,8 @@ import java.util.Set;
 
 /**
  * Created by James on 31/07/2016.
+ *
+ * Event Calling Bus
  */
 public class EventBus {
 
@@ -73,16 +75,16 @@ public class EventBus {
 	}
 
 	private static class WrappedHandler {
-		public EventListener listener;
-		public Method method;
-		public EventOrdering order;
+		EventListener listener;
+		Method method;
+		EventOrdering order;
 		private WrappedHandler(EventListener listener, Method method, EventOrdering order) {
 			this.listener = listener;
 			this.method = method;
 			this.order = order;
-
+			method.setAccessible(true);
 		}
-		public void push(AbstractEvent event) {
+		void push(AbstractEvent event) {
 			try {
 				method.invoke(listener,event);
 			}catch(Exception e) {

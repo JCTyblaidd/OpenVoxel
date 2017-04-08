@@ -1,5 +1,6 @@
 package net.openvoxel.common.registry;
 
+import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import net.openvoxel.OpenVoxel;
@@ -51,10 +52,10 @@ public class RegistryBlocks {
 		fixed_id_map.put(block,fixedID);
 	}
 
-	public Integer getIDFromBlock(Block block) {
+	public int getIDFromBlock(Block block) {
 		return reverse_id_map.get(block);
 	}
-	public Integer getIDFromName(String name) {
+	public int getIDFromName(String name) {
 		return getIDFromBlock(getBlockFromName(name));
 	}
 	public Block getBlockFromID(int ID) {
@@ -88,23 +89,37 @@ public class RegistryBlocks {
 			}
 		}
 	}
-	public void generateMappingsFromPrevious(HashMap<String,Integer> previousMap) {
+
+	public TObjectIntMap<String> getDataMap() {
+		TObjectIntMap<String> required = new TObjectIntHashMap<>();
+		block_map.keySet().forEach(k -> {
+			required.put(k,getIDFromName(k));
+		});
+		return required;
+	}
+
+	public void generateMappingsFromPrevious(TObjectIntMap<String> previousMap) {
 		id_map.clear();
 		reverse_id_map.clear();
-		previousMap.forEach((name,id) -> {
+		fixed_id_map.forEach((block,id) -> {
+			id_map.put(id,block);
+			reverse_id_map.put(block,id);
+		});
+		previousMap.forEachEntry((name,id) -> {
 			Block b = block_map.get(name);
 			if(b == null) {
-				OpenVoxel.reportCrash(new CrashReport("Block Doesn't Exist").invalidState("Previous Block Name Not Found!!!").unexpectedNull("block_map.get(name);"));
+				OpenVoxel.reportCrash(new CrashReport("Block Doesn't Exist")
+						                      .invalidState("Previous Block Name Not Found!!!")
+						                      .unexpectedNull("block_map.get(name);"));
 			}
 			id_map.put(id,b);
 			reverse_id_map.put(b,id);
+			return true;
 		});
-		//TODO:
 	}
 
 	@SideOnly(side= Side.CLIENT)
 	public void clientRegisterAll(IconAtlas atlas) {
-		fixed_id_map.keySet().forEach(o -> o.loadTextureAtlasData(atlas));
 		name_map.keySet().forEach(o -> o.loadTextureAtlasData(atlas));
 	}
 

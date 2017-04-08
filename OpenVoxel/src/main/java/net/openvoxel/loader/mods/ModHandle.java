@@ -1,15 +1,17 @@
 package net.openvoxel.loader.mods;
 
+import com.jc.util.reflection.Reflect;
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.mods.CrossModCommsHandler;
-import net.openvoxel.api.mods.Mod;
-import net.openvoxel.api.mods.ModInitEventHandler;
-import net.openvoxel.api.mods.ModInstance;
+import net.openvoxel.api.logger.Logger;
+import net.openvoxel.api.mods.*;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.common.event.init.ModInitEvent;
+import org.lwjgl.system.CallbackI;
+import sun.rmi.runtime.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +28,7 @@ public class ModHandle {
 	private Object modInstance;
 	private Class<?> modClass;
 	private Mod modAnnotation;
+	private Logger modLogger;
 
 	private Map<String,Method> crossModHandles;
 	private Map<Class<? extends ModInitEvent>,Method> initHandles;
@@ -34,35 +37,68 @@ public class ModHandle {
 	private List<String> loadBefore;
 	private List<ModDependency> hardDependencies;
 
-	public ModHandle(String type) throws Exception{
+	private void deepFieldSet(Field field,Object obj,Object val) throws IllegalAccessException{
+		if(field.isAccessible()) {
+			field.set(obj,val);
+		}else{
+			field.setAccessible(true);
+			field.set(obj,val);
+		}
+	}
+
+	ModHandle(String type) throws Exception {
 		modClass = Class.forName(type);
-		modInstance = modClass.newInstance();
+		try {
+			modInstance = modClass.newInstance();
+		}catch (Exception ex) {
+			Logger crashLogger = Logger.getLogger("Mods");
+			crashLogger.Severe("Failed to Instantiate Constructor");
+			crashLogger.Severe("Please Ensure the constructor is public and has no parameters");
+			crashLogger.StackTrace(ex);
+			throw new ModLoader.ModLoadingException("Failed to Construct Mod");
+		}
 		modAnnotation = modClass.getAnnotation(Mod.class);
 		crossModHandles = new HashMap<>();
 		initHandles = new HashMap<>();
+		modLogger = Logger.getLogger("Mods").getSubLogger(modAnnotation.name());
+		modLogger.Info("Initialized Mod Handle Successfully");
 		//Scan All Methods//
 		for(Method m : modClass.getMethods()) {
 			if(m.getAnnotation(CrossModCommsHandler.class) != null) {
 				String key = m.getAnnotation(CrossModCommsHandler.class).value();
 				crossModHandles.put(key,m);
+				modLogger.Info("Enabled Cross Mod Communication Method: " + key);
 			}
 			if(m.getAnnotation(ModInitEventHandler.class) != null && m.getParameterTypes().length == 1) {
 				Class<?> param = m.getParameterTypes()[0];
 				if(ModInitEvent.class.isAssignableFrom(param)) {
 					initHandles.put((Class<? extends ModInitEvent>) param,m);
+					modLogger.Info("Enabled Initialization Method: " + param.getSimpleName());
 				}
 			}
 		}
 		//Scan All Fields//
-		for(Field f : modClass.getFields()) {
+		for(Field f : modClass.getDeclaredFields()) {
 			if(f.getAnnotation(ModInstance.class) != null) {
-				f.set(null,modInstance);
+				if(!Modifier.isStatic(f.getModifiers())) {
+					modLogger.Warning("Mod Instance Class is Not Static");
+					deepFieldSet(f,modInstance,modInstance);
+				}else {
+					deepFieldSet(f, null, modInstance);
+				}
+			}
+			if(f.getAnnotation(ModLogger.class) != null && f.getType() == Logger.class) {
+				if(Modifier.isStatic(f.getModifiers())) {
+					deepFieldSet(f,null,modLogger);
+				}else{
+					deepFieldSet(f,modInstance,modLogger);
+				}
 			}
 		}
 		//Load Data//
 		loadAfter = Arrays.asList(modAnnotation.loadAfter());
 		loadBefore = Arrays.asList(modAnnotation.loadBefore());
-		hardDependencies = Arrays.asList(modAnnotation.requiredMods()).stream().map(ModDependency::parseDependency).collect(Collectors.toList());
+		hardDependencies = Arrays.stream(modAnnotation.requiredMods()).map(ModDependency::parseDependency).collect(Collectors.toList());
 	}
 
 	public Object getModInstance() {

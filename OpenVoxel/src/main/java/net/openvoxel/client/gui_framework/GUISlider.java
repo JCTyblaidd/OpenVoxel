@@ -101,15 +101,12 @@ public class GUISlider extends GUIObjectSizable{
 	@Override
 	public void OnMouseMove(float newX, float newY, float oldX, float oldY) {
 		final float X1 = getScrollbarX(ClientInput.currentWindowWidth);
-		//final float Y1 = getPosY(ClientInput.currentWindowHeight);
 		final float X2 = X1 + getScrollbarWidth(ClientInput.currentWindowWidth);
-		//final float Y2 = Y1 + getHeight(ClientInput.currentWindowHeight);
 		if(sliderSelected) {
 			float hW = (X2 - X1) / 2.0F;
 			float minX = getPosX(ClientInput.currentWindowWidth) + hW;
 			float maxX = getPosX(ClientInput.currentWindowWidth)+getWidth(ClientInput.currentWindowWidth) - hW;
 			float perc = (newX - minX) / (maxX - minX);
-			System.out.println("Per="+perc);
 			if(perc > 1.0F) {
 				perc = 1.0F;
 			}else if(perc < 0.0F) {

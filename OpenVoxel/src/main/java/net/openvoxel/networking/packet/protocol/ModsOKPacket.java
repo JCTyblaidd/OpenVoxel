@@ -6,6 +6,8 @@ import net.openvoxel.networking.protocol.WriteOnlyBuffer;
 
 /**
  * Created by James on 11/09/2016.
+ *
+ * Notify the other connection that the mods connected are valid
  */
 public class ModsOKPacket extends AbstractPacket{
 	@Override

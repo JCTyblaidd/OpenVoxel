@@ -1,5 +1,7 @@
 package net.openvoxel.common.entity.living.player;
 
+import net.openvoxel.api.side.Side;
+import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.client.keybindings.KeyBinding;
 import net.openvoxel.client.keybindings.KeyManager;
 import net.openvoxel.networking.ClientNetworkHandler;
@@ -34,6 +36,7 @@ public class EntityPlayerSP extends EntityPlayer{
 		keySprint = KeyManager.getBinding("player.movement.sprint",GLFW_KEY_LEFT_CONTROL);
 
 		keyOpenInv = KeyManager.getBinding("player.inventory.open",GLFW_KEY_E);
+
 		keySlot0 = KeyManager.getBinding("player.inventory.slot0",GLFW_KEY_0);
 		keySlot1 = KeyManager.getBinding("player.inventory.slot1",GLFW_KEY_1);
 		keySlot2 = KeyManager.getBinding("player.inventory.slot2",GLFW_KEY_2);
@@ -65,10 +68,12 @@ public class EntityPlayerSP extends EntityPlayer{
 		tickClientInputs();
 	}
 
+
 	private void selectSlot(int v) {
 		//TODO: clientInv::selectSlot
 	}
 
+	@SideOnly(side = Side.CLIENT)
 	void tickClientInputs() {
 		if(keyOpenInv.isDown()) {
 			//Send Open Inventory Packet//

@@ -24,6 +24,10 @@ public class HandshakePacket extends AbstractPacket{
 
 	public boolean directedToServer;
 
+	public HandshakePacket(boolean directedToServer) {
+		this.directedToServer = directedToServer;
+	}
+
 	@Override
 	public void storeData(WriteOnlyBuffer buffer) {
 		buffer.writeBoolean(directedToServer);

@@ -32,7 +32,7 @@ public class BlockAir extends Block{
 
 	@Override
 	public Icon getIconAtSide(IBlockAccess blockAccess, BlockFace face) {
-		return null;
+		return null;//NO ICON//
 	}
 
 	@Override

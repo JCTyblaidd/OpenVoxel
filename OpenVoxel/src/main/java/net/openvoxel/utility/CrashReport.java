@@ -16,7 +16,7 @@ public class CrashReport extends RuntimeException{
 	private List<String> state = new ArrayList<>();
 
 	public CrashReport(String mainError) {
-		super("==Reported Crash==");
+		super();
 		this.mainError = mainError;
 	}
 
@@ -34,7 +34,7 @@ public class CrashReport extends RuntimeException{
 	}
 
 	public CrashReport withReport(CrashReport otherReport) {
-		_report("===Attached Report=====");
+		_report("===Attached Report===");
 		_report(otherReport.mainError);
 		otherReport.state.forEach(this::_report);
 		return this;
@@ -47,8 +47,22 @@ public class CrashReport extends RuntimeException{
 
 	@Override
 	public void printStackTrace() {
-		Logger.INSTANCE.Severe("==Reported Crash===");
+		Logger.INSTANCE.Severe("===Reported Crash===");
 		state.forEach(Logger.INSTANCE::Severe);
-		super.printStackTrace();
+		Logger.INSTANCE.StackTrace(this);
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder("=====CRASH REPORT=====");
+		builder.append('\n');
+		builder.append("Cause: ");
+		builder.append(mainError);
+		builder.append('\n');
+		state.forEach(e -> {
+			builder.append(e);
+			builder.append('\n');
+		});
+		return builder.toString();
 	}
 }

@@ -1,14 +1,18 @@
 package net.openvoxel.networking;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.networking.protocol.AbstractPacket;
 import net.openvoxel.networking.protocol.PacketChannelInitializer;
 import net.openvoxel.server.LocalServer;
 
+import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -16,40 +20,44 @@ import java.util.Deque;
 /**
  * Created by James on 25/08/2016.
  *
- * TODO: rework network model
  */
 public class ClientNetworkHandler extends NetworkHandler {
 
-	OpenVoxel Handle;
 	Bootstrap NETTY;
 	ClientMessageHandler clientMessageHandle;
 	Deque<AbstractPacket> packetQueue = new ArrayDeque<>();
 	boolean isLocalServer = false;
+	Channel rawConnection;
 
-	public ClientNetworkHandler(OpenVoxel openVoxel) {
-		this.Handle = openVoxel;
+	public ClientNetworkHandler() {
 		NETTY = new Bootstrap();
 		NETTY.channel(NioSocketChannel.class);
 		NETTY.group(workerGroup);
 		clientMessageHandle = new ClientMessageHandler(this);
-		NETTY.handler(new PacketChannelInitializer(Handle.packetRegistry,() -> clientMessageHandle));//TODO: HANDLER
+		NETTY.handler(new PacketChannelInitializer(OpenVoxel.getInstance().packetRegistry,() -> clientMessageHandle));
 	}
 
 	public void sendJoinServerRequest() {
-
+		Logger.INSTANCE.Debug("Sending Server Connection Request");
 	}
 
-	public void connectTo(SocketAddress address) {
+	public void connectTo(SocketAddress address) throws IOException {
 		isLocalServer = false;
+		try {
+			rawConnection = NETTY.connect(address).sync().channel();
+		}catch (InterruptedException ex) {
+			throw new IOException("Failed to connect to address");
+		}
 	}
 
 	public void connectToLocal() {
 		LocalServer server = (LocalServer)OpenVoxel.getServer();
 		isLocalServer = true;
+
 	}
 
 	public boolean isConnected() {
-		return false;
+		return rawConnection != null;
 	}
 
 	public void sendPacket(AbstractPacket packet) {
@@ -67,6 +75,9 @@ public class ClientNetworkHandler extends NetworkHandler {
 	public void handlePacket(AbstractPacket pkt) {
 		//TODO: handle?
 	}
+
+	public void shutdown() {}
+
 
 
 	public static class ClientMessageHandler extends SimpleChannelInboundHandler<AbstractPacket> {

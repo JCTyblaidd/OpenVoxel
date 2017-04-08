@@ -4,6 +4,8 @@ import java.util.concurrent.locks.StampedLock;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Wrapper around stored chunk information
  */
 public class Chunk {
 
@@ -24,7 +26,7 @@ public class Chunk {
 		stampedLock = new StampedLock();
 	}
 
-	public static int getArrayOffsetFromRelative(int x, int y, int z) {
+	private static int getArrayOffsetFromRelative(int x, int y, int z) {
 		return (x * 256 * 16) + (z * 256) + y;
 	}
 

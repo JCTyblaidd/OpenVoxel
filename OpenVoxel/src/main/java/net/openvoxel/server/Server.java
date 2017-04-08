@@ -8,9 +8,13 @@ import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.World;
-import net.openvoxel.common.world.generation.DebugWorldGenerator;
+import net.openvoxel.files.GameSave;
 import net.openvoxel.networking.ServerNetworkHandler;
 import net.openvoxel.networking.protocol.AbstractPacket;
+import net.openvoxel.utility.Command;
+import net.openvoxel.utility.CrashReport;
+
+import java.io.IOException;
 
 /**
  * Created by James on 25/08/2016.
@@ -19,32 +23,17 @@ import net.openvoxel.networking.protocol.AbstractPacket;
  */
 public abstract class Server implements Producer<SimpleChannelInboundHandler<AbstractPacket>> {
 
-	public ServerNetworkHandler Network;
-
-	public void host(int PORT) {
-		if(Network == null) {
-			Network = new ServerNetworkHandler(this);
-		}
-		Network.Host(PORT);
-	}
-
-	public TIntObjectHashMap<World> dimensionMap;
+	public abstract void host(int PORT);
 
 	public Server() {
-		dimensionMap = new TIntObjectHashMap<>();
-		//LOAD:
-
-		//Generate Mappings
-		OpenVoxel.getInstance().blockRegistry.generateMappingsFromRaw();
-
-		//DEBUG Launch:
+		OpenVoxel.getInstance().packetRegistry.generateDefaultMappings();
 	}
 
-	public World getWorldAtDimension(int dimensionID) {
-		return dimensionMap.get(dimensionID);
-	}
+	public abstract World getWorldAtDimension(int dimensionID);
 
 	public abstract boolean isRemote();
+
+	public abstract void callCommand(Command command);
 
 	//Client Side Only, get the world I Am In
 	@SideOnly(side= Side.CLIENT)
@@ -54,17 +43,8 @@ public abstract class Server implements Producer<SimpleChannelInboundHandler<Abs
 	public abstract EntityPlayerSP getMyPlayer();
 
 	/**Only To Be Called From The Game Logic Thread*/
-	public void gameLogicTick() {
-		dimensionMap.forEachValue(o -> {o.gameLogicTick(); return true;});
-	}
-
-	public void loadDataMappings() {
-		// TODO: 04/09/2016 Make It So That World Config Settings Are Loaded From The File
-	}
-
+	public abstract void gameLogicTick();
 
 	@Override
-	public SimpleChannelInboundHandler<AbstractPacket> create() {
-		return null;
-	}
+	public abstract SimpleChannelInboundHandler<AbstractPacket> create();
 }

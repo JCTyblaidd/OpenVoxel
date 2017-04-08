@@ -1,5 +1,6 @@
 package net.openvoxel;
 
+import com.jc.util.event.EventSubscriber;
 import com.jc.util.utils.ArgumentParser;
 import net.openvoxel.api.logger.GLFWLogWrapper;
 import net.openvoxel.api.logger.LWJGLLogWrapper;
@@ -7,28 +8,41 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.logger.NettyLogWrapper;
 import net.openvoxel.api.login.UserData;
 import net.openvoxel.api.side.Side;
+import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.audio.ClientAudio;
 import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.control.Renderer;
+import net.openvoxel.client.gui.menu.settings.ScreenSettings;
+import net.openvoxel.client.gui_framework.GUI;
+import net.openvoxel.client.keybindings.KeyManager;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 import net.openvoxel.common.GameThread;
 import net.openvoxel.common.event.AbstractEvent;
 import net.openvoxel.common.event.EventBus;
 import net.openvoxel.common.event.EventListener;
+import net.openvoxel.common.event.SubscribeEvents;
+import net.openvoxel.common.event.input.KeyStateChangeEvent;
 import net.openvoxel.common.event.window.ProgramShutdownEvent;
 import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.registry.RegistryEntities;
 import net.openvoxel.common.registry.RegistryItems;
+import net.openvoxel.files.FolderUtils;
+import net.openvoxel.files.GameSave;
 import net.openvoxel.loader.mods.ModLoader;
 import net.openvoxel.networking.protocol.PacketRegistry;
+import net.openvoxel.server.ClientServer;
 import net.openvoxel.server.RemoteServer;
 import net.openvoxel.server.Server;
 import net.openvoxel.server.dedicated.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.Library;
 
+import java.io.File;
 import java.net.SocketAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by James on 25/08/2016.
@@ -46,7 +60,7 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * Is the game currently Running
 	 */
-	public volatile boolean isRunning = true;
+	public AtomicBoolean isRunning = new AtomicBoolean(true);
 	/**
 	 * The Global EventBus
 	 */
@@ -61,6 +75,9 @@ public class OpenVoxel implements EventListener{
 	 */
 	private static OpenVoxel instance;
 
+	/**
+	 * Currently Enabled Server
+	 */
 	public Server currentServer = null;
 	/**
 	 * The ID <-> Name <-> Packet Registry,
@@ -97,23 +114,16 @@ public class OpenVoxel implements EventListener{
 	 */
 	public void HostServer(Server server) {
 		if(currentServer != null) {
-			//Kill// // TODO: 04/09/2016
+			Logger.getLogger("OpenVoxel").Severe("Running Server Was Not Shutdown Correctly");
+			CrashReport crashReport = new CrashReport("Server Was Hosted But The Old One Has Not Shutdown");
+			reportCrash(crashReport);
 		}
 		currentServer = server;
-		currentServer.loadDataMappings();
 	}
 
-	//Initialize Client Connections//
-	public void clientConnectToLocalHost() {
-		startServerConnectionBootstrap();
-	}
 	//Initialize Client Connections -> Remove//
 	public void clientConnectRemote(SocketAddress address) {
-
-		startServerConnectionBootstrap();
-	}
-	private void startServerConnectionBootstrap() {
-
+		HostServer(new ClientServer(address));
 	}
 
 	/**
@@ -156,7 +166,19 @@ public class OpenVoxel implements EventListener{
 	 */
 	public static void reportCrash(CrashReport report) {
 		report.printStackTrace();
+		FolderUtils.storeCrashReport(report);
 		instance.AttemptShutdownSequence(true);
+	}
+
+
+	private AtomicBoolean flagReload = new AtomicBoolean(false);
+	/**
+	 * Tells the wrapped loader to re-attempt the loading seqyence
+	 */
+	public static void reloadMods() {
+		Logger.getLogger("OpenVoxel").getSubLogger("Reload").Info("Attempting Mod Reload");
+		instance.flagReload.set(true);
+		instance.AttemptShutdownSequence(false);
 	}
 
 	/**
@@ -172,7 +194,6 @@ public class OpenVoxel implements EventListener{
 		Side.isClient = isClient;
 		eventBus = new EventBus();
 		eventBus.register(this);
-
 		//Configure Debug Settings//
 		if(args.hasFlag("noChecks")) {//Tiny Performance Improvement
 			System.setProperty("org.lwjgl.glfw.checkThread0","false");
@@ -190,6 +211,7 @@ public class OpenVoxel implements EventListener{
 				GLFWLogWrapper.Load();
 			}
 		}
+
 		//Acquire user data if ClientSide
 		if(isClient) {
 			userData = UserData.from(args);
@@ -213,27 +235,45 @@ public class OpenVoxel implements EventListener{
 		if(!isClient) {
 			GameThread.INSTANCE.awaitModsLoaded();
 			Logger.getLogger("Dedicated Server").Info("Starting Server....");
-			HostServer(new RemoteServer());
+			HostServer(new RemoteServer(new GameSave(new File("dedicated_save"))));
+		}else{
+			eventBus.register(new EventListener() {
+				@SubscribeEvents
+				public void onEvent(KeyStateChangeEvent ev) {
+					if(ev.GLFW_KEY == GLFW.GLFW_KEY_ESCAPE && ev.GLFW_KEY_STATE == GLFW.GLFW_PRESS) {
+						//Conditionally Create Settings Menu//
+						if(currentServer != null) {
+							if(GUI.getStack().size() == 0) {
+								GUI.addScreen(new ScreenSettings());
+							}
+						}
+					}
+				}
+			});
 		}
 		//Convert Bootstrap Thread Into InputPollThread if clientSide ELSE end the thread//
 		if(isClient) {
 			DisplayHandle handle = Renderer.renderer.getDisplayHandle();
-			while(isRunning) {
-				//Poll Inputs : setupLikeThis Due to GLFW needing event polls from the main thread//
+			while(isRunning.get()) {
+				//GLFW Requires polling from the main thread
 				handle.pollEvents();
 				try {
-					Thread.sleep(16);//RoundDown from 1000 / 60 (60 Polls Per Second)
+					Thread.sleep(16);//RoundDown from 1000 / 60 (60 Polls Per Second) todo: convert to per second util
 				} catch (InterruptedException e) {
 					//Thread Interrupted
 					Logger.getLogger("Poll Thread").Warning("Thread Interrupted");
 				}
 			}
 		}
+		if(instance.flagReload.get() && isClient) {
+			//Send Runtime Exception Across the Class Loader Barrier
+			throw new RuntimeException("built_in_exception::mod_reload");
+		}
 	}
 
 	/**
 	* Start the Shutdown Sequence, Can be cancelled
-	* @param isCrash is the shutdown unexpected
+	* @param isCrash is the shutdown unexpected, so forcefully exit
 	**/
 	public void AttemptShutdownSequence(boolean isCrash) {
 		WindowCloseRequestedEvent e1 = new WindowCloseRequestedEvent(isCrash);
@@ -243,15 +283,19 @@ public class OpenVoxel implements EventListener{
 				Logger.getLogger("OpenVoxel").Warning("Window Close Requested Event for Crash Stopped, Invalid Behaviour");
 			}
 			//notifyEvent Main Loops Of Shutdown//
-			isRunning = false;
+			isRunning.set(false);
 			try{
-				Thread.sleep(1000);
-			}catch(InterruptedException e) {}
+				Thread.sleep(1000);//TODO: await more efficiently
+			}catch(InterruptedException e) {
+				Logger.getLogger("OpenVoxel").Warning("Thread Wait Was Interrupted");
+			}
 			//Push Event After Timeout//
 			Logger.getLogger("OpenVoxel").Info("Shutting Down...");
 			ProgramShutdownEvent e2 = new ProgramShutdownEvent(isCrash);
 			eventBus.push(e2);
-			System.exit(isCrash ? -1 : 0);
+			if(isCrash) {
+				System.exit(-1);
+			}
 		}
 	}
 }

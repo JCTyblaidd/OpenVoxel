@@ -23,8 +23,14 @@ public class GL_Caps {
 	 */
 	public static final boolean CanUseASTCCompression;
 
+	/**
+	 * Can Perform Cascade Shadow Map Via the GPU
+	 */
 	public static final boolean CanPerformSinglePassCascade;
 
+	/**
+	 * Can Perform Block Pass Via the GPU
+	 */
 	public static final boolean CanPerformSinglePassBlockData;
 
 }

@@ -2,7 +2,10 @@ package net.openvoxel.loader.mods;
 
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.mods.ASMHandler;
+import net.openvoxel.api.side.Side;
+import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.api.util.Version;
+import net.openvoxel.client.gui.menu.ScreenLoading;
 import net.openvoxel.common.event.init.ModInitEvent;
 
 import java.util.*;
@@ -54,6 +57,10 @@ public class ModLoader {
 
 	public ModHandle getHandleFor(String ID) {
 		return loadedMods.get(ID);
+	}
+
+	public int getModCount() {
+		return loadedMods.size();
 	}
 
 	public static boolean isModLoaded(String modID) {
@@ -200,6 +207,16 @@ public class ModLoader {
 		Logger log = Logger.getLogger("Mod Loader").getSubLogger(ID);
 		for(ModHandle h : initialisationOrder) {
 			log.Info(Pre + h.getInformation().name());
+			h.propagateEvent(e);
+		}
+	}
+
+	@SideOnly(side = Side.CLIENT)
+	public void propagateInitEvent(ModInitEvent e, String ID, String Pre, ScreenLoading loading) {
+		Logger log = Logger.getLogger("Mod Loader").getSubLogger(ID);
+		for(ModHandle h : initialisationOrder) {
+			log.Info(Pre + h.getInformation().name());
+			loading.startMod(h.getInformation().name());
 			h.propagateEvent(e);
 		}
 	}

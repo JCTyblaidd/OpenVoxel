@@ -9,14 +9,18 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
  */
 public class GUIText extends GUIObjectSizable{
 
-	private final String text;
+	private String text;
 
 	public GUIText(String str) {
 		text = str;
 	}
 
+	public synchronized void updateText(String text) {
+		this.text = text;
+	}
+
 	@Override
-	public void Draw(GUIRenderer.GUITessellator drawHandle) {
+	public synchronized void Draw(GUIRenderer.GUITessellator drawHandle) {
 		float X = getPosX(drawHandle.getScreenWidth());
 		float Y = getPosY(drawHandle.getScreenHeight());
 		float H = getHeight(drawHandle.getScreenHeight());

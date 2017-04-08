@@ -1,5 +1,9 @@
 package net.openvoxel.server.dedicated;
 
+import net.openvoxel.OpenVoxel;
+import net.openvoxel.server.Server;
+import net.openvoxel.utility.Command;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -21,6 +25,7 @@ public class CommandInputThread implements Runnable{
 
 	private CommandInputThread() {
 		thread = new Thread(this,"Open Voxel: Server Command Input Thread");
+		thread.setDaemon(true);
 	}
 
 	@Override
@@ -37,6 +42,9 @@ public class CommandInputThread implements Runnable{
 	}
 
 	private void handleCmd(String cmd) {
-		// TODO: 25/08/2016 Push to a command handler
+		Server server = OpenVoxel.getServer();
+		if(server != null) {
+			server.callCommand(new Command(cmd));
+		}
 	}
 }

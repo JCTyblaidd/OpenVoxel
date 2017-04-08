@@ -1,5 +1,8 @@
 package net.openvoxel.files;
 
+import com.jc.util.filesystem.FileHandle;
+import net.openvoxel.api.logger.Logger;
+import net.openvoxel.utility.CrashReport;
 import org.lwjgl.stb.STBImageWrite;
 import org.lwjgl.system.MemoryUtil;
 
@@ -9,7 +12,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -56,7 +61,7 @@ public class FolderUtils {
 			Date d = new Date();
 			Random rand = new Random();
 			DateFormat format = DateFormat.getDateTimeInstance();
-			File f = new File(ScreenshotsDir, "screenshot" + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png");
+			File f = new File(ScreenshotsDir, "screenshot " + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png");
 			ByteBuffer DATA = MemoryUtil.memAlloc(4 * w * h);
 			DATA.asIntBuffer().put(pixels);
 			DATA.position(0);
@@ -74,10 +79,43 @@ public class FolderUtils {
 				DateFormat format = DateFormat.getDateTimeInstance();
 				ImageIO.write(IMG, "PNG", new File(ScreenshotsDir, "screenshot" + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png"));
 			} catch (IOException e) {
-				//TODO: Handle
+				Logger.getLogger("Screenshots").Severe("Failed to Create New Screenshot");
 			}
 		}
 	}
 
+	public static List<String> listAllGameSaves() {
+		File[] subFiles = SaveDir.listFiles();
+		List<String> saves = new ArrayList<>();
+		for(File f : subFiles) {
+			saves.add(f.getName());
+		}
+		return saves;
+	}
 
+	public static GameSave loadGameSave(String saveName) {
+		File f = new File(SaveDir,saveName);
+		if(!f.exists()) {
+			Logger.getLogger("Save Manager").Severe("Loading Imaginary Save File");
+			throw new RuntimeException("bad save create");
+		}
+		return new GameSave(f);
+	}
+
+	public static GameSave newSave(String saveName) {
+		File f = new File(SaveDir,saveName);
+		if(f.exists()) {
+			Logger.getLogger("Save Manager").Severe("Save exists where new one was requested");
+			Logger.getLogger("Save Manager").Info("Result - the save was loaded instead");
+		}
+		return new GameSave(f);
+	}
+
+	public static void storeCrashReport(CrashReport report) {
+		File crash = new File(CrashDir,"crash-"+new Date().getTime()+".txt");
+		FileHandle handle = new FileHandle(crash);
+		handle.startWrite();
+		handle.write(report.toString());
+		handle.stopWrite();
+	}
 }

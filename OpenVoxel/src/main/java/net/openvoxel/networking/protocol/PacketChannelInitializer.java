@@ -35,6 +35,6 @@ public class PacketChannelInitializer extends ChannelInitializer<SocketChannel>{
 		pipeline.addLast(new KeepAliveHandler(5));//if not traffic sent for 5 seconds -> send a keep alive packet//
 
 		//Inbound Handler//
-		pipeline.addLast(handler.create());
+		pipeline.addLast("exec_handler",handler.create());
 	}
 }

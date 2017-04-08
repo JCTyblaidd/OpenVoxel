@@ -3,7 +3,10 @@ package net.openvoxel.client.gui.menu;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui.menu.settings.ScreenSettings;
 import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.files.GameSave;
 import net.openvoxel.server.LocalServer;
+
+import java.io.File;
 
 /**
  * Created by James on 01/09/2016.
@@ -12,13 +15,14 @@ import net.openvoxel.server.LocalServer;
  */
 public class ScreenMainMenu extends Screen{
 
-	public GUIObjectImage backgroundImage;
-	public GUIButton buttonSinglePlayer;
-	public GUIButton buttonMultiPlayer;
-	public GUIButton buttonSettings;
-	public GUIButton buttonQuit;
-	public GUIText mainText;
-	public GUIColour background;
+	private GUIObjectImage backgroundImage;
+	private GUIButton buttonSinglePlayer;
+	private GUIButton buttonMultiPlayer;
+	private GUIButton buttonSettings;
+	private GUIButton buttonReloadMods;
+	private GUIButton buttonQuit;
+	private GUIText mainText;
+	private GUIColour background;
 
 	public ScreenMainMenu() {
 		backgroundImage = new GUIObjectImage("gui/BG");
@@ -28,6 +32,7 @@ public class ScreenMainMenu extends Screen{
 		buttonSinglePlayer = new GUIButton("Single Player");
 		buttonMultiPlayer = new GUIButton("Multi Player");
 		buttonSettings = new GUIButton("Settings");
+		buttonReloadMods = new GUIButton("Reload");
 		buttonQuit = new GUIButton("Quit");
 		mainText = new GUIText("OpenVoxel");
 
@@ -37,7 +42,8 @@ public class ScreenMainMenu extends Screen{
 		buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
 		buttonMultiPlayer.setupOffsetTo(mainText,-125,10,150,30);
 		buttonSettings.setupOffsetTo(mainText,-125,50,150,30);
-		buttonQuit.setupOffsetTo(mainText,-125,90,150,30);
+		buttonReloadMods.setupOffsetTo(mainText,-125,90,150,30);
+		buttonQuit.setupOffsetTo(mainText,-125,130,150,30);
 
 		background.setupOffsetTo(mainText,-130,-100,260,500);//300);
 
@@ -46,41 +52,31 @@ public class ScreenMainMenu extends Screen{
 		guiObjects.add(buttonSinglePlayer);
 		guiObjects.add(buttonMultiPlayer);
 		guiObjects.add(buttonSettings);
+		guiObjects.add(buttonReloadMods);
 		guiObjects.add(buttonQuit);
-/**
-		GUILoadingCircle temp = new GUILoadingCircle();
-		temp.setCentered(100,100);
-		guiObjects.add(temp);
-**/
+
 		buttonSinglePlayer.setAction(this::onPressSinglePlayer);
 		buttonMultiPlayer.setAction(this::onPressMultiPlayer);
 		buttonSettings.setAction(this::onPressSettings);
+		buttonReloadMods.setAction(this::onPressReload);
 		buttonQuit.setAction(this::onPressQuit);
 	}
 
-	public void onPressSinglePlayer(GUIButton button) {
-		//TODO: convert to real code
-		GUI.removeScreen(this);
+	private void onPressSinglePlayer(GUIButton button) {
 		GUI.addScreen(new ScreenSinglePlayer());
-		/**
-			LocalServer myServer = new LocalServer();
-			OpenVoxel.getInstance().HostServer(myServer);
-			OpenVoxel.getInstance().clientConnectToLocalHost();
-			GUI.removeAllScreens();
-		 **/
 	}
-	public void onPressMultiPlayer(GUIButton button) {
-		LocalServer myServer = new LocalServer();
-		OpenVoxel.getInstance().HostServer(myServer);
-		OpenVoxel.getInstance().clientConnectToLocalHost();
-		GUI.removeAllScreens();
+	private void onPressMultiPlayer(GUIButton button) {
+		GUI.addScreen(new ScreenMultiPlayer());
 	}
-	public void onPressSettings(GUIButton button) {
-		//GUI.removeScreen(this);
+	private void onPressSettings(GUIButton button) {
 		GUI.addScreen(new ScreenSettings());
 	}
-	public void onPressQuit(GUIButton button) {
+	private void onPressQuit(GUIButton button) {
 		OpenVoxel.getInstance().AttemptShutdownSequence(false);
+	}
+
+	private void onPressReload(GUIButton button) {
+		OpenVoxel.reloadMods();
 	}
 
 }

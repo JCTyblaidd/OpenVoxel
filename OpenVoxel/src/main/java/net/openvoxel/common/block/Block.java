@@ -21,7 +21,7 @@ public abstract class Block {
 	public static IBlockRenderHandler emptyRenderHandler = (renderer, stateAccess) -> {};//Draw Nothing//
 
 	protected float explosion_resistance = 1.0F;
-	protected byte light_emission = 0;
+	protected int light_emission = 0;
 
 	protected float friction;//0->1, 0=noFriction, 1=Normal Walking, >1 = Slow Walking
 
@@ -29,7 +29,7 @@ public abstract class Block {
 		return explosion_resistance;
 	}
 
-	public float getLightEmitted(BlockFace face) {
+	public int getLightEmitted(BlockFace face) {
 		return light_emission;
 	}
 

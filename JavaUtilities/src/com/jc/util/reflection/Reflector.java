@@ -153,7 +153,7 @@ public class Reflector<E> {
 	public ReflectedMethod<E> getMethod(String name) {
 		Method[] ms = clazz.getDeclaredMethods();
 		for(Method m : ms) {
-			if(m.getName() == name) {
+			if(m.getName().equals(name)) {
 				return new ReflectedMethod<E>(clazz,m,this);
 			}
 		}
@@ -166,7 +166,7 @@ public class Reflector<E> {
 	public ReflectedMethod<E> getMethod(String name,int paramcount) {
 		Method[] ms = clazz.getDeclaredMethods();
 		for(Method m : ms) {
-			if(m.getName() == name && m.getParameterCount() == paramcount) {
+			if(m.getName().equals(name) && m.getParameterCount() == paramcount) {
 				return new ReflectedMethod<E>(clazz,m,this);
 			}
 		}
@@ -180,7 +180,7 @@ public class Reflector<E> {
 	public ReflectedMethod<E> getMethod(String name,int paramcount, Class<?> returntype) {
 		Method[] ms = clazz.getDeclaredMethods();
 		for(Method m : ms) {
-			if(m.getName() == name && m.getParameterCount() == paramcount && m.getReturnType() == returntype) {
+			if(m.getName().equals(name) && m.getParameterCount() == paramcount && m.getReturnType() == returntype) {
 				return new ReflectedMethod<E>(clazz,m,this);
 			}
 		}

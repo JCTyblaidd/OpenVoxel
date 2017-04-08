@@ -4,6 +4,8 @@ import net.openvoxel.client.renderer.gl3.util.OGL3FrameBufferObject;
 
 /**
  * Created by James on 28/08/2016.
+ *
+ * Utility : GBuffer Renderer
  */
 public class OGL3GBufferManager {
 

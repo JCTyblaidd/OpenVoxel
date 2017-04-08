@@ -75,6 +75,14 @@
             <scope>compile</scope>
         </dependency>
 
+	    <!--
+	    <dependency> JavaAssist : Netty Perf Boost
+		    <groupId>org.javaassist</groupId>
+		    <artifactId>javaassist</artifactId>
+		    <version>LATEST</version>
+	    </dependency>
+		-->
+
         <dependency><!--ObjectWeb ASM-->
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>

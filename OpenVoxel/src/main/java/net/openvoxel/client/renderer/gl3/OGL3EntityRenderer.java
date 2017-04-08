@@ -6,6 +6,8 @@ import javax.vecmath.Matrix4f;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * OpenGL 3 - Renderer
  */
 public class OGL3EntityRenderer implements EntityRenderer{
 	@Override
@@ -19,7 +21,7 @@ public class OGL3EntityRenderer implements EntityRenderer{
 	}
 
 	@Override
-	public void drawBuffer(float[] posarray, float[] uvarray) {
+	public void drawBuffer(float[] posArray, float[] uvArray) {
 
 	}
 

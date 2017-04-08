@@ -7,6 +7,8 @@ import javax.vecmath.Matrix4f;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * GUI Rendering Handler
  */
 public interface GUIRenderer {
 

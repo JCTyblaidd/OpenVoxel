@@ -22,7 +22,7 @@ public class RenderThread implements Runnable{
 	private PerSecondTimer FPS_TIMER;
 
 	public static void Start() {
-		if(INSTANCE != null) {
+		if(INSTANCE == null) {
 			INSTANCE = new RenderThread();
 			INSTANCE.start();
 		}else{
@@ -33,7 +33,6 @@ public class RenderThread implements Runnable{
 	private RenderThread() {
 		thread = new Thread(this,"OpenVoxel: Render Thread");
 		FPS_TIMER = new PerSecondTimer(64);//Very Volatile Value//
-		thread.setPriority(Thread.MAX_PRIORITY);//EXTREMELY IMPORTANT
 	}
 
 	/**
@@ -43,7 +42,7 @@ public class RenderThread implements Runnable{
 		return INSTANCE.FPS_TIMER.getPerSecond();
 	}
 
-	void start() {
+	private void start() {
 		thread.start();
 	}
 
@@ -54,7 +53,7 @@ public class RenderThread implements Runnable{
 		WorldRenderer worldRenderer = renderer.getWorldRenderer();
 		GUIRenderer guiRenderer = renderer.getGUIRenderer();
 		renderer.loadPostRenderThread();
-		while(inst.isRunning) {
+		while(inst.isRunning.get()) {
 			//Call Render Functionality//
 
 			//Render World + entity(included)//
@@ -75,6 +74,7 @@ public class RenderThread implements Runnable{
 				synchronized (GUI.class) {
 					GUI.getStack().descendingIterator().forEachRemaining(guiRenderer::DisplayScreen);
 				}
+				//Debug Screen Renderer//
 				guiRenderer.DisplayScreen(ScreenDebugInfo.instance);
 			}catch (Exception e) {
 				CrashReport crashReport = new CrashReport("Exception Drawing GUI").caughtException(e);

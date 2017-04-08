@@ -1,6 +1,7 @@
 package net.openvoxel.networking.packet.protocol;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.networking.protocol.AbstractPacket;
 import net.openvoxel.networking.protocol.ReadOnlyBuffer;
 import net.openvoxel.networking.protocol.WriteOnlyBuffer;

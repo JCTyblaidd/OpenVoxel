@@ -4,8 +4,6 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
-import org.lwjgl.stb.STBImageResize;
-import org.lwjgl.system.jemalloc.JEmalloc;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -28,7 +26,7 @@ public class STBITexture {
 	public ByteBuffer pixels;
 
 	/**
-	 * Fix for stbi_load_from_memory since the buffer size repoted is incorrect
+	 * Fix for stbi_load_from_memory since the buffer size reported is incorrect
 	 */
 	private ByteBuffer _correctSTBIMem(ByteBuffer buffer,IntBuffer x,IntBuffer y, IntBuffer comp,int req_comp) {
 		if ( CHECKS ) {

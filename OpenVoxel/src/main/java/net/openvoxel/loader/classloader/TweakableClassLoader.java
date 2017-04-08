@@ -1,6 +1,9 @@
 package net.openvoxel.loader.classloader;
 
 
+import com.jc.util.reflection.Reflect;
+import com.jc.util.reflection.Reflector;
+import com.sun.deploy.util.NativeLibraryBundle;
 import net.openvoxel.api.logger.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -9,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 import java.util.stream.Stream;
 
 /**
@@ -22,7 +26,6 @@ public class TweakableClassLoader extends ClassLoader{
 
 	private List<IASMTransformer> transformers;
 	private List<IBytecodeSource> sources;
-	private Class<?> loaderClass;
 
 	public void unregisterAllTransformers() {
 		transformers.clear();
@@ -55,6 +58,22 @@ public class TweakableClassLoader extends ClassLoader{
 		return transformers.size();
 	}
 
+	@SuppressWarnings("unchecked")
+	public void unloadLibraries() {
+		Object libraries = Reflect.on(this).get("nativeLibraries");
+		Vector<Object> classLoaderLibraries = (Vector<Object>) libraries;
+		Reflector.ReflectedMethod unloadFunc = Reflect.byName("java.lang.ClassLoader$NativeLibrary").getMethod("finalize");
+		for(Object library : classLoaderLibraries) {
+			Logger.getLogger("ClassLoader").Info("Unloading: " + Reflect.on(library).get("name"));
+			try {
+				unloadFunc.invoke(library);
+			}catch(Exception ex) {
+				ex.printStackTrace();
+				System.exit(-1);
+			}
+		}
+	}
+
 	public interface IASMTransformer {
 		byte[] transform(byte[] values, String classID);
 	}
@@ -73,7 +92,7 @@ public class TweakableClassLoader extends ClassLoader{
 			if(stream != null) {
 				return stream;
 			}
-		}catch(Exception e) {}
+		}catch(Exception ignored) {}
 		//Iterate Through ByteCode Sources//
 		for(IBytecodeSource source : sources) {
 			try{
@@ -83,7 +102,7 @@ public class TweakableClassLoader extends ClassLoader{
 						return stream;
 					}
 				}
-			}catch(Exception e) {}
+			}catch(Exception ignored) {}
 		}
 		return null;
 	}
@@ -98,24 +117,21 @@ public class TweakableClassLoader extends ClassLoader{
 		}
 		try {
 			return findClass(name);
-		}catch (Exception e) {
+		}catch (Exception ex) {
 			try {
 				Logger.INSTANCE.Severe("Error Loading Class[Revert to System]: " + name);
-			}catch(Exception e2) {}
+			}catch(Exception ignored) {}
 			return getSystemClassLoader().loadClass(name);
 		}
 	}
 
 	private boolean forceSystem(String classID) {
-		if(classID.startsWith("sun.")) return true;
-		return false;
+		return classID.startsWith("sun.");
 	}
 
 	private boolean allowTweaks(String classID) {
 		if(classID.startsWith("net.openvoxel.loader.")) return false;
-		//if(classID.startsWith("sun.")) return false;  //Sun stuff is skipped altogether
-		if(classID.startsWith("java.")) return false;
-		return true;
+		return !classID.startsWith("java.");
 	}
 
 
