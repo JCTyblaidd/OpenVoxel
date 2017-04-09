@@ -1,16 +1,13 @@
 package net.openvoxel.launchwrapper;
 
 import com.jc.util.utils.ArgumentParser;
-import com.sun.javafx.util.WeakReferenceQueue;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.loader.classloader.SideSpecificTweaker;
 import net.openvoxel.loader.classloader.TweakableClassLoader;
 import net.openvoxel.loader.mods.ModDataLoader;
+import net.openvoxel.loader.optimizer.Optimizer;
 
 import java.io.File;
-import java.lang.ref.PhantomReference;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
@@ -64,6 +61,9 @@ class CommonLauncher {
 				mod_args[mod_args.length-1]=VanillaClass;
 				Logger.INSTANCE.Info("Added Vanilla");
 			}
+			if(argParser.hasFlag("optimizeBytecode")) {
+				TweakableClassLoader.INSTANCE.registerTransformer(new Optimizer(argParser));
+			}
 			if(argParser.hasFlag("noASM")) {//Allow Option of no ASM: for debug purposes
 				TweakableClassLoader.INSTANCE.unregisterAllTransformers();
 			}
@@ -72,7 +72,7 @@ class CommonLauncher {
 				clz.getConstructor(String[].class, String[].class, String[].class, boolean.class).newInstance(args, mod_args, asm_args, isClient);
 			}catch (InvocationTargetException ex) {
 				if(ex.getCause().getClass() == RuntimeException.class) {
-					if(ex.getCause().getMessage().equals("built_in_exception::mod_reload")) {
+					if(ex.getCause().getMessage().equals(ReloadExceptionKey)) {
 						Logger.getLogger("Loader").Info("Attempting Reload");
 						return true;
 					}else{

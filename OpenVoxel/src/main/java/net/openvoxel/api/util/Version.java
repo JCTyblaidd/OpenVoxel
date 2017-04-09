@@ -2,6 +2,8 @@ package net.openvoxel.api.util;
 
 /**
  * Created by James on 31/07/2016.
+ *
+ * Version Information
  */
 public class Version implements Comparable<Version>{
 

@@ -2,6 +2,8 @@ package net.openvoxel.launchwrapper;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Server Main Class
  */
 public class ServerLauncher {
 

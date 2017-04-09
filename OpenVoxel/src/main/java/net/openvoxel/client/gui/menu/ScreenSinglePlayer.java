@@ -3,10 +3,7 @@ package net.openvoxel.client.gui.menu;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui_framework.*;
 import net.openvoxel.files.FolderUtils;
-import net.openvoxel.files.GameSave;
 import net.openvoxel.server.LocalServer;
-
-import java.io.File;
 
 /**
  * Created by James on 11/09/2016.

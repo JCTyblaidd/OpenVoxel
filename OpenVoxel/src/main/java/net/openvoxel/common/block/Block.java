@@ -67,6 +67,10 @@ public abstract class Block {
 		return true;
 	}
 
+	public boolean isCompleteOpaque() {
+		return true;
+	}
+
 	//Use to optimize + check if the block should be updated
 	public boolean hasRandomBlockUpdates() {
 		return false;

@@ -1,6 +1,9 @@
 package net.openvoxel.client.gui.menu;
 
-import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.gui_framework.GUIObjectImage;
+import net.openvoxel.client.gui_framework.GUIProgressBar;
+import net.openvoxel.client.gui_framework.GUIText;
+import net.openvoxel.client.gui_framework.Screen;
 
 /**
  * Created by James on 14/09/2016.

@@ -1,6 +1,5 @@
 package net.openvoxel.client.renderer.gl3;
 
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;

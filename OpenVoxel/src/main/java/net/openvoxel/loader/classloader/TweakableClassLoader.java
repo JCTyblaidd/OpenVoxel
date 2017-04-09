@@ -3,7 +3,6 @@ package net.openvoxel.loader.classloader;
 
 import com.jc.util.reflection.Reflect;
 import com.jc.util.reflection.Reflector;
-import com.sun.deploy.util.NativeLibraryBundle;
 import net.openvoxel.api.logger.Logger;
 
 import java.io.ByteArrayInputStream;

@@ -1,4 +1,4 @@
-package net.openvoxel.server.dedicated;
+package net.openvoxel.server.util;
 
 import com.jc.util.format.json.JSON;
 import com.jc.util.format.json.JSONInteger;

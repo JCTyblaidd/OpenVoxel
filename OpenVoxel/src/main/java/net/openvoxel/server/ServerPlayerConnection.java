@@ -8,11 +8,8 @@ import net.openvoxel.api.login.UserData;
 import net.openvoxel.common.entity.living.player.EntityPlayerMP;
 import net.openvoxel.networking.packet.protocol.HandshakePacket;
 import net.openvoxel.networking.packet.protocol.JoinGamePacket;
-import net.openvoxel.networking.packet.protocol.LoadPacketRegistryPacket;
 import net.openvoxel.networking.packet.protocol.RequestPacketSync;
 import net.openvoxel.networking.packet.sync.RequestServerSyncPacket;
-import net.openvoxel.networking.packet.sync.SyncDetailedModInformationPacket;
-import net.openvoxel.networking.packet.sync.SyncLoadedModsHashPacket;
 import net.openvoxel.networking.packet.sync.SyncRegistryPacket;
 import net.openvoxel.networking.protocol.AbstractPacket;
 

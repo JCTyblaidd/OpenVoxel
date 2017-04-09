@@ -20,33 +20,31 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by James on 25/08/2016.
  *
- * Thread That Handles Game Logic
+ * Thread That Handles Asynchronously Initializing Game Logic
  */
-public class GameThread implements Runnable{
+public class GameLoaderThread implements Runnable{
 
-	public static GameThread INSTANCE;
+	private static GameLoaderThread INSTANCE;
 	private Thread thread;
-	private OpenVoxel openVoxel;
-	private PerSecondTimer tickTimer;
-	private Logger gameLogger = Logger.getLogger("Game Thread");
+	private Logger gameLogger = Logger.getLogger("Game Loader");
 	private AtomicBoolean hasLoadedMods = new AtomicBoolean(false);
 
-	public static void Start() {
-		INSTANCE = new GameThread();
+	public static void StartLoad() {
+		INSTANCE = new GameLoaderThread();
 		INSTANCE.thread.start();
 	}
 
-	public GameThread() {
-		thread = new Thread(this,"OpenVoxel: Game Logic Thread");
-		openVoxel = OpenVoxel.getInstance();
-		tickTimer = new PerSecondTimer();
+	public static void AwaitLoadFinish() {
+		INSTANCE.awaitModsLoaded();
+		INSTANCE = null;
 	}
 
-	private float getTicksPerSecond() {
-		return tickTimer.getPerSecond();
+	private GameLoaderThread() {
+		thread = new Thread(this,"OpenVoxel: Game Loader Thread");
 	}
 
-	private void initMods() {
+	@Override
+	public void run() {
 		if(Side.isClient) {
 			ScreenLoading loadingScreen = new ScreenLoading(6, ModLoader.getInstance().getModCount());
 			GUI.addScreen(loadingScreen);
@@ -55,19 +53,21 @@ public class GameThread implements Runnable{
 			ModLoader.getInstance().generateDependencyOrder();
 			gameLogger.Info("====Pre Init=====");
 			loadingScreen.startSection("Pre Initialization");
-			ModLoader.getInstance().propagateInitEvent(new ModPreInitialisationEvent(), "Pre Init", "Sending Pre-Initialisation Event to ");
+			ModLoader.getInstance().propagateInitEvent(new ModPreInitialisationEvent(), "Pre Init", "Sending Pre-Initialisation Event to ", loadingScreen);
 			gameLogger.Info("======Init======");
 			loadingScreen.startSection("Initialization");
-			ModLoader.getInstance().propagateInitEvent(new ModInitialisationEvent(), "Init", "Sending Initialisation Event to ");
+			ModLoader.getInstance().propagateInitEvent(new ModInitialisationEvent(), "Init", "Sending Initialisation Event to ", loadingScreen);
 			gameLogger.Info("====Post Init====");
 			loadingScreen.startSection("Post Initialization");
-			ModLoader.getInstance().propagateInitEvent(new ModPostInitialisationEvent(), "Post Init", "Sending Post-Initialisation Event to ");
+			ModLoader.getInstance().propagateInitEvent(new ModPostInitialisationEvent(), "Post Init", "Sending Post-Initialisation Event to ", loadingScreen);
 			gameLogger.Info("===Final Init====");
 			loadingScreen.startSection("Final Initialization");
-			ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(), "Final Init", "Sending Final-Initialisation Event to ");
+			ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(), "Final Init", "Sending Final-Initialisation Event to ", loadingScreen);
 			gameLogger.Info("===Load Textures===");
 			loadingScreen.startSection("Texture Loading");
 			OpenVoxel.getInstance().blockRegistry.clientRegisterAll(Renderer.getBlockTextureAtlas());
+			gameLogger.Info("Finished Initializing Game State");
+			GUI.removeAllScreens();
 		}else{
 			gameLogger.Info("Starting Mod Loading");
 			ModLoader.getInstance().generateDependencyOrder();
@@ -79,62 +79,17 @@ public class GameThread implements Runnable{
 			ModLoader.getInstance().propagateInitEvent(new ModPostInitialisationEvent(), "Post Init", "Sending Post-Initialisation Event to ");
 			gameLogger.Info("===Final Init====");
 			ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(), "Final Init", "Sending Final-Initialisation Event to ");
+			gameLogger.Info("Finished Initializing Game State");
 		}
 		hasLoadedMods.set(true);
 	}
 
-	public void awaitModsLoaded() {
+	private void awaitModsLoaded() {
 		while(!hasLoadedMods.get()) {
 			Thread.yield();
 			try {
 				Thread.sleep(100);
-			} catch (InterruptedException e) {}
-		}
-	}
-
-
-	private void initSide() {
-		if(Side.isClient) {
-			gameLogger.Info("Finished");
-			GUI.removeAllScreens();
-			GUI.addScreen(new ScreenMainMenu());
-		}else{
-			gameLogger.Info("Starting Server Hosting");
-		}
-	}
-
-	private void runGameLogic() {
-		Server server = OpenVoxel.getServer();
-		if(server != null) {
-			server.gameLogicTick();
-		}
-	}
-
-	private static final int TICK_DELAY = 50;//1000 / 20;
-
-	@Override
-	public void run() {
-		initMods();
-		initSide();
-		long last_time = System.currentTimeMillis();
-		long current_time, time_taken, wait_time;
-		while(openVoxel.isRunning.get()) {
-			//Run Game Logic//
-			try{
-				runGameLogic();
-			}catch(Exception e) {
-				e.printStackTrace();
-			}
-			current_time = tickTimer.notifyEvent();
-			time_taken = last_time - current_time;
-			if(time_taken < TICK_DELAY) {
-				//The Thread Must Sleep//
-				wait_time = TICK_DELAY - time_taken;
-				try {
-					Thread.sleep(wait_time);
-				}catch(InterruptedException e) {}
-			}
-			last_time = System.currentTimeMillis();
+			} catch (InterruptedException ignored) {}
 		}
 	}
 }

@@ -1,6 +1,5 @@
 package net.openvoxel;
 
-import com.jc.util.event.EventSubscriber;
 import com.jc.util.utils.ArgumentParser;
 import net.openvoxel.api.logger.GLFWLogWrapper;
 import net.openvoxel.api.logger.LWJGLLogWrapper;
@@ -8,16 +7,15 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.logger.NettyLogWrapper;
 import net.openvoxel.api.login.UserData;
 import net.openvoxel.api.side.Side;
-import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.audio.ClientAudio;
 import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.control.Renderer;
+import net.openvoxel.client.gui.menu.ScreenMainMenu;
 import net.openvoxel.client.gui.menu.settings.ScreenSettings;
 import net.openvoxel.client.gui_framework.GUI;
-import net.openvoxel.client.keybindings.KeyManager;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
-import net.openvoxel.common.GameThread;
+import net.openvoxel.common.GameLoaderThread;
 import net.openvoxel.common.event.AbstractEvent;
 import net.openvoxel.common.event.EventBus;
 import net.openvoxel.common.event.EventListener;
@@ -35,10 +33,9 @@ import net.openvoxel.networking.protocol.PacketRegistry;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.server.RemoteServer;
 import net.openvoxel.server.Server;
-import net.openvoxel.server.dedicated.CommandInputThread;
+import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.system.Library;
 
 import java.io.File;
 import java.net.SocketAddress;
@@ -121,10 +118,17 @@ public class OpenVoxel implements EventListener{
 		currentServer = server;
 	}
 
-	//Initialize Client Connections -> Remove//
+	/**
+	 *
+	 * Connect to a hosted server
+	 *
+	 * @param address the address of the server
+	 */
 	public void clientConnectRemote(SocketAddress address) {
 		HostServer(new ClientServer(address));
 	}
+
+
 
 	/**
 	 * @return the current instance
@@ -231,25 +235,18 @@ public class OpenVoxel implements EventListener{
 		}else {
 			CommandInputThread.Start();
 		}
-		GameThread.Start();
+		GameLoaderThread.StartLoad();
+		if(isClient) {
+			//TODO: load config & resources
+		}else{
+			//TODO: load config
+		}
+		GameLoaderThread.AwaitLoadFinish();
 		if(!isClient) {
-			GameThread.INSTANCE.awaitModsLoaded();
 			Logger.getLogger("Dedicated Server").Info("Starting Server....");
 			HostServer(new RemoteServer(new GameSave(new File("dedicated_save"))));
 		}else{
-			eventBus.register(new EventListener() {
-				@SubscribeEvents
-				public void onEvent(KeyStateChangeEvent ev) {
-					if(ev.GLFW_KEY == GLFW.GLFW_KEY_ESCAPE && ev.GLFW_KEY_STATE == GLFW.GLFW_PRESS) {
-						//Conditionally Create Settings Menu//
-						if(currentServer != null) {
-							if(GUI.getStack().size() == 0) {
-								GUI.addScreen(new ScreenSettings());
-							}
-						}
-					}
-				}
-			});
+			GUI.addScreen(new ScreenMainMenu());
 		}
 		//Convert Bootstrap Thread Into InputPollThread if clientSide ELSE end the thread//
 		if(isClient) {

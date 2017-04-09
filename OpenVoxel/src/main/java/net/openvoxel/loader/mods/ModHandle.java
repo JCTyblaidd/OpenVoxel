@@ -1,13 +1,10 @@
 package net.openvoxel.loader.mods;
 
-import com.jc.util.reflection.Reflect;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.mods.*;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.common.event.init.ModInitEvent;
-import org.lwjgl.system.CallbackI;
-import sun.rmi.runtime.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

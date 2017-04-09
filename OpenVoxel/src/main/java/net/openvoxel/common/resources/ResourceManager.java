@@ -5,6 +5,8 @@ import java.util.Map;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Resource Management
  */
 public class ResourceManager {
 

@@ -1,6 +1,5 @@
 package net.openvoxel.server;
 
-import net.openvoxel.common.entity.living.player.EntityPlayerMP;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.ChunkCoordinate;
 import net.openvoxel.common.world.World;

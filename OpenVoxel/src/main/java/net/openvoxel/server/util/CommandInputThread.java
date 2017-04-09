@@ -1,4 +1,4 @@
-package net.openvoxel.server.dedicated;
+package net.openvoxel.server.util;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.server.Server;
