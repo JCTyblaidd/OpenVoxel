@@ -1,8 +1,6 @@
 package net.openvoxel.client.renderer.gl3.worldutil;
 
-import net.openvoxel.common.world.ChunkCoordinate;
-
-import java.util.HashMap;
+import net.openvoxel.collection.ChunkMap;
 
 /**
  * Created by James on 04/09/2016.
@@ -11,22 +9,22 @@ import java.util.HashMap;
  */
 public class OGL3CacheManager {
 
-	private static final HashMap<ChunkCoordinate,OGL3SubChunkCache[]> CACHE = new HashMap<>();
+	private static final ChunkMap<OGL3SubChunkCache[]> CACHE = new ChunkMap<>();
 	public static int currentWorld = -1;
 
-	public static OGL3SubChunkCache Load(ChunkCoordinate coordinate, int Y) {
+	public static OGL3SubChunkCache Load(int chunkX, int chunkZ, int Y) {
 		try{
-			return CACHE.get(coordinate)[Y];
+			return CACHE.get(chunkX,chunkZ)[Y];
 		}catch(NullPointerException e) {
 			return null;
 		}
 	}
 
-	public static OGL3SubChunkCache LoadCreate(ChunkCoordinate coordinate, int Y) {
-		OGL3SubChunkCache[] cacheArr = CACHE.get(coordinate);
+	public static OGL3SubChunkCache LoadCreate(int chunkX, int chunkZ, int Y) {
+		OGL3SubChunkCache[] cacheArr = CACHE.get(chunkX,chunkZ);
 		if(cacheArr == null) {
 			cacheArr = new OGL3SubChunkCache[16];
-			CACHE.put(coordinate,cacheArr);
+			CACHE.set(chunkX,chunkZ,cacheArr);
 			OGL3SubChunkCache newCache = new OGL3SubChunkCache();
 			cacheArr[Y] = newCache;
 			return newCache;
@@ -43,23 +41,22 @@ public class OGL3CacheManager {
 
 	/**
 	 * Clear Chunk Rendering Data
-	 * @param coordinate
 	 */
-	public static void Forget(ChunkCoordinate coordinate) {
-		OGL3SubChunkCache[] arr = CACHE.get(coordinate);
+	public static void Forget(int chunkX, int chunkZ) {
+		OGL3SubChunkCache[] arr = CACHE.get(chunkX,chunkZ);
 		if(arr != null) {
 			for (int i = 0; i < arr.length; i++) {
 				arr[i].kill();
 				arr[i] = null;
 			}
 		}
-		CACHE.remove(coordinate);
+		CACHE.remove(chunkX,chunkZ);
 	}
 
 	/**
 	 * Clear All Loaded Data
 	 */
 	public static void ForgetAll() {
-		CACHE.forEach((k,v) -> Forget(k));
+		//TODO: implement
 	}
 }

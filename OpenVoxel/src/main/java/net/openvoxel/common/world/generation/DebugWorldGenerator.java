@@ -1,9 +1,7 @@
 package net.openvoxel.common.world.generation;
 
-import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.resources.ResourceHandle;
-import net.openvoxel.common.world.Chunk;
-import net.openvoxel.common.world.ChunkCoordinate;
+import net.openvoxel.common.world.chunk.Chunk;
 import net.openvoxel.vanilla.VanillaBlocks;
 
 /**
@@ -14,13 +12,12 @@ import net.openvoxel.vanilla.VanillaBlocks;
 public class DebugWorldGenerator implements IWorldGenerator{
 
 	@Override
-	public Chunk generateChunk(ChunkCoordinate coordinate) {
-		Chunk chunk = new Chunk(coordinate);
-		int blockID = OpenVoxel.getInstance().blockRegistry.getIDFromBlock(VanillaBlocks.BLOCK_BRICKS);
+	public Chunk generateChunk(int xv, int zv) {
+		Chunk chunk = new Chunk(xv,zv);
 		for(int x = 0; x < 16; x++) {
 			for(int z = 0; z < 16; z++) {
 				for(int y = 0; y < 100; y++) {
-					chunk.setBlockAt(x,y,z,blockID,(byte)0);//Debug Data
+					chunk.setBlock(x,y,z,VanillaBlocks.BLOCK_BRICKS,(byte)0);
 				}
 			}
 		}
@@ -28,7 +25,7 @@ public class DebugWorldGenerator implements IWorldGenerator{
 	}
 
 	@Override
-	public ResourceHandle getSkymapResource() {
+	public ResourceHandle getSkyMapResource() {
 		return null;
 	}
 

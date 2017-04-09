@@ -1,9 +1,8 @@
 package net.openvoxel.common.world.generation;
 
 import net.openvoxel.common.resources.ResourceHandle;
-import net.openvoxel.common.world.Chunk;
-import net.openvoxel.common.world.ChunkCoordinate;
 import net.openvoxel.common.world.World;
+import net.openvoxel.common.world.chunk.Chunk;
 
 /**
  * Created by James on 25/08/2016.
@@ -12,7 +11,7 @@ import net.openvoxel.common.world.World;
  */
 public interface IWorldGenerator {
 
-	Chunk generateChunk(ChunkCoordinate coordinate);
+	Chunk generateChunk(int xCoord, int zCoord);
 
 	default float getGravity(World world) {
 		return 9.81F / 400.0F;
@@ -28,5 +27,5 @@ public interface IWorldGenerator {
 	}
 
 	//THIS HAS TO BE CONSTANT
-	ResourceHandle getSkymapResource();
+	ResourceHandle getSkyMapResource();
 }

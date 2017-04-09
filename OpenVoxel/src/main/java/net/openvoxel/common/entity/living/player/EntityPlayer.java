@@ -2,7 +2,6 @@ package net.openvoxel.common.entity.living.player;
 
 import net.openvoxel.common.entity.living.EntityLiving;
 import net.openvoxel.common.util.AABB;
-import net.openvoxel.server.player.PlayerNetworkInterface;
 
 /**
  * Created by James on 15/09/2016.
@@ -15,8 +14,6 @@ public abstract class EntityPlayer extends EntityLiving{
 	protected float eyeHeight;
 	protected float yaw;//0 = X+Direction
 	protected float pitch;//+ = up, - = down
-
-	private PlayerNetworkInterface networkInterface;
 
 	public EntityPlayer() {
 		this.maxHealth = 20;
@@ -43,7 +40,4 @@ public abstract class EntityPlayer extends EntityLiving{
 		return eyeHeight;
 	}
 
-	public PlayerNetworkInterface getNetworkInterface() {
-		return networkInterface;
-	}
 }

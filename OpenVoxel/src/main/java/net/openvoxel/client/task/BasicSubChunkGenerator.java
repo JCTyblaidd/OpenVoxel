@@ -15,6 +15,7 @@ public abstract class BasicSubChunkGenerator implements ISubChunkDataGenerator{
 	@Override
 	public void generate(BaseChunkRenderTask Data, int subChunk) {
 		WorldRenderer.WorldBlockRenderer blockRenderer = getRenderer();
+		/**
 		BaseChunkRenderTask.RenderBlockAccess blockAccess = Data.createAccess(0,0,0);
 		//Lock All 4 Side Chunks//
 		final int yMin = subChunk*16;
@@ -28,6 +29,7 @@ public abstract class BasicSubChunkGenerator implements ISubChunkDataGenerator{
 				}
 			}
 		}
+		 **/
 		RenderFinished(Data,subChunk);
 	}
 

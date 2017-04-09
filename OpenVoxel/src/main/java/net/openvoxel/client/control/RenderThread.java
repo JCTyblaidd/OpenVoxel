@@ -7,7 +7,9 @@ import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
+import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.World;
+import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
 
 /**
@@ -54,20 +56,20 @@ public class RenderThread implements Runnable{
 		GUIRenderer guiRenderer = renderer.getGUIRenderer();
 		renderer.loadPostRenderThread();
 		while(inst.isRunning.get()) {
-			//Call Render Functionality//
-
-			//Render World + entity(included)//
+			//Render World//
 			try {
-				if(OpenVoxel.getInstance().currentServer != null) {
-					World world = OpenVoxel.getInstance().currentServer.getMyWorld();
-					if (world != null) {//IGNORE IF WORLD DOESN'T EXIST
-						worldRenderer.renderWorld(world);// TODO: 25/08/2016 Work Out Chunk Unload and Load
+				ClientServer clientServer = OpenVoxel.getClientServer();
+				if(clientServer != null) {
+					EntityPlayerSP renderTarget = clientServer.getThePlayer();
+					if(renderTarget != null && renderTarget.currentWorld != null) {
+						worldRenderer.renderWorld(renderTarget,renderTarget.currentWorld);
 					}
 				}
 			}catch (Exception e) {
 				e.printStackTrace();
+				CrashReport crashReport = new CrashReport("Exception Drawing World").caughtException(e);
+				OpenVoxel.reportCrash(crashReport);
 			}
-
 			//Render GUI//
 			try {
 				guiRenderer.beginDraw();
@@ -80,7 +82,6 @@ public class RenderThread implements Runnable{
 				CrashReport crashReport = new CrashReport("Exception Drawing GUI").caughtException(e);
 				OpenVoxel.reportCrash(crashReport);
 			}
-
 			//Finish//
 			renderer.nextFrame();
 			FPS_TIMER.notifyEvent();

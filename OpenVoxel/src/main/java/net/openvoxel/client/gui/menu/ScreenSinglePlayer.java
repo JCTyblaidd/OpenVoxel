@@ -34,8 +34,10 @@ public class ScreenSinglePlayer extends Screen{
 		loadGameBG.setSize(1,1,0,-100);
 		debugGame.setCentered(400,30);
 		debugGame.setAction(e -> {
-			LocalServer myServer = new LocalServer(FolderUtils.newSave("debug55"),false);
-			OpenVoxel.getInstance().HostServer(myServer);
+			LocalServer myServer = new LocalServer(FolderUtils.newSave("debug55"));
+			OpenVoxel.getInstance().SetCurrentServer(myServer);
+			myServer.start(2500);
+			OpenVoxel.getInstance().clientConnectLocal();
 			GUI.removeAllScreens();
 		});
 

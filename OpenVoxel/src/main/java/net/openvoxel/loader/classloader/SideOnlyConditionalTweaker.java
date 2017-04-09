@@ -45,6 +45,7 @@ public class SideOnlyConditionalTweaker extends ClassNodeTweaker{
 		}
 	}
 
+	/**
 	//TEST CLASS FOR LOOKING AT BYTECODE
 	public void fun() {
 		if(Side.isClient) {
@@ -60,6 +61,6 @@ public class SideOnlyConditionalTweaker extends ClassNodeTweaker{
 			modify(null);
 		}
 	}
-
+	**/
 
 }

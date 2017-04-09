@@ -50,8 +50,7 @@ public class OGL3DisplayHandle implements DisplayHandle, EventListener{
 
 	@Override
 	public void pollEvents() {
-		glfwPollEvents();
-		//glfwWaitEventsTimeout(0.01F);
+		glfwWaitEventsTimeout(1.0 / 60.0);
 		if(glfwWindowShouldClose(window)) {
 			OpenVoxel.getInstance().AttemptShutdownSequence(false);
 		}

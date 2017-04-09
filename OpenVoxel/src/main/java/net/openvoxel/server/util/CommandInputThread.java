@@ -44,7 +44,7 @@ public class CommandInputThread implements Runnable{
 	private void handleCmd(String cmd) {
 		Server server = OpenVoxel.getServer();
 		if(server != null) {
-			server.callCommand(new Command(cmd));
+			//server.callCommand(new Command(cmd));
 		}
 	}
 }

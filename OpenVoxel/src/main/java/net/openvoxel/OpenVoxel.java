@@ -7,20 +7,18 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.logger.NettyLogWrapper;
 import net.openvoxel.api.login.UserData;
 import net.openvoxel.api.side.Side;
+import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.audio.ClientAudio;
 import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui.menu.ScreenMainMenu;
-import net.openvoxel.client.gui.menu.settings.ScreenSettings;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 import net.openvoxel.common.GameLoaderThread;
 import net.openvoxel.common.event.AbstractEvent;
 import net.openvoxel.common.event.EventBus;
 import net.openvoxel.common.event.EventListener;
-import net.openvoxel.common.event.SubscribeEvents;
-import net.openvoxel.common.event.input.KeyStateChangeEvent;
 import net.openvoxel.common.event.window.ProgramShutdownEvent;
 import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import net.openvoxel.common.registry.RegistryBlocks;
@@ -31,11 +29,10 @@ import net.openvoxel.files.GameSave;
 import net.openvoxel.loader.mods.ModLoader;
 import net.openvoxel.networking.protocol.PacketRegistry;
 import net.openvoxel.server.ClientServer;
-import net.openvoxel.server.RemoteServer;
+import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
 import java.net.SocketAddress;
@@ -73,9 +70,16 @@ public class OpenVoxel implements EventListener{
 	private static OpenVoxel instance;
 
 	/**
-	 * Currently Enabled Server
+	 * Currently Running Standard Server
 	 */
 	public Server currentServer = null;
+
+	/**
+	 * Currently Handled Client Server View
+	 */
+	@SideOnly(side = Side.CLIENT)
+	public ClientServer currentClientServer = null;
+
 	/**
 	 * The ID <-> Name <-> Packet Registry,
 	 * Automatically Synchronised on connection to a (non-local) server
@@ -109,7 +113,7 @@ public class OpenVoxel implements EventListener{
 	 * Client Server => Connect
 	 * @param server
 	 */
-	public void HostServer(Server server) {
+	public void SetCurrentServer(Server server) {
 		if(currentServer != null) {
 			Logger.getLogger("OpenVoxel").Severe("Running Server Was Not Shutdown Correctly");
 			CrashReport crashReport = new CrashReport("Server Was Hosted But The Old One Has Not Shutdown");
@@ -125,9 +129,17 @@ public class OpenVoxel implements EventListener{
 	 * @param address the address of the server
 	 */
 	public void clientConnectRemote(SocketAddress address) {
-		HostServer(new ClientServer(address));
+		currentClientServer = new ClientServer();
+		//TODO: implement connect
 	}
 
+	/**
+	 *  Connect to the currently hosted integrated server
+	 */
+	public void clientConnectLocal() {
+		currentClientServer = new ClientServer();
+		//TODO: implement connect
+	}
 
 
 	/**
@@ -149,6 +161,14 @@ public class OpenVoxel implements EventListener{
 	 */
 	public static Server getServer() {
 		return instance.currentServer;
+	}
+
+	/**
+	 * @return the current server view from the client
+	 */
+	@SideOnly(side = Side.CLIENT)
+	public static ClientServer getClientServer() {
+		return instance.currentClientServer;
 	}
 
 	/**
@@ -244,7 +264,8 @@ public class OpenVoxel implements EventListener{
 		GameLoaderThread.AwaitLoadFinish();
 		if(!isClient) {
 			Logger.getLogger("Dedicated Server").Info("Starting Server....");
-			HostServer(new RemoteServer(new GameSave(new File("dedicated_save"))));
+			SetCurrentServer(new DedicatedServer(new GameSave(new File("dedicated_save"))));
+			currentServer.start(2500);
 		}else{
 			GUI.addScreen(new ScreenMainMenu());
 		}
@@ -252,14 +273,7 @@ public class OpenVoxel implements EventListener{
 		if(isClient) {
 			DisplayHandle handle = Renderer.renderer.getDisplayHandle();
 			while(isRunning.get()) {
-				//GLFW Requires polling from the main thread
 				handle.pollEvents();
-				try {
-					Thread.sleep(16);//RoundDown from 1000 / 60 (60 Polls Per Second) todo: convert to per second util
-				} catch (InterruptedException e) {
-					//Thread Interrupted
-					Logger.getLogger("Poll Thread").Warning("Thread Interrupted");
-				}
 			}
 		}
 		if(instance.flagReload.get() && isClient) {

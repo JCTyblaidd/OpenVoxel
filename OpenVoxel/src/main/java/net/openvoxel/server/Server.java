@@ -3,42 +3,53 @@ package net.openvoxel.server;
 import com.jc.util.stream.utils.Producer;
 import io.netty.channel.SimpleChannelInboundHandler;
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.side.Side;
-import net.openvoxel.api.side.SideOnly;
-import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.common.world.World;
+import net.openvoxel.networking.ServerNetworkHandler;
 import net.openvoxel.networking.protocol.AbstractPacket;
-import net.openvoxel.utility.Command;
+import net.openvoxel.utility.AsyncRunnablePool;
+import net.openvoxel.utility.CrashReport;
+
+import java.io.IOException;
 
 /**
- * Created by James on 25/08/2016.
+ * Created by James on 09/04/2017.
  *
- * Base Server Class
+ * Standard Server Base Class
  */
-public abstract class Server implements Producer<SimpleChannelInboundHandler<AbstractPacket>> {
+public class Server extends BaseServer implements Producer<SimpleChannelInboundHandler<AbstractPacket>> {
 
-	public abstract void host(int PORT);
+	private AsyncRunnablePool asyncExecutionService;
+	private ServerNetworkHandler serverNetworkHandler;
 
 	public Server() {
-		OpenVoxel.getInstance().packetRegistry.generateDefaultMappings();
+		asyncExecutionService = new AsyncRunnablePool("server_update",4);
+		serverNetworkHandler = new ServerNetworkHandler(this);
 	}
 
-	public abstract World getWorldAtDimension(int dimensionID);
+	public void start(int port) {
+		super.start();
+		try {
+			serverNetworkHandler.Host(port);
+		}catch(IOException ex) {
+			CrashReport crashReport = new CrashReport("Error Starting Server").caughtException(ex);
+			OpenVoxel.reportCrash(crashReport);
+		}
+	}
 
-	public abstract boolean isRemote();
-
-	public abstract void callCommand(Command command);
-
-	//Client Side Only, get the world I Am In
-	@SideOnly(side= Side.CLIENT)
-	public abstract World getMyWorld();
-
-	@SideOnly(side = Side.CLIENT)
-	public abstract EntityPlayerSP getMyPlayer();
-
-	/**Only To Be Called From The Game Logic Thread*/
-	public abstract void gameLogicTick();
+	public void shutdown() {
+		super.shutdown();
+		asyncExecutionService.stop();
+	}
 
 	@Override
-	public abstract SimpleChannelInboundHandler<AbstractPacket> create();
+	public SimpleChannelInboundHandler<AbstractPacket> create() {
+		return new ServerPlayerConnection(this);
+	}
+
+	@Override
+	public void run() {
+		dimensionMap.forEachValue(world -> {
+			asyncExecutionService.addWork(world::gameLogicTick);
+			return true;
+		});
+	}
 }

@@ -3,15 +3,16 @@ package net.openvoxel.client.task;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.util.BlockFace;
-import net.openvoxel.common.world.Chunk;
-import net.openvoxel.common.world.ChunkCoordinate;
 import net.openvoxel.common.world.World;
+import net.openvoxel.common.world.chunk.Chunk;
 
 /**
  * Created by James on 02/09/2016.
+ *
+ * Chunk Regeneration Task
  */
 public abstract class BaseChunkRenderTask implements Runnable{
-
+/**
 	public World world;
 	public Chunk mainChunk;
 	public Chunk chunk_ZPlus;
@@ -24,7 +25,7 @@ public abstract class BaseChunkRenderTask implements Runnable{
 	public Chunk chunk_XMinus_ZMinus;
 	public ISubChunkDataGenerator generator;
 
-	public BaseChunkRenderTask(World world, ChunkCoordinate coordinate, ISubChunkDataGenerator generator) {
+	public BaseChunkRenderTask(World world, int chunkX, int chunkZ, ISubChunkDataGenerator generator) {
 		this.world = world;
 		this.generator = generator;
 		//TODO: loadChunks
@@ -53,6 +54,7 @@ public abstract class BaseChunkRenderTask implements Runnable{
 			xpos=X;ypos=Y;zpos=Z;
 		}
 		private void loadCache() {
+			/**
 			loadFailed = false;
 			int vX = xpos / 16;
 			int vZ = zpos / 16;
@@ -94,6 +96,8 @@ public abstract class BaseChunkRenderTask implements Runnable{
 				loadFailed = true;
 			}
 			hasCache = false;
+			 **/
+/**
 		}
 
 		@Override
@@ -142,5 +146,5 @@ public abstract class BaseChunkRenderTask implements Runnable{
 			return new RenderBlockAccess(task,xpos+face.xOffset,ypos+face.yOffset,zpos+face.zOffset);
 		}
 	}
-
+**/
 }

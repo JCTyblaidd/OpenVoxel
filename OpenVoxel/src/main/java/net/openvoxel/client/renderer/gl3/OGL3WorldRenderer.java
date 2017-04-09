@@ -4,9 +4,11 @@ import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.gl3.worldutil.OGL3CacheManager;
-import net.openvoxel.common.world.Chunk;
+import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.common.world.World;
+import net.openvoxel.common.world.chunk.Chunk;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +34,20 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		cacheManager = new OGL3CacheManager();
 	}
 
-	private List<Chunk> pollAndRequestUpdatesForNearbyChunks(World world) {
-		return null;
+	private List<Chunk> pollAndRequestUpdatesForNearbyChunks(EntityPlayerSP player,World world) {
+		int playerChunkX = (int)(player.xPos / 16);
+		int playerChunkZ = (int)(player.zPos / 16);
+		int xMin = playerChunkX - 20;
+		int xMax = playerChunkX + 20;
+		int zMin = playerChunkZ - 20;
+		int zMax = playerChunkZ + 20;
+		List<Chunk> chunks = new ArrayList<>();
+		for(int z = zMin; z <= zMax; z++) {
+			for(int x = xMin; x <= xMax; x++) {
+				chunks.add(world.requestChunk(x,z));
+			}
+		}
+		return chunks;
 	}
 
 	private void checkForSettingsChange() {
@@ -46,12 +60,12 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 
 
 	@Override
-	public void renderWorld(World world) {
-		List<Chunk> toRender = pollAndRequestUpdatesForNearbyChunks(world);
+	public void renderWorld(EntityPlayerSP player, World world) {
+		List<Chunk> toRender = pollAndRequestUpdatesForNearbyChunks(player,world);
 		checkForSettingsChange();
 		if(currentSettings.useDeferredPipeline) {
 			//Deferred//
-
+			
 		}else{
 			//Standard Pipeline//
 			

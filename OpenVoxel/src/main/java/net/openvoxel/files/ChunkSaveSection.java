@@ -2,9 +2,10 @@ package net.openvoxel.files;
 
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import javafx.util.Pair;
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.common.world.Chunk;
-import net.openvoxel.common.world.ChunkCoordinate;
+import net.openvoxel.collection.ChunkMap;
+import net.openvoxel.common.world.chunk.Chunk;
 import net.openvoxel.utility.CrashReport;
 
 import java.io.File;
@@ -22,9 +23,9 @@ import java.util.Set;
 public class ChunkSaveSection {
 
 	private File dataFile;
-	private Set<ChunkCoordinate> requiredCoordinates;
+	private Set<Pair<Integer,Integer>> requiredCoordinates;
 	private RandomAccessFile randomAccessFile;
-	private TObjectIntMap<ChunkCoordinate> offsetMap;
+	private ChunkMap<Integer> offsetMap;
 	private int entityOffsetMap;
 	private int entityByteSize;
 	private int lastChunkData;
@@ -32,7 +33,7 @@ public class ChunkSaveSection {
 	ChunkSaveSection(File ref) {
 		this.dataFile = ref;
 		requiredCoordinates = new HashSet<>();
-		offsetMap = new TObjectIntHashMap<>();
+		offsetMap = new ChunkMap<>();
 		if(!this.dataFile.exists()) {
 			try {
 				this.dataFile.createNewFile();
@@ -59,8 +60,7 @@ public class ChunkSaveSection {
 			for (int xDiff = 0; xDiff < 32; xDiff++) {
 				for (int zDiff = 0; zDiff < 32; zDiff++) {
 					int offset = randomAccessFile.readInt();
-					ChunkCoordinate coordinate = new ChunkCoordinate(xDiff,zDiff);
-					offsetMap.put(coordinate,offset);
+					offsetMap.set(xDiff,zDiff,offset);
 				}
 			}
 			entityOffsetMap = randomAccessFile.read();
@@ -86,13 +86,14 @@ public class ChunkSaveSection {
 		}
 	}
 
-	boolean hasChunk(ChunkCoordinate coordinate) {
-		return offsetMap.get(coordinate) != -1;
+	boolean hasChunk(int xCoord, int zCoord) {
+		return offsetMap.get(xCoord,zCoord) != -1;
 	}
 
 	private ByteBuffer dataCache = ByteBuffer.allocate(16*16*256);
 
-	Chunk loadChunk(ChunkCoordinate coordinate) {
+	Chunk loadChunk(int xCoord, int zCoord) {
+		/**
 		int offset = offsetMap.get(coordinate);
 		try {
 			if(offset < 1) {
@@ -112,17 +113,21 @@ public class ChunkSaveSection {
 			OpenVoxel.reportCrash(crashReport);
 			return null;
 		}
+		 **/
+		return null;
 	}
 
 	void saveChunk(Chunk chunk) {
+		/**
 		int offset = offsetMap.get(chunk.coordinate);
 		if(offset < 1) {
 			//Allocate Area//
 		}
+		 **/
 	}
 
-	void unloadChunk(ChunkCoordinate coordinate) {
-		requiredCoordinates.remove(coordinate);
+	void unloadChunk(int x, int z) {
+		requiredCoordinates.remove(new Pair<>(x,z));
 	}
 
 	int getChunkCount() {

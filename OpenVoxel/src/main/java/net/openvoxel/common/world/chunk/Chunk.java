@@ -38,6 +38,19 @@ public class Chunk {
 
 	private List<Entity> entities = new ArrayList<>();
 
+
+	public final int chunkX;
+
+	public final int chunkZ;
+
+	public Chunk(int x, int z) {
+		this.chunkX = x;
+		this.chunkZ = z;
+		for(int i = 0; i < 16; i++) {
+			chunkSections[i] = new ChunkSection();
+		}
+	}
+
 	public int getHeightAt(int x, int z) {
 		return Byte.toUnsignedInt(heightMap.get(x * 16 + z));
 	}

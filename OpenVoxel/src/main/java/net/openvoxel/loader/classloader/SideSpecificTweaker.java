@@ -17,20 +17,20 @@ import java.util.List;
  */
 public class SideSpecificTweaker extends ClassNodeTweaker {
 
-	public boolean ClientSide;
+	private boolean ClientSide;
 
 	public SideSpecificTweaker(boolean Client) {
 		ClientSide = Client;
 	}
 
 
-	@SuppressWarnings("all")
+	@SuppressWarnings("unchecked")
 	public void modify(ClassNode node) {
 		//Entire Class//
 		if(shouldClassShell(node)) {
 			node.fields.clear();
 			for(MethodNode methodNode : (List<MethodNode>)node.methods) {
-				makeMethodUseless(methodNode);
+				ClassNodeUtilities.MakeMethodUseless(methodNode);
 			}
 			return;
 		}
@@ -54,6 +54,7 @@ public class SideSpecificTweaker extends ClassNodeTweaker {
 		node.fields.remove(removedFields);
 	}
 
+	@SuppressWarnings("unchecked")
 	private boolean shouldClassShell(ClassNode node) {
 		if(node.visibleAnnotations == null) return false;
 		for(AnnotationNode annotation : (List<AnnotationNode>)node.visibleAnnotations) {
@@ -89,7 +90,7 @@ public class SideSpecificTweaker extends ClassNodeTweaker {
 	}
 
 	/**@return should remove**/
-	@SuppressWarnings("all")
+	@SuppressWarnings("unchecked")
 	private boolean modifyMethod(MethodNode node) {
 		if(node.visibleAnnotations == null) return false;
 		for(AnnotationNode annotation : (List<AnnotationNode>)node.visibleAnnotations) {
@@ -112,7 +113,7 @@ public class SideSpecificTweaker extends ClassNodeTweaker {
 				if(side == Side.CLIENT) {
 					if(!ClientSide) {
 						if(operation == SideOnly.SideOperation.REMOVE_CODE) {
-							makeMethodUseless(node);
+							ClassNodeUtilities.MakeMethodUseless(node);
 							return false;
 						}else {
 							return true;
@@ -121,7 +122,7 @@ public class SideSpecificTweaker extends ClassNodeTweaker {
 				}else {
 					if(ClientSide) {
 						if(operation == SideOnly.SideOperation.REMOVE_CODE) {
-							makeMethodUseless(node);
+							ClassNodeUtilities.MakeMethodUseless(node);
 							return false;
 						}else {
 							return true;
@@ -134,7 +135,7 @@ public class SideSpecificTweaker extends ClassNodeTweaker {
 	}
 
 	/**@return should remove**/
-	@SuppressWarnings("all")
+	@SuppressWarnings("unchecked")
 	private boolean modifyField(FieldNode node) {
 		if(node.visibleAnnotations == null) return false;
 		for(AnnotationNode annotation : (List<AnnotationNode>)node.visibleAnnotations) {
@@ -170,40 +171,4 @@ public class SideSpecificTweaker extends ClassNodeTweaker {
 	}
 
 
-	private void makeMethodUseless(MethodNode node) {
-		Type return_type = Type.getReturnType(node.desc);
-		node.instructions.clear();
-		if(return_type == Type.VOID_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.RETURN));
-			return;
-		}else if(return_type == Type.BOOLEAN_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.ICONST_0));
-			node.instructions.add(new InsnNode(Opcodes.IRETURN));
-		}else if(return_type == Type.BYTE_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.ICONST_0));
-			node.instructions.add(new InsnNode(Opcodes.IRETURN));
-		}else if(return_type == Type.CHAR_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.ICONST_0));
-			node.instructions.add(new InsnNode(Opcodes.IRETURN));
-		}else if(return_type == Type.SHORT_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.ICONST_0));
-			node.instructions.add(new InsnNode(Opcodes.IRETURN));
-		}else if(return_type == Type.INT_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.ICONST_0));
-			node.instructions.add(new InsnNode(Opcodes.IRETURN));
-		}else if(return_type == Type.LONG_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.LCONST_0));
-			node.instructions.add(new InsnNode(Opcodes.LRETURN));
-		}else if(return_type == Type.FLOAT_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.FCONST_0));
-			node.instructions.add(new InsnNode(Opcodes.FRETURN));
-		}else if(return_type == Type.DOUBLE_TYPE) {
-			node.instructions.add(new InsnNode(Opcodes.DCONST_0));
-			node.instructions.add(new InsnNode(Opcodes.DRETURN));
-		}else {
-			node.instructions.add(new InsnNode(Opcodes.ACONST_NULL));
-			node.instructions.add(new InsnNode(Opcodes.ARETURN));
-			return;
-		}
-	}
 }
