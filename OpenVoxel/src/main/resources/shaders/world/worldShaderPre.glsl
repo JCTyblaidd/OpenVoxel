@@ -33,39 +33,37 @@ layout(std140) uniform FinalFrame {
 
     //Per Dimension Information//
     float dayProgress;//Current Day Progress//
-    mat3 dayProgressMatrix;
     float skyLightPower;//SkyLight Strength: 0->1//
+    mat3 dayProgressMatrix;
     vec3 dirSun;//Direction of light from the sun or the moon
     bool skyEnabled;//Sky Is Enabled//
     vec3 fogColour;//Distance Fog Colour//
     vec3 skyLightColour;//Colour of skyLight//
     bool isRaining;
     bool isThunder;
+    //Texture Uniform Information//
+    vec2 tileSize;
 } frame;
 
-layout(std140) uniform chunkConstants {
+layout(std140) uniform ChunkConstants {
     mat4 chunkPos;
 } chunkdata;
 
-layout(std140) uniform TextureAtlas {
-    sampler2D tDiffuse;//Block Diffuse//
-    sampler2D tNormal;//Normal Diffuse//
-    sampler2D tPBR;//Physically Based Rendering Information//
-    sampler2D itemDiffuse;//Item Diffuse Texture//
-    samplerCube skyMap;
-    vec2 tileSize;
-} atlas;
+uniform sampler2D tDiffuse;     //Block Diffuse//
+uniform sampler2D tNormal;      //Normal Diffuse//
+uniform sampler2D tPBR;         //Physically Based Rendering Information//
+uniform sampler2D itemDiffuse;  //Item Diffuse Texture//
+uniform samplerCube skyMap;     //Sky Background Map
+uniform sampler2D shadow1;      //Shadow Map Cascade1
+uniform sampler2D shadow2;      //Shadow Map Cascade2
+uniform sampler2D shadow3;      //Shadow Map Cascade3
 
-layout(std140) uniform ShadowMap {
-    sampler2D shadow1;
-    sampler2D shadow2;
-    sampler2D shadow3;
-} shadowmap;
-
+/**
 vec3 sampleSky(in vec3 camSpaceDir) {
     vec3 worldSpaceDir = frame.dayProgressMatrix * frame.invCamNormMatrix * camSpaceDir;
-    return textureCube(atlas.skyMap,worldSpaceDir);
+    return textureCube(skyMap,worldSpaceDir);
 }
+**/
 
 /**Get The Real Block Light Value (taking into account world lighting)*/
 vec3 getRealLight(in vec4 lightDat) {

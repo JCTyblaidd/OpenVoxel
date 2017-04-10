@@ -1,8 +1,8 @@
-package net.openvoxel.common.world.generation;
+package net.openvoxel.world.generation;
 
 import net.openvoxel.common.resources.ResourceHandle;
-import net.openvoxel.common.world.World;
-import net.openvoxel.common.world.chunk.Chunk;
+import net.openvoxel.world.World;
+import net.openvoxel.world.chunk.Chunk;
 
 /**
  * Created by James on 25/08/2016.

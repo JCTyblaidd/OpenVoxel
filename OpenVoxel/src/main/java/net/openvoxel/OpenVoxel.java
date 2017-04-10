@@ -28,6 +28,7 @@ import net.openvoxel.files.FolderUtils;
 import net.openvoxel.files.GameSave;
 import net.openvoxel.loader.mods.ModLoader;
 import net.openvoxel.networking.protocol.PacketRegistry;
+import net.openvoxel.server.BackgroundClientServer;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.Server;
@@ -77,7 +78,7 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * Currently Handled Client Server View
 	 */
-	@SideOnly(side = Side.CLIENT)
+	//@SideOnly(side = Side.CLIENT)
 	public ClientServer currentClientServer = null;
 
 	/**
@@ -267,6 +268,9 @@ public class OpenVoxel implements EventListener{
 			SetCurrentServer(new DedicatedServer(new GameSave(new File("dedicated_save"))));
 			currentServer.start(2500);
 		}else{
+			blockRegistry.generateMappingsFromRaw();
+			currentClientServer = new BackgroundClientServer();
+			currentClientServer.start();
 			GUI.addScreen(new ScreenMainMenu());
 		}
 		//Convert Bootstrap Thread Into InputPollThread if clientSide ELSE end the thread//

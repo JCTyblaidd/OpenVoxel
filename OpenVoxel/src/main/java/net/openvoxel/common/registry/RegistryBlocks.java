@@ -47,7 +47,7 @@ public class RegistryBlocks {
 	/**
 	 * To Be Used In Rare Circumstances: Expected Only Use: Registry AIR
 	 */
-	public void registerBlockWithFixedID(int fixedID,String ID, Block block) {
+	private void registerBlockWithFixedID(int fixedID,String ID, Block block) {
 		registerBlock(ID,block);
 		fixed_id_map.put(block,fixedID);
 	}
@@ -59,7 +59,11 @@ public class RegistryBlocks {
 		return getIDFromBlock(getBlockFromName(name));
 	}
 	public Block getBlockFromID(int ID) {
-		return id_map.get(ID);
+		Block res =  id_map.get(ID);
+		if(res == null) {
+			res =  BlockAir.BLOCK_AIR;
+		}
+		return res;
 	}
 	public Block getBlockFromName(String name) {
 		return block_map.get(name);

@@ -3,8 +3,9 @@ package net.openvoxel.server;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.common.world.World;
-import net.openvoxel.common.world.generation.DebugWorldGenerator;
+import net.openvoxel.world.World;
+import net.openvoxel.world.client.ClientWorld;
+import net.openvoxel.world.generation.DebugWorldGenerator;
 import net.openvoxel.networking.ClientNetworkHandler;
 import net.openvoxel.networking.protocol.AbstractPacket;
 import net.openvoxel.utility.CrashReport;
@@ -20,22 +21,12 @@ import java.util.function.Consumer;
  */
 public class ClientServer extends BaseServer implements Consumer<AbstractPacket> {
 
-	private EntityPlayerSP thePlayer;
+	protected EntityPlayerSP thePlayer;
 
-	private ClientNetworkHandler serverConnection;
+	protected ClientNetworkHandler serverConnection;
 
 	public ClientServer() {
-		thePlayer = null;
-		serverConnection = new ClientNetworkHandler();
-		//DEBUG CODE TODO: remove and update
-		thePlayer = new EntityPlayerSP();
-		World theWorld = new World(new DebugWorldGenerator());
-		thePlayer.currentWorld = theWorld;
-		thePlayer.xPos = 0;
-		thePlayer.yPos = 140;
-		thePlayer.zPos = 0;
-		dimensionMap.put(0,theWorld);
-		//END OF DEBUG CODE
+
 	}
 
 	public void connectTo(SocketAddress address) throws IOException {
@@ -65,8 +56,8 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 		return thePlayer;
 	}
 
-	public World getTheWorld() {
-		return thePlayer.currentWorld;
+	public ClientWorld getTheWorld() {
+		return (ClientWorld)thePlayer.currentWorld;
 	}
 
 	@Override

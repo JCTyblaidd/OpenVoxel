@@ -1,6 +1,6 @@
 package net.openvoxel.common.event.load;
 
-import net.openvoxel.common.world.World;
+import net.openvoxel.world.World;
 import net.openvoxel.server.Server;
 
 /**

@@ -4,7 +4,7 @@ import com.jc.util.format.json.JSONDouble;
 import com.jc.util.format.json.JSONMap;
 import com.jc.util.format.json.JSONObject;
 import net.openvoxel.common.util.AABB;
-import net.openvoxel.common.world.World;
+import net.openvoxel.world.World;
 import net.openvoxel.server.Server;
 
 /**

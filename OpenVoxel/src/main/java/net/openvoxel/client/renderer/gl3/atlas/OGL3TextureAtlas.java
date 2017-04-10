@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 
 /**
  * Created by James on 16/09/2016.
@@ -43,6 +44,7 @@ public class OGL3TextureAtlas implements IconAtlas{
 	}
 
 	public void bind() {
+		/*
 		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_2D,tex_diffuse);
 		glActiveTexture(GL_TEXTURE11);
@@ -50,6 +52,14 @@ public class OGL3TextureAtlas implements IconAtlas{
 		glActiveTexture(GL_TEXTURE12);
 		glBindTexture(GL_TEXTURE_2D,tex_pbr);
 		glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0);
+		*/
+		//DEBUG//
+		//glActiveTexture(GL_TEXTURE10);
+		//glBindTexture(GL_TEXTURE_2D,tex_diffuse);
+		//System.out.println(glGetTexLevelParameteri(GL_TEXTURE_2D,0,GL_TEXTURE_WIDTH));
+		//System.out.println(glGetInteger(GL_TEXTURE_BINDING_2D));
+		//System.out.println(":"+tex_diffuse);
 	}
 
 	private int _getFormat(CompressionLevel level) {
@@ -92,35 +102,47 @@ public class OGL3TextureAtlas implements IconAtlas{
 	}
 
 	/**
-	 *
+	 * TODO: add support for compression
 	 * @param img_size the power of 2 texture resolution to use
 	 * @param enableAnimation if animations are enabled
 	 * @param level texture compression : currently not supported
 	 */
 	public void update(int img_size, boolean enableAnimation, CompressionLevel level) {
 		retVal data = generate(img_size,enableAnimation);
-		int type = _getFormat(level);
-		//if(type == GL_RGBA) {
-			glBindTexture(GL_TEXTURE_2D, tex_pbr);
-			glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgDiff);
-			glBindTexture(GL_TEXTURE_2D,tex_normal);
-			glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgNorm);
-			glBindTexture(GL_TEXTURE_2D,tex_pbr);
-			glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgPBR);
-			glBindTexture(GL_TEXTURE_2D,0);
-		/**
-		}else{
-			glBindTexture(GL_TEXTURE_2D, tex_pbr);
-			//glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgDiff);
-			glCompressedTexImage2D(GL_TEXTURE_2D,0,type,data.width,data.height,0, refTo(data.imgDiff));
-			glCompressedTexImage2D();
-			glBindTexture(GL_TEXTURE_2D,tex_normal);
-			glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgNorm);
-			glBindTexture(GL_TEXTURE_2D,tex_pbr);
-			glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgPBR);
-			glBindTexture(GL_TEXTURE_2D,0);
-		}
-		 **/
+		System.out.println(data.width+"x"+data.height);
+		//
+		glActiveTexture(GL_TEXTURE10);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, tex_diffuse);
+		glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgDiff);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		//
+		glActiveTexture(GL_TEXTURE11);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D,tex_normal);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgNorm);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		//
+		glActiveTexture(GL_TEXTURE12);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D,tex_pbr);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.imgPBR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		//cleanup
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D,0);
 	}
 
 
@@ -207,7 +229,7 @@ public class OGL3TextureAtlas implements IconAtlas{
 
 	@Override
 	public void performStitch() {
-		update(100,true,CompressionLevel.NO_COMPRESSION);
+		update(128,true,CompressionLevel.NO_COMPRESSION);
 	}
 
 }

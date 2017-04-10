@@ -150,7 +150,7 @@ public class OGL3FontRenderer {
 		final int SIZE = text.length();
 		triCount = 0;
 		float runningOffset = 0;
-		final float aspect = (float)ClientInput.currentWindowHeight / ClientInput.currentWindowWidth;
+		final float aspect = (float)ClientInput.currentWindowHeight.get() / ClientInput.currentWindowWidth.get();
 		for(int i = 0; i < SIZE; i++){
 			char c = text.charAt(i);
 			runningOffset += DrawChar(X+runningOffset,Y,Z,Height,c,Reversed,aspect);
@@ -176,7 +176,7 @@ public class OGL3FontRenderer {
 
 	public float getWidth(String text) {
 		final int SIZE = text.length();
-		final float aspect = (float)ClientInput.currentWindowHeight / ClientInput.currentWindowWidth;
+		final float aspect = (float)ClientInput.currentWindowHeight.get() / ClientInput.currentWindowWidth.get();
 		float runningOffset = 0;
 		for(int i = 0; i < SIZE; i++){
 			char c = text.charAt(i);

@@ -4,7 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.entity.Entity;
 import net.openvoxel.common.item.Item;
-import net.openvoxel.common.world.generation.IWorldGenerator;
+import net.openvoxel.world.generation.IWorldGenerator;
 
 /**
  * Created by James on 16/09/2016.

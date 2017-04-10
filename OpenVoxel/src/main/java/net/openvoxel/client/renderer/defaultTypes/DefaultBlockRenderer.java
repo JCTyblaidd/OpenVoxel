@@ -55,7 +55,20 @@ public class DefaultBlockRenderer implements IBlockRenderHandler{
 		renderer.addVertex(xmax,yVal,zmin,xmax,zmin,0,1,0);
 	}
 	private void renderDown(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
-		
+		Icon icon = block.getIconAtSide(stateAccess,BlockFace.DOWN);
+		renderer.setCurrentIcon(icon);
+		float yVal = (float)bounds.minY;
+		float xmin = (float)bounds.minX;
+		float xmax = (float)bounds.maxX;
+		float zmin = (float)bounds.minZ;
+		float zmax = (float)bounds.maxZ;
+		renderer.addVertex(xmax,yVal,zmax,xmax,zmax,0,-1,0);
+		renderer.addVertex(xmin,yVal,zmax,xmin,zmax,0,-1,0);
+		renderer.addVertex(xmin,yVal,zmin,xmin,zmin,0,-1,0);
+
+		renderer.addVertex(xmax,yVal,zmin,xmax,zmin,0,-1,0);
+		renderer.addVertex(xmax,yVal,zmax,xmax,zmax,0,-1,0);
+		renderer.addVertex(xmin,yVal,zmin,xmin,zmin,0,-1,0);
 	}
 	private void renderWest(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 

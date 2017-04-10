@@ -1,6 +1,6 @@
-package net.openvoxel.dimension;
+package net.openvoxel.server.dimension;
 
-import net.openvoxel.common.world.generation.IWorldGenerator;
+import net.openvoxel.world.generation.IWorldGenerator;
 
 /**
  * Created by James on 09/04/2017.

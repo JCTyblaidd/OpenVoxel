@@ -12,8 +12,8 @@ public abstract class EntityPlayer extends EntityLiving{
 
 	protected AABB boundingBox;
 	protected float eyeHeight;
-	protected float yaw;//0 = X+Direction
-	protected float pitch;//+ = up, - = down
+	protected float yaw = 0;//0 = X+Direction
+	protected float pitch = 0;//+ = up, - = down
 
 	public EntityPlayer() {
 		this.maxHealth = 20;
@@ -26,6 +26,14 @@ public abstract class EntityPlayer extends EntityLiving{
 	@Override
 	public AABB getBoundingBox() {
 		return boundingBox;
+	}
+
+	public void setYaw(float yaw) {
+		this.yaw = yaw;
+	}
+
+	public void setPitch(float pitch) {
+		this.pitch = pitch;
 	}
 
 	public float getPitch() {

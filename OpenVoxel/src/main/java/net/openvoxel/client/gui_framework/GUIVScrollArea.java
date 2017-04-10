@@ -48,7 +48,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 
 	@Override
 	public void OnMouseMove(float newX, float newY, float oldX, float oldY) {
-		final float delta = absOffset / ClientInput.currentWindowHeight;
+		final float delta = absOffset / ClientInput.currentWindowHeight.get();
 		for(GUIObject object : subObjects) {
 			object.OnMouseMove(newX,newY - delta,oldX,oldY - delta);
 		}
@@ -56,7 +56,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 
 	@Override
 	public void OnMousePress(double x, double y) {
-		final float delta = absOffset / ClientInput.currentWindowHeight;
+		final float delta = absOffset / ClientInput.currentWindowHeight.get();
 		for(GUIObject object : subObjects) {
 			object.OnMousePress(x,y-delta);
 		}
@@ -64,7 +64,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 
 	@Override
 	public void OnMouseRelease(double x, double y) {
-		final float delta = absOffset / ClientInput.currentWindowHeight;
+		final float delta = absOffset / ClientInput.currentWindowHeight.get();
 		for(GUIObject object : subObjects) {
 			object.OnMouseRelease(x,y-delta);
 		}

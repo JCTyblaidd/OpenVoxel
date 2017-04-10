@@ -75,7 +75,7 @@ public class ScreenSettings extends Screen{
 	}
 
 	private String getDebugMode() {
-		switch (ScreenDebugInfo.debugLevel) {
+		switch (ScreenDebugInfo.debugLevel.get()) {
 			case EXTREME_DETAIL:
 				return "Extreme Debug";
 			case  FPS:
@@ -107,6 +107,6 @@ public class ScreenSettings extends Screen{
 				level = ScreenDebugInfo.GUIDebugLevel.NONE;
 				break;
 		}
-		ScreenDebugInfo.debugLevel = level;
+		ScreenDebugInfo.debugLevel.set(level);
 	}
 }

@@ -2,8 +2,9 @@ package net.openvoxel.client.renderer.generic;
 
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.common.world.World;
-import net.openvoxel.common.world.chunk.Chunk;
+import net.openvoxel.world.World;
+import net.openvoxel.world.chunk.Chunk;
+import net.openvoxel.world.client.ClientWorld;
 
 /**
  * Created by James on 25/08/2016.
@@ -68,7 +69,7 @@ import net.openvoxel.common.world.chunk.Chunk;
 public interface WorldRenderer {
 
 	//Handle Dirty Chunks In This//
-	void renderWorld(EntityPlayerSP playerSP,World worldSP);
+	void renderWorld(EntityPlayerSP playerSP,ClientWorld worldSP);
 
 	void onChunkLoaded(World world, Chunk chunk);
 	void onChunkUnloaded(World world, Chunk chunk);

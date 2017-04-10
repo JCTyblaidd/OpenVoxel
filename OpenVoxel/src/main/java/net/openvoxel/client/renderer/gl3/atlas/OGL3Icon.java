@@ -13,13 +13,25 @@ import net.openvoxel.common.resources.ResourceHandle;
 public class OGL3Icon implements Icon{
 	public float u_min, u_max, v_min, v_max;
 
-	public int currHeight, currWidth;
+	public float getU(float u) {
+		//float val =  u_min + (u_max - u_min)*u;
+		//System.out.println(u+"->"+val);
+		//return val;
+		return u;
+	}
 
-	public int getIconSize() {
+	public float getV(float v) {
+		//return v_min + (v_max - v_min)*v;
+		return v;
+	}
+
+	private int currHeight, currWidth;
+
+	int getIconSize() {
 		return currHeight / currWidth;
 	}
 
-	public void reload() {
+	void reload() {
 		Logger log = Logger.getLogger("OGL3 Block Icon");
 		if(tex_diff != null) {
 			tex_diff.Free();
@@ -66,7 +78,7 @@ public class OGL3Icon implements Icon{
 
 
 
-	public void cleanup() {
+	void cleanup() {
 		tex_diff.Free();
 		tex_norm.Free();
 		tex_pbr.Free();
@@ -75,7 +87,7 @@ public class OGL3Icon implements Icon{
 		tex_pbr = null;
 	}
 
-	public STBITexture tex_diff,tex_norm,tex_pbr;
+	STBITexture tex_diff,tex_norm,tex_pbr;
 
-	public ResourceHandle diffuse_dat, normal_dat,pbr_dat;
+	ResourceHandle diffuse_dat, normal_dat,pbr_dat;
 }

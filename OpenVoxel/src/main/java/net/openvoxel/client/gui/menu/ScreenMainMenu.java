@@ -23,7 +23,7 @@ public class ScreenMainMenu extends Screen{
 	public ScreenMainMenu() {
 		backgroundImage = new GUIObjectImage("gui/BG");
 		backgroundImage.setupFullscreen();
-		guiObjects.add(backgroundImage);
+		//guiObjects.add(backgroundImage);
 
 		buttonSinglePlayer = new GUIButton("Single Player");
 		buttonMultiPlayer = new GUIButton("Multi Player");

@@ -1,10 +1,9 @@
 package net.openvoxel.files;
 
-import net.openvoxel.collection.ChunkMap;
-import net.openvoxel.common.world.chunk.Chunk;
+import net.openvoxel.utility.collection.ChunkMap;
+import net.openvoxel.world.chunk.Chunk;
 
 import java.io.File;
-import java.util.HashMap;
 
 /**
  * Created by James on 02/09/2016.

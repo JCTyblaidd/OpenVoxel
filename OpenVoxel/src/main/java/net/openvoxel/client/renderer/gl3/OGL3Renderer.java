@@ -81,8 +81,8 @@ public class OGL3Renderer implements GlobalRenderer{
 	public GUIRenderer getGUIRenderer() {
 		return guiRenderer;
 	}
-	private int oldWidth = ClientInput.currentWindowWidth;
-	private int oldHeight = ClientInput.currentWindowHeight;
+	private int oldWidth = ClientInput.currentWindowWidth.get();
+	private int oldHeight = ClientInput.currentWindowHeight.get();
 	private AtomicBoolean stateChangeLock = new AtomicBoolean(false);
 	private void updateFullScreenState() {
 		int newWidth;
@@ -92,8 +92,8 @@ public class OGL3Renderer implements GlobalRenderer{
 		{
 			GLFWVidMode vidMode = glfwGetVideoMode(currentMonitor);
 
-			oldWidth = ClientInput.currentWindowWidth;
-			oldHeight = ClientInput.currentWindowHeight;
+			oldWidth = ClientInput.currentWindowWidth.get();
+			oldHeight = ClientInput.currentWindowHeight.get();
 			newWidth = vidMode.width();
 			newHeight = vidMode.height();
 		}
@@ -121,7 +121,7 @@ public class OGL3Renderer implements GlobalRenderer{
 			if(glDebug) {
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,GLFW_TRUE);
 			}
-			window = glfwCreateWindow(ClientInput.currentWindowWidth, ClientInput.currentWindowHeight, "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
+			window = glfwCreateWindow(ClientInput.currentWindowWidth.get(), ClientInput.currentWindowHeight.get(), "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
 		}catch(Throwable e) {
 			gl3Log.Severe("Error Creating Screen");
 			gl3Log.StackTrace(e);
@@ -130,7 +130,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		glfwMakeContextCurrent(window);
 		glfwSwapInterval(1);//Enable VSync : Disabled -> Refresh Rate Used Instead//
 		createCapabilities(true);
-		glViewport(0,0,ClientInput.currentWindowWidth,ClientInput.currentWindowHeight);
+		glViewport(0,0,ClientInput.currentWindowWidth.get(),ClientInput.currentWindowHeight.get());
 		glEnable (GL_CULL_FACE); // cull face
 		glCullFace (GL_BACK); // cull back face
 		glFrontFace (GL_CW); //clockwise
@@ -172,8 +172,8 @@ public class OGL3Renderer implements GlobalRenderer{
 	public void nextFrame() {
 		if(screenshotRequested) {
 			screenshotRequested = false;
-			final int W = ClientInput.currentWindowWidth;
-			final int H = ClientInput.currentWindowHeight;
+			final int W = ClientInput.currentWindowWidth.get();
+			final int H = ClientInput.currentWindowHeight.get();
 			int[] pixels = new int[W * H];
 			glReadPixels(0,0,W,H,GL_BGRA,GL_UNSIGNED_BYTE,pixels);
 			FolderUtils.saveScreenshot(W,H,pixels);

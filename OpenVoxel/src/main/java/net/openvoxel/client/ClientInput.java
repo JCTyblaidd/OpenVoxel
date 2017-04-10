@@ -3,6 +3,7 @@ package net.openvoxel.client;
 import net.openvoxel.client.gui_framework.GUI;
 
 import javax.vecmath.Vector2d;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by James on 25/08/2016.
@@ -10,10 +11,10 @@ import javax.vecmath.Vector2d;
  * Main Input Handle
  */
 public class ClientInput {
-	public static volatile Vector2d unhandledMouseDelta;
-	public static volatile Vector2d mousePosition;
-	public static volatile int currentWindowWidth;
-	public static volatile int currentWindowHeight;
+	public static Vector2d unhandledMouseDelta;
+	public static Vector2d mousePosition;
+	public static AtomicInteger currentWindowWidth;
+	public static AtomicInteger currentWindowHeight;
 
 	public static boolean[] currentInputStatus;
 
@@ -24,8 +25,8 @@ public class ClientInput {
 	static {
 		unhandledMouseDelta = new Vector2d(0,0);
 		mousePosition = new Vector2d(0,0);
-		currentWindowWidth = 1980;
-		currentWindowHeight = 1080;
+		currentWindowWidth = new AtomicInteger(1980);
+		currentWindowHeight = new AtomicInteger(1080);
 		currentInputStatus = new boolean[512];
 		for(int i = 0; i < 512; i++) {
 			currentInputStatus[i] = false;

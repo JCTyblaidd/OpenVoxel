@@ -6,6 +6,8 @@ import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * Created by James on 10/09/2016.
  *
@@ -14,7 +16,7 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
 public class ScreenDebugInfo extends Screen{
 
 	public static final ScreenDebugInfo instance = new ScreenDebugInfo();
-	public static volatile GUIDebugLevel debugLevel = GUIDebugLevel.EXTREME_DETAIL;
+	public static AtomicReference<GUIDebugLevel> debugLevel = new AtomicReference<>(GUIDebugLevel.EXTREME_DETAIL);
 
 	public static String RendererType   = "Unknown Renderer";
 	public static String RendererVendor = "Unknown Vendor";
@@ -58,8 +60,8 @@ public class ScreenDebugInfo extends Screen{
 
 	@Override
 	public void DrawScreen(GUIRenderer.GUITessellator tess) {
-		int debug = debugLevel.getVal();
-		int h = ClientInput.currentWindowHeight;
+		int debug = debugLevel.get().getVal();
+		int h = ClientInput.currentWindowHeight.get();
 		//int w = ClientInput.currentWindowWidth;
 		float height = 50.0F / h;
 		final float x_pos = -1.0F;

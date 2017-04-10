@@ -8,9 +8,9 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.common.world.World;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
+import net.openvoxel.world.client.ClientWorld;
 
 /**
  * Created by James on 25/08/2016.
@@ -62,7 +62,7 @@ public class RenderThread implements Runnable{
 				if(clientServer != null) {
 					EntityPlayerSP renderTarget = clientServer.getThePlayer();
 					if(renderTarget != null && renderTarget.currentWorld != null) {
-						worldRenderer.renderWorld(renderTarget,renderTarget.currentWorld);
+						worldRenderer.renderWorld(renderTarget,(ClientWorld)renderTarget.currentWorld);
 					}
 				}
 			}catch (Exception e) {
@@ -79,6 +79,7 @@ public class RenderThread implements Runnable{
 				//Debug Screen Renderer//
 				guiRenderer.DisplayScreen(ScreenDebugInfo.instance);
 			}catch (Exception e) {
+				e.printStackTrace();
 				CrashReport crashReport = new CrashReport("Exception Drawing GUI").caughtException(e);
 				OpenVoxel.reportCrash(crashReport);
 			}

@@ -4,6 +4,8 @@ import net.openvoxel.common.resources.ResourceHandle;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * OpenGL Reloadable Shader [handles resource changes]
  */
 public abstract class OGL3ReloadableShader<T extends OGL3BasicShader> {
 

@@ -26,8 +26,8 @@ public class GUIHandler implements EventListener{
 
 	@SubscribeEvents
 	public void onMouseMove(CursorPositionChangeEvent mouseMove) {
-		final float H = ClientInput.currentWindowHeight;
-		final float W = ClientInput.currentWindowWidth;
+		final float H = ClientInput.currentWindowHeight.get();
+		final float W = ClientInput.currentWindowWidth.get();
 		GUI.handleMouseMoveEvent((float)ClientInput.mousePosition.x/W,(float)ClientInput.mousePosition.y/H,mouseMove.X/W,mouseMove.Y/H);
 	}
 
@@ -35,9 +35,9 @@ public class GUIHandler implements EventListener{
 	public void onClick(MouseButtonChangeEvent clickEvent) {
 		if(clickEvent.GLFW_BUTTON != GLFW_MOUSE_BUTTON_1) return;
 		if(clickEvent.PRESSED) {
-			GUI.handleMousePress((float)ClientInput.mousePosition.x/ClientInput.currentWindowWidth,(float)ClientInput.mousePosition.y/ClientInput.currentWindowHeight);
+			GUI.handleMousePress((float)ClientInput.mousePosition.x/ClientInput.currentWindowWidth.get(),(float)ClientInput.mousePosition.y/ClientInput.currentWindowHeight.get());
 		}else{
-			GUI.handleMouseRelease((float)ClientInput.mousePosition.x/ClientInput.currentWindowWidth,(float)ClientInput.mousePosition.y/ClientInput.currentWindowHeight);
+			GUI.handleMouseRelease((float)ClientInput.mousePosition.x/ClientInput.currentWindowWidth.get(),(float)ClientInput.mousePosition.y/ClientInput.currentWindowHeight.get());
 		}
 	}
 

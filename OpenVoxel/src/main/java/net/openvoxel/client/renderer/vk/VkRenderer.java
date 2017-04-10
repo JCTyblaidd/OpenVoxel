@@ -56,7 +56,7 @@ public class VkRenderer implements GlobalRenderer {
 		try {
 			glfwDefaultWindowHints();
 			glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API);
-			window = glfwCreateWindow(ClientInput.currentWindowWidth, ClientInput.currentWindowHeight, "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
+			window = glfwCreateWindow(ClientInput.currentWindowWidth.get(), ClientInput.currentWindowHeight.get(), "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
 		}catch(Throwable e) {
 			vkLog.Severe("Error Creating Screen");
 			vkLog.StackTrace(e);

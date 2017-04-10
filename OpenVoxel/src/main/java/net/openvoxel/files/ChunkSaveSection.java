@@ -1,11 +1,9 @@
 package net.openvoxel.files;
 
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import javafx.util.Pair;
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.collection.ChunkMap;
-import net.openvoxel.common.world.chunk.Chunk;
+import net.openvoxel.utility.collection.ChunkMap;
+import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.utility.CrashReport;
 
 import java.io.File;

@@ -1,9 +1,9 @@
-package net.openvoxel.common.world;
+package net.openvoxel.world;
 
-import net.openvoxel.collection.ChunkMap;
+import net.openvoxel.utility.collection.ChunkMap;
 import net.openvoxel.common.entity.Entity;
-import net.openvoxel.common.world.chunk.Chunk;
-import net.openvoxel.common.world.generation.IWorldGenerator;
+import net.openvoxel.world.chunk.Chunk;
+import net.openvoxel.world.generation.IWorldGenerator;
 
 /**
  * Created by James on 25/08/2016.
@@ -16,7 +16,7 @@ public class World {
 	public final IWorldGenerator generator;
 
 	public World(IWorldGenerator generator) {
-		chunkMap = new ChunkMap();
+		chunkMap = new ChunkMap<>();
 		this.generator = generator;
 	}
 

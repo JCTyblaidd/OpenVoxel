@@ -1,4 +1,4 @@
-package net.openvoxel.collection;
+package net.openvoxel.utility.collection;
 
 import gnu.trove.impl.sync.TSynchronizedLongObjectMap;
 import gnu.trove.map.TLongObjectMap;

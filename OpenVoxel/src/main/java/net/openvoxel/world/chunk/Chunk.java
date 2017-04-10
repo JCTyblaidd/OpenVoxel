@@ -1,4 +1,4 @@
-package net.openvoxel.common.world.chunk;
+package net.openvoxel.world.chunk;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.block.Block;
@@ -19,7 +19,7 @@ public class Chunk {
 	/**
 	 * Chunk Information
 	 */
-	private ChunkSection[] chunkSections = new ChunkSection[16];
+	protected ChunkSection[] chunkSections = new ChunkSection[16];
 
 	/**
 	 * Chunk Height Map [unsigned byte]
@@ -50,6 +50,12 @@ public class Chunk {
 			chunkSections[i] = new ChunkSection();
 		}
 	}
+
+	protected Chunk(int x, int z,boolean noGenFlag) {
+		this.chunkX = x;
+		this.chunkZ = z;
+	}
+
 
 	public int getHeightAt(int x, int z) {
 		return Byte.toUnsignedInt(heightMap.get(x * 16 + z));

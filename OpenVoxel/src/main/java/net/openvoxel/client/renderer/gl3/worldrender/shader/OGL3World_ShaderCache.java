@@ -13,6 +13,7 @@ import net.openvoxel.common.resources.ResourceType;
 public class OGL3World_ShaderCache {
 
 	//GIANT CACHE OF WORLD SHADERS
+	public static final WorldShaderCache BLOCK_SIMPLE = _get("world/block/shaderWorld_simple","Simple Block Renderer");
 	public static final WorldShaderCache BLOCK_OPAQUE = _get("world/block/shaderWorld_blockOpaque","Deferred Block Opaque");
 	public static final WorldShaderCache BLOCK_FORWARD = _get("world/block/shaderWorld_forwardStore","Forward Renderer Block");
 	public static final WorldShaderCache ENTITY_DEFERRED = _get("world/entity/shaderWorld_entity_deferred","Deferred Entity");
@@ -23,19 +24,26 @@ public class OGL3World_ShaderCache {
 	public static final WorldShaderCache SHADOW_CASCADE_SIMPLE = _get("world/shadow/shaderWorld_cascademap_Simple","Simple Shadow Map");
 	public static final WorldShaderCache SHADOW_SIMPLE_MAP = _get("world/shadow/shaderWorld_shadowmap","Simple Single Shadow Map");
 
+	public static void Load() {
+		//Call the static init functionality
+	}
+
 	private static WorldShaderCache _get(String str,String debug) {
 		return new WorldShaderCache(ResourceManager.getResource(ResourceType.SHADER,str),debug);
 	}
 
-	private static class WorldShaderCache extends OGL3ReloadableShader<OGL3WorldAppendedShader> {
+	public static class WorldShaderCache extends OGL3ReloadableShader<OGL3WorldAppendedShader> {
 		private final String Debug;
-		public WorldShaderCache(ResourceHandle res,String id) {
+		WorldShaderCache(ResourceHandle res,String id) {
 			super(res);
 			Debug = id;
 		}
 		@Override
 		public OGL3WorldAppendedShader newShader(String src) {
 			return new OGL3WorldAppendedShader(src,"World Shader: " + Debug);
+		}
+		public void setupUniforms() {
+
 		}
 	}
 }

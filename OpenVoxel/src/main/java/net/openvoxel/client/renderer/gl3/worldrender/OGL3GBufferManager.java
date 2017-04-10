@@ -1,4 +1,4 @@
-package net.openvoxel.client.renderer.gl3;
+package net.openvoxel.client.renderer.gl3.worldrender;
 
 import net.openvoxel.client.renderer.gl3.util.OGL3FrameBufferObject;
 

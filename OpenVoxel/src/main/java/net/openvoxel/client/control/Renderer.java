@@ -22,7 +22,8 @@ public class Renderer {
 	public static AsyncRunnablePool renderCacheManager;
 	public static Logger logger;
 
-	static {//Prevent Vulkan Renderer
+	static {
+		//TODO: remove after vulkan renderer is implemented
 		OpenVoxel.getLaunchParameters().storeRuntimeFlag("openGL");
 		Logger.getLogger("SHODDY FIXES").Severe("Prevented Vulkan Renderer From Being Used {Reason: Not Yet Implemented}");
 	}

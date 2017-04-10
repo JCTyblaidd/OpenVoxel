@@ -5,9 +5,8 @@ import net.openvoxel.client.renderer.gl3.util.OGL3BasicShader;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.common.resources.ResourceType;
-import org.lwjgl.opengl.GL31;
 
-import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL31.*;
 
 /**
@@ -17,27 +16,49 @@ import static org.lwjgl.opengl.GL31.*;
  */
 public class OGL3WorldAppendedShader extends OGL3BasicShader{
 
-	static final ResourceHandle shaderPreResource;
+	/**
+	 * The Uniform Block for Inserting
+	 */
+	private static final ResourceHandle shaderPreResource;
 	static {
 		shaderPreResource = ResourceManager.getResource(ResourceType.SHADER,"world/worldShaderPre");
 	}
 
-	public OGL3WorldAppendedShader(String shaderSource, String debugID) {
+	OGL3WorldAppendedShader(String shaderSource, String debugID) {
 		super(shaderSource, debugID);
-		_bindUBO(OGL3World_UniformCache.UBO_Settings,"SETTINGS");
-		_bindUBO(OGL3World_UniformCache.UBO_ChunkConstants,"ChunkConstants");
-		_bindUBO(OGL3World_UniformCache.UBO_FinalFrame,"FinalFrame");
-		_bindUBO(OGL3World_UniformCache.UBO_TextureAtlas,"TextureAtlas");
-		_bindUBO(OGL3World_UniformCache.UBO_ShadowMap,"ShadowMap");
+		glUseProgram(program_ID);
+		_bindUBO("Settings",0);
+		_bindUBO("FinalFrame",1);
+		_bindUBO("ChunkConstants",2);
+		//Texture Bindings//
+		_bindTextureTarget("tDiffuse",10);
+		_bindTextureTarget("tNormal",11);
+		_bindTextureTarget("tPBR",12);
+		_bindTextureTarget("tItemDiffuse",13);
+		_bindTextureTarget("skyMap",14);
+		_bindTextureTarget("shadow1",15);
+		_bindTextureTarget("shadow2",16);
+		_bindTextureTarget("shadow3",17);
+		glUseProgram(0);
 	}
 
-	private void _bindUBO(int ubo,String Name) {
-		glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+	private void _bindUBO(String Name,int uniformBinding) {
 		int index = glGetUniformBlockIndex(program_ID, Name);
 		if (index != GL_INVALID_INDEX) {
-			GL31.glUniformBlockBinding(program_ID, 0, index);
+			glUniformBlockBinding(program_ID,index,uniformBinding);
 		}else {
-			Logger.getLogger("Shader UBO Binder : " + DEBUG).Warning("Failed to get Index of Uniform Buffer Object");
+			Logger.getLogger("Shader UBO Binder : " + DEBUG)
+					.Warning("Failed to get Index of Uniform Buffer Object -> " + Name);
+		}
+	}
+
+	private void _bindTextureTarget(String Name, int textureTarget) {
+		int loc = glGetUniformLocation(program_ID,Name);
+		if(loc != GL_INVALID_INDEX) {
+			glUniform1i(loc,textureTarget);
+		}else{
+			Logger.getLogger("Shader Sampler Uniform : " + DEBUG)
+					.Warning("Failed to get Sampler Location -> " + Name);
 		}
 	}
 

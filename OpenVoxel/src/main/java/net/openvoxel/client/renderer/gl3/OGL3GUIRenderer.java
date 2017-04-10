@@ -228,17 +228,17 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 
 	@Override
 	public float getScreenWidth() {
-		return ClientInput.currentWindowWidth;
+		return ClientInput.currentWindowWidth.get();
 	}
 
 	@Override
 	public float getScreenHeight() {
-		return ClientInput.currentWindowHeight;
+		return ClientInput.currentWindowHeight.get();
 	}
 
 	@Override
 	public void resetScissor() {
-		glScissor(0,0,ClientInput.currentWindowWidth,ClientInput.currentWindowHeight);
+		glScissor(0,0,ClientInput.currentWindowWidth.get(),ClientInput.currentWindowHeight.get());
 		glDisable(GL_SCISSOR_TEST);
 	}
 

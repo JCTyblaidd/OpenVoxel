@@ -49,12 +49,23 @@ public class Locale {
 		return currentLocale;
 	}
 
+	public void setLocale(Locale locale) {
+		currentLocale = locale;
+	}
+
 	private String type;
 	private HashMap<String,String> cache;
 	public Locale(String type) {
 		this.type = type;
 		cache = new HashMap<>();
-		//Scan for localisations//
+	}
+
+	public String getType() {
+		return "locale."+type;
+	}
+
+	public void registerLocalisation(String a,String b) {
+		cache.put(a,b);
 	}
 
 	private String getValue(String key,Object[] data) {

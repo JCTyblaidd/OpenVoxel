@@ -1,8 +1,8 @@
 package net.openvoxel.common.event.load;
 
 import net.openvoxel.common.event.AbstractEvent;
-import net.openvoxel.common.world.World;
-import net.openvoxel.common.world.chunk.Chunk;
+import net.openvoxel.world.World;
+import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.server.Server;
 
 /**

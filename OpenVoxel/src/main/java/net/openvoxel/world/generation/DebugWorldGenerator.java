@@ -1,8 +1,9 @@
-package net.openvoxel.common.world.generation;
+package net.openvoxel.world.generation;
 
 import net.openvoxel.common.resources.ResourceHandle;
-import net.openvoxel.common.world.chunk.Chunk;
+import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.vanilla.VanillaBlocks;
+import net.openvoxel.world.client.ClientChunk;
 
 /**
  * Created by James on 04/09/2016.
@@ -13,7 +14,7 @@ public class DebugWorldGenerator implements IWorldGenerator{
 
 	@Override
 	public Chunk generateChunk(int xv, int zv) {
-		Chunk chunk = new Chunk(xv,zv);
+		ClientChunk chunk = new ClientChunk(xv,zv);
 		for(int x = 0; x < 16; x++) {
 			for(int z = 0; z < 16; z++) {
 				for(int y = 0; y < 100; y++) {
@@ -21,7 +22,7 @@ public class DebugWorldGenerator implements IWorldGenerator{
 				}
 			}
 		}
-		return null;
+		return chunk;
 	}
 
 	@Override

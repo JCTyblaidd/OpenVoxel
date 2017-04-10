@@ -1,4 +1,4 @@
-package net.openvoxel.client.renderer.gl3;
+package net.openvoxel.client.renderer.gl3.worldrender;
 
 /**
  * Created by James on 28/08/2016.

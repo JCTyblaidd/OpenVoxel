@@ -9,5 +9,6 @@ public class ClientLauncher {
 
 	public static void main(String[] args) {
 		CommonLauncher.defaultLaunch(args,true);
+		System.exit(0);
 	}
 }

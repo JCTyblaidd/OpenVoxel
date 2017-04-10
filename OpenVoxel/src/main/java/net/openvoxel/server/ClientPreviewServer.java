@@ -5,5 +5,9 @@ package net.openvoxel.server;
  *
  * Client No - Edit Preview Server
  */
-public class ClientPreviewServer {
+public class ClientPreviewServer extends ClientServer{
+
+	public ClientPreviewServer() {}
+
+
 }

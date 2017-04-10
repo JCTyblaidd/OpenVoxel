@@ -6,8 +6,11 @@ import net.openvoxel.loader.classloader.SideSpecificTweaker;
 import net.openvoxel.loader.classloader.TweakableClassLoader;
 import net.openvoxel.loader.mods.ModDataLoader;
 import net.openvoxel.loader.optimizer.Optimizer;
+import net.openvoxel.utility.debug.RenderDocAutoHook;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
@@ -19,6 +22,9 @@ import java.util.Arrays;
 class CommonLauncher {
 
 	static void defaultLaunch(String[] args, boolean isClient) {
+		if(new ArgumentParser(args).hasFlag("renderDocWait")) {
+			RenderDocAutoHook.callRenderDocInject();
+		}
 		boolean reloadRequest;
 		do {
 			Logger loaderLogger = Logger.getLogger("Initialisation");

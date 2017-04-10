@@ -1,4 +1,4 @@
-package net.openvoxel.debug;
+package net.openvoxel.utility.debug;
 
 import net.openvoxel.loader.optimizer.tags.Validation;
 
