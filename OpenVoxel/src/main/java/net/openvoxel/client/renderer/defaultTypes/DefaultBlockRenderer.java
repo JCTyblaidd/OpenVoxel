@@ -18,22 +18,22 @@ public class DefaultBlockRenderer implements IBlockRenderHandler{
 	public void storeBlockData(WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess) {
 		Block block = stateAccess.getBlock();
 		AABB bounds = block.getBlockBounds();
-		if(block.isOpaque(BlockFace.UP) && stateAccess.getOffsetBlockData(BlockFace.UP).getBlock().isOpaque(BlockFace.DOWN)) {
+		if(block.isOpaque(BlockFace.UP) && !stateAccess.getOffsetBlockData(BlockFace.UP).getBlock().isOpaque(BlockFace.DOWN)) {
 			renderUp(block,renderer,stateAccess,bounds);
 		}
-		if(block.isOpaque(BlockFace.DOWN) && stateAccess.getOffsetBlockData(BlockFace.DOWN).getBlock().isOpaque(BlockFace.UP)) {
+		if(block.isOpaque(BlockFace.DOWN) && !stateAccess.getOffsetBlockData(BlockFace.DOWN).getBlock().isOpaque(BlockFace.UP)) {
 			renderDown(block,renderer,stateAccess,bounds);
 		}
-		if(block.isOpaque(BlockFace.WEST) && stateAccess.getOffsetBlockData(BlockFace.WEST).getBlock().isOpaque(BlockFace.EAST)) {
+		if(block.isOpaque(BlockFace.WEST) && !stateAccess.getOffsetBlockData(BlockFace.WEST).getBlock().isOpaque(BlockFace.EAST)) {
 			renderWest(block,renderer,stateAccess,bounds);
 		}
-		if(block.isOpaque(BlockFace.EAST) && stateAccess.getOffsetBlockData(BlockFace.EAST).getBlock().isOpaque(BlockFace.WEST)) {
+		if(block.isOpaque(BlockFace.EAST) && !stateAccess.getOffsetBlockData(BlockFace.EAST).getBlock().isOpaque(BlockFace.WEST)) {
 			renderEast(block,renderer,stateAccess,bounds);
 		}
-		if(block.isOpaque(BlockFace.NORTH) && stateAccess.getOffsetBlockData(BlockFace.NORTH).getBlock().isOpaque(BlockFace.SOUTH)) {
+		if(block.isOpaque(BlockFace.NORTH) && !stateAccess.getOffsetBlockData(BlockFace.NORTH).getBlock().isOpaque(BlockFace.SOUTH)) {
 			renderNorth(block,renderer,stateAccess,bounds);
 		}
-		if(block.isOpaque(BlockFace.SOUTH) && stateAccess.getOffsetBlockData(BlockFace.SOUTH).getBlock().isOpaque(BlockFace.NORTH)) {
+		if(block.isOpaque(BlockFace.SOUTH) && !stateAccess.getOffsetBlockData(BlockFace.SOUTH).getBlock().isOpaque(BlockFace.NORTH)) {
 			renderSouth(block,renderer,stateAccess,bounds);
 		}
 	}
@@ -42,44 +42,96 @@ public class DefaultBlockRenderer implements IBlockRenderHandler{
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.UP);
 		renderer.setCurrentIcon(icon);
 		float yVal = (float)bounds.maxY;
-		float xmin = (float)bounds.minX;
-		float xmax = (float)bounds.maxX;
-		float zmin = (float)bounds.minZ;
-		float zmax = (float)bounds.maxZ;
-		renderer.addVertex(xmin,yVal,zmin,xmin,zmin,0,1,0);
-		renderer.addVertex(xmin,yVal,zmax,xmin,zmax,0,1,0);
-		renderer.addVertex(xmax,yVal,zmax,xmax,zmax,0,1,0);
+		float xMin = (float)bounds.minX;
+		float xMax = (float)bounds.maxX;
+		float zMin = (float)bounds.minZ;
+		float zMax = (float)bounds.maxZ;
+		renderer.addVertex(xMin,yVal,zMin,xMin,zMin,0,1,0);
+		renderer.addVertex(xMin,yVal,zMax,xMin,zMax,0,1,0);
+		renderer.addVertex(xMax,yVal,zMax,xMax,zMax,0,1,0);
 
-		renderer.addVertex(xmin,yVal,zmin,xmin,zmin,0,1,0);
-		renderer.addVertex(xmax,yVal,zmax,xmax,zmax,0,1,0);
-		renderer.addVertex(xmax,yVal,zmin,xmax,zmin,0,1,0);
+		renderer.addVertex(xMin,yVal,zMin,xMin,zMin,0,1,0);
+		renderer.addVertex(xMax,yVal,zMax,xMax,zMax,0,1,0);
+		renderer.addVertex(xMax,yVal,zMin,xMax,zMin,0,1,0);
 	}
 	private void renderDown(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.DOWN);
 		renderer.setCurrentIcon(icon);
 		float yVal = (float)bounds.minY;
-		float xmin = (float)bounds.minX;
-		float xmax = (float)bounds.maxX;
-		float zmin = (float)bounds.minZ;
-		float zmax = (float)bounds.maxZ;
-		renderer.addVertex(xmax,yVal,zmax,xmax,zmax,0,-1,0);
-		renderer.addVertex(xmin,yVal,zmax,xmin,zmax,0,-1,0);
-		renderer.addVertex(xmin,yVal,zmin,xmin,zmin,0,-1,0);
+		float xMin = (float)bounds.minX;
+		float xMax = (float)bounds.maxX;
+		float zMin = (float)bounds.minZ;
+		float zMax = (float)bounds.maxZ;
+		renderer.addVertex(xMax,yVal,zMax,xMax,zMax,0,-1,0);
+		renderer.addVertex(xMin,yVal,zMax,xMin,zMax,0,-1,0);
+		renderer.addVertex(xMin,yVal,zMin,xMin,zMin,0,-1,0);
 
-		renderer.addVertex(xmax,yVal,zmin,xmax,zmin,0,-1,0);
-		renderer.addVertex(xmax,yVal,zmax,xmax,zmax,0,-1,0);
-		renderer.addVertex(xmin,yVal,zmin,xmin,zmin,0,-1,0);
+		renderer.addVertex(xMax,yVal,zMin,xMax,zMin,0,-1,0);
+		renderer.addVertex(xMax,yVal,zMax,xMax,zMax,0,-1,0);
+		renderer.addVertex(xMin,yVal,zMin,xMin,zMin,0,-1,0);
 	}
 	private void renderWest(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+		Icon icon = block.getIconAtSide(stateAccess,BlockFace.WEST);
+		renderer.setCurrentIcon(icon);
+		float zVal = (float)bounds.maxZ;
+		float xMin = (float)bounds.minX;
+		float xMax = (float)bounds.maxX;
+		float yMin = (float)bounds.minY;
+		float yMax = (float)bounds.maxY;
+		renderer.addVertex(xMin,yMin,zVal,xMin,yMin,0,0,1);
+		renderer.addVertex(xMin,yMax,zVal,xMin,yMax,0,0,1);
+		renderer.addVertex(xMax,yMax,zVal,xMax,yMax,0,0,1);
 
+		renderer.addVertex(xMin,yMin,zVal,xMin,yMin,0,0,1);
+		renderer.addVertex(xMax,yMax,zVal,xMax,yMax,0,0,1);
+		renderer.addVertex(xMax,yMin,zVal,xMax,yMin,0,0,1);
 	}
 	private void renderEast(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+		Icon icon = block.getIconAtSide(stateAccess,BlockFace.EAST);
+		renderer.setCurrentIcon(icon);
+		float zVal = (float)bounds.minZ;
+		float xMin = (float)bounds.minX;
+		float xMax = (float)bounds.maxX;
+		float yMin = (float)bounds.minY;
+		float yMax = (float)bounds.maxY;
+		renderer.addVertex(xMax,yMax,zVal,xMax,yMax,0,0,-1);
+		renderer.addVertex(xMin,yMax,zVal,xMin,yMax,0,0,-1);
+		renderer.addVertex(xMin,yMin,zVal,xMin,yMin,0,0,-1);
 
+		renderer.addVertex(xMax,yMin,zVal,xMax,yMin,0,0,-1);
+		renderer.addVertex(xMax,yMax,zVal,xMax,yMax,0,0,-1);
+		renderer.addVertex(xMin,yMin,zVal,xMin,yMin,0,0,-1);
 	}
 	private void renderNorth(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+		Icon icon = block.getIconAtSide(stateAccess, BlockFace.NORTH);
+		renderer.setCurrentIcon(icon);
+		float xVal = (float)bounds.maxX;
+		float yMin = (float)bounds.minY;
+		float yMax = (float)bounds.maxY;
+		float zMin = (float)bounds.minZ;
+		float zMax = (float)bounds.maxZ;
+		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,1,0,0);
+		renderer.addVertex(xVal,yMin,zMax,yMin,zMax,1,0,0);
+		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,1,0,0);
 
+		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,1,0,0);
+		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,1,0,0);
+		renderer.addVertex(xVal,yMax,zMin,yMax,zMin,1,0,0);
 	}
 	private void renderSouth(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+		Icon icon = block.getIconAtSide(stateAccess,BlockFace.SOUTH);
+		renderer.setCurrentIcon(icon);
+		float xVal = (float)bounds.minX;
+		float yMin = (float)bounds.minY;
+		float yMax = (float)bounds.maxY;
+		float zMin = (float)bounds.minZ;
+		float zMax = (float)bounds.maxZ;
+		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,-1,0,0);
+		renderer.addVertex(xVal,yMin,zMax,yMin,zMax,-1,0,0);
+		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,-1,0,0);
 
+		renderer.addVertex(xVal,yMax,zMin,yMax,zMin,-1,0,0);
+		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,-1,0,0);
+		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,-1,0,0);
 	}
 }

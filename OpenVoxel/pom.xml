@@ -88,13 +88,18 @@
             <artifactId>asm-all</artifactId>
             <version>5.0.3</version>
         </dependency>
-
-        <dependency><!-- Vector Mathematics Utils -->
+<!--
+        <dependency>
             <groupId>java3d</groupId>
             <artifactId>vecmath</artifactId>
             <version>1.3.1</version>
         </dependency>
-
+-->
+	    <dependency>
+		    <groupId>org.joml</groupId>
+		    <artifactId>joml</artifactId>
+		    <version>LATEST</version>
+	    </dependency>
         <dependency><!--Trove Library-->
             <groupId>net.sf.trove4j</groupId>
             <artifactId>trove4j</artifactId>

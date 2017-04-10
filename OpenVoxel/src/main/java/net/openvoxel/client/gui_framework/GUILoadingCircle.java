@@ -3,8 +3,8 @@ package net.openvoxel.client.gui_framework;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
+import org.joml.Matrix4f;
 
-import javax.vecmath.Matrix4f;
 
 /**
  * Created by James on 14/09/2016.
@@ -61,11 +61,11 @@ public class GUILoadingCircle extends GUIObjectSizable{
 		drawHandle.EnableColour(true);
 		drawHandle.EnableTexture(true);
 		Matrix4f mat = new Matrix4f();
-		mat.setIdentity();
-		mat.m00 = x_v;
-		mat.m11 = x_v;
-		mat.m01 = -y_v;
-		mat.m10 = y_v;
+		mat.m00(x_v);
+		mat.m11(x_v);
+		mat.m01(-y_v);
+		mat.m10(y_v);
+		//TODO: fix
 		System.out.println("S:" + Math.sqrt((x_v *x_v)+(y_v * y_v)));
 		drawHandle.SetMatrix(mat);
 		drawHandle.SetTexture(Image);

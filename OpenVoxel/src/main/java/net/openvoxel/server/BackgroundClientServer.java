@@ -1,6 +1,10 @@
 package net.openvoxel.server;
 
+import net.openvoxel.client.ClientInput;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.common.event.AbstractEvent;
+import net.openvoxel.common.event.SubscribeEvents;
+import net.openvoxel.common.event.input.CursorPositionChangeEvent;
 import net.openvoxel.networking.ClientNetworkHandler;
 import net.openvoxel.world.World;
 import net.openvoxel.world.client.ClientWorld;
@@ -20,10 +24,11 @@ public class BackgroundClientServer extends ClientServer{
 		thePlayer = new EntityPlayerSP();
 		World theWorld = new ClientWorld(new DebugWorldGenerator());
 		thePlayer.currentWorld = theWorld;
-		thePlayer.xPos = 0;
-		thePlayer.yPos = 140;
-		thePlayer.zPos = 0;
-		thePlayer.setPitch(-30.0F);
+		thePlayer.xPos = 100;
+		thePlayer.yPos = 105;
+		thePlayer.zPos = 100;
+		thePlayer.setPitch(0);
+		thePlayer.setYaw(0);
 		dimensionMap.put(0,theWorld);
 		//END OF DEBUG CODE
 	}
@@ -31,6 +36,35 @@ public class BackgroundClientServer extends ClientServer{
 	@Override
 	public void run() {
 		//super.run();
-		thePlayer.setYaw(thePlayer.getYaw() + 0.001F);
+		thePlayer.setYaw(thePlayer.getYaw() + 0.002F);
+		/*
+		if(EntityPlayerSP.keyForward.isDownRaw()) {
+			thePlayer.zPos -= 0.5F;
+		}
+		if(EntityPlayerSP.keyBackward.isDownRaw()) {
+			thePlayer.zPos += 0.5F;
+		}
+		if(EntityPlayerSP.keyLeft.isDownRaw()) {
+			thePlayer.xPos -= 0.5F;
+		}
+		if(EntityPlayerSP.keyRight.isDownRaw()) {
+			thePlayer.xPos += 0.5F;
+		}
+		if(EntityPlayerSP.keyJump.isDownRaw()) {
+			thePlayer.yPos += 0.5F;
+		}
+		if(EntityPlayerSP.keyCrouch.isDownRaw()) {
+			thePlayer.yPos -= 0.5F;
+		}
+		float a = (float)ClientInput.unhandledMouseDelta.x;
+		float b = (float)ClientInput.unhandledMouseDelta.y;
+		ClientInput.unhandledMouseDelta.x = 0;
+		ClientInput.unhandledMouseDelta.y = 0;
+		a /= 300;
+		b /= 300;
+		thePlayer.setYaw(thePlayer.getYaw() + a);
+		thePlayer.setPitch(thePlayer.getPitch() + b);
+		*/
 	}
+
 }

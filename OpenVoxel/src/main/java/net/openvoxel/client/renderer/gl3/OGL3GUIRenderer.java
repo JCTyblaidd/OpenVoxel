@@ -12,8 +12,8 @@ import net.openvoxel.client.renderer.gl3.util.shader.OGL3GUIShader;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.common.resources.ResourceType;
+import org.joml.Matrix4f;
 
-import javax.vecmath.Matrix4f;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -89,7 +89,6 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 	private static final Matrix4f identity_mat;
 	static {
 		identity_mat = new Matrix4f();
-		identity_mat.setIdentity();
 	}
 
 	private float Z_Position = 0;

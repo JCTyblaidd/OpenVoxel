@@ -1,8 +1,8 @@
 package net.openvoxel.client;
 
 import net.openvoxel.client.gui_framework.GUI;
+import org.joml.Vector2d;
 
-import javax.vecmath.Vector2d;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**

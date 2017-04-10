@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.gl3.worldrender.cache;
 
 import net.openvoxel.client.async_caches.IRenderDataCache;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
@@ -96,6 +97,13 @@ public class OGL3RenderCache implements IRenderDataCache{
 			set_data(bufferNormal, dataNormal);
 			set_data(bufferColourMask, dataColourMask);
 			set_data(bufferLighting, dataLighting);
+			//Release//
+			MemoryUtil.memFree(dataPos);
+			MemoryUtil.memFree(dataUV);
+			MemoryUtil.memFree(dataNormal);
+			MemoryUtil.memFree(dataColourMask);
+			MemoryUtil.memFree(dataLighting);
+			//Cleanup//
 			dataPos = null;
 			dataUV = null;
 			dataNormal = null;

@@ -1,9 +1,12 @@
 package net.openvoxel.common.util;
 
-import javax.vecmath.Vector3d;
+
+import org.joml.Vector3d;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Axis Aligned Bounding Box
  */
 public class AABB {
 

@@ -1,15 +1,14 @@
 package net.openvoxel.client.renderer.gl3.worldrender.shader;
 
-import com.sun.javafx.geom.Vec2f;
 import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
 import net.openvoxel.client.renderer.gl3.util.shader.STD140Layout;
+import net.openvoxel.utility.MatrixUtils;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.system.MemoryUtil;
 
-import javax.vecmath.Matrix3f;
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
 import java.nio.ByteBuffer;
 
 import static net.openvoxel.client.renderer.gl3.util.shader.STD140Layout.LayoutType.*;
@@ -25,6 +24,7 @@ import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 public class OGL3World_UniformCache {
 
 	private static void storeMat4(ByteBuffer buffer,int offset,Matrix4f matrix4f) {
+		/*
 		buffer.putFloat(offset,matrix4f.m00);
 		buffer.putFloat(offset+4,matrix4f.m01);
 		buffer.putFloat(offset+8,matrix4f.m02);
@@ -41,6 +41,26 @@ public class OGL3World_UniformCache {
 		buffer.putFloat(offset+52,matrix4f.m31);
 		buffer.putFloat(offset+56,matrix4f.m32);
 		buffer.putFloat(offset+60,matrix4f.m33);
+		*/
+		/** correct: i think
+		buffer.putFloat(offset,matrix4f.m00());
+		buffer.putFloat(offset+4,matrix4f.m10());
+		buffer.putFloat(offset+8,matrix4f.m20());
+		buffer.putFloat(offset+12,matrix4f.m30());
+		buffer.putFloat(offset+16,matrix4f.m01());
+		buffer.putFloat(offset+20,matrix4f.m11());
+		buffer.putFloat(offset+24,matrix4f.m21());
+		buffer.putFloat(offset+28,matrix4f.m31());
+		buffer.putFloat(offset+32,matrix4f.m02());
+		buffer.putFloat(offset+36,matrix4f.m12());
+		buffer.putFloat(offset+40,matrix4f.m22());
+		buffer.putFloat(offset+44,matrix4f.m32());
+		buffer.putFloat(offset+48,matrix4f.m03());
+		buffer.putFloat(offset+52,matrix4f.m13());
+		buffer.putFloat(offset+56,matrix4f.m23());
+		buffer.putFloat(offset+60,matrix4f.m33());
+		 **/
+		matrix4f.get(offset,buffer);
 	}
 
 	private static void storeMat3(ByteBuffer buffer,int offset,Matrix3f matrix3f) {
@@ -144,27 +164,11 @@ public class OGL3World_UniformCache {
 	                                                 Vector3f cameraPos, float yaw, float pitch, float dayProgress,
 	                                                 float skylightPower,Vector3f skyLightColour, boolean skyEnabled,
 	                                                 Vector3f fogColour, boolean isRaining, boolean isThunder,Vector2f tileSize) {
-		Matrix4f projMatrix = new Matrix4f();
-		projMatrix.setIdentity();
-		projMatrix.m11 = (float)Math.cos(FoV / 2.0F) / (float)Math.sin(FoV / 2.0F);
-		projMatrix.m00 = projMatrix.m11 / aspectRatio;
-		projMatrix.m22 = zLims.y /  (zLims.y - zLims.x);
-		projMatrix.m33 = 0;
-		projMatrix.m23 = 1;
-		projMatrix.m32 = (-1.0F * zLims.x * zLims.y) / (zLims.y - zLims.x);
-		Matrix4f camMatrix = new Matrix4f();
-		camMatrix.setIdentity();
-		Matrix3f camNormMatrix = new Matrix3f();
-		camNormMatrix.setIdentity();
-		//cameraPos.negate();
-		camMatrix.rotX(pitch);
-		camMatrix.rotY(yaw);
-		camMatrix.transform(cameraPos);
-		//camNormMatrix.rotX(pitch);
-		//camNormMatrix.rotZ(yaw);
+		Matrix4f projMatrix = MatrixUtils.genProjectionMatrix(FoV,aspectRatio,zLims);
+		Matrix3f camNormMatrix = MatrixUtils.genCameraNormalMatrix(pitch,yaw);
+		Matrix4f camMatrix = MatrixUtils.genCameraMatrix(cameraPos,camNormMatrix);
 		int worldTick = animCounter % 128;
 		Matrix3f dayProgressMatrix = new Matrix3f();
-		dayProgressMatrix.setIdentity();
 		Vector3f dirSun = new Vector3f(1,0,0);
 		updateFrameInformation(animCounter,worldTick,projMatrix,zLims,camMatrix,camNormMatrix,dayProgress,
 				skylightPower,dayProgressMatrix,dirSun,skyEnabled,fogColour,skyLightColour,isRaining,isThunder,tileSize);

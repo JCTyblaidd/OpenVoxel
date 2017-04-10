@@ -2,8 +2,8 @@ package net.openvoxel.client.gui_framework;
 
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
+import org.joml.Matrix4f;
 
-import javax.vecmath.Matrix4f;
 
 /**
  * Created by James on 01/09/2016.

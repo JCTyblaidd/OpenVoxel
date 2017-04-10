@@ -30,7 +30,7 @@ public class EntityPlayerSP extends EntityPlayer{
 		keyForward = KeyManager.getBinding("player.movement.forward",GLFW_KEY_W);
 		keyBackward = KeyManager.getBinding("player.movement.backward",GLFW_KEY_S);
 		keyLeft = KeyManager.getBinding("player.movement.left",GLFW_KEY_A);
-		keyRight = KeyManager.getBinding("player.movement.right",GLFW_KEY_RIGHT);
+		keyRight = KeyManager.getBinding("player.movement.right",GLFW_KEY_D);
 		keyJump = KeyManager.getBinding("player.movement.jump",GLFW_KEY_SPACE);
 		keyCrouch = KeyManager.getBinding("player.movement.crouch",GLFW_KEY_LEFT_SHIFT);
 		keySprint = KeyManager.getBinding("player.movement.sprint",GLFW_KEY_LEFT_CONTROL);

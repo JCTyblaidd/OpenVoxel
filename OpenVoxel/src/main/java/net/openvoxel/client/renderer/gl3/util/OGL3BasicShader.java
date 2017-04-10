@@ -1,9 +1,9 @@
 package net.openvoxel.client.renderer.gl3.util;
 
 import net.openvoxel.client.renderer.gl3.OGL3Renderer;
+import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 
-import javax.vecmath.Matrix4f;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_FALSE;
@@ -182,10 +182,10 @@ public class OGL3BasicShader {
 
 
 	protected final void setUniformMat4(int Uniform, Matrix4f mat) {
-		float[] Data = new float[]{ mat.m00,mat.m10,mat.m20,mat.m30,
-									mat.m01,mat.m11,mat.m21,mat.m31,
-									mat.m02,mat.m12,mat.m22,mat.m32,
-									mat.m03,mat.m13,mat.m23,mat.m33};
+		float[] Data = new float[]{ mat.m00(),mat.m10(),mat.m20(),mat.m30(),
+									mat.m01(),mat.m11(),mat.m21(),mat.m31(),
+									mat.m02(),mat.m12(),mat.m22(),mat.m32(),
+									mat.m03(),mat.m13(),mat.m23(),mat.m33()};
 		glUniformMatrix4fv(Uniform,false,Data);
 	}
 

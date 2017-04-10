@@ -39,4 +39,14 @@ public class BlockAir extends Block{
 	public boolean hasTileEntity() {
 		return false;
 	}
+
+	@Override
+	public boolean isCompleteOpaque() {
+		return false;
+	}
+
+	@Override
+	public boolean isOpaque(BlockFace face) {
+		return false;
+	}
 }

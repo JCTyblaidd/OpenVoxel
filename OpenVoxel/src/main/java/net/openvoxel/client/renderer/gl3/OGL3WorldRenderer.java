@@ -11,16 +11,18 @@ import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCacheManage
 import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_ShaderCache;
 import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_UniformCache;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.utility.MatrixUtils;
 import net.openvoxel.world.World;
 import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,10 +52,10 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	private List<ClientChunk> pollAndRequestUpdatesForNearbyChunks(EntityPlayerSP player,ClientWorld world) {
 		int playerChunkX = (int)(player.xPos / 16);
 		int playerChunkZ = (int)(player.zPos / 16);
-		int xMin = playerChunkX - 5;
-		int xMax = playerChunkX + 5;
-		int zMin = playerChunkZ - 5;
-		int zMax = playerChunkZ + 5;
+		int xMin = playerChunkX - 8;
+		int xMax = playerChunkX + 8;
+		int zMin = playerChunkZ - 8;
+		int zMax = playerChunkZ + 8;
 		List<ClientChunk> chunks = new ArrayList<>();
 		for(int z = zMin; z <= zMax; z++) {
 			for(int x = xMin; x <= xMax; x++) {
@@ -77,7 +79,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		//Update Per Frame Uniform//
 		int animCounter = 0;
 		float aspectRatio = (float)ClientInput.currentWindowWidth.get() / ClientInput.currentWindowHeight.get();
-		float fov = 90.0F;
+		float fov = 80.0F;
 		Vector3f cameraPos = new Vector3f((float)player.xPos,(float)player.yPos,(float)player.zPos);
 		float yaw = player.getYaw();
 		float pitch = player.getPitch();
@@ -90,39 +92,23 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		boolean isThunder = false;
 		Vector2f tileSize = new Vector2f(1,1);//TODO:
 		OGL3World_UniformCache.calcAndUpdateFrameInformation(animCounter,(float)Math.toRadians(fov),
-				new Vector2f(0.1F,100.0F),aspectRatio,cameraPos,yaw,pitch,dayProgress,skylightPower,skylightColour,
+				new Vector2f(0.1F,1000.0F),aspectRatio,cameraPos,yaw,pitch,dayProgress,skylightPower,skylightColour,
 				skyEnabled,fogColour,isRaining,isThunder,tileSize);
 		OGL3World_UniformCache.bindAndUpdateTextureAtlas(OGL3Renderer.instance.blockAtlas);
 	}
+
 
 	private void setupCacheUniform(ClientChunk chunk,int yHeight) {
 		float X = chunk.chunkX * 16.0F;
 		float Y = yHeight * 16.0F;
 		float Z = chunk.chunkZ * 16.0F;
-		Matrix4f matrix4f = new Matrix4f();
-		matrix4f.setIdentity();
-		matrix4f.transform(new Vector3f(X,Y,Z));
-		OGL3World_UniformCache.setChunkUniform(matrix4f);
+		Matrix4f matrix = MatrixUtils.genChunkPositionMatrix(X,Y,Z);
+		OGL3World_UniformCache.setChunkUniform(matrix);
 	}
 
-	/**
-	 * TODO: rework entirely [async section clipping from player & from sun]
-	 *  TODO: add support for deferred render path
-	 * @param player the player to draw from the viewpoint of
-	 * @param world the world to draw
-	 */
-	@Override
-	public void renderWorld(EntityPlayerSP player, ClientWorld world) {
-		List<ClientChunk> toRender = pollAndRequestUpdatesForNearbyChunks(player,world);
-		checkForSettingsChange();
-		//TODO: remove custom background reset
-		glClearColor(0,0,0.3F,1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		//Setup Uniforms//
-		setupUniforms(player,world);
-		//Allow all caches updates//
-		for(ClientChunk chunk : toRender) {
+
+	private void updateChunks(List<ClientChunk> chunkData) {
+		for(ClientChunk chunk : chunkData) {
 			if(chunk != null) {
 				for(int y = 0; y < 16; y++) {
 					ClientChunkSection section = chunk.getSectionAt(y);
@@ -135,6 +121,26 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 				}
 			}
 		}
+	}
+
+	/**
+	 * TODO: rework entirely [async section clipping from player & from sun]
+	 *  TODO: add support for deferred render path
+	 * @param player the player to draw from the viewpoint of
+	 * @param world the world to draw
+	 */
+	@Override
+	public void renderWorld(EntityPlayerSP player, ClientWorld world) {
+		List<ClientChunk> toRender = pollAndRequestUpdatesForNearbyChunks(player,world);
+		checkForSettingsChange();
+		glClearColor(0,0,0.3F,1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		updateChunks(toRender);
+		//Setup Uniforms//
+		setupUniforms(player,world);
+		//Allow all caches updates//
 		OGL3World_ShaderCache.BLOCK_SIMPLE.use();
 		//Draw All Caches : todo update//
 		for(ClientChunk chunk : toRender) {

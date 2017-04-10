@@ -19,6 +19,10 @@ public class KeyBinding {
 		return !ClientInput.inputTakenByGUI() && ClientInput.isKeyDown(KEY);
 	}
 
+	public boolean isDownRaw() {
+		return ClientInput.isKeyDown(KEY);
+	}
+
 	public int getKey() {
 		return KEY;
 	}
