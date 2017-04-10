@@ -1,13 +1,12 @@
 package net.openvoxel.client.renderer.gl3.worldrender.cache;
 
-import net.openvoxel.client.async_caches.IRenderDataCache;
+import net.openvoxel.client.utility.IRenderDataCache;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glDrawBuffers;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
@@ -25,14 +24,16 @@ public class OGL3RenderCache implements IRenderDataCache{
 	// OpenGL Draw Buffer Caches //
 	///////////////////////////////
 
-	int bufferPos;
-	int bufferUV;
-	int bufferNormal;
-	int bufferColourMask;
-	int bufferLighting;
+	private int bufferPos;
+	private int bufferUV;
+	private int bufferNormal;
+	private int bufferTangent;
+	private int bufferBiTangent;
+	private int bufferColourMask;
+	private int bufferLighting;
 
-	//BAD???///
-	int VAO;
+	//TODO: is using lots of vertex arrays worth it
+	private int VAO;
 
 	////////////////////////////////////////
 	// OpenGL Draw Buffer Data Generation //
@@ -41,47 +42,48 @@ public class OGL3RenderCache implements IRenderDataCache{
 	ByteBuffer dataPos;
 	ByteBuffer dataUV;
 	ByteBuffer dataNormal;
+	ByteBuffer dataTangent;
+	ByteBuffer dataBiTangent;
 	ByteBuffer dataColourMask;
 	ByteBuffer dataLighting;
 
-	boolean hasData = true;//TODO: init to false
-	int valueCount = 0;
+	private int valueCount = 0;
 	int newValueCount = 0;
 
-	public void initGL() {
-		int[] bufferArray = new int[5];
+	void initGL() {
+		int[] bufferArray = new int[7];
 		glGenBuffers(bufferArray);
 		bufferPos = bufferArray[0];
 		bufferUV = bufferArray[1];
 		bufferNormal = bufferArray[2];
-		bufferColourMask = bufferArray[3];
-		bufferLighting = bufferArray[4];
-		//Set as no data//
-		ByteBuffer emptyData = ByteBuffer.allocate(0);
-		//TODO: remove(waste of opengl calls debug only)
-		set_data(bufferPos,emptyData);
-		set_data(bufferUV,emptyData);
-		set_data(bufferNormal,emptyData);
-		set_data(bufferColourMask,emptyData);
-		set_data(bufferLighting,emptyData);
+		bufferTangent = bufferArray[3];
+		bufferBiTangent = bufferArray[4];
+		bufferColourMask = bufferArray[5];
+		bufferLighting = bufferArray[6];
 		//
 		VAO = glGenVertexArrays();
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER,bufferPos);
 		glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
 		glBindBuffer(GL_ARRAY_BUFFER,bufferUV);
-		glVertexAttribPointer(1,2,GL_FLOAT,false,0,0);
+		glVertexAttribPointer(1,2,GL_UNSIGNED_SHORT,true,0,0);
 		glBindBuffer(GL_ARRAY_BUFFER,bufferNormal);
-		glVertexAttribPointer(2,3,GL_FLOAT,false,0,0);
-		glBindBuffer(GL_ARRAY_BUFFER,bufferColourMask);
+		glVertexAttribPointer(2,3,GL_UNSIGNED_BYTE,true,0,0);
+		glBindBuffer(GL_ARRAY_BUFFER,bufferTangent);
 		glVertexAttribPointer(3,3,GL_UNSIGNED_BYTE,true,0,0);
-		glBindBuffer(GL_ARRAY_BUFFER,bufferLighting);
+		glBindBuffer(GL_ARRAY_BUFFER,bufferBiTangent);
 		glVertexAttribPointer(4,3,GL_UNSIGNED_BYTE,true,0,0);
+		glBindBuffer(GL_ARRAY_BUFFER,bufferColourMask);
+		glVertexAttribPointer(5,4,GL_UNSIGNED_BYTE,true,0,0);
+		glBindBuffer(GL_ARRAY_BUFFER,bufferLighting);
+		glVertexAttribPointer(6,4,GL_UNSIGNED_BYTE,true,0,0);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
 		glEnableVertexAttribArray(3);
 		glEnableVertexAttribArray(4);
+		glEnableVertexAttribArray(5);
+		glEnableVertexAttribArray(6);
 		glBindVertexArray(0);
 	}
 
@@ -95,12 +97,16 @@ public class OGL3RenderCache implements IRenderDataCache{
 			set_data(bufferPos, dataPos);
 			set_data(bufferUV, dataUV);
 			set_data(bufferNormal, dataNormal);
+			set_data(bufferTangent,dataTangent);
+			set_data(bufferBiTangent,dataBiTangent);
 			set_data(bufferColourMask, dataColourMask);
 			set_data(bufferLighting, dataLighting);
 			//Release//
 			MemoryUtil.memFree(dataPos);
 			MemoryUtil.memFree(dataUV);
 			MemoryUtil.memFree(dataNormal);
+			MemoryUtil.memFree(dataTangent);
+			MemoryUtil.memFree(dataBiTangent);
 			MemoryUtil.memFree(dataColourMask);
 			MemoryUtil.memFree(dataLighting);
 			//Cleanup//
@@ -122,14 +128,16 @@ public class OGL3RenderCache implements IRenderDataCache{
 	}
 
 	public boolean cacheExists() {
-		return true;//IGNORE//
+		return valueCount != 0;
 	}
 
 	public void draw() {
-		if(valueCount != 0) {
-			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, valueCount);
-		}
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, valueCount);
 	}
 
+	@Override
+	public void onChunkSectionFree() {
+		//TODO: call and mark for cleanup
+	}
 }

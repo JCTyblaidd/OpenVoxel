@@ -4,6 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -40,9 +41,9 @@ public class STBITexture {
 
 	public STBITexture(byte[] array) {
 		//STBImage.stbi_load_from_memory()
-		ByteBuffer buffer = BufferUtils.createByteBuffer(array.length);
+		ByteBuffer buffer = MemoryUtil.memAlloc(array.length);
 		buffer.put(array);
-		buffer.position(0);
+		buffer.position(0); //TODO: improve the usage of tiny buffers
 		IntBuffer xBuffer = BufferUtils.createIntBuffer(1);
 		IntBuffer yBuffer = BufferUtils.createIntBuffer(1);
 		IntBuffer compBuffer = BufferUtils.createIntBuffer(1);
@@ -59,6 +60,7 @@ public class STBITexture {
 			CrashReport crashReport = new CrashReport("Image Load Error").invalidState("componentCount != 4").invalidState("Capacity = "+pixels.capacity()).invalidState("Expected Capacity = " + (4 * width * height));
 			OpenVoxel.reportCrash(crashReport);
 		}
+		MemoryUtil.memFree(buffer);
 	}
 
 

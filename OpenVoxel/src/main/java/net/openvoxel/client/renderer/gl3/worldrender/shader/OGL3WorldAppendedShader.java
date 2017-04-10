@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.gl3.worldrender.shader;
 
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import net.openvoxel.client.renderer.gl3.util.OGL3BasicShader;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
@@ -27,18 +28,16 @@ public class OGL3WorldAppendedShader extends OGL3BasicShader{
 	OGL3WorldAppendedShader(String shaderSource, String debugID) {
 		super(shaderSource, debugID);
 		glUseProgram(program_ID);
-		_bindUBO("Settings",0);
-		_bindUBO("FinalFrame",1);
-		_bindUBO("ChunkConstants",2);
+		_bindUBO("Settings",OGL3Renderer.UniformBlockBinding_Settings);
+		_bindUBO("FinalFrame",OGL3Renderer.UniformBlockBinding_FrameInfo);
+		_bindUBO("ChunkConstants",OGL3Renderer.UniformBlockBinding_ChunkInfo);
 		//Texture Bindings//
-		_bindTextureTarget("tDiffuse",10);
-		_bindTextureTarget("tNormal",11);
-		_bindTextureTarget("tPBR",12);
-		_bindTextureTarget("tItemDiffuse",13);
-		_bindTextureTarget("skyMap",14);
-		_bindTextureTarget("shadow1",15);
-		_bindTextureTarget("shadow2",16);
-		_bindTextureTarget("shadow3",17);
+		_bindTextureTarget("tDiffuse", OGL3Renderer.TextureBinding_tDiffuse);
+		_bindTextureTarget("tNormal",OGL3Renderer.TextureBinding_tNormal);
+		_bindTextureTarget("tPBR",OGL3Renderer.TextureBinding_tPBR);
+		_bindTextureTarget("tItemDiffuse",OGL3Renderer.TextureBinding_tItemDiffuse);
+		_bindTextureTarget("skyMap",OGL3Renderer.TextureBinding_SkyCubeMap);
+		_bindTextureTarget("shadows",OGL3Renderer.TextureBinding_Shadows);
 		glUseProgram(0);
 	}
 

@@ -9,7 +9,7 @@ import net.openvoxel.world.chunk.Chunk;
  * Client Based Chunk Implementation
  */
 @SideOnly(side = Side.CLIENT)
-public class ClientChunk extends Chunk{
+public class ClientChunk extends Chunk {
 
 	public ClientChunk(int x, int z) {
 		super(x, z,true);

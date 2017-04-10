@@ -39,4 +39,8 @@ public class ChunkMap<T> {
 	public void forEachEntry(TLongObjectProcedure<T> procedure) {
 		dataMap.forEachEntry(procedure);
 	}
+
+	public void emptyAll() {
+		dataMap.clear();
+	}
 }

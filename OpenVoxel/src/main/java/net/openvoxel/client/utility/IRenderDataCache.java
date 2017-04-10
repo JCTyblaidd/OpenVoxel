@@ -1,4 +1,4 @@
-package net.openvoxel.client.async_caches;
+package net.openvoxel.client.utility;
 
 /**
  * Created by James on 09/04/2017.
@@ -8,5 +8,5 @@ package net.openvoxel.client.async_caches;
  */
 public interface IRenderDataCache {
 
-
+	void onChunkSectionFree();
 }

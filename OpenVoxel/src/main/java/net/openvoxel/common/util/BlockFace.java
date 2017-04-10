@@ -2,6 +2,8 @@ package net.openvoxel.common.util;
 
 /**
  * Created by James on 28/08/2016.
+ *
+ * Block Face Displacement Utility
  */
 public enum BlockFace {
 	UP(0,1,0),//Y+

@@ -34,6 +34,8 @@ import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
+import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.jemalloc.JEmalloc;
 
 import java.io.File;
 import java.net.SocketAddress;
@@ -107,6 +109,17 @@ public class OpenVoxel implements EventListener{
 	 */
 	public UserData userData;
 
+
+	/**
+	 * Main Logger
+	 */
+	private static Logger openVoxelLogger;
+
+
+	public static Logger getLogger() {
+		return openVoxelLogger;
+	}
+
 	/**
 	 * Tells the game to bootstrap a server instance
 	 * Local Server => Host + Connect
@@ -116,7 +129,7 @@ public class OpenVoxel implements EventListener{
 	 */
 	public void SetCurrentServer(Server server) {
 		if(currentServer != null) {
-			Logger.getLogger("OpenVoxel").Severe("Running Server Was Not Shutdown Correctly");
+			openVoxelLogger.Severe("Running Server Was Not Shutdown Correctly");
 			CrashReport crashReport = new CrashReport("Server Was Hosted But The Old One Has Not Shutdown");
 			reportCrash(crashReport);
 		}
@@ -201,7 +214,7 @@ public class OpenVoxel implements EventListener{
 	 * Tells the wrapped loader to re-attempt the loading seqyence
 	 */
 	public static void reloadMods() {
-		Logger.getLogger("OpenVoxel").getSubLogger("Reload").Info("Attempting Mod Reload");
+		openVoxelLogger.getSubLogger("Reload").Info("Attempting Mod Reload");
 		instance.flagReload.set(true);
 		instance.AttemptShutdownSequence(false);
 	}
@@ -219,16 +232,22 @@ public class OpenVoxel implements EventListener{
 		Side.isClient = isClient;
 		eventBus = new EventBus();
 		eventBus.register(this);
+		openVoxelLogger = Logger.getLogger("Open Voxel");
 		//Configure Debug Settings//
-		if(args.hasFlag("noChecks")) {//Tiny Performance Improvement
+		if(args.hasFlag("noChecks")) {
+			openVoxelLogger.Info("Enabled Minimal Checking Mode");
 			System.setProperty("org.lwjgl.glfw.checkThread0","false");
 			System.setProperty("org.lwjgl.util.NoChecks","true");
-		}else if(args.hasFlag("debugChecks")) {//For Debugging//
+		}else if(args.hasFlag("debugChecks")) {
+			openVoxelLogger.Info("Enabled Maximum Checking Mode");
 			System.setProperty("org.lwjgl.util.Debug","true");
+			args.storeRuntimeFlag("debugAllocator");
 		}
-		Logger.getLogger("Open Voxel").Info("Loaded Open Voxel "+currentVersion.getValString());
-
-		//Hook Debug Output//
+		if(args.hasFlag("debugAllocator")) {
+			openVoxelLogger.Info("Enabled LWJGL Debug Memory Allocator");
+			System.setProperty("org.lwjgl.util.DebugAllocator","true");
+		}
+		openVoxelLogger.Info("Loaded Open Voxel "+currentVersion.getValString());
 		if(args.hasFlag("bonusLogging")) {
 			NettyLogWrapper.Load();
 			if (isClient) {
@@ -236,7 +255,6 @@ public class OpenVoxel implements EventListener{
 				GLFWLogWrapper.Load();
 			}
 		}
-
 		//Acquire user data if ClientSide
 		if(isClient) {
 			userData = UserData.from(args);
@@ -295,17 +313,17 @@ public class OpenVoxel implements EventListener{
 		eventBus.push(e1);
 		if(!e1.isCancelled() || isCrash) {
 			if(e1.isCancelled()) {
-				Logger.getLogger("OpenVoxel").Warning("Window Close Requested Event for Crash Stopped, Invalid Behaviour");
+				openVoxelLogger.Warning("Window Close Requested Event for Crash Stopped, Invalid Behaviour");
 			}
 			//notifyEvent Main Loops Of Shutdown//
 			isRunning.set(false);
 			try{
 				Thread.sleep(1000);//TODO: await more efficiently
 			}catch(InterruptedException e) {
-				Logger.getLogger("OpenVoxel").Warning("Thread Wait Was Interrupted");
+				openVoxelLogger.Warning("Thread Wait Was Interrupted");
 			}
 			//Push Event After Timeout//
-			Logger.getLogger("OpenVoxel").Info("Shutting Down...");
+			openVoxelLogger.Info("Shutting Down...");
 			ProgramShutdownEvent e2 = new ProgramShutdownEvent(isCrash);
 			eventBus.push(e2);
 			if(isCrash) {

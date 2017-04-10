@@ -55,8 +55,8 @@ public class OGL3FontRenderer {
 
 	public OGL3FontRenderer() {
 		fontTexture.makeLinear();
-		posData = new float[3 * 2 * 256];
-		uvData = new float[2 * 2 * 256];
+		posData = new float[3 * 2 * 1024];
+		uvData = new float[2 * 2 * 1024];
 		bufferPos = glGenBuffers();
 		bufferUV = glGenBuffers();
 		VAO = glGenVertexArrays();

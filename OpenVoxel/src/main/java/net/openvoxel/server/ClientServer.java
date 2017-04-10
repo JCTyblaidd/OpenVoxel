@@ -3,6 +3,7 @@ package net.openvoxel.server;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.server.util.ClientChunkLoadManager;
 import net.openvoxel.world.World;
 import net.openvoxel.world.client.ClientWorld;
 import net.openvoxel.world.generation.DebugWorldGenerator;
@@ -24,6 +25,8 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 	protected EntityPlayerSP thePlayer;
 
 	protected ClientNetworkHandler serverConnection;
+
+	public ClientChunkLoadManager loadManager;
 
 	public ClientServer() {
 

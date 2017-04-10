@@ -38,7 +38,14 @@ abstract class BaseServer implements Runnable{
 	}
 
 	void shutdown() {
+		//TODO: save data on shutdown
 		gameTickThread.terminate();
+		dimensionMap.forEachValue(e -> {
+			e.releaseAllChunkData();
+			return true;
+		});
+		dimensionMap.clear();
+		connectedPlayers.clear();
 	}
 
 

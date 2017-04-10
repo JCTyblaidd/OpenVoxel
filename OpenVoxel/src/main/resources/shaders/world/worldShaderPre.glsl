@@ -49,14 +49,12 @@ layout(std140) uniform ChunkConstants {
     mat4 chunkPos;
 } chunkdata;
 
-uniform sampler2D tDiffuse;     //Block Diffuse//
-uniform sampler2D tNormal;      //Normal Diffuse//
-uniform sampler2D tPBR;         //Physically Based Rendering Information//
-uniform sampler2D itemDiffuse;  //Item Diffuse Texture//
-uniform samplerCube skyMap;     //Sky Background Map
-uniform sampler2D shadow1;      //Shadow Map Cascade1
-uniform sampler2D shadow2;      //Shadow Map Cascade2
-uniform sampler2D shadow3;      //Shadow Map Cascade3
+uniform sampler2D tDiffuse;             //Block Diffuse//
+uniform sampler2D tNormal;              //Normal Diffuse//
+uniform sampler2D tPBR;                 //Physically Based Rendering Information//
+uniform sampler2D itemDiffuse;          //Item Diffuse Texture//
+uniform samplerCube skyMap;             //Sky Background Map
+uniform sampler2DArrayShadow shadows;   //Shadow Map Cascades
 
 /**
 vec3 sampleSky(in vec3 camSpaceDir) {

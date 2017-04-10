@@ -33,6 +33,17 @@ public class World {
 	}
 
 	/**
+	 * Unload The Entire World : Release All Chunk Data
+	 */
+	public void releaseAllChunkData() {
+		chunkMap.forEachChunk(e -> {
+			e.releaseData();
+			return true;
+		});
+		chunkMap.emptyAll();
+	}
+
+	/**
 	 * Run Required Updates on the location
 	 */
 	public void gameLogicTick() {

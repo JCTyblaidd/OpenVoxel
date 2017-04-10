@@ -9,6 +9,8 @@ import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * Created by James on 01/08/2016.
+ *
+ * Forwards events from the window to the event bus
  */
 public class GLFWEventHandler {
 
@@ -18,7 +20,7 @@ public class GLFWEventHandler {
 		INSTANCE = new GLFWEventHandler(window);
 	}
 
-	public GLFWEventHandler(long window) {
+	private GLFWEventHandler(long window) {
 		glfwSetCursorPosCallback(window,new CursorPosCallback());
 		glfwSetKeyCallback(window,new KeyCallback());
 		glfwSetCharCallback(window,new CharacterCallback());

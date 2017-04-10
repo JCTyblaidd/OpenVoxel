@@ -1,6 +1,7 @@
 package net.openvoxel.api.login;
 
 import com.jc.util.utils.ArgumentParser;
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
 
@@ -18,7 +19,7 @@ public class UserData {
 		UserName = name;
 		uniqueID = uuid;
 		if(Side.isClient) {
-			Logger.INSTANCE.Info("Loaded Client w/ UserName="+UserName);
+			OpenVoxel.getLogger().Info("Loaded Client: UserName = "+UserName);
 		}
 	}
 

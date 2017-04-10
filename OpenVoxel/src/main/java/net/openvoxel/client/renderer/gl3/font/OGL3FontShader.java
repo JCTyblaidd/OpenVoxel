@@ -8,6 +8,8 @@ import static org.lwjgl.opengl.GL20.*;
 
 /**
  * Created by James on 04/09/2016.
+ *
+ * Font Display Shader Code
  */
 public class OGL3FontShader extends OGL3BasicShader{
 
@@ -35,17 +37,13 @@ public class OGL3FontShader extends OGL3BasicShader{
 	}
 
 	public void setColour(int col) {
-		//glUniform1i(colMain_Uniform,col);
 		float[] v = getCol(col);
-		//System.out.println(Arrays.toString(v));
 		glUniform4f(colMain_Uniform,v[0],v[1],v[2],v[3]);
 	}
 
 
 	public void setOutlineColour(int col) {
-		//glUniform1i(colOutline_Uniform,col);
 		float[] v = getCol(col);
-		//System.out.println(Arrays.toString(v));
 		glUniform4f(colOutline_Uniform,v[0],v[1],v[2],v[3]);
 	}
 

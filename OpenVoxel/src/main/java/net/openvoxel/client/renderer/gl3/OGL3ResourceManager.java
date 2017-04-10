@@ -4,6 +4,8 @@ import net.openvoxel.client.renderer.gl3.util.OGL3Texture;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Remove??? TODO: kill after moving information
  */
 public class OGL3ResourceManager {
 

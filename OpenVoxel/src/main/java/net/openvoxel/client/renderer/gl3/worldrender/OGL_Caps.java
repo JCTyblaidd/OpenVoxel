@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GLCapabilities;
  *
  * Information About OpenGL Capabilities: if advanced optimization = true
  */
-public class GL_Caps {
+public class OGL_Caps {
 
 	public static void Load() {}
 	static {

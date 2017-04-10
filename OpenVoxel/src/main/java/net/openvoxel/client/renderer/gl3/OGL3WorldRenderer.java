@@ -5,9 +5,12 @@ import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
-import net.openvoxel.client.renderer.gl3.worldrender.OGL3GBufferManager;
+import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
+import net.openvoxel.client.renderer.gl3.util.OGL3CubeMapTexture;
+import net.openvoxel.client.renderer.gl3.worldrender.OGL3ForwardWorldRenderer;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCache;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCacheManager;
+import net.openvoxel.client.renderer.gl3.worldrender.deferred_path.OGL3DeferredWorldRenderer;
 import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_ShaderCache;
 import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_UniformCache;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
@@ -17,11 +20,9 @@ import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
-import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,8 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 
 	private RenderConfig currentSettings;
 	private AtomicBoolean settingsDirty = new AtomicBoolean(true);
-	private OGL3GBufferManager gBufferManager;
+	private OGL3DeferredWorldRenderer deferredWorldRenderer;
+	private OGL3ForwardWorldRenderer forwardWorldRenderer;
 	private OGL3RenderCacheManager cacheManager;
 
 	OGL3WorldRenderer() {
@@ -47,6 +49,8 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		cacheManager = new OGL3RenderCacheManager();
 		OGL3World_UniformCache.Load();
 		OGL3World_ShaderCache.Load();
+		deferredWorldRenderer = new OGL3DeferredWorldRenderer();
+		forwardWorldRenderer = new OGL3ForwardWorldRenderer();
 	}
 
 	private List<ClientChunk> pollAndRequestUpdatesForNearbyChunks(EntityPlayerSP player,ClientWorld world) {
@@ -68,7 +72,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	private void checkForSettingsChange() {
 		if(settingsDirty.get()) {
 			settingsDirty.set(false);
-			//Handle: settings change
+			//TODO: enable settings tweaking
 			Logger.getLogger("World Renderer").Info("Settings Update");
 			OGL3Renderer.instance.blockAtlas.update(128,false, CompressionLevel.NO_COMPRESSION);
 		}
@@ -94,7 +98,6 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		OGL3World_UniformCache.calcAndUpdateFrameInformation(animCounter,(float)Math.toRadians(fov),
 				new Vector2f(0.1F,1000.0F),aspectRatio,cameraPos,yaw,pitch,dayProgress,skylightPower,skylightColour,
 				skyEnabled,fogColour,isRaining,isThunder,tileSize);
-		OGL3World_UniformCache.bindAndUpdateTextureAtlas(OGL3Renderer.instance.blockAtlas);
 	}
 
 
@@ -123,6 +126,15 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		}
 	}
 
+	private void generateWorldBackground(EntityPlayerSP player, ClientWorld world) {
+		int worldSkyScatter = 0xCFFFFF;
+		int worldLightColour = 0xDFE5A2;
+		//TODO: sky cube map
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(187.F/255.F,1.F,1.F,1.F);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+
 	/**
 	 * TODO: rework entirely [async section clipping from player & from sun]
 	 *  TODO: add support for deferred render path
@@ -133,16 +145,12 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	public void renderWorld(EntityPlayerSP player, ClientWorld world) {
 		List<ClientChunk> toRender = pollAndRequestUpdatesForNearbyChunks(player,world);
 		checkForSettingsChange();
-		glClearColor(0,0,0.3F,1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		generateWorldBackground(player, world);
 		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 		updateChunks(toRender);
-		//Setup Uniforms//
 		setupUniforms(player,world);
-		//Allow all caches updates//
 		OGL3World_ShaderCache.BLOCK_SIMPLE.use();
-		//Draw All Caches : todo update//
 		for(ClientChunk chunk : toRender) {
 			if(chunk != null) {
 				for(int y = 0; y < 16; y++) {
@@ -152,7 +160,6 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 						if (cache.cacheExists()) {
 							//Set Uniform Vertex//
 							setupCacheUniform(chunk,y);
-							//Draw// //TODO: enable//
 							cache.draw();
 						}
 					}
@@ -171,7 +178,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		//Cleanup Chunk Rendering Data//
 	}
 
-	public void onSettingsChanged(RenderConfig settingChangeRequested) {
+	void onSettingsChanged(RenderConfig settingChangeRequested) {
 		currentSettings = settingChangeRequested;
 		settingsDirty.set(true);
 	}

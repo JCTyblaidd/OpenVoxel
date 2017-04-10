@@ -3,7 +3,7 @@ package net.openvoxel.world.client;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
-import net.openvoxel.client.async_caches.IRenderDataCache;
+import net.openvoxel.client.utility.IRenderDataCache;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.world.chunk.ChunkSection;
 
@@ -30,5 +30,13 @@ public class ClientChunkSection extends ChunkSection {
 	}
 	public byte getPrevMeta() {
 		return metaVal;
+	}
+
+	@Override
+	protected void freeMemory() {
+		super.freeMemory();
+		if(renderCache != null) {
+			renderCache.onChunkSectionFree();
+		}
 	}
 }

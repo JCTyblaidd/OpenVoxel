@@ -3,6 +3,8 @@ package net.openvoxel.world.chunk;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.entity.Entity;
+import net.openvoxel.loader.optimizer.tags.Validation;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
@@ -24,12 +26,12 @@ public class Chunk {
 	/**
 	 * Chunk Height Map [unsigned byte]
 	 */
-	private ByteBuffer heightMap = ByteBuffer.allocate(16*16);
+	private ByteBuffer heightMap = MemoryUtil.memAlloc(16*16);
 
 	/**
 	 * Biome Information Map
 	 */
-	private ShortBuffer biomeMap = ShortBuffer.allocate(16*16);
+	private ShortBuffer biomeMap = MemoryUtil.memAllocShort(16*16);
 
 	/**
 	 * Chunk needs update flag
@@ -37,7 +39,6 @@ public class Chunk {
 	private boolean needsUpdate = true;
 
 	private List<Entity> entities = new ArrayList<>();
-
 
 	public final int chunkX;
 
@@ -54,6 +55,22 @@ public class Chunk {
 	protected Chunk(int x, int z,boolean noGenFlag) {
 		this.chunkX = x;
 		this.chunkZ = z;
+	}
+
+	/**
+	 * Cleanup All Allocated Memory
+	 *
+	 * Must be called before references are lost
+	 */
+	public void releaseData() {
+		MemoryUtil.memFree(heightMap);
+		MemoryUtil.memFree(biomeMap);
+		for(ChunkSection section : chunkSections) {
+			section.freeMemory();
+		}
+		//TODO: how are we going to handle entities
+		//TODO: add onFinalize Validation as an option
+		entities.clear();
 	}
 
 

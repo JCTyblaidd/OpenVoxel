@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.gl3.worldrender.shader;
 
+import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
 import net.openvoxel.client.renderer.gl3.util.shader.STD140Layout;
 import net.openvoxel.utility.MatrixUtils;
@@ -24,42 +25,6 @@ import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 public class OGL3World_UniformCache {
 
 	private static void storeMat4(ByteBuffer buffer,int offset,Matrix4f matrix4f) {
-		/*
-		buffer.putFloat(offset,matrix4f.m00);
-		buffer.putFloat(offset+4,matrix4f.m01);
-		buffer.putFloat(offset+8,matrix4f.m02);
-		buffer.putFloat(offset+12,matrix4f.m03);
-		buffer.putFloat(offset+16,matrix4f.m10);
-		buffer.putFloat(offset+20,matrix4f.m11);
-		buffer.putFloat(offset+24,matrix4f.m12);
-		buffer.putFloat(offset+28,matrix4f.m13);
-		buffer.putFloat(offset+32,matrix4f.m20);
-		buffer.putFloat(offset+36,matrix4f.m21);
-		buffer.putFloat(offset+40,matrix4f.m22);
-		buffer.putFloat(offset+44,matrix4f.m23);
-		buffer.putFloat(offset+48,matrix4f.m30);
-		buffer.putFloat(offset+52,matrix4f.m31);
-		buffer.putFloat(offset+56,matrix4f.m32);
-		buffer.putFloat(offset+60,matrix4f.m33);
-		*/
-		/** correct: i think
-		buffer.putFloat(offset,matrix4f.m00());
-		buffer.putFloat(offset+4,matrix4f.m10());
-		buffer.putFloat(offset+8,matrix4f.m20());
-		buffer.putFloat(offset+12,matrix4f.m30());
-		buffer.putFloat(offset+16,matrix4f.m01());
-		buffer.putFloat(offset+20,matrix4f.m11());
-		buffer.putFloat(offset+24,matrix4f.m21());
-		buffer.putFloat(offset+28,matrix4f.m31());
-		buffer.putFloat(offset+32,matrix4f.m02());
-		buffer.putFloat(offset+36,matrix4f.m12());
-		buffer.putFloat(offset+40,matrix4f.m22());
-		buffer.putFloat(offset+44,matrix4f.m32());
-		buffer.putFloat(offset+48,matrix4f.m03());
-		buffer.putFloat(offset+52,matrix4f.m13());
-		buffer.putFloat(offset+56,matrix4f.m23());
-		buffer.putFloat(offset+60,matrix4f.m33());
-		 **/
 		matrix4f.get(offset,buffer);
 	}
 
@@ -87,33 +52,33 @@ public class OGL3World_UniformCache {
 	}
 
 	//Buffer References//
-	public static int UBO_Settings, UBO_FinalFrame, UBO_ChunkConstants;
+	private static int UBO_Settings, UBO_FinalFrame, UBO_ChunkConstants;
 	//Data Allocation//
-	public static ByteBuffer buf_settings, buf_final_frame, buf_chunk_constants;
+	private static ByteBuffer buf_settings, buf_final_frame, buf_chunk_constants;
 
 	//Offset Information//
-	public static final int offsetFrame_AnimIndex;
-	public static final int offsetFrame_WorldTick;
-	public static final int offsetFrame_ProjMatrix ;
-	public static final int offsetFrame_InverseProjMatrix;
-	public static final int offsetFrame_ZLimits;
-	public static final int offsetFrame_CamMatrix;
-	public static final int offsetFrame_CamNormMatrix;
-	public static final int offsetFrame_InvCamNormMatrix;
-	public static final int offsetFrame_DayProgress;
-	public static final int offsetFrame_DayProgressMatrix;
-	public static final int offsetFrame_SunlightPower;
-	public static final int offsetFrame_DirSun;
-	public static final int offsetFrame_SkyEnabled;
-	public static final int offsetFrame_FogColour;
-	public static final int offsetFrame_SkyLightColour;
-	public static final int offsetFrame_IsRaining;
-	public static final int offsetFrame_IsThunder;
-	public static final int offsetFrame_TileSize;
-	public static final int offsetFrame_SIZE;
+	private static final int offsetFrame_AnimIndex;
+	private static final int offsetFrame_WorldTick;
+	private static final int offsetFrame_ProjMatrix ;
+	private static final int offsetFrame_InverseProjMatrix;
+	private static final int offsetFrame_ZLimits;
+	private static final int offsetFrame_CamMatrix;
+	private static final int offsetFrame_CamNormMatrix;
+	private static final int offsetFrame_InvCamNormMatrix;
+	private static final int offsetFrame_DayProgress;
+	private static final int offsetFrame_DayProgressMatrix;
+	private static final int offsetFrame_SunlightPower;
+	private static final int offsetFrame_DirSun;
+	private static final int offsetFrame_SkyEnabled;
+	private static final int offsetFrame_FogColour;
+	private static final int offsetFrame_SkyLightColour;
+	private static final int offsetFrame_IsRaining;
+	private static final int offsetFrame_IsThunder;
+	private static final int offsetFrame_TileSize;
+	private static final int offsetFrame_SIZE;
 
-	public static final int offsetChunk_ChunkMatrix = 0;//Only Value//
-	public static final int offsetChunk_SIZE = 64;
+	private static final int offsetChunk_ChunkMatrix = 0;//Only Value//
+	private static final int offsetChunk_SIZE = 64;
 
 	static {
 		STD140Layout layout = new STD140Layout(//TODO: find out the issue with the layout
@@ -222,26 +187,21 @@ public class OGL3World_UniformCache {
 		buf_settings.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_Settings);
 		glBufferData(GL_UNIFORM_BUFFER,buf_settings,GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER,0,UBO_Settings);
+		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_Settings,UBO_Settings);
 	}
 
 	private static void updateFinalFrame() {
 		buf_final_frame.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_FinalFrame);
 		glBufferData(GL_UNIFORM_BUFFER, buf_final_frame,GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER,1,UBO_FinalFrame);
+		glBindBufferBase(GL_UNIFORM_BUFFER,OGL3Renderer.UniformBlockBinding_FrameInfo,UBO_FinalFrame);
 	}
 
 	private static void updateChunkConstants() {
 		buf_chunk_constants.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_ChunkConstants);
 		glBufferData(GL_UNIFORM_BUFFER,buf_chunk_constants,GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER,2,UBO_ChunkConstants);
-	}
-
-
-	public static void bindAndUpdateTextureAtlas(OGL3TextureAtlas blockAtlas) {
-		blockAtlas.bind();
+		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_ChunkInfo,UBO_ChunkConstants);
 	}
 
 	public static void setChunkUniform(Matrix4f matrix4f) {

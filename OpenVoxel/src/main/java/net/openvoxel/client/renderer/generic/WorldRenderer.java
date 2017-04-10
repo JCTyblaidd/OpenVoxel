@@ -85,12 +85,12 @@ public interface WorldRenderer {
 		/**
 		 * Normal add Vertex Draw Request
 		 */
-		void addVertex(float X, float Y, float Z, float U, float V,float xNorm,float yNorm,float zNorm);
+		void addVertex(float X, float Y, float Z, float U, float V,float xNorm,float yNorm,float zNorm,float xTangent,float yTangent, float zTangent, float xBiTangent, float yBiTangent, float zBiTangent);
 
 		/**
 		 * Add Vertex Draw Request For Block Sections With Variable Colours
 		 */
-		void addVertexWithCol(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, int Color);
+		void addVertexWithCol(float X, float Y, float Z, float U, float V,float xNorm,float yNorm,float zNorm,float xTangent,float yTangent, float zTangent, float xBiTangent, float yBiTangent, float zBiTangent,int Colour);
 
 		/**
 		 * notifyEvent that UV: values are to be considered in relation to this icon

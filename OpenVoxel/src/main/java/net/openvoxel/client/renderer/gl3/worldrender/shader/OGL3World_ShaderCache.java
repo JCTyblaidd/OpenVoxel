@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.gl3.worldrender.shader;
 
+import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import net.openvoxel.client.renderer.gl3.util.OGL3ReloadableShader;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
@@ -12,7 +13,8 @@ import net.openvoxel.common.resources.ResourceType;
  */
 public class OGL3World_ShaderCache {
 
-	//GIANT CACHE OF WORLD SHADERS
+	//GIANT CACHE OF WORLD SHADER CODE
+	public static final WorldShaderCache SKYMAP_BACKGROUND = _get("world/util/shaderWorld_SkyDrop","Sky Background Renderer");
 	public static final WorldShaderCache BLOCK_SIMPLE = _get("world/block/shaderWorld_simple","Simple Block Renderer");
 	public static final WorldShaderCache BLOCK_OPAQUE = _get("world/block/shaderWorld_blockOpaque","Deferred Block Opaque");
 	public static final WorldShaderCache BLOCK_FORWARD = _get("world/block/shaderWorld_forwardStore","Forward Renderer Block");
@@ -25,7 +27,7 @@ public class OGL3World_ShaderCache {
 	public static final WorldShaderCache SHADOW_SIMPLE_MAP = _get("world/shadow/shaderWorld_shadowmap","Simple Single Shadow Map");
 
 	public static void Load() {
-		//Call the static init functionality
+		OGL3Renderer.gl3Log.Info("Initial Loading of World Shader Code");
 	}
 
 	private static WorldShaderCache _get(String str,String debug) {
@@ -41,9 +43,6 @@ public class OGL3World_ShaderCache {
 		@Override
 		public OGL3WorldAppendedShader newShader(String src) {
 			return new OGL3WorldAppendedShader(src,"World Shader: " + Debug);
-		}
-		public void setupUniforms() {
-
 		}
 	}
 }

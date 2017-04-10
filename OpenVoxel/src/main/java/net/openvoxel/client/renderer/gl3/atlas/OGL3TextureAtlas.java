@@ -2,6 +2,8 @@ package net.openvoxel.client.renderer.gl3.atlas;
 
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
+import net.openvoxel.client.renderer.gl3.OGL3Renderer;
+import net.openvoxel.client.renderer.gl3.util.OGL3CubeMapTexture;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.resources.ResourceHandle;
@@ -31,6 +33,8 @@ import static org.lwjgl.opengl.GL30.glGenerateMipmap;
  */
 public class OGL3TextureAtlas implements IconAtlas{
 
+	private OGL3CubeMapTexture skyMap ;
+
 	private List<OGL3Icon> icons = new ArrayList<>();
 	private int tex_diffuse;
 	private int tex_normal;
@@ -43,25 +47,8 @@ public class OGL3TextureAtlas implements IconAtlas{
 		tex_normal = glGenTextures();
 		tex_pbr = glGenTextures();
 		astc_compression = GL.getCapabilities().GL_KHR_texture_compression_astc_ldr;
-	}
-
-	public void bind() {
-		/*
-		glActiveTexture(GL_TEXTURE10);
-		glBindTexture(GL_TEXTURE_2D,tex_diffuse);
-		glActiveTexture(GL_TEXTURE11);
-		glBindTexture(GL_TEXTURE_2D,tex_normal);
-		glActiveTexture(GL_TEXTURE12);
-		glBindTexture(GL_TEXTURE_2D,tex_pbr);
-		glActiveTexture(GL_TEXTURE0);
-		glActiveTexture(GL_TEXTURE0);
-		*/
-		//DEBUG//
-		//glActiveTexture(GL_TEXTURE10);
-		//glBindTexture(GL_TEXTURE_2D,tex_diffuse);
-		//System.out.println(glGetTexLevelParameteri(GL_TEXTURE_2D,0,GL_TEXTURE_WIDTH));
-		//System.out.println(glGetInteger(GL_TEXTURE_BINDING_2D));
-		//System.out.println(":"+tex_diffuse);
+		skyMap = new OGL3CubeMapTexture("world/skyCube");
+		skyMap.bind(OGL3Renderer.TextureBinding_SkyCubeMap);
 	}
 
 	private int _getFormat(CompressionLevel level) {

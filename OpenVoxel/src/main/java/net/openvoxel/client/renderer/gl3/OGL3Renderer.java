@@ -12,7 +12,7 @@ import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
 import net.openvoxel.client.renderer.gl3.font.OGL3FontRenderer;
 import net.openvoxel.client.renderer.gl3.util.OGL3ErrorLogger;
-import net.openvoxel.client.renderer.gl3.worldrender.GL_Caps;
+import net.openvoxel.client.renderer.gl3.worldrender.OGL_Caps;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.event.input.WindowResizeEvent;
 import net.openvoxel.files.FolderUtils;
@@ -32,8 +32,29 @@ import static org.lwjgl.opengl.GL30.GL_MINOR_VERSION;
  * Created by James on 25/08/2016.
  *
  * OpenGL 3.3 Implementation Of The Renderer
+ *
+ *
+ *
+ * Texture Binding Points:
+ *
+ *
  */
 public class OGL3Renderer implements GlobalRenderer{
+
+	public static final int TextureBinding_tDiffuse = 10;
+	public static final int TextureBinding_tNormal = 11;
+	public static final int TextureBinding_tPBR = 12;
+	public static final int TextureBinding_tItemDiffuse = 13;
+	public static final int TextureBinding_SkyCubeMap = 14;
+	public static final int TextureBinding_Shadows = 15;
+	public static final int TextureBinding_GBufferDiffuse = 16;
+	public static final int TextureBinding_GBufferNormal = 17;
+	public static final int TextureBinding_GBufferPBR = 18;
+	public static final int TextureBinding_GBufferLighting = 19;
+
+	public static final int UniformBlockBinding_Settings = 0;
+	public static final int UniformBlockBinding_FrameInfo = 1;
+	public static final int UniformBlockBinding_ChunkInfo = 2;
 
 	private long window;
 
@@ -140,7 +161,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		blockAtlas = new OGL3TextureAtlas();
 		updateDebug();
 		OGL3FontRenderer.Init();
-		GL_Caps.Load();
+		OGL_Caps.Load();
 		if(glDebug) {
 			OGL3ErrorLogger.Handle();
 		}

@@ -1,5 +1,7 @@
 package net.openvoxel.world.chunk;
 
+import org.lwjgl.system.MemoryUtil;
+
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
@@ -14,16 +16,16 @@ public class ChunkSection {
 	/**
 	 * Block Data
 	 */
-	protected IntBuffer blockInformation = IntBuffer.allocate(16*16*16);
+	protected IntBuffer blockInformation = MemoryUtil.memAllocInt(16*16*16);
 	/**
 	 * Short based 4xNibble [red,green,blue,sunlight]
 	 */
-	protected ShortBuffer blockLightInfo = ShortBuffer.allocate(16*16*16);
+	protected ShortBuffer blockLightInfo = MemoryUtil.memAllocShort(16*16*16);
 	/**
 	 * 6x side mapping information
 	 * each side [z+,z-,x+,x-,y+,y-] used for culling
 	 */
-	protected ByteBuffer chunkSideInfo = ByteBuffer.allocate(6);
+	protected ByteBuffer chunkSideInfo = MemoryUtil.memAlloc(6);
 
 	/**
 	 * 6x side dirty information
@@ -48,5 +50,12 @@ public class ChunkSection {
 	 */
 	protected int nonAirBlockRefCount = 0;
 
-
+	/**
+	 * Cleanup Allocated Data
+	 */
+	protected void freeMemory() {
+		MemoryUtil.memFree(blockInformation);
+		MemoryUtil.memFree(blockLightInfo);
+		MemoryUtil.memFree(chunkSideInfo);
+	}
 }
