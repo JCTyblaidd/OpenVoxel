@@ -113,12 +113,12 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		float zMin = (float)bounds.minZ;
 		float zMax = (float)bounds.maxZ;
 		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,1,0,0,0,1,0);
-		renderer.addVertex(xVal,yMin,zMax,yMin,zMax,1,0,0,0,1,0);
+		renderer.addVertex(xVal,yMin,zMax,yMax,zMin,1,0,0,0,1,0);
 		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,1,0,0,0,1,0);
 
 		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,1,0,0,0,1,0);
 		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,1,0,0,0,1,0);
-		renderer.addVertex(xVal,yMax,zMin,yMax,zMin,1,0,0,0,1,0);
+		renderer.addVertex(xVal,yMax,zMin,yMin,zMax,1,0,0,0,1,0);
 	}
 	private void renderSouth(Block block, WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.SOUTH);
@@ -129,10 +129,10 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		float zMin = (float)bounds.minZ;
 		float zMax = (float)bounds.maxZ;
 		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,-1,0,0,0,1,0);
-		renderer.addVertex(xVal,yMin,zMax,yMin,zMax,-1,0,0,0,1,0);
+		renderer.addVertex(xVal,yMin,zMax,yMax,zMin,-1,0,0,0,1,0);
 		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,-1,0,0,0,1,0);
 
-		renderer.addVertex(xVal,yMax,zMin,yMax,zMin,-1,0,0,0,1,0);
+		renderer.addVertex(xVal,yMax,zMin,yMin,zMax,-1,0,0,0,1,0);
 		renderer.addVertex(xVal,yMax,zMax,yMax,zMax,-1,0,0,0,1,0);
 		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,-1,0,0,0,1,0);
 	}

@@ -40,13 +40,12 @@ public class STBITexture {
 	}
 
 	public STBITexture(byte[] array) {
-		//STBImage.stbi_load_from_memory()
 		ByteBuffer buffer = MemoryUtil.memAlloc(array.length);
 		buffer.put(array);
-		buffer.position(0); //TODO: improve the usage of tiny buffers
-		IntBuffer xBuffer = BufferUtils.createIntBuffer(1);
-		IntBuffer yBuffer = BufferUtils.createIntBuffer(1);
-		IntBuffer compBuffer = BufferUtils.createIntBuffer(1);
+		buffer.position(0);
+		IntBuffer xBuffer = MemoryUtil.memAllocInt(1);
+		IntBuffer yBuffer = MemoryUtil.memAllocInt(1);
+		IntBuffer compBuffer = MemoryUtil.memAllocInt(1);
 		pixels = _correctSTBIMem(buffer,xBuffer,yBuffer,compBuffer,STBImage.STBI_rgb_alpha);
 		xBuffer.position(0);
 		yBuffer.position(0);
@@ -61,6 +60,9 @@ public class STBITexture {
 			OpenVoxel.reportCrash(crashReport);
 		}
 		MemoryUtil.memFree(buffer);
+		MemoryUtil.memFree(xBuffer);
+		MemoryUtil.memFree(yBuffer);
+		MemoryUtil.memFree(compBuffer);
 	}
 
 

@@ -3,7 +3,6 @@ package net.openvoxel.client.renderer.gl3.util.shader;
 import net.openvoxel.client.renderer.gl3.util.OGL3BasicShader;
 import org.joml.Matrix4f;
 
-
 import static org.lwjgl.opengl.GL20.*;
 
 /**

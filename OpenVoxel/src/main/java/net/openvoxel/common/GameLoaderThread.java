@@ -3,17 +3,14 @@ package net.openvoxel.common;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
-import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui.menu.ScreenLoading;
-import net.openvoxel.client.gui.menu.ScreenMainMenu;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.common.event.init.ModFinalizeInitialisationEvent;
 import net.openvoxel.common.event.init.ModInitialisationEvent;
 import net.openvoxel.common.event.init.ModPostInitialisationEvent;
 import net.openvoxel.common.event.init.ModPreInitialisationEvent;
 import net.openvoxel.loader.mods.ModLoader;
-import net.openvoxel.server.Server;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

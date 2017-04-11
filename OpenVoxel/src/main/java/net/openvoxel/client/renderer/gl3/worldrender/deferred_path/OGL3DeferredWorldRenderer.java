@@ -17,9 +17,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glDrawBuffers;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
 /**
@@ -44,10 +42,9 @@ public class OGL3DeferredWorldRenderer {
 	private int gBuffer_Transparent1;
 	private int gBuffer_Transparent2;
 
-	//Shadow Pass Information
-	private int shadowPass1_Depth;
-	private int shadowPass2_Depth;
-	private int shadowPass3_Depth;
+	//Shadows//
+	private OGL3CascadeManager shadowCascades;
+	private OGL3NearGlobalIlluminationHandler nearGI;
 
 	//Merge to run post target//
 	private int prepost_Colour;
@@ -59,8 +56,8 @@ public class OGL3DeferredWorldRenderer {
 
 	//Full Screen Draw//
 	private int fullScreenVAO;
-	private int fullScreenbufPos;
-	private int fullScreenbufUV;
+	private int fullScreenBufPos;
+	private int fullScreenBufUV;
 
 
 	private List<ClientChunkSection> cullViewport;
@@ -70,6 +67,8 @@ public class OGL3DeferredWorldRenderer {
 
 	public OGL3DeferredWorldRenderer(OGL3WorldRenderer worldRenderer) {
 		this.worldRenderer = worldRenderer;
+		shadowCascades = new OGL3CascadeManager();
+		nearGI = new OGL3NearGlobalIlluminationHandler(this);
 		initialize();
 	}
 
@@ -82,19 +81,16 @@ public class OGL3DeferredWorldRenderer {
 		gBuffer_Normal = glGenTextures();
 		gBuffer_Lighting = glGenTextures();
 		gBuffer_Depth = glGenTextures();
-		shadowPass1_Depth = glGenTextures();
-		shadowPass2_Depth = glGenTextures();
-		shadowPass3_Depth = glGenTextures();
 		prepost_Colour = glGenTextures();
 		//Setup Full Screen Render Pass Request//
 		fullScreenVAO = glGenVertexArrays();
-		fullScreenbufPos = glGenBuffers();
-		fullScreenbufUV = glGenBuffers();
+		fullScreenBufPos = glGenBuffers();
+		fullScreenBufUV = glGenBuffers();
 		glBindVertexArray(fullScreenVAO);
-		glBindBuffer(GL_ARRAY_BUFFER,fullScreenbufPos);
+		glBindBuffer(GL_ARRAY_BUFFER, fullScreenBufPos);
 		glBufferData(GL_ARRAY_BUFFER,new float[]{-1,-1,-1,1,1,1,-1,-1,1,1,1,-1},GL_STATIC_DRAW);
 		glVertexAttribPointer(0,2,GL_FLOAT,false,0,0);
-		glBindBuffer(GL_ARRAY_BUFFER,fullScreenbufUV);
+		glBindBuffer(GL_ARRAY_BUFFER, fullScreenBufUV);
 		glBufferData(GL_ARRAY_BUFFER,new float[]{0 , 0, 0,1,1,1, 0, 0,1,1,1, 0},GL_STATIC_DRAW);
 		glVertexAttribPointer(1,2,GL_FLOAT,false,0,0);
 		glEnableVertexAttribArray(0);
@@ -238,5 +234,9 @@ public class OGL3DeferredWorldRenderer {
 
 	public void onFrameResize(int newWidth, int newHeight) {
 		update_textures(newWidth,newHeight);
+	}
+
+	public void updateUniforms() {
+		shadowCascades.updateShadowInfoUniform();
 	}
 }

@@ -2,7 +2,6 @@ package net.openvoxel.server.util;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.server.Server;
-import net.openvoxel.utility.Command;
 
 import java.io.BufferedReader;
 import java.io.IOException;

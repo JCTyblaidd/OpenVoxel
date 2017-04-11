@@ -5,8 +5,6 @@ import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
-import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
-import net.openvoxel.client.renderer.gl3.util.OGL3CubeMapTexture;
 import net.openvoxel.client.renderer.gl3.worldrender.OGL3ForwardWorldRenderer;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCache;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCacheManager;
@@ -37,6 +35,8 @@ import static org.lwjgl.opengl.GL11.*;
  */
 public final class OGL3WorldRenderer implements WorldRenderer{
 
+	public static final float Z_NEAR = 0.1F;
+	public static final float Z_FAR = 1000.0F;
 
 	public RenderConfig currentSettings;
 	private AtomicBoolean settingsDirty = new AtomicBoolean(true);
@@ -78,13 +78,14 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		}
 	}
 
-
+	private static final Vector2f nearFarVector = new Vector2f();
+	private static final Vector3f cameraPosVector = new Vector3f();
 	private void setupUniforms(EntityPlayerSP player,ClientWorld world) {
 		//Update Per Frame Uniform//
 		int animCounter = 0;
 		float aspectRatio = (float)ClientInput.currentWindowWidth.get() / ClientInput.currentWindowHeight.get();
 		float fov = 80.0F;
-		Vector3f cameraPos = new Vector3f((float)player.xPos,(float)player.yPos,(float)player.zPos);
+		cameraPosVector.set((float)player.xPos,(float)player.yPos,(float)player.zPos);
 		float yaw = player.getYaw();
 		float pitch = player.getPitch();
 		float dayProgress = 0;
@@ -94,10 +95,12 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		Vector3f fogColour = new Vector3f(0,0,0);
 		boolean isRaining = false;
 		boolean isThunder = false;
-		Vector2f tileSize = new Vector2f(1,1);//TODO:
+		Vector2f tileSize = new Vector2f(1,1);
+		nearFarVector.set(Z_NEAR, Z_FAR);
 		OGL3World_UniformCache.calcAndUpdateFrameInformation(animCounter,(float)Math.toRadians(fov),
-				new Vector2f(0.1F,1000.0F),aspectRatio,cameraPos,yaw,pitch,dayProgress,skylightPower,skylightColour,
+				nearFarVector,aspectRatio,cameraPosVector,yaw,pitch,dayProgress,skylightPower,skylightColour,
 				skyEnabled,fogColour,isRaining,isThunder,tileSize);
+		deferredWorldRenderer.updateUniforms();
 	}
 
 

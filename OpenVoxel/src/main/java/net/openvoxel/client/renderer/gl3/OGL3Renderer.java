@@ -57,6 +57,8 @@ public class OGL3Renderer implements GlobalRenderer{
 	public static final int UniformBlockBinding_Settings = 0;
 	public static final int UniformBlockBinding_FrameInfo = 1;
 	public static final int UniformBlockBinding_ChunkInfo = 2;
+	public static final int UniformBlockBinding_ShadowInfo = 3;
+	public static final int UniformBlockBinding_VoxelInfo = 4;
 
 	private long window;
 

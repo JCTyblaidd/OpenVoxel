@@ -1,7 +1,7 @@
 package net.openvoxel.world;
 
-import net.openvoxel.utility.collection.ChunkMap;
 import net.openvoxel.common.entity.Entity;
+import net.openvoxel.utility.collection.ChunkMap;
 import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.world.generation.IWorldGenerator;
 

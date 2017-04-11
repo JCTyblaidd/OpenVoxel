@@ -1,14 +1,10 @@
 package net.openvoxel.client.renderer.gl3.util;
 
 import net.openvoxel.client.STBITexture;
-import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
-import net.openvoxel.common.util.BlockFace;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.glBindTexture;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_WRAP_R;
 import static org.lwjgl.opengl.GL13.*;

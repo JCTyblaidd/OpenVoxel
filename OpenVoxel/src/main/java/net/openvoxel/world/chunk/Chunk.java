@@ -3,7 +3,6 @@ package net.openvoxel.world.chunk;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.entity.Entity;
-import net.openvoxel.loader.optimizer.tags.Validation;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;

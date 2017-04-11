@@ -34,8 +34,6 @@ import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
-import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.system.jemalloc.JEmalloc;
 
 import java.io.File;
 import java.net.SocketAddress;

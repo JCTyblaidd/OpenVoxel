@@ -2,9 +2,9 @@ package net.openvoxel.files;
 
 import javafx.util.Pair;
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.collection.ChunkMap;
 import net.openvoxel.world.chunk.Chunk;
-import net.openvoxel.utility.CrashReport;
 
 import java.io.File;
 import java.io.IOException;

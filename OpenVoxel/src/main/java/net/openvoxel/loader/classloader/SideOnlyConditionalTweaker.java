@@ -1,7 +1,6 @@
 package net.openvoxel.loader.classloader;
 
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.api.side.Side;
 import org.objectweb.asm.tree.*;
 
 import java.util.ArrayList;

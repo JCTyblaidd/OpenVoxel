@@ -2,7 +2,6 @@ package net.openvoxel.api.login;
 
 import com.jc.util.utils.ArgumentParser;
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
 
 import java.util.UUID;

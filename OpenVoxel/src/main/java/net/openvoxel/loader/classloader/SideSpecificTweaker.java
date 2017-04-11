@@ -2,9 +2,10 @@ package net.openvoxel.loader.classloader;
 
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
 import java.util.List;

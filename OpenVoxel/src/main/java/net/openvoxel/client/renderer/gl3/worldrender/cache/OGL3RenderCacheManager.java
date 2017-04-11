@@ -7,14 +7,10 @@ import net.openvoxel.common.block.Block;
 import net.openvoxel.common.block.BlockAir;
 import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.util.BlockFace;
-import net.openvoxel.vanilla.Vanilla;
-import net.openvoxel.vanilla.VanillaBlocks;
 import net.openvoxel.world.client.ClientChunkSection;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
-import java.util.Random;
 
 /**
  * Created by James on 09/04/2017.

@@ -1,10 +1,6 @@
 package net.openvoxel.server;
 
-import net.openvoxel.client.ClientInput;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.common.event.AbstractEvent;
-import net.openvoxel.common.event.SubscribeEvents;
-import net.openvoxel.common.event.input.CursorPositionChangeEvent;
 import net.openvoxel.networking.ClientNetworkHandler;
 import net.openvoxel.world.World;
 import net.openvoxel.world.client.ClientWorld;

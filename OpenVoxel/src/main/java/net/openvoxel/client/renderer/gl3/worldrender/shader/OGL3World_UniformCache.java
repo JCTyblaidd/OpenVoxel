@@ -1,14 +1,13 @@
 package net.openvoxel.client.renderer.gl3.worldrender.shader;
 
 import net.openvoxel.client.renderer.gl3.OGL3Renderer;
-import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
 import net.openvoxel.client.renderer.gl3.util.shader.STD140Layout;
 import net.openvoxel.utility.MatrixUtils;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
@@ -52,9 +51,9 @@ public class OGL3World_UniformCache {
 	}
 
 	//Buffer References//
-	private static int UBO_Settings, UBO_FinalFrame, UBO_ChunkConstants;
+	private static int UBO_Settings, UBO_FinalFrame, UBO_ChunkConstants, UBO_ShadowInfo, UBO_VoxelInfo;
 	//Data Allocation//
-	private static ByteBuffer buf_settings, buf_final_frame, buf_chunk_constants;
+	private static ByteBuffer buf_settings, buf_final_frame, buf_chunk_constants, buf_shadow_info, buf_voxel_info;
 
 	//Offset Information//
 	private static final int offsetFrame_AnimIndex;
@@ -77,11 +76,20 @@ public class OGL3World_UniformCache {
 	private static final int offsetFrame_TileSize;
 	private static final int offsetFrame_SIZE;
 
-	private static final int offsetChunk_ChunkMatrix = 0;//Only Value//
-	private static final int offsetChunk_SIZE = 64;
+	private static final int offsetChunk_ChunkMatrix;
+	private static final int offsetChunk_SIZE;
+
+	private static final int offsetShadow_Mat1;
+	private static final int offsetShadow_Mat2;
+	private static final int offsetShadow_Mat3;
+	private static final int offsetShadow_SIZE;
+
+	private static final int offsetVoxel_MinVoxel;
+	private static final int offsetVoxel_SizeVoxel;
+	private static final int offsetVoxel_SIZE;
 
 	static {
-		STD140Layout layout = new STD140Layout(//TODO: find out the issue with the layout
+		STD140Layout layoutFrameData = new STD140Layout(//TODO: find out the issue with the layout
 			INT,    //animIndex;
 			INT,    //worldTick;
 			MAT4,   //projMatrix;
@@ -101,25 +109,53 @@ public class OGL3World_UniformCache {
 			BOOL,   //isThunder;
 			VEC2    //tileSize;
 		);
-		offsetFrame_AnimIndex           = layout.getOffset(0);
-		offsetFrame_WorldTick           = layout.getOffset(1);
-		offsetFrame_ProjMatrix          = layout.getOffset(2);
-		offsetFrame_InverseProjMatrix   = layout.getOffset(3);
-		offsetFrame_ZLimits             = layout.getOffset(4);
-		offsetFrame_CamMatrix           = layout.getOffset(5);
-		offsetFrame_CamNormMatrix       = layout.getOffset(6);
-		offsetFrame_InvCamNormMatrix    = layout.getOffset(7);
-		offsetFrame_DayProgress         = layout.getOffset(8);
-		offsetFrame_SunlightPower       = layout.getOffset(9);
-		offsetFrame_DayProgressMatrix   = layout.getOffset(10);
-		offsetFrame_DirSun              = layout.getOffset(11);
-		offsetFrame_SkyEnabled          = layout.getOffset(12);
-		offsetFrame_FogColour           = layout.getOffset(13);
-		offsetFrame_SkyLightColour      = layout.getOffset(14);
-		offsetFrame_IsRaining           = layout.getOffset(15);
-		offsetFrame_IsThunder           = layout.getOffset(16);
-		offsetFrame_TileSize            = layout.getOffset(17);
-		offsetFrame_SIZE = layout.getTotalSize();
+		offsetFrame_AnimIndex           = layoutFrameData.getOffset(0);
+		offsetFrame_WorldTick           = layoutFrameData.getOffset(1);
+		offsetFrame_ProjMatrix          = layoutFrameData.getOffset(2);
+		offsetFrame_InverseProjMatrix   = layoutFrameData.getOffset(3);
+		offsetFrame_ZLimits             = layoutFrameData.getOffset(4);
+		offsetFrame_CamMatrix           = layoutFrameData.getOffset(5);
+		offsetFrame_CamNormMatrix       = layoutFrameData.getOffset(6);
+		offsetFrame_InvCamNormMatrix    = layoutFrameData.getOffset(7);
+		offsetFrame_DayProgress         = layoutFrameData.getOffset(8);
+		offsetFrame_SunlightPower       = layoutFrameData.getOffset(9);
+		offsetFrame_DayProgressMatrix   = layoutFrameData.getOffset(10);
+		offsetFrame_DirSun              = layoutFrameData.getOffset(11);
+		offsetFrame_SkyEnabled          = layoutFrameData.getOffset(12);
+		offsetFrame_FogColour           = layoutFrameData.getOffset(13);
+		offsetFrame_SkyLightColour      = layoutFrameData.getOffset(14);
+		offsetFrame_IsRaining           = layoutFrameData.getOffset(15);
+		offsetFrame_IsThunder           = layoutFrameData.getOffset(16);
+		offsetFrame_TileSize            = layoutFrameData.getOffset(17);
+		offsetFrame_SIZE = layoutFrameData.getTotalSize();
+
+		STD140Layout layoutChunkData = new STD140Layout(
+			MAT4
+		);
+
+		offsetChunk_ChunkMatrix = layoutChunkData.getOffset(0);
+		offsetChunk_SIZE = layoutChunkData.getTotalSize();
+
+
+		STD140Layout layoutShadowData = new STD140Layout(
+			MAT4,
+			MAT4,
+			MAT4
+		);
+
+		offsetShadow_Mat1 = layoutShadowData.getOffset(0);
+		offsetShadow_Mat2 = layoutShadowData.getOffset(1);
+		offsetShadow_Mat3 = layoutShadowData.getOffset(2);
+		offsetShadow_SIZE = layoutShadowData.getTotalSize();
+
+		STD140Layout layoutVoxelData = new STD140Layout(
+			VEC3,
+            VEC3
+		);
+
+		offsetVoxel_MinVoxel            = layoutVoxelData.getOffset(0);
+		offsetVoxel_SizeVoxel           = layoutVoxelData.getOffset(1);
+		offsetVoxel_SIZE                = layoutVoxelData.getTotalSize();
 	}
 
 	/**
@@ -170,17 +206,23 @@ public class OGL3World_UniformCache {
 	}
 
 	public static void Load() {
-		int[] arr = new int[3];
+		int[] arr = new int[5];
 		glGenBuffers(arr);
 		UBO_Settings = arr[0];
 		UBO_FinalFrame = arr[1];
 		UBO_ChunkConstants = arr[2];
-		buf_settings = BufferUtils.createByteBuffer(15);
-		buf_final_frame = BufferUtils.createByteBuffer(offsetFrame_SIZE);
-		buf_chunk_constants = BufferUtils.createByteBuffer(offsetChunk_SIZE);
+		UBO_ShadowInfo = arr[3];
+		UBO_VoxelInfo = arr[4];
+		buf_settings = MemoryUtil.memAlloc(15);
+		buf_final_frame = MemoryUtil.memAlloc(offsetFrame_SIZE);
+		buf_chunk_constants = MemoryUtil.memAlloc(offsetChunk_SIZE);
+		buf_shadow_info = MemoryUtil.memAlloc(offsetShadow_SIZE);
+		buf_voxel_info = MemoryUtil.memAlloc(offsetVoxel_SIZE);
 		updateSettings();
 		updateFinalFrame();
 		updateChunkConstants();
+		updateShadowInfo();
+		updateVoxelInfo();
 	}
 
 	private static void updateSettings() {
@@ -202,6 +244,20 @@ public class OGL3World_UniformCache {
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_ChunkConstants);
 		glBufferData(GL_UNIFORM_BUFFER,buf_chunk_constants,GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_ChunkInfo,UBO_ChunkConstants);
+	}
+
+	private static void updateShadowInfo() {
+		buf_shadow_info.position(0);
+		glBindBuffer(GL_UNIFORM_BUFFER, UBO_ShadowInfo);
+		glBufferData(GL_UNIFORM_BUFFER, buf_shadow_info,GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_ShadowInfo,UBO_ShadowInfo);
+	}
+
+	private static void updateVoxelInfo() {
+		buf_voxel_info.position(0);
+		glBindBuffer(GL_UNIFORM_BUFFER, UBO_VoxelInfo);
+		glBufferData(GL_UNIFORM_BUFFER, buf_voxel_info,GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_VoxelInfo,UBO_VoxelInfo);
 	}
 
 	public static void setChunkUniform(Matrix4f matrix4f) {

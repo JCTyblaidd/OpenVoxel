@@ -9,8 +9,6 @@ import net.openvoxel.loader.optimizer.Optimizer;
 import net.openvoxel.utility.debug.RenderDocAutoHook;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 

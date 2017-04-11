@@ -19,6 +19,9 @@ public class OGL3World_ShaderCache {
 	public static final WorldShaderCache GBUFFER_MERGE = _get("world/block/shaderWorld_Merge","GBuffer Merging Shader");
 	public static final WorldShaderCache WORLD_POSTPROCESS = _get("world/block/shaderWorld_Post","World Post Processing Shader");
 
+	public static final WorldShaderCache WORLD_VOXELISE = _get("world/voxelGI/shaderWorld_Voxelise.glsl","World GI Voxel Shader");
+
+
 	public static void Load() {
 		OGL3Renderer.gl3Log.Info("Initial Loading of World Shader Code");
 	}

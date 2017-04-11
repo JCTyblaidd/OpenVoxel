@@ -2,8 +2,8 @@ package net.openvoxel.world.generation;
 
 import net.openvoxel.common.block.BlockAir;
 import net.openvoxel.common.resources.ResourceHandle;
-import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.vanilla.VanillaBlocks;
+import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.world.client.ClientChunk;
 
 /**

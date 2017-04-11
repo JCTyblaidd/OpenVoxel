@@ -19,6 +19,10 @@ layout(std140) uniform Settings {//Uniform Based Shader Configuration//
     bool windAnim;          //Changes: Block Draw -> Vertex Diff
 } config;
 
+
+/**
+ * Frame Display Information
+**/
 layout(std140) uniform FinalFrame {
     //Animation Information//
     int animIndex;//Current Animation Index //Endless Counter//
@@ -45,9 +49,28 @@ layout(std140) uniform FinalFrame {
     vec2 tileSize;
 } frame;
 
+
+/**
+ * Chunk Display information
+**/
 layout(std140) uniform ChunkConstants {
     mat4 chunkPos;
 } chunkdata;
+
+/**
+ * Cascade Shadow Map Information
+**/
+layout(std140) uniform ShadowMapping {
+    mat4 shadowMapMatrices[3];
+} shadowdata;
+
+/**
+ * Near Player Voxel Global Illumination Information
+**/
+layout(std140) uniform VoxelConeData {
+    vec3 minVoxels;
+    vec3 sizeVoxels;
+} voxeldata;
 
 uniform sampler2D tDiffuse;             //Diffuse Atlas//
 uniform sampler2D tNormal;              //Normal Atlas//

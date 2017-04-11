@@ -14,7 +14,6 @@ import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.common.resources.ResourceType;
 import org.joml.Matrix4f;
 
-
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;

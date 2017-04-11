@@ -7,10 +7,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.local.LocalAddress;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.networking.protocol.AbstractPacket;
 import net.openvoxel.networking.protocol.PacketChannelInitializer;
-import net.openvoxel.server.LocalServer;
 
 import java.io.IOException;
 import java.net.SocketAddress;

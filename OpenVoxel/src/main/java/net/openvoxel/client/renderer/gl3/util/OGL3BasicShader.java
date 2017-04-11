@@ -2,9 +2,6 @@ package net.openvoxel.client.renderer.gl3.util;
 
 import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import org.joml.Matrix4f;
-import org.lwjgl.BufferUtils;
-
-import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.*;
@@ -140,10 +137,8 @@ public class OGL3BasicShader {
 	protected void _storeShaderSource(int id, String source) {
 		glShaderSource(id,source);
 		glCompileShader(id);
-		IntBuffer buffer = BufferUtils.createIntBuffer(1);
-		buffer.position(0);
-		glGetShaderiv(id,GL_COMPILE_STATUS,buffer);
-		if(buffer.get(0) == GL_FALSE) {
+		int compileStatus = glGetShaderi(id,GL_COMPILE_STATUS);
+		if(compileStatus == GL_FALSE) {
 			String reason = glGetShaderInfoLog(id);
 			OGL3Renderer.gl3Log.Severe("Shader Failed to Compile["+DEBUG+"]: ");
 			String[] lines = reason.split("\n");
