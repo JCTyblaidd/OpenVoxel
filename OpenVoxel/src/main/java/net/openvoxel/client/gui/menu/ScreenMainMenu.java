@@ -15,6 +15,7 @@ public class ScreenMainMenu extends Screen{
 	private GUIButton buttonSinglePlayer;
 	private GUIButton buttonMultiPlayer;
 	private GUIButton buttonSettings;
+	private GUIButton buttonListMods;
 	private GUIButton buttonReloadMods;
 	private GUIButton buttonQuit;
 	private GUIText mainText;
@@ -28,6 +29,7 @@ public class ScreenMainMenu extends Screen{
 		buttonSinglePlayer = new GUIButton("Single Player");
 		buttonMultiPlayer = new GUIButton("Multi Player");
 		buttonSettings = new GUIButton("Settings");
+		buttonListMods = new GUIButton("Mods");
 		buttonReloadMods = new GUIButton("Reload");
 		buttonQuit = new GUIButton("Quit");
 		mainText = new GUIText("OpenVoxel");
@@ -38,8 +40,10 @@ public class ScreenMainMenu extends Screen{
 		buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
 		buttonMultiPlayer.setupOffsetTo(mainText,-125,10,150,30);
 		buttonSettings.setupOffsetTo(mainText,-125,50,150,30);
-		buttonReloadMods.setupOffsetTo(mainText,-125,90,150,30);
-		buttonQuit.setupOffsetTo(mainText,-125,130,150,30);
+		buttonListMods.setupOffsetTo(mainText,-125,90,150,30);
+		buttonReloadMods.setupOffsetTo(mainText,-125,130,150,30);
+		buttonQuit.setupOffsetTo(mainText,-125,170,150,30);
+
 
 		background.setupOffsetTo(mainText,-130,-100,260,500);//300);
 
@@ -48,6 +52,7 @@ public class ScreenMainMenu extends Screen{
 		guiObjects.add(buttonSinglePlayer);
 		guiObjects.add(buttonMultiPlayer);
 		guiObjects.add(buttonSettings);
+		guiObjects.add(buttonListMods);
 		guiObjects.add(buttonReloadMods);
 		guiObjects.add(buttonQuit);
 

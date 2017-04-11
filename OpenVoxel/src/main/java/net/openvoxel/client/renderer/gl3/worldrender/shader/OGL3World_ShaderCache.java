@@ -16,7 +16,8 @@ public class OGL3World_ShaderCache {
 	//GIANT CACHE OF WORLD SHADER CODE
 	public static final WorldShaderCache SKYMAP_BACKGROUND = _get("world/util/shaderWorld_SkyDrop","Sky Background Renderer");
 	public static final WorldShaderCache BLOCK_SIMPLE = _get("world/block/shaderWorld_simple","Simple Block Renderer");
-	public static final WorldShaderCache BLOCK_OPAQUE = _get("world/block/shaderWorld_blockOpaque","Deferred Block Opaque");
+	public static final WorldShaderCache GBUFFER_OPAQUE = _get("world/block/shaderWorld_gBufferOpaque","Deferred Block Opaque");
+
 	public static final WorldShaderCache BLOCK_FORWARD = _get("world/block/shaderWorld_forwardStore","Forward Renderer Block");
 	public static final WorldShaderCache ENTITY_DEFERRED = _get("world/entity/shaderWorld_entity_deferred","Deferred Entity");
 	public static final WorldShaderCache ENTITY_FORWARD = _get("world/entity/shaderWorld_entity_forward","Forward Entity");

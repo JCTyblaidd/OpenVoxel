@@ -1,15 +1,26 @@
 package net.openvoxel.client.renderer.gl3.worldrender.deferred_path;
 
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.renderer.gl3.OGL3Renderer;
+import net.openvoxel.client.renderer.gl3.OGL3WorldRenderer;
+import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCache;
+import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_ShaderCache;
+import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
+import net.openvoxel.world.client.ClientWorld;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL15.glBindBuffer;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
-import static org.lwjgl.opengl.GL30.glGenFramebuffers;
-import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.glDrawBuffers;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL30.*;
 
 /**
  * Created by James on 10/04/2017.
@@ -24,13 +35,16 @@ public class OGL3DeferredWorldRenderer {
 
 	//GBuffer Draw Information//
 	private int gBuffer_Diffuse;
-	private int gBuffer_UV;
+	private int gBuffer_PBR;
 	private int gBuffer_Normal;
 	private int gBuffer_Lighting;
 	private int gBuffer_Depth;
 
+	//GBuffer Transparent Information//
+	private int gBuffer_Transparent1;
+	private int gBuffer_Transparent2;
+
 	//Shadow Pass Information
-	//TODO: convert to array
 	private int shadowPass1_Depth;
 	private int shadowPass2_Depth;
 	private int shadowPass3_Depth;
@@ -43,16 +57,28 @@ public class OGL3DeferredWorldRenderer {
 	private int frameBufferTarget_Shadows;
 	private int frameBufferTarget_Post;
 
+	//Full Screen Draw//
+	private int fullScreenVAO;
+	private int fullScreenbufPos;
+	private int fullScreenbufUV;
+
 
 	private List<ClientChunkSection> cullViewport;
 	private List<ClientChunkSection> cullShadow;
+
+	private OGL3WorldRenderer worldRenderer;
+
+	public OGL3DeferredWorldRenderer(OGL3WorldRenderer worldRenderer) {
+		this.worldRenderer = worldRenderer;
+		initialize();
+	}
 
 	private void initialize() {
 		frameBufferTarget_GBuffer = glGenFramebuffers();
 		frameBufferTarget_Shadows = glGenFramebuffers();
 		frameBufferTarget_Post = glGenFramebuffers();
 		gBuffer_Diffuse = glGenTextures();
-		gBuffer_UV = glGenTextures();
+		gBuffer_PBR = glGenTextures();
 		gBuffer_Normal = glGenTextures();
 		gBuffer_Lighting = glGenTextures();
 		gBuffer_Depth = glGenTextures();
@@ -60,19 +86,94 @@ public class OGL3DeferredWorldRenderer {
 		shadowPass2_Depth = glGenTextures();
 		shadowPass3_Depth = glGenTextures();
 		prepost_Colour = glGenTextures();
-		//Init GBuffer//
+		//Setup Full Screen Render Pass Request//
+		fullScreenVAO = glGenVertexArrays();
+		fullScreenbufPos = glGenBuffers();
+		fullScreenbufUV = glGenBuffers();
+		glBindVertexArray(fullScreenVAO);
+		glBindBuffer(GL_ARRAY_BUFFER,fullScreenbufPos);
+		glBufferData(GL_ARRAY_BUFFER,new float[]{-1,-1,-1,1,1,1,-1,-1,1,1,1,-1},GL_STATIC_DRAW);
+		glVertexAttribPointer(0,2,GL_FLOAT,false,0,0);
+		glBindBuffer(GL_ARRAY_BUFFER,fullScreenbufUV);
+		glBufferData(GL_ARRAY_BUFFER,new float[]{0 , 0, 0,1,1,1, 0, 0,1,1,1, 0},GL_STATIC_DRAW);
+		glVertexAttribPointer(1,2,GL_FLOAT,false,0,0);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glBindVertexArray(0);
 		update_textures(ClientInput.currentWindowWidth.get(),ClientInput.currentWindowHeight.get());
+		bind_render_targets();
+		bind_textures();
 	}
+
+	private void bind_textures() {
+		bind_tex(gBuffer_Diffuse, OGL3Renderer.TextureBinding_GBufferDiffuse);
+		bind_tex(gBuffer_PBR, OGL3Renderer.TextureBinding_GBufferPBR);
+		bind_tex(gBuffer_Normal, OGL3Renderer.TextureBinding_GBufferNormal);
+		bind_tex(gBuffer_Lighting, OGL3Renderer.TextureBinding_GBufferLighting);
+		//bind_tex(gBuffer_Depth, OGL3Renderer.TextureBinding_GbufferDepth);
+		glActiveTexture(GL_TEXTURE0);
+	}
+
+	private void bind_tex(int id, int binding) {
+		glActiveTexture(GL_TEXTURE0+binding);
+		glBindTexture(GL_TEXTURE_2D,id);
+	}
+
+	private void bind_render_targets() {
+		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_GBuffer);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gBuffer_Diffuse, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gBuffer_PBR, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gBuffer_Normal, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gBuffer_Lighting, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT , GL_TEXTURE_2D, gBuffer_Depth,0);
+		glDrawBuffers(new int[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+	}
+
+
+	private void drawFullScreen() {
+		glBindVertexArray(fullScreenVAO);
+		glDrawArrays(GL_TRIANGLES,0,6);
+	}
+
+	private void set_tex(int width,int height,int tex,int type) {
+		glBindTexture(GL_TEXTURE_2D,tex);
+		glTexImage2D(GL_TEXTURE_2D,0,type,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,(ByteBuffer)null);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	}
+
+	private void set_depth(int width, int height, int tex, int type) {
+		glBindTexture(GL_TEXTURE_2D,tex);
+		glTexImage2D(GL_TEXTURE_2D,0,type,width,height,0,GL_DEPTH_COMPONENT,GL_FLOAT,(ByteBuffer)null);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	}
+
 	private void update_textures(int width, int height) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindBuffer(GL_FRAMEBUFFER,frameBufferTarget_GBuffer);
-		glBindTexture(GL_TEXTURE_2D,gBuffer_Diffuse);
-		glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,(ByteBuffer)null);
-
+		//UPDATE GBuffer Information//
+		set_tex(width,height,gBuffer_Diffuse,GL_RGB);
+		set_tex(width,height,gBuffer_PBR,GL_RGBA);
+		set_tex(width,height,gBuffer_Normal,GL_RGB);
+		set_tex(width,height,gBuffer_Lighting,GL_RGBA);
+		set_depth(width,height,gBuffer_Depth,GL_DEPTH_COMPONENT);
+		//Update Sizes//
+		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_GBuffer);
+		glViewport(0,0,width,height);
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
 	}
 
 	private void setupRenderTargetGBuffer() {
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_GBuffer);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+	}
+
+	private void setupRenderTargetTransparentGBuffer() {
+
 	}
 
 	private void setupRenderTargetShadows() {
@@ -85,5 +186,38 @@ public class OGL3DeferredWorldRenderer {
 
 	private void setupRenderTargetFinal() {
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
+	}
+
+	public void renderWorld(EntityPlayerSP player, ClientWorld world, List<ClientChunk> toRender) {
+		setupRenderTargetGBuffer();
+		OGL3World_ShaderCache.GBUFFER_OPAQUE.use();
+		for(ClientChunk chunk : toRender) {
+			if(chunk != null) {
+				for(int y = 0; y < 16; y++) {
+					ClientChunkSection section = chunk.getSectionAt(y);
+					if(section.renderCache != null) {
+						OGL3RenderCache cache = worldRenderer.cacheManager.loadRenderCache(section);
+						if (cache.cacheExists()) {
+							//Set Uniform Vertex//
+							worldRenderer.setupCacheUniform(chunk,y);
+							cache.draw();
+						}
+					}
+				}
+			}
+		}
+		//Draw FoV Opaque
+		//setupRenderTargetTransparentGBuffer();
+		//Draw FoV Transparency
+		//setupRenderTargetShadows();
+		//Draw ShadowMaps
+		//setupRenderTargetMerge();
+		//drawFullScreen();
+		setupRenderTargetFinal();
+		drawFullScreen();
+	}
+
+	public void onFrameResize(int newWidth, int newHeight) {
+		update_textures(newWidth,newHeight);
 	}
 }

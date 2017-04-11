@@ -208,6 +208,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		}
 		if(windowResized != null) {
 			glViewport(0,0,windowResized.Width,windowResized.Height);
+			worldRenderer.onWindowResized(windowResized.Width,windowResized.Height);
 			windowResized = null;
 		}
 		if(stateChangeRequested) {
@@ -221,7 +222,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		}
 	}
 
-	public void pollHooks() {
+	void pollHooks() {
 		if(stateChangeRequested) {
 			if(stateChangeLock.get()) {
 				updateFullScreenState();

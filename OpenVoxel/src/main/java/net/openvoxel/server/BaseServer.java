@@ -28,7 +28,7 @@ abstract class BaseServer implements Runnable{
 	protected List<EntityPlayer> connectedPlayers;
 
 	BaseServer() {
-		gameTickThread = new GameTickThread(this,this.toString());
+		gameTickThread = new GameTickThread(this,this.toString(),this::onCleanup);
 		dimensionMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>());
 		connectedPlayers = new ArrayList<>();
 	}
@@ -38,8 +38,11 @@ abstract class BaseServer implements Runnable{
 	}
 
 	void shutdown() {
-		//TODO: save data on shutdown
 		gameTickThread.terminate();
+	}
+
+	void onCleanup() {
+		//TODO: save data on shutdown
 		dimensionMap.forEachValue(e -> {
 			e.releaseAllChunkData();
 			return true;
@@ -47,7 +50,6 @@ abstract class BaseServer implements Runnable{
 		dimensionMap.clear();
 		connectedPlayers.clear();
 	}
-
 
 	@Override
 	public String toString() {

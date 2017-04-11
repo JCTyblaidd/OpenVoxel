@@ -16,12 +16,14 @@ public class GameTickThread implements Runnable{
 	private AtomicBoolean executionFlag;
 	private Runnable tickTarget;
 	private Thread thread;
+	private Runnable onTerminate;
 
-	public GameTickThread(Runnable target,String name) {
+	public GameTickThread(Runnable target,String name,Runnable onTerminate) {
 		executionFlag = new AtomicBoolean(true);
 		tickTarget = target;
 		tickTimer = new PerSecondTimer();
 		thread = new Thread(this,name);
+		this.onTerminate = onTerminate;
 	}
 
 	public void start() {
@@ -60,5 +62,6 @@ public class GameTickThread implements Runnable{
 			}
 			last_time = System.currentTimeMillis();
 		}
+		onTerminate.run();
 	}
 }

@@ -1,5 +1,6 @@
 package net.openvoxel.world.generation;
 
+import net.openvoxel.common.block.BlockAir;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.vanilla.VanillaBlocks;
@@ -19,6 +20,9 @@ public class DebugWorldGenerator implements IWorldGenerator{
 			for(int z = 0; z < 16; z++) {
 				for(int y = 0; y < 100; y++) {
 					chunk.setBlock(x,y,z,VanillaBlocks.BLOCK_BRICKS,(byte)0);
+				}
+				for(int y = 100; y < 256; y++) {
+					chunk.setBlock(x,y,z, BlockAir.BLOCK_AIR,(byte)0);
 				}
 			}
 		}

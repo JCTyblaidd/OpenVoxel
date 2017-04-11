@@ -63,7 +63,6 @@ public class OGL3RenderCacheManager {
 		cache.dataUV = blockRenderer.uv;
 		cache.dataNormal = blockRenderer.norm;
 		cache.dataTangent = blockRenderer.tangent;
-		cache.dataBiTangent = blockRenderer.bitangent;
 		cache.dataLighting = blockRenderer.lighting;
 		cache.dataColourMask = blockRenderer.colMask;
 		cache.newValueCount = blockRenderer.count;
@@ -71,7 +70,6 @@ public class OGL3RenderCacheManager {
 		cache.dataUV.position(0);
 		cache.dataNormal.position(0);
 		cache.dataTangent.position(0);
-		cache.dataBiTangent.position(0);
 		cache.dataLighting.position(0);
 		cache.dataColourMask.position(0);
 	}
@@ -174,7 +172,6 @@ public class OGL3RenderCacheManager {
 		private ByteBuffer uv;
 		private ByteBuffer norm;
 		private ByteBuffer tangent;
-		private ByteBuffer bitangent;
 		private ByteBuffer colMask;
 		private ByteBuffer lighting;
 		private int count = 0;
@@ -189,7 +186,6 @@ public class OGL3RenderCacheManager {
 			uv = MemoryUtil.memAlloc(maxCount * 4);//2*unsigned short
 			norm = MemoryUtil.memAlloc(maxCount * 3);//3*byte
 			tangent = MemoryUtil.memAlloc(maxCount * 3);//3*byte
-			bitangent = MemoryUtil.memAlloc(maxCount * 3);//3*byte
 			colMask = MemoryUtil.memAlloc(maxCount * 4);//4*byte
 			lighting = MemoryUtil.memAlloc(maxCount * 4);//4*byte
 		}
@@ -202,35 +198,30 @@ public class OGL3RenderCacheManager {
 				ByteBuffer uv2 = MemoryUtil.memAlloc(newCount * 4);//2*unsigned short
 				ByteBuffer norm2 = MemoryUtil.memAlloc(newCount * 3);//3*byte
 				ByteBuffer tangent2 = MemoryUtil.memAlloc(newCount * 3);//3*byte
-				ByteBuffer bitangent2 = MemoryUtil.memAlloc(newCount * 3);//3*byte
 				ByteBuffer colMask2 = MemoryUtil.memAlloc(newCount * 4);//4*byte
 				ByteBuffer lighting2 = MemoryUtil.memAlloc(newCount * 4);//4*byte
 				pos.position(0);
 				uv.position(0);
 				norm.position(0);
 				tangent.position(0);
-				bitangent.position(0);
 				colMask.position(0);
 				lighting.position(0);
 				pos2.put(pos);
 				uv2.put(uv);
 				norm2.put(norm);
 				tangent2.put(tangent);
-				bitangent2.put(bitangent);
 				colMask2.put(colMask);
 				lighting2.put(lighting);
 				MemoryUtil.memFree(pos);
 				MemoryUtil.memFree(uv);
 				MemoryUtil.memFree(norm);
 				MemoryUtil.memFree(tangent);
-				MemoryUtil.memFree(bitangent);
 				MemoryUtil.memFree(colMask);
 				MemoryUtil.memFree(lighting);
 				pos = pos2;
 				uv = uv2;
 				norm = norm2;
 				tangent = tangent2;
-				bitangent = bitangent2;
 				colMask = colMask2;
 				lighting = lighting2;
 				maxCount = newCount;
@@ -244,8 +235,8 @@ public class OGL3RenderCacheManager {
 		}
 
 		@Override
-		public void addVertex(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, float xTangent, float yTangent, float zTangent, float xBiTangent, float yBiTangent, float zBiTangent) {
-			addVertexWithCol(X,Y,Z,U,V,xNorm,yNorm,zNorm,xTangent,yTangent,zTangent,xBiTangent,yBiTangent,zBiTangent,0xFFFFFFFF);
+		public void addVertex(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, float xTangent, float yTangent, float zTangent) {
+			addVertexWithCol(X,Y,Z,U,V,xNorm,yNorm,zNorm,xTangent,yTangent,zTangent,0xFFFFFFFF);
 		}
 
 		private static final float USHORT_MAX = 65535.0F;
@@ -259,7 +250,7 @@ public class OGL3RenderCacheManager {
 		}
 
 		@Override
-		public void addVertexWithCol(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, float xTangent, float yTangent, float zTangent, float xBiTangent, float yBiTangent, float zBiTangent, int Colour) {
+		public void addVertexWithCol(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, float xTangent, float yTangent, float zTangent,int Colour) {
 			ensureCapacity();
 			pos.putFloat(X + xOffset);
 			pos.putFloat(Y + yOffset);
@@ -272,9 +263,6 @@ public class OGL3RenderCacheManager {
 			tangent.put(floatToByte(xTangent));
 			tangent.put(floatToByte(yTangent));
 			tangent.put(floatToByte(zTangent));
-			bitangent.put(floatToByte(xBiTangent));
-			bitangent.put(floatToByte(yBiTangent));
-			bitangent.put(floatToByte(zBiTangent));
 			colMask.putInt(Colour);
 			lighting.putInt(0xFFFFFFFF);//TODO: implement
 			count++;

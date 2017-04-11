@@ -28,7 +28,6 @@ public class OGL3RenderCache implements IRenderDataCache{
 	private int bufferUV;
 	private int bufferNormal;
 	private int bufferTangent;
-	private int bufferBiTangent;
 	private int bufferColourMask;
 	private int bufferLighting;
 
@@ -43,7 +42,6 @@ public class OGL3RenderCache implements IRenderDataCache{
 	ByteBuffer dataUV;
 	ByteBuffer dataNormal;
 	ByteBuffer dataTangent;
-	ByteBuffer dataBiTangent;
 	ByteBuffer dataColourMask;
 	ByteBuffer dataLighting;
 
@@ -51,15 +49,14 @@ public class OGL3RenderCache implements IRenderDataCache{
 	int newValueCount = 0;
 
 	void initGL() {
-		int[] bufferArray = new int[7];
+		int[] bufferArray = new int[6];
 		glGenBuffers(bufferArray);
 		bufferPos = bufferArray[0];
 		bufferUV = bufferArray[1];
 		bufferNormal = bufferArray[2];
 		bufferTangent = bufferArray[3];
-		bufferBiTangent = bufferArray[4];
-		bufferColourMask = bufferArray[5];
-		bufferLighting = bufferArray[6];
+		bufferColourMask = bufferArray[4];
+		bufferLighting = bufferArray[5];
 		//
 		VAO = glGenVertexArrays();
 		glBindVertexArray(VAO);
@@ -71,12 +68,10 @@ public class OGL3RenderCache implements IRenderDataCache{
 		glVertexAttribPointer(2,3,GL_UNSIGNED_BYTE,true,0,0);
 		glBindBuffer(GL_ARRAY_BUFFER,bufferTangent);
 		glVertexAttribPointer(3,3,GL_UNSIGNED_BYTE,true,0,0);
-		glBindBuffer(GL_ARRAY_BUFFER,bufferBiTangent);
-		glVertexAttribPointer(4,3,GL_UNSIGNED_BYTE,true,0,0);
 		glBindBuffer(GL_ARRAY_BUFFER,bufferColourMask);
-		glVertexAttribPointer(5,4,GL_UNSIGNED_BYTE,true,0,0);
+		glVertexAttribPointer(4,4,GL_UNSIGNED_BYTE,true,0,0);
 		glBindBuffer(GL_ARRAY_BUFFER,bufferLighting);
-		glVertexAttribPointer(6,4,GL_UNSIGNED_BYTE,true,0,0);
+		glVertexAttribPointer(5,4,GL_UNSIGNED_BYTE,true,0,0);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
@@ -98,7 +93,6 @@ public class OGL3RenderCache implements IRenderDataCache{
 			set_data(bufferUV, dataUV);
 			set_data(bufferNormal, dataNormal);
 			set_data(bufferTangent,dataTangent);
-			set_data(bufferBiTangent,dataBiTangent);
 			set_data(bufferColourMask, dataColourMask);
 			set_data(bufferLighting, dataLighting);
 			//Release//
@@ -106,7 +100,6 @@ public class OGL3RenderCache implements IRenderDataCache{
 			MemoryUtil.memFree(dataUV);
 			MemoryUtil.memFree(dataNormal);
 			MemoryUtil.memFree(dataTangent);
-			MemoryUtil.memFree(dataBiTangent);
 			MemoryUtil.memFree(dataColourMask);
 			MemoryUtil.memFree(dataLighting);
 			//Cleanup//

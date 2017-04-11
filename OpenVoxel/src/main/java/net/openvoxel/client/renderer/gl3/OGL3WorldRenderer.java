@@ -38,19 +38,19 @@ import static org.lwjgl.opengl.GL11.*;
 public final class OGL3WorldRenderer implements WorldRenderer{
 
 
-	private RenderConfig currentSettings;
+	public RenderConfig currentSettings;
 	private AtomicBoolean settingsDirty = new AtomicBoolean(true);
 	private OGL3DeferredWorldRenderer deferredWorldRenderer;
 	private OGL3ForwardWorldRenderer forwardWorldRenderer;
-	private OGL3RenderCacheManager cacheManager;
+	public OGL3RenderCacheManager cacheManager;
 
 	OGL3WorldRenderer() {
 		currentSettings = new RenderConfig();
 		cacheManager = new OGL3RenderCacheManager();
 		OGL3World_UniformCache.Load();
 		OGL3World_ShaderCache.Load();
-		deferredWorldRenderer = new OGL3DeferredWorldRenderer();
-		forwardWorldRenderer = new OGL3ForwardWorldRenderer();
+		deferredWorldRenderer = new OGL3DeferredWorldRenderer(this);
+		forwardWorldRenderer = new OGL3ForwardWorldRenderer(this);
 	}
 
 	private List<ClientChunk> pollAndRequestUpdatesForNearbyChunks(EntityPlayerSP player,ClientWorld world) {
@@ -101,7 +101,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	}
 
 
-	private void setupCacheUniform(ClientChunk chunk,int yHeight) {
+	public void setupCacheUniform(ClientChunk chunk,int yHeight) {
 		float X = chunk.chunkX * 16.0F;
 		float Y = yHeight * 16.0F;
 		float Z = chunk.chunkZ * 16.0F;
@@ -150,21 +150,10 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		glEnable(GL_CULL_FACE);
 		updateChunks(toRender);
 		setupUniforms(player,world);
-		OGL3World_ShaderCache.BLOCK_SIMPLE.use();
-		for(ClientChunk chunk : toRender) {
-			if(chunk != null) {
-				for(int y = 0; y < 16; y++) {
-					ClientChunkSection section = chunk.getSectionAt(y);
-					if(section.renderCache != null) {
-						OGL3RenderCache cache = cacheManager.loadRenderCache(section);
-						if (cache.cacheExists()) {
-							//Set Uniform Vertex//
-							setupCacheUniform(chunk,y);
-							cache.draw();
-						}
-					}
-				}
-			}
+		if(!currentSettings.useDeferredPipeline) {//TODO: change back
+			deferredWorldRenderer.renderWorld(player,world,toRender);
+		}else{
+			forwardWorldRenderer.renderWorld(player,world,toRender);
 		}
 	}
 
@@ -181,5 +170,9 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	void onSettingsChanged(RenderConfig settingChangeRequested) {
 		currentSettings = settingChangeRequested;
 		settingsDirty.set(true);
+	}
+
+	public void onWindowResized(int width, int height) {
+		deferredWorldRenderer.onFrameResize(width, height);
 	}
 }

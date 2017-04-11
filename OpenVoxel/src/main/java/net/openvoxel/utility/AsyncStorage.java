@@ -90,15 +90,4 @@ public class AsyncStorage<ID,T> {
 			this.store((ID)(Integer)i,(T)(Long)(long)i);
 		}
 	}
-
-	public static void main(String[] args) {
-		//TEST://
-		AsyncStorage<Integer,Long> storage = new AsyncStorage<>(32);
-		Thread t = new Thread(storage::test);
-		t.start();
-		for(int i = 0; i < 50; i++) {
-			storage.forEachHandle((a, b) -> System.out.println(a));
-		}
-		System.out.print("END");
-	}
 }

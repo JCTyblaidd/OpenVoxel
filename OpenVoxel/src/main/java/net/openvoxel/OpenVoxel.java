@@ -239,9 +239,10 @@ public class OpenVoxel implements EventListener{
 			System.setProperty("org.lwjgl.glfw.checkThread0","false");
 			System.setProperty("org.lwjgl.util.NoChecks","true");
 		}else if(args.hasFlag("debugChecks")) {
-			openVoxelLogger.Info("Enabled Maximum Checking Mode");
+			openVoxelLogger.Info("Enabled Maximum Debug Mode");
 			System.setProperty("org.lwjgl.util.Debug","true");
 			args.storeRuntimeFlag("debugAllocator");
+			args.storeRuntimeFlag("bonusLogging");
 		}
 		if(args.hasFlag("debugAllocator")) {
 			openVoxelLogger.Info("Enabled LWJGL Debug Memory Allocator");
