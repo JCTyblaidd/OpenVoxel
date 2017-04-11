@@ -121,7 +121,7 @@ public class OGL3RenderCache implements IRenderDataCache{
 	}
 
 	public boolean cacheExists() {
-		return valueCount != 0;
+		return valueCount > 0;
 	}
 
 	public void draw() {

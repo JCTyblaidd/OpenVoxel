@@ -193,6 +193,7 @@ public class OGL3RenderCacheManager {
 		private void ensureCapacity() {
 			if(count >= maxCount) {
 				//EXPAND//
+				//TODO: convert to memRealloc
 				int newCount = maxCount + 1024;
 				ByteBuffer pos2 = MemoryUtil.memAlloc(newCount * 12);//3*float
 				ByteBuffer uv2 = MemoryUtil.memAlloc(newCount * 4);//2*unsigned short

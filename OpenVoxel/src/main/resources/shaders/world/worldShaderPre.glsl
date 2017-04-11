@@ -49,19 +49,22 @@ layout(std140) uniform ChunkConstants {
     mat4 chunkPos;
 } chunkdata;
 
-uniform sampler2D tDiffuse;             //Block Diffuse//
-uniform sampler2D tNormal;              //Normal Diffuse//
-uniform sampler2D tPBR;                 //Physically Based Rendering Information//
+uniform sampler2D tDiffuse;             //Diffuse Atlas//
+uniform sampler2D tNormal;              //Normal Atlas//
+uniform sampler2D tPBR;                 //Physically Based Rendering Information Atlas//
 uniform sampler2D itemDiffuse;          //Item Diffuse Texture//
-uniform samplerCube skyMap;             //Sky Background Map
-uniform sampler2DArrayShadow shadows;   //Shadow Map Cascades
+uniform samplerCube skyMap;             //Sky Background Map//
 
-/**
-vec3 sampleSky(in vec3 camSpaceDir) {
-    vec3 worldSpaceDir = frame.dayProgressMatrix * frame.invCamNormMatrix * camSpaceDir;
-    return textureCube(skyMap,worldSpaceDir);
-}
-**/
+uniform sampler2D gDiffuse;             //GBuffer Diffuse//
+uniform sampler2D gPBR;                 //GBuffer PBR//
+uniform sampler2D gNormal;              //GBuffer Normal//
+uniform sampler2D gLighting;            //GBuffer Lighting Information//
+uniform sampler2DShadow gDepth;         //GBuffer Depth//
+
+uniform sampler2D tMerged;              //Texture Input For Post Processing//
+
+uniform sampler2DArrayShadow shadows;   //Shadow Map Cascades//
+uniform sampler3D nearVoxel;            //Near Result Voxels//
 
 /**Get The Real Block Light Value (taking into account world lighting)*/
 vec3 getRealLight(in vec4 lightDat) {

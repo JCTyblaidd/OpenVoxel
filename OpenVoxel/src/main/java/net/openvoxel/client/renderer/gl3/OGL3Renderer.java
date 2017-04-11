@@ -51,6 +51,8 @@ public class OGL3Renderer implements GlobalRenderer{
 	public static final int TextureBinding_GBufferNormal = 17;
 	public static final int TextureBinding_GBufferPBR = 18;
 	public static final int TextureBinding_GBufferLighting = 19;
+	public static final int TextureBinding_GBufferDepth = 20;
+	public static final int TextureBinding_MergedTextureTarget = 21;
 
 	public static final int UniformBlockBinding_Settings = 0;
 	public static final int UniformBlockBinding_FrameInfo = 1;

@@ -37,7 +37,17 @@ public class OGL3WorldAppendedShader extends OGL3BasicShader{
 		_bindTextureTarget("tPBR",OGL3Renderer.TextureBinding_tPBR);
 		_bindTextureTarget("tItemDiffuse",OGL3Renderer.TextureBinding_tItemDiffuse);
 		_bindTextureTarget("skyMap",OGL3Renderer.TextureBinding_SkyCubeMap);
+		//
+		_bindTextureTarget("gDiffuse",OGL3Renderer.TextureBinding_GBufferDiffuse);
+		_bindTextureTarget("gPBR",OGL3Renderer.TextureBinding_GBufferPBR);
+		_bindTextureTarget("gNormal",OGL3Renderer.TextureBinding_GBufferNormal);
+		_bindTextureTarget("gLighting",OGL3Renderer.TextureBinding_GBufferLighting);
+		_bindTextureTarget("gDepth",OGL3Renderer.TextureBinding_GBufferDepth);
+		//
+		_bindTextureTarget("tMerged",OGL3Renderer.TextureBinding_MergedTextureTarget);
+		//
 		_bindTextureTarget("shadows",OGL3Renderer.TextureBinding_Shadows);
+
 		glUseProgram(0);
 	}
 
@@ -47,7 +57,7 @@ public class OGL3WorldAppendedShader extends OGL3BasicShader{
 			glUniformBlockBinding(program_ID,index,uniformBinding);
 		}else {
 			Logger.getLogger("Shader UBO Binder : " + DEBUG)
-					.Warning("Failed to get Index of Uniform Buffer Object -> " + Name);
+					.Debug("Failed to get Index of Uniform Buffer Object -> " + Name);
 		}
 	}
 
@@ -57,7 +67,7 @@ public class OGL3WorldAppendedShader extends OGL3BasicShader{
 			glUniform1i(loc,textureTarget);
 		}else{
 			Logger.getLogger("Shader Sampler Uniform : " + DEBUG)
-					.Warning("Failed to get Sampler Location -> " + Name);
+					.Debug("Failed to get Sampler Location -> " + Name);
 		}
 	}
 

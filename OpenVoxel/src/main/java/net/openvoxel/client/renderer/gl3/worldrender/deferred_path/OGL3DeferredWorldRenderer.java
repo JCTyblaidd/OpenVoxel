@@ -110,7 +110,9 @@ public class OGL3DeferredWorldRenderer {
 		bind_tex(gBuffer_PBR, OGL3Renderer.TextureBinding_GBufferPBR);
 		bind_tex(gBuffer_Normal, OGL3Renderer.TextureBinding_GBufferNormal);
 		bind_tex(gBuffer_Lighting, OGL3Renderer.TextureBinding_GBufferLighting);
-		//bind_tex(gBuffer_Depth, OGL3Renderer.TextureBinding_GbufferDepth);
+		bind_tex(gBuffer_Depth, OGL3Renderer.TextureBinding_GBufferDepth);
+		//
+		bind_tex(prepost_Colour,OGL3Renderer.TextureBinding_MergedTextureTarget);
 		glActiveTexture(GL_TEXTURE0);
 	}
 
@@ -127,6 +129,11 @@ public class OGL3DeferredWorldRenderer {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gBuffer_Lighting, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT , GL_TEXTURE_2D, gBuffer_Depth,0);
 		glDrawBuffers(new int[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
+
+		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_Post);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, prepost_Colour, 0);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 	}
 
@@ -158,14 +165,19 @@ public class OGL3DeferredWorldRenderer {
 		set_tex(width,height,gBuffer_Normal,GL_RGB);
 		set_tex(width,height,gBuffer_Lighting,GL_RGBA);
 		set_depth(width,height,gBuffer_Depth,GL_DEPTH_COMPONENT);
+		//UPDATE PrePost Information//
+		set_tex(width,height,prepost_Colour,GL_RGBA);
 		//Update Sizes//
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_GBuffer);
+		glViewport(0,0,width,height);
+		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_Post);
 		glViewport(0,0,width,height);
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 	}
 
 	private void setupRenderTargetGBuffer() {
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_GBuffer);
+		glClearColor(0,0,0,1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
@@ -182,10 +194,15 @@ public class OGL3DeferredWorldRenderer {
 
 	private void setupRenderTargetMerge() {
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_Post);
+		glClearColor(0,0,0,1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
 	}
 
 	private void setupRenderTargetFinal() {
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		glDisable(GL_DEPTH_TEST);
 	}
 
 	public void renderWorld(EntityPlayerSP player, ClientWorld world, List<ClientChunk> toRender) {
@@ -211,9 +228,11 @@ public class OGL3DeferredWorldRenderer {
 		//Draw FoV Transparency
 		//setupRenderTargetShadows();
 		//Draw ShadowMaps
-		//setupRenderTargetMerge();
-		//drawFullScreen();
+		setupRenderTargetMerge();
+		OGL3World_ShaderCache.GBUFFER_MERGE.use();
+		drawFullScreen();
 		setupRenderTargetFinal();
+		OGL3World_ShaderCache.WORLD_POSTPROCESS.use();
 		drawFullScreen();
 	}
 
