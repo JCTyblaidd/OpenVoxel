@@ -317,7 +317,7 @@ public class OpenVoxel implements EventListener{
 			//notifyEvent Main Loops Of Shutdown//
 			isRunning.set(false);
 			try{
-				Thread.sleep(1000);//TODO: await more efficiently
+				Thread.sleep(5000);//TODO: await more efficiently
 			}catch(InterruptedException e) {
 				openVoxelLogger.Warning("Thread Wait Was Interrupted");
 			}

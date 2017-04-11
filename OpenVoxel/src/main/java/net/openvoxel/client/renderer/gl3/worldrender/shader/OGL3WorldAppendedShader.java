@@ -31,6 +31,8 @@ public class OGL3WorldAppendedShader extends OGL3BasicShader{
 		_bindUBO("Settings",OGL3Renderer.UniformBlockBinding_Settings);
 		_bindUBO("FinalFrame",OGL3Renderer.UniformBlockBinding_FrameInfo);
 		_bindUBO("ChunkConstants",OGL3Renderer.UniformBlockBinding_ChunkInfo);
+		_bindUBO("ShadowMapping",OGL3Renderer.UniformBlockBinding_ShadowInfo);
+		_bindUBO("VoxelConeData",OGL3Renderer.UniformBlockBinding_VoxelInfo);
 		//Texture Bindings//
 		_bindTextureTarget("tDiffuse", OGL3Renderer.TextureBinding_tDiffuse);
 		_bindTextureTarget("tNormal",OGL3Renderer.TextureBinding_tNormal);
@@ -47,7 +49,8 @@ public class OGL3WorldAppendedShader extends OGL3BasicShader{
 		_bindTextureTarget("tMerged",OGL3Renderer.TextureBinding_MergedTextureTarget);
 		//
 		_bindTextureTarget("shadows",OGL3Renderer.TextureBinding_Shadows);
-
+		//
+		_bindTextureTarget("nearVoxel",OGL3Renderer.TextureBinding_NearVoxelMap);
 		glUseProgram(0);
 	}
 

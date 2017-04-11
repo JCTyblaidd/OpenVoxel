@@ -13,6 +13,7 @@ import net.openvoxel.client.renderer.gl3.atlas.OGL3TextureAtlas;
 import net.openvoxel.client.renderer.gl3.font.OGL3FontRenderer;
 import net.openvoxel.client.renderer.gl3.util.OGL3ErrorLogger;
 import net.openvoxel.client.renderer.gl3.worldrender.OGL_Caps;
+import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_UniformCache;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.event.input.WindowResizeEvent;
 import net.openvoxel.files.FolderUtils;
@@ -53,6 +54,7 @@ public class OGL3Renderer implements GlobalRenderer{
 	public static final int TextureBinding_GBufferLighting = 19;
 	public static final int TextureBinding_GBufferDepth = 20;
 	public static final int TextureBinding_MergedTextureTarget = 21;
+	public static final int TextureBinding_NearVoxelMap = 22;
 
 	public static final int UniformBlockBinding_Settings = 0;
 	public static final int UniformBlockBinding_FrameInfo = 1;
@@ -240,6 +242,7 @@ public class OGL3Renderer implements GlobalRenderer{
 	@Override
 	public void kill() {
 		glfwDestroyWindow(window);
+		OGL3World_UniformCache.FreeMemory();
 	}
 
 	@Override

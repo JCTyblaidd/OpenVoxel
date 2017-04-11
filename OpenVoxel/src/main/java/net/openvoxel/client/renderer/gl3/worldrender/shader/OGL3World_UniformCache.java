@@ -225,6 +225,14 @@ public class OGL3World_UniformCache {
 		updateVoxelInfo();
 	}
 
+	public static void FreeMemory() {
+		MemoryUtil.memFree(buf_settings);
+		MemoryUtil.memFree(buf_final_frame);
+		MemoryUtil.memFree(buf_chunk_constants);
+		MemoryUtil.memFree(buf_shadow_info);
+		MemoryUtil.memFree(buf_voxel_info);
+	}
+
 	private static void updateSettings() {
 		buf_settings.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_Settings);
