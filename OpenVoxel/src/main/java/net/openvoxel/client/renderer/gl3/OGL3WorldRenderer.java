@@ -6,7 +6,6 @@ import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.CompressionLevel;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.gl3.worldrender.OGL3ForwardWorldRenderer;
-import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCache;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCacheManager;
 import net.openvoxel.client.renderer.gl3.worldrender.deferred_path.OGL3DeferredWorldRenderer;
 import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_ShaderCache;
@@ -25,6 +24,8 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -38,11 +39,17 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	public static final float Z_NEAR = 0.1F;
 	public static final float Z_FAR = 1000.0F;
 
-	public RenderConfig currentSettings;
+	private RenderConfig currentSettings;
 	private AtomicBoolean settingsDirty = new AtomicBoolean(true);
 	private OGL3DeferredWorldRenderer deferredWorldRenderer;
 	private OGL3ForwardWorldRenderer forwardWorldRenderer;
 	public OGL3RenderCacheManager cacheManager;
+
+	private ReentrantLock sectionLock = new ReentrantLock();
+	private List<ClientChunk> toGenerateSections = new ArrayList<>();
+	private List<ClientChunk> toRemoveSections = new ArrayList<>();
+
+	private List<ClientChunk> enabledChunks = new ArrayList<>();
 
 	OGL3WorldRenderer() {
 		currentSettings = new RenderConfig();
@@ -51,22 +58,6 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		OGL3World_ShaderCache.Load();
 		deferredWorldRenderer = new OGL3DeferredWorldRenderer(this);
 		forwardWorldRenderer = new OGL3ForwardWorldRenderer(this);
-	}
-
-	private List<ClientChunk> pollAndRequestUpdatesForNearbyChunks(EntityPlayerSP player,ClientWorld world) {
-		int playerChunkX = (int)(player.xPos / 16);
-		int playerChunkZ = (int)(player.zPos / 16);
-		int xMin = playerChunkX - 8;
-		int xMax = playerChunkX + 8;
-		int zMin = playerChunkZ - 8;
-		int zMax = playerChunkZ + 8;
-		List<ClientChunk> chunks = new ArrayList<>();
-		for(int z = zMin; z <= zMax; z++) {
-			for(int x = xMin; x <= xMax; x++) {
-				chunks.add(world.requestChunk(x,z));
-			}
-		}
-		return chunks;
 	}
 
 	private void checkForSettingsChange() {
@@ -113,17 +104,25 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	}
 
 
-	private void updateChunks(List<ClientChunk> chunkData) {
-		for(ClientChunk chunk : chunkData) {
-			if(chunk != null) {
-				for(int y = 0; y < 16; y++) {
-					ClientChunkSection section = chunk.getSectionAt(y);
-					if(section.renderCache == null) {
-						cacheManager.requestRenderCacheGeneration(section);
-					}else{
-						OGL3RenderCache cache = cacheManager.loadRenderCache(section);
-						cache.updateGLAndRelease();
-					}
+	/**
+	 * Handle the updating and removing of new chunk information
+	 */
+	private void updateChunks() {
+		//Update Valid Chunk Info Cache//
+		sectionLock.lock();
+		toGenerateSections.forEach(cacheManager::handleChunkLoad);
+		toRemoveSections.forEach(cacheManager::handleChunkUnload);
+		enabledChunks.addAll(toGenerateSections);
+		enabledChunks.removeAll(toRemoveSections);
+		toGenerateSections.clear();
+		toRemoveSections.clear();
+		sectionLock.unlock();
+		//Handle dirt update TODO: add another queue
+		for(ClientChunk chunk : enabledChunks) {
+			for(int y = 0; y < 16; y++) {
+				ClientChunkSection section = chunk.getSectionAt(y);
+				if(section.renderCache.get() != null) {
+					cacheManager.loadRenderCache(section).updateGLAndRelease();
 				}
 			}
 		}
@@ -146,36 +145,64 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	 */
 	@Override
 	public void renderWorld(EntityPlayerSP player, ClientWorld world) {
-		List<ClientChunk> toRender = pollAndRequestUpdatesForNearbyChunks(player,world);
+		updateChunks();
 		checkForSettingsChange();
 		generateWorldBackground(player, world);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
-		updateChunks(toRender);
 		setupUniforms(player,world);
 		if(!currentSettings.useDeferredPipeline) {//TODO: change back
-			deferredWorldRenderer.renderWorld(player,world,toRender);
+			deferredWorldRenderer.renderWorld(player,world,enabledChunks);
 		}else{
-			forwardWorldRenderer.renderWorld(player,world,toRender);
+			forwardWorldRenderer.renderWorld(player,world,enabledChunks);
 		}
 	}
 
+	/**
+	 * Called When a Chunk is Loaded : Client Server Thread
+	 */
 	@Override
-	public void onChunkLoaded(World world, Chunk chunk) {
-		//Prepare Chunk For Rendering//
+	public void onChunkLoaded(ClientChunk chunk) {
+		sectionLock.lock();
+		toGenerateSections.add(chunk);
+		sectionLock.unlock();
 	}
 
+	/**
+	 * Called When Chunk Information is Dirty : Client Server Thread
+	 */
 	@Override
-	public void onChunkUnloaded(World world, Chunk chunk) {
-		//Cleanup Chunk Rendering Data//
+	public void onChunkDirty(ClientChunk chunk) {
+		for(int y = 0; y < 16; y++) {
+			ClientChunkSection section = chunk.getSectionAt(y);
+			if(section.isDirty()) {
+				cacheManager.handleDirtySection(section);
+			}
+		}
 	}
 
+	/**
+	 * Called When A Chunk is Unloaded : Client Server Thread
+	 */
+	@Override
+	public void onChunkUnloaded(ClientChunk chunk) {
+		sectionLock.lock();
+		toRemoveSections.add(chunk);
+		sectionLock.unlock();
+	}
+
+	/**
+	 * Called When The Settings Are Changed : Renderer Thread
+	 */
 	void onSettingsChanged(RenderConfig settingChangeRequested) {
 		currentSettings = settingChangeRequested;
 		settingsDirty.set(true);
 	}
 
-	public void onWindowResized(int width, int height) {
+	/**
+	 * Called When The Window is Resized : Renderer Thread
+	 */
+	void onWindowResized(int width, int height) {
 		deferredWorldRenderer.onFrameResize(width, height);
 	}
 }

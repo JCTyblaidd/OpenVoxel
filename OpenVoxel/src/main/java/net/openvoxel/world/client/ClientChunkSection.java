@@ -7,6 +7,8 @@ import net.openvoxel.client.utility.IRenderDataCache;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.world.chunk.ChunkSection;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * Created by James on 09/04/2017.
  *
@@ -18,7 +20,7 @@ public class ClientChunkSection extends ChunkSection {
 	/**
 	 * Renderer Draw Information Cache
 	 */
-	public IRenderDataCache renderCache = null;
+	public AtomicReference<IRenderDataCache> renderCache = new AtomicReference<>(null);
 
 	private byte metaVal;
 	public Block blockAt(int x, int y, int z) {
@@ -32,11 +34,21 @@ public class ClientChunkSection extends ChunkSection {
 		return metaVal;
 	}
 
+	/**
 	@Override
 	protected void freeMemory() {
 		super.freeMemory();
-		if(renderCache != null) {
-			renderCache.onChunkSectionFree();
+		if(renderCache.get() != null) {
+			renderCache.get().onChunkSectionFree();
 		}
+	}
+	**/
+
+	public boolean isDirty() {
+		return false;
+	}
+
+	public void markClean() {
+		//TODO: implement clean and dirty client side properly
 	}
 }

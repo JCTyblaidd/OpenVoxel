@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.gl3.worldrender.cache;
 
+import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.gl3.atlas.OGL3Icon;
 import net.openvoxel.client.textureatlas.Icon;
@@ -7,6 +8,7 @@ import net.openvoxel.common.block.Block;
 import net.openvoxel.common.block.BlockAir;
 import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.util.BlockFace;
+import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import org.lwjgl.system.MemoryUtil;
 
@@ -22,21 +24,32 @@ public class OGL3RenderCacheManager {
 
 
 	public OGL3RenderCache loadRenderCache(ClientChunkSection section) {
-		return (OGL3RenderCache)section.renderCache;
+		return (OGL3RenderCache)section.renderCache.get();
 	}
 
-	public void requestRenderCacheGeneration(ClientChunkSection section) {
-		OGL3RenderCache cache = new OGL3RenderCache();
-		cache.initGL();
-		//Generate//
-		/* todo: make async
-		Renderer.renderCacheManager.addWork(() -> {
-
-		});
-		 */
-		GenerateData(section, cache);
-		section.renderCache = cache;
+	public void handleChunkLoad(ClientChunk chunk) {
+		for(int y = 0; y < 16; y++) {
+			ClientChunkSection section = chunk.getSectionAt(y);
+			OGL3RenderCache cache = new OGL3RenderCache();
+			cache.initGL();
+			section.renderCache.set(cache);
+			Renderer.renderCacheManager.addWork(() -> {
+				GenerateData(section,cache);
+			});
+		}
 	}
+
+	public void handleChunkUnload(ClientChunk chunk) {
+		for(int y = 0; y < 16; y++) {
+			ClientChunkSection section = chunk.getSectionAt(y);
+			loadRenderCache(section).removeGL();
+		}
+	}
+
+	public void handleDirtySection(ClientChunkSection section) {
+		//TODO: implement
+	}
+
 
 	private static void GenerateData(ClientChunkSection section,OGL3RenderCache cache) {
 		ogl3BlockRenderer blockRenderer = new ogl3BlockRenderer(0,0,0);
@@ -188,39 +201,13 @@ public class OGL3RenderCacheManager {
 
 		private void ensureCapacity() {
 			if(count >= maxCount) {
-				//EXPAND//
-				//TODO: convert to memRealloc
-				int newCount = maxCount + 1024;
-				ByteBuffer pos2 = MemoryUtil.memAlloc(newCount * 12);//3*float
-				ByteBuffer uv2 = MemoryUtil.memAlloc(newCount * 4);//2*unsigned short
-				ByteBuffer norm2 = MemoryUtil.memAlloc(newCount * 3);//3*byte
-				ByteBuffer tangent2 = MemoryUtil.memAlloc(newCount * 3);//3*byte
-				ByteBuffer colMask2 = MemoryUtil.memAlloc(newCount * 4);//4*byte
-				ByteBuffer lighting2 = MemoryUtil.memAlloc(newCount * 4);//4*byte
-				pos.position(0);
-				uv.position(0);
-				norm.position(0);
-				tangent.position(0);
-				colMask.position(0);
-				lighting.position(0);
-				pos2.put(pos);
-				uv2.put(uv);
-				norm2.put(norm);
-				tangent2.put(tangent);
-				colMask2.put(colMask);
-				lighting2.put(lighting);
-				MemoryUtil.memFree(pos);
-				MemoryUtil.memFree(uv);
-				MemoryUtil.memFree(norm);
-				MemoryUtil.memFree(tangent);
-				MemoryUtil.memFree(colMask);
-				MemoryUtil.memFree(lighting);
-				pos = pos2;
-				uv = uv2;
-				norm = norm2;
-				tangent = tangent2;
-				colMask = colMask2;
-				lighting = lighting2;
+				int newCount = maxCount + 2048;
+				pos = MemoryUtil.memRealloc(pos,newCount * 12);
+				uv = MemoryUtil.memRealloc(uv, newCount * 4);
+				norm = MemoryUtil.memRealloc(norm,newCount * 3);
+				tangent = MemoryUtil.memRealloc(tangent,newCount * 3);
+				colMask = MemoryUtil.memRealloc(colMask,newCount * 4);
+				lighting = MemoryUtil.memRealloc(lighting, newCount * 4);
 				maxCount = newCount;
 			}
 		}

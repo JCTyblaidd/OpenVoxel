@@ -129,8 +129,4 @@ public class OGL3RenderCache implements IRenderDataCache{
 		glDrawArrays(GL_TRIANGLES, 0, valueCount);
 	}
 
-	@Override
-	public void onChunkSectionFree() {
-		//TODO: call and mark for cleanup
-	}
 }

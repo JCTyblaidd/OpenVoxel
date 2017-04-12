@@ -242,6 +242,7 @@ public class OGL3Renderer implements GlobalRenderer{
 	@Override
 	public void kill() {
 		glfwDestroyWindow(window);
+		glfwTerminate();
 		OGL3World_UniformCache.FreeMemory();
 	}
 

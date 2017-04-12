@@ -21,7 +21,11 @@ public class World {
 	}
 
 	public void unloadChunk(int x, int z) {
-		//TODO: implement
+		Chunk res = chunkMap.get(x,z);
+		if(res != null) {
+			res.releaseData();
+			chunkMap.remove(x,z);
+		}
 	}
 	public Chunk requestChunk(int x, int z) {
 		Chunk res = chunkMap.get(x,z);
@@ -31,6 +35,7 @@ public class World {
 		}//TODO: improve
 		return res;
 	}
+
 
 	/**
 	 * Unload The Entire World : Release All Chunk Data

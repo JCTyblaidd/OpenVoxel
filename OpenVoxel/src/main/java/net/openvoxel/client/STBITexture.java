@@ -2,18 +2,13 @@ package net.openvoxel.client;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.utility.CrashReport;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-import static org.lwjgl.stb.STBImage.nstbi_load_from_memory;
-import static org.lwjgl.system.Checks.CHECKS;
-import static org.lwjgl.system.Checks.checkBuffer;
-import static org.lwjgl.system.MemoryUtil.memAddress;
-import static org.lwjgl.system.MemoryUtil.memByteBuffer;
+import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
 
 /**
  * Created by James on 28/08/2016.
@@ -26,18 +21,6 @@ public class STBITexture {
 	public int componentCount;
 	public ByteBuffer pixels;
 
-	/**
-	 * Fix for stbi_load_from_memory since the buffer size reported is incorrect
-	 */
-	private ByteBuffer _correctSTBIMem(ByteBuffer buffer,IntBuffer x,IntBuffer y, IntBuffer comp,int req_comp) {
-		if ( CHECKS ) {
-			checkBuffer(x, 1);
-			checkBuffer(y, 1);
-			checkBuffer(comp, 1);
-		}
-		long __result = nstbi_load_from_memory(memAddress(buffer), buffer.remaining(), memAddress(x), memAddress(y), memAddress(comp), req_comp);
-		return memByteBuffer(__result, x.get(x.position()) * y.get(y.position()) * req_comp);//FIX:
-	}
 
 	public STBITexture(byte[] array) {
 		ByteBuffer buffer = MemoryUtil.memAlloc(array.length);
@@ -46,7 +29,7 @@ public class STBITexture {
 		IntBuffer xBuffer = MemoryUtil.memAllocInt(1);
 		IntBuffer yBuffer = MemoryUtil.memAllocInt(1);
 		IntBuffer compBuffer = MemoryUtil.memAllocInt(1);
-		pixels = _correctSTBIMem(buffer,xBuffer,yBuffer,compBuffer,STBImage.STBI_rgb_alpha);
+		pixels = stbi_load_from_memory(buffer,xBuffer,yBuffer,compBuffer,STBImage.STBI_rgb_alpha);
 		xBuffer.position(0);
 		yBuffer.position(0);
 		compBuffer.position(0);

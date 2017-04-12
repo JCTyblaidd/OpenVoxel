@@ -140,6 +140,10 @@ public class Chunk {
 		return needsUpdate;
 	}
 
+	public void markUpdated() {
+		needsUpdate = false;
+	}
+
 	public List<Entity> getEntityList() {
 		return entities;
 	}

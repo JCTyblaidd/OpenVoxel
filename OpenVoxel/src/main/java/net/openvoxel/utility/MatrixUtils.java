@@ -35,4 +35,11 @@ public class MatrixUtils {
 		return chunkPositionMatrix.identity().translate(X,Y,Z);
 	}
 
+
+	private static final Matrix4f projectionViewMatrix = new Matrix4f();
+	public static Matrix4f getLastProjectionViewMatrix() {
+		projectionMatrix.set(cameraMatrix).mul(projectionMatrix);
+		return projectionViewMatrix;
+	}
+
 }

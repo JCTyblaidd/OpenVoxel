@@ -28,6 +28,7 @@ public class OGL3CascadeManager {
 	 * World -> Screen Matrices
 	 */
 	private static Matrix4f[] CASCADE_MATRICES = new Matrix4f[]{new Matrix4f(), new Matrix4f(), new Matrix4f()};
+
 	/**
 	 * Shadow 2D Array OpenGL Handle
 	 */
@@ -49,7 +50,7 @@ public class OGL3CascadeManager {
 	 * Calculate And Update Shadow Uniform Information
 	 */
 	void updateShadowInfoUniform() {
-
+		
 	}
 
 	public void renderShadowCascades(List<ClientChunkSection> toRender) {

@@ -2,11 +2,14 @@ package net.openvoxel.server;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.client.control.RenderThread;
+import net.openvoxel.client.control.Renderer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.networking.ClientNetworkHandler;
 import net.openvoxel.networking.protocol.AbstractPacket;
 import net.openvoxel.server.util.ClientChunkLoadManager;
 import net.openvoxel.utility.CrashReport;
+import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientWorld;
 
 import java.io.IOException;
@@ -27,7 +30,7 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 	public ClientChunkLoadManager loadManager;
 
 	public ClientServer() {
-
+		loadManager = new ClientChunkLoadManager(this);
 	}
 
 	public void connectTo(SocketAddress address) throws IOException {
@@ -47,10 +50,27 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 
 	@Override
 	public void run() {
-		serverConnection.handleAllRecievedPackets(this);
+		loadManager.tick();
+		//serverConnection.handleAllRecievedPackets(this);
 		//simulate client side//
 
 		//Await Timeout//
+	}
+
+	public void requestChunkLoad(ClientWorld world, int x, int z) {
+		//TODO: rework for packet based
+		ClientChunk clientChunk = world.requestChunk(x,z);
+		loadManager.loadedChunk(clientChunk);
+		Renderer.renderer.getWorldRenderer().onChunkLoaded(clientChunk);
+	}
+
+	public void requestChunkUnload(ClientWorld world, int x, int z) {
+		world.unloadChunk(x,z);
+	}
+
+	public void requestChunkUpdate(ClientWorld world, int x, int z) {
+		ClientChunk clientChunk = world.requestChunk(x,z);
+		Renderer.renderer.getWorldRenderer().onChunkDirty(clientChunk);
 	}
 
 	public EntityPlayerSP getThePlayer() {
@@ -68,7 +88,6 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 
 	public void disconnect() {
 		shutdown();
-		//todo: send exit packet;
 		serverConnection.shutdown();
 	}
 

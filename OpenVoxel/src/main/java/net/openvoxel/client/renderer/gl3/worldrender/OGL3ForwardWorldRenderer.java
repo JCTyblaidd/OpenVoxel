@@ -28,7 +28,7 @@ public class OGL3ForwardWorldRenderer {
 			if(chunk != null) {
 				for(int y = 0; y < 16; y++) {
 					ClientChunkSection section = chunk.getSectionAt(y);
-					if(section.renderCache != null) {
+					if(section.renderCache.get() != null) {
 						OGL3RenderCache cache = worldRenderer.cacheManager.loadRenderCache(section);
 						if (cache.cacheExists()) {
 							//Set Uniform Vertex//

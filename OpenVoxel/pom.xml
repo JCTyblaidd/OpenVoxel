@@ -40,33 +40,197 @@
 
 
     <dependencies>
-
-	    <dependency><!--LWJGL for OpenGL + Vulkan-->
+		<!-- LWJGL OLD
+	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl</artifactId>
 		    <version>3.0.0</version>
 	    </dependency>
 
-	    <dependency><!--Natives for LWJGL : Windows-->
+	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-platform</artifactId>
 		    <version>3.0.0</version>
 		    <classifier>natives-windows</classifier>
 	    </dependency>
 
-	    <dependency><!--Natives for LWJGL : MacOS-->
+	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-platform</artifactId>
 		    <version>3.0.0</version>
 		    <classifier>natives-osx</classifier>
 	    </dependency>
 
-	    <dependency><!--Natives for LWJGL : Linux-->
+	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-platform</artifactId>
 		    <version>3.0.0</version>
 		    <classifier>natives-linux</classifier>
 	    </dependency>
+		-->
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<version>3.1.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<version>3.1.1</version>
+			<classifier>natives-windows</classifier>
+		</dependency>
+
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<version>3.1.1</version>
+			<classifier>natives-osx</classifier>
+		</dependency>
+
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<version>3.1.1</version>
+			<classifier>natives-linux</classifier>
+		</dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-opengl</artifactId>
+		    <version>3.1.1</version>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-opengl</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-windows</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-opengl</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-osx</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-opengl</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-linux</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-vulkan</artifactId>
+		    <version>3.1.1</version>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-vulkan</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-windows</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-vulkan</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-osx</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-vulkan</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-linux</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>3.1.1</version>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-windows</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-osx</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-linux</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>3.1.1</version>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-windows</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-osx</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-linux</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <version>3.1.1</version>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-windows</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-osx</classifier>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <version>3.1.1</version>
+		    <classifier>natives-linux</classifier>
+	    </dependency>
+
+		<!-- Other Utility Libraries -->
 
         <dependency><!-- Netty Project -->
             <groupId>io.netty</groupId>
@@ -88,18 +252,13 @@
             <artifactId>asm-all</artifactId>
             <version>5.0.3</version>
         </dependency>
-<!--
-        <dependency>
-            <groupId>java3d</groupId>
-            <artifactId>vecmath</artifactId>
-            <version>1.3.1</version>
-        </dependency>
--->
-	    <dependency>
+
+	    <dependency><!-- Java Math Library -->
 		    <groupId>org.joml</groupId>
 		    <artifactId>joml</artifactId>
 		    <version>LATEST</version>
 	    </dependency>
+
         <dependency><!--Trove Library-->
             <groupId>net.sf.trove4j</groupId>
             <artifactId>trove4j</artifactId>

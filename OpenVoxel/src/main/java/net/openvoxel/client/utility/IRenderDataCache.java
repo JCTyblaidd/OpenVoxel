@@ -8,5 +8,4 @@ package net.openvoxel.client.utility;
  */
 public interface IRenderDataCache {
 
-	void onChunkSectionFree();
 }

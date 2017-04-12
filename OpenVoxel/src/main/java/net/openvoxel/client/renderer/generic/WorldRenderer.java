@@ -2,8 +2,7 @@ package net.openvoxel.client.renderer.generic;
 
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.world.World;
-import net.openvoxel.world.chunk.Chunk;
+import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientWorld;
 
 /**
@@ -71,8 +70,12 @@ public interface WorldRenderer {
 	//Handle Dirty Chunks In This//
 	void renderWorld(EntityPlayerSP playerSP,ClientWorld worldSP);
 
-	void onChunkLoaded(World world, Chunk chunk);
-	void onChunkUnloaded(World world, Chunk chunk);
+	///
+	/// Handling Chunk Updates : Unloads are handled via the release data method
+	///
+	void onChunkLoaded(ClientChunk chunk);
+	void onChunkDirty(ClientChunk chunk);
+	void onChunkUnloaded(ClientChunk chunk);
 
 	/**
 	 * Interface for the generation of block data from the world space

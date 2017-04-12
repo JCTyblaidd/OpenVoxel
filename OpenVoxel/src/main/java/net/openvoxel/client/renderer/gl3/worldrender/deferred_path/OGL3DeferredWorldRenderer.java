@@ -42,16 +42,16 @@ public class OGL3DeferredWorldRenderer {
 	private int gBuffer_Transparent1;
 	private int gBuffer_Transparent2;
 
-	//Shadows//
+	//Utilities//
 	private OGL3CascadeManager shadowCascades;
 	private OGL3NearGlobalIlluminationHandler nearGI;
+	private OGL3DeferredCuller culler;
 
 	//Merge to run post target//
-	private int prepost_Colour;
+	private int mergeTarget_Colour;
 
 	//FrameBuffer Target//
 	private int frameBufferTarget_GBuffer;
-	private int frameBufferTarget_Shadows;
 	private int frameBufferTarget_Post;
 
 	//Full Screen Draw//
@@ -74,14 +74,13 @@ public class OGL3DeferredWorldRenderer {
 
 	private void initialize() {
 		frameBufferTarget_GBuffer = glGenFramebuffers();
-		frameBufferTarget_Shadows = glGenFramebuffers();
 		frameBufferTarget_Post = glGenFramebuffers();
 		gBuffer_Diffuse = glGenTextures();
 		gBuffer_PBR = glGenTextures();
 		gBuffer_Normal = glGenTextures();
 		gBuffer_Lighting = glGenTextures();
 		gBuffer_Depth = glGenTextures();
-		prepost_Colour = glGenTextures();
+		mergeTarget_Colour = glGenTextures();
 		//Setup Full Screen Render Pass Request//
 		fullScreenVAO = glGenVertexArrays();
 		fullScreenBufPos = glGenBuffers();
@@ -108,7 +107,7 @@ public class OGL3DeferredWorldRenderer {
 		bind_tex(gBuffer_Lighting, OGL3Renderer.TextureBinding_GBufferLighting);
 		bind_tex(gBuffer_Depth, OGL3Renderer.TextureBinding_GBufferDepth);
 		//
-		bind_tex(prepost_Colour,OGL3Renderer.TextureBinding_MergedTextureTarget);
+		bind_tex(mergeTarget_Colour,OGL3Renderer.TextureBinding_MergedTextureTarget);
 		glActiveTexture(GL_TEXTURE0);
 	}
 
@@ -127,7 +126,7 @@ public class OGL3DeferredWorldRenderer {
 		glDrawBuffers(new int[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
 
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_Post);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, prepost_Colour, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mergeTarget_Colour, 0);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -162,7 +161,7 @@ public class OGL3DeferredWorldRenderer {
 		set_tex(width,height,gBuffer_Lighting,GL_RGBA);
 		set_depth(width,height,gBuffer_Depth,GL_DEPTH_COMPONENT);
 		//UPDATE PrePost Information//
-		set_tex(width,height,prepost_Colour,GL_RGBA);
+		set_tex(width,height, mergeTarget_Colour,GL_RGBA);
 		//Update Sizes//
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_GBuffer);
 		glViewport(0,0,width,height);
@@ -182,10 +181,6 @@ public class OGL3DeferredWorldRenderer {
 
 	private void setupRenderTargetTransparentGBuffer() {
 
-	}
-
-	private void setupRenderTargetShadows() {
-		//glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_Shadows);
 	}
 
 	private void setupRenderTargetMerge() {
@@ -208,7 +203,7 @@ public class OGL3DeferredWorldRenderer {
 			if(chunk != null) {
 				for(int y = 0; y < 16; y++) {
 					ClientChunkSection section = chunk.getSectionAt(y);
-					if(section.renderCache != null) {
+					if(section.renderCache.get() != null) {
 						OGL3RenderCache cache = worldRenderer.cacheManager.loadRenderCache(section);
 						if (cache.cacheExists()) {
 							//Set Uniform Vertex//
@@ -224,6 +219,9 @@ public class OGL3DeferredWorldRenderer {
 		//Draw FoV Transparency
 		//setupRenderTargetShadows();
 		//Draw ShadowMaps
+
+
+		///FINISH THE RENDER PASS///
 		setupRenderTargetMerge();
 		OGL3World_ShaderCache.GBUFFER_MERGE.use();
 		drawFullScreen();
