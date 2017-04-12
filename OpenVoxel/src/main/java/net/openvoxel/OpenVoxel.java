@@ -73,13 +73,13 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * Currently Running Standard Server
 	 */
-	public Server currentServer = null;
+	private Server currentServer = null;
 
 	/**
 	 * Currently Handled Client Server View
 	 */
 	//@SideOnly(side = Side.CLIENT)
-	public ClientServer currentClientServer = null;
+	private ClientServer currentClientServer = null;
 
 	/**
 	 * The ID <-> Name <-> Packet Registry,
@@ -141,6 +141,9 @@ public class OpenVoxel implements EventListener{
 	 * @param address the address of the server
 	 */
 	public void clientConnectRemote(SocketAddress address) {
+		if(currentClientServer != null) {
+			currentClientServer.disconnect();
+		}
 		currentClientServer = new ClientServer();
 		//TODO: implement connect
 	}
@@ -149,6 +152,9 @@ public class OpenVoxel implements EventListener{
 	 *  Connect to the currently hosted integrated server
 	 */
 	public void clientConnectLocal() {
+		if(currentClientServer != null) {
+			currentClientServer.disconnect();
+		}
 		currentClientServer = new ClientServer();
 		//TODO: implement connect
 	}
@@ -310,14 +316,21 @@ public class OpenVoxel implements EventListener{
 	public void AttemptShutdownSequence(boolean isCrash) {
 		WindowCloseRequestedEvent e1 = new WindowCloseRequestedEvent(isCrash);
 		eventBus.push(e1);
+		if(e1.isCancelled() && isCrash) {
+			openVoxelLogger.Warning("Window Close Requested Event for Crash Stopped, Invalid Behaviour");
+		}
 		if(!e1.isCancelled() || isCrash) {
-			if(e1.isCancelled()) {
-				openVoxelLogger.Warning("Window Close Requested Event for Crash Stopped, Invalid Behaviour");
-			}
 			//notifyEvent Main Loops Of Shutdown//
+			openVoxelLogger.Info("Starting Shutdown Sequence");
 			isRunning.set(false);
+			if(Side.isClient) {
+				if(currentClientServer != null) {
+					currentClientServer.disconnect();
+				}
+				RenderThread.awaitTermination();
+			}
 			try{
-				Thread.sleep(5000);//TODO: await more efficiently
+				Thread.sleep(3000);//TODO: await more efficiently
 			}catch(InterruptedException e) {
 				openVoxelLogger.Warning("Thread Wait Was Interrupted");
 			}

@@ -30,7 +30,11 @@ void main() {
     vec3 normal = texture(gNormal,uv).rgb;
     vec4 light = texture(gLighting,uv).rgba;
     //float depth = textureShadow(gDepth,uv).z;
-    finalColour = vec4(diffuse,1);
+
+    float pow = dot(normalize(normal),normalize(vec3(1,0.2,0.2)));
+    pow = clamp(pow,0.1,1);
+
+    finalColour = vec4(diffuse * pow,1);
 }
 
 /**[End]**/

@@ -7,21 +7,20 @@ import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.util.BlockFace;
 
 /**
- * Created by James on 24/09/2016.
+ * Created by James on 12/04/2017.
  *
- * Brick Block
  */
-public class BlockBricks extends Block{
+public class BlockStone extends Block {
 
 	private Icon icon;
 
 	@Override
 	public void loadTextureAtlasData(IconAtlas texAtlas) {
-		icon = texAtlas.register("block/brick/brick.diff","block/brick/brick.normals","block/brick/brick.pbr");
+
 	}
 
 	@Override
 	public Icon getIconAtSide(IBlockAccess blockAccess, BlockFace face) {
-		return icon;
+		return null;
 	}
 }

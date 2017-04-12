@@ -22,6 +22,7 @@ import org.lwjgl.opengl.GLCapabilities;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -241,6 +242,7 @@ public class OGL3Renderer implements GlobalRenderer{
 
 	@Override
 	public void kill() {
+		glfwFreeCallbacks(window);
 		glfwDestroyWindow(window);
 		glfwTerminate();
 		OGL3World_UniformCache.FreeMemory();

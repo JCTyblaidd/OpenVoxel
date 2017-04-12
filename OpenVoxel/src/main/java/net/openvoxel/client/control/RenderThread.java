@@ -1,6 +1,7 @@
 package net.openvoxel.client.control;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.GUI;
@@ -12,6 +13,8 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.world.client.ClientWorld;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Created by James on 25/08/2016.
  *
@@ -22,6 +25,7 @@ public class RenderThread implements Runnable{
 	private static RenderThread INSTANCE;
 	private Thread thread;
 	private PerSecondTimer FPS_TIMER;
+	private AtomicBoolean shutdownFlag = new AtomicBoolean(false);
 
 	public static void Start() {
 		if(INSTANCE == null) {
@@ -87,6 +91,21 @@ public class RenderThread implements Runnable{
 			renderer.nextFrame();
 			FPS_TIMER.notifyEvent();
 		}
+		Logger.getLogger("Render Thread").Info("Terminating...");
 		renderer.kill();
+		Logger.getLogger("Render Thread").Info("Terminated");
+		shutdownFlag.set(true);
+	}
+
+	public static void awaitTermination() {
+		for(int i = 0; i < 20; i++) {
+			try{
+				Thread.sleep(10);
+			}catch(InterruptedException ignored) {}
+			if(INSTANCE.shutdownFlag.get()) {
+				return;
+			}
+		}
+		Logger.getLogger("Render Thread").Severe("Shutdown Failed");
 	}
 }

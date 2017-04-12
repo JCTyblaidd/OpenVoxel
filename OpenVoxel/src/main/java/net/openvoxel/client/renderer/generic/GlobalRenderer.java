@@ -5,6 +5,8 @@ import net.openvoxel.client.textureatlas.IconAtlas;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Global Rendering Management Handle
  */
 public interface GlobalRenderer {
 

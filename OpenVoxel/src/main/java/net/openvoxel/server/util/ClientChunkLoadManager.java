@@ -24,7 +24,7 @@ public class ClientChunkLoadManager {
 	private ChunkMap<ClientChunk> loadedChunks;
 
 	public ClientChunkLoadManager(ClientServer clientServer) {
-		chunkLoadDistance = 8;
+		chunkLoadDistance = 10;
 		loadChunksSquare = true;
 		this.clientServer = clientServer;
 		loadedChunks = new ChunkMap<>();
@@ -70,10 +70,16 @@ public class ClientChunkLoadManager {
 				}
 			}
 		}
-		//List<ClientChunk> toUnloadChunks = new ArrayList<>();
-		//loadedChunks.forEachChunkCoord((x,z,chunk) -> {
-		//	//TODO:
-		//});
+		List<ClientChunk> toUnloadChunks = new ArrayList<>();
+		loadedChunks.forEachChunkCoord((x,z,chunk) -> {
+			if(x < xMin || x > xMax || z < zMin || z > zMax) {
+				toUnloadChunks.add(chunk);
+			}
+		});
+		toUnloadChunks.forEach(chunk -> {
+			clientServer.requestChunkUnload(world,chunk.chunkX,chunk.chunkZ);
+			loadedChunks.remove(chunk.chunkX,chunk.chunkZ);
+		});
 	}
 
 }

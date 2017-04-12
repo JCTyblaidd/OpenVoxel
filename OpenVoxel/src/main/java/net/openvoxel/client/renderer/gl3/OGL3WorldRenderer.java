@@ -22,7 +22,9 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -49,7 +51,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	private List<ClientChunk> toGenerateSections = new ArrayList<>();
 	private List<ClientChunk> toRemoveSections = new ArrayList<>();
 
-	private List<ClientChunk> enabledChunks = new ArrayList<>();
+	private Set<ClientChunk> enabledChunks = new HashSet<>();
 
 	OGL3WorldRenderer() {
 		currentSettings = new RenderConfig();
@@ -104,18 +106,37 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	}
 
 
+	private void handleLimitedGenSections(int lim) {
+		int listSize;
+		for(int i = 0; i < lim && (listSize = toGenerateSections.size()) != 0; i++) {
+			ClientChunk chunk = toGenerateSections.get(listSize-1);
+			cacheManager.handleChunkLoad(chunk);
+			enabledChunks.add(chunk);
+			toGenerateSections.remove(listSize-1);
+		}
+	}
+
+	private void handleLimitedRemoveSections(int lim) {
+		int listSize;
+		for(int i = 0; i < lim && (listSize = toRemoveSections.size()) != 0; i++) {
+			ClientChunk chunk = toRemoveSections.get(listSize-1);
+			cacheManager.handleChunkUnload(chunk);
+			enabledChunks.remove(chunk);
+			toRemoveSections.remove(listSize-1);
+		}
+	}
+
+
 	/**
 	 * Handle the updating and removing of new chunk information
+	 *
+	 * TODO: limit the processing rate to stop large stutters
 	 */
 	private void updateChunks() {
 		//Update Valid Chunk Info Cache//
 		sectionLock.lock();
-		toGenerateSections.forEach(cacheManager::handleChunkLoad);
-		toRemoveSections.forEach(cacheManager::handleChunkUnload);
-		enabledChunks.addAll(toGenerateSections);
-		enabledChunks.removeAll(toRemoveSections);
-		toGenerateSections.clear();
-		toRemoveSections.clear();
+		handleLimitedGenSections(1);
+		handleLimitedRemoveSections(1);
 		sectionLock.unlock();
 		//Handle dirt update TODO: add another queue
 		for(ClientChunk chunk : enabledChunks) {

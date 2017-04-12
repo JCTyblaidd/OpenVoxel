@@ -9,6 +9,7 @@ import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by James on 10/04/2017.
@@ -22,7 +23,7 @@ public class OGL3ForwardWorldRenderer {
 		this.worldRenderer = worldRenderer;
 	}
 
-	public void renderWorld(EntityPlayerSP player, ClientWorld world, List<ClientChunk> toRender) {
+	public void renderWorld(EntityPlayerSP player, ClientWorld world, Set<ClientChunk> toRender) {
 		OGL3World_ShaderCache.BLOCK_SIMPLE.use();
 		for(ClientChunk chunk : toRender) {
 			if(chunk != null) {

@@ -27,7 +27,7 @@ class OGL3NearGlobalIlluminationHandler {
 
 	OGL3NearGlobalIlluminationHandler(OGL3DeferredWorldRenderer deferredWorldRenderer) {
 		this.deferredWorldRenderer = deferredWorldRenderer;
-		init_voxel_target();
+		//init_voxel_target();
 	}
 
 	private void init_voxel_target() {

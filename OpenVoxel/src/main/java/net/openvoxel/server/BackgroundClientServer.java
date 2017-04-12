@@ -32,7 +32,8 @@ public class BackgroundClientServer extends ClientServer{
 	@Override
 	public void run() {
 		super.run();
-		thePlayer.setYaw(thePlayer.getYaw() + 0.002F);
+		thePlayer.setYaw(thePlayer.getYaw() + 0.004F);
+		//thePlayer.xPos += 0.004F;
 		/*
 		if(EntityPlayerSP.keyForward.isDownRaw()) {
 			thePlayer.zPos -= 0.5F;

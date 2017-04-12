@@ -12,6 +12,7 @@ import net.openvoxel.world.client.ClientWorld;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Set;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
@@ -96,8 +97,8 @@ public class OGL3DeferredWorldRenderer {
 		glEnableVertexAttribArray(1);
 		glBindVertexArray(0);
 		update_textures(ClientInput.currentWindowWidth.get(),ClientInput.currentWindowHeight.get());
-		bind_render_targets();
 		bind_textures();
+		bind_render_targets();
 	}
 
 	private void bind_textures() {
@@ -124,7 +125,11 @@ public class OGL3DeferredWorldRenderer {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gBuffer_Lighting, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT , GL_TEXTURE_2D, gBuffer_Depth,0);
 		glDrawBuffers(new int[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
-
+		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			OGL3Renderer.gl3Log.Severe("GBuffer Target is Not Complete!!!");
+			OGL3Renderer.gl3Log.Severe("err code = "+glCheckFramebufferStatus(GL_FRAMEBUFFER));
+			System.exit(-1);
+		}
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_Post);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mergeTarget_Colour, 0);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -196,7 +201,7 @@ public class OGL3DeferredWorldRenderer {
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	public void renderWorld(EntityPlayerSP player, ClientWorld world, List<ClientChunk> toRender) {
+	public void renderWorld(EntityPlayerSP player, ClientWorld world, Set<ClientChunk> toRender) {
 		setupRenderTargetGBuffer();
 		OGL3World_ShaderCache.GBUFFER_OPAQUE.use();
 		for(ClientChunk chunk : toRender) {
