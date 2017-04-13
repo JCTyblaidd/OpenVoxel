@@ -98,7 +98,7 @@ public class RenderThread implements Runnable{
 	}
 
 	public static void awaitTermination() {
-		for(int i = 0; i < 20; i++) {
+		for(int i = 0; i < 1000; i++) {
 			try{
 				Thread.sleep(10);
 			}catch(InterruptedException ignored) {}

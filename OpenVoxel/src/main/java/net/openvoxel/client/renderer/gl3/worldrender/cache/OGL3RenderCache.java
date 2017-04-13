@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.gl3.worldrender.cache;
 
 import net.openvoxel.client.utility.IRenderDataCache;
+import net.openvoxel.world.client.ClientChunk;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -18,7 +19,15 @@ import static org.lwjgl.opengl.GL30.glGenVertexArrays;
  *
  * Cache Associated with a chunk section
  */
-public class OGL3RenderCache implements IRenderDataCache{
+public class OGL3RenderCache implements IRenderDataCache {
+
+	///////////////////////
+	// Bonus Information //
+	///////////////////////
+
+	public ClientChunk chunk;
+	public int yPos;
+
 
 	///////////////////////////////
 	// OpenGL Draw Buffer Caches //

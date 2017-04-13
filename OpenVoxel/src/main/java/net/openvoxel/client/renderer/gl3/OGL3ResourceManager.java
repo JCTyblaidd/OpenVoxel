@@ -5,7 +5,7 @@ import net.openvoxel.client.renderer.gl3.util.OGL3Texture;
 /**
  * Created by James on 25/08/2016.
  *
- * Remove??? TODO: kill after moving information
+ * TODO: DEPRECATE AFTER MOVING THE REQUIRED INFORMATION TO ANOTHER LOCATION
  */
 public class OGL3ResourceManager {
 

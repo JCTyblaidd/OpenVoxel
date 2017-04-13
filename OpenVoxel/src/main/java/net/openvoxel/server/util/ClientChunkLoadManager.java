@@ -24,7 +24,7 @@ public class ClientChunkLoadManager {
 	private ChunkMap<ClientChunk> loadedChunks;
 
 	public ClientChunkLoadManager(ClientServer clientServer) {
-		chunkLoadDistance = 10;
+		chunkLoadDistance = 20;
 		loadChunksSquare = true;
 		this.clientServer = clientServer;
 		loadedChunks = new ChunkMap<>();

@@ -1,6 +1,8 @@
 package net.openvoxel.client.renderer.gl3.worldrender.deferred_path;
 
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import net.openvoxel.client.renderer.gl3.OGL3WorldRenderer;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCache;
@@ -99,6 +101,7 @@ public class OGL3DeferredWorldRenderer {
 		update_textures(ClientInput.currentWindowWidth.get(),ClientInput.currentWindowHeight.get());
 		bind_textures();
 		bind_render_targets();
+		culler = new OGL3DeferredCuller();
 	}
 
 	private void bind_textures() {
@@ -201,30 +204,27 @@ public class OGL3DeferredWorldRenderer {
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	public void renderWorld(EntityPlayerSP player, ClientWorld world, Set<ClientChunk> toRender) {
+	public void preRenderWorld(EntityPlayerSP player,Set<ClientChunk> toRender) {
+		culler.startCulling(player,toRender);
+	}
+
+	public void renderWorld(EntityPlayerSP player, ClientWorld world) {
 		setupRenderTargetGBuffer();
 		OGL3World_ShaderCache.GBUFFER_OPAQUE.use();
-		for(ClientChunk chunk : toRender) {
-			if(chunk != null) {
-				for(int y = 0; y < 16; y++) {
-					ClientChunkSection section = chunk.getSectionAt(y);
-					if(section.renderCache.get() != null) {
-						OGL3RenderCache cache = worldRenderer.cacheManager.loadRenderCache(section);
-						if (cache.cacheExists()) {
-							//Set Uniform Vertex//
-							worldRenderer.setupCacheUniform(chunk,y);
-							cache.draw();
-						}
-					}
-				}
+		List<OGL3RenderCache> standardCull = culler.requestCullStandard();
+		for(OGL3RenderCache cache : standardCull) {
+			if(cache.cacheExists()) {
+				worldRenderer.setupCacheUniform(cache.chunk,cache.yPos);
+				cache.draw();
 			}
 		}
 		//Draw FoV Opaque
 		//setupRenderTargetTransparentGBuffer();
+		//TODO: implement
+
 		//Draw FoV Transparency
 		//setupRenderTargetShadows();
 		//Draw ShadowMaps
-
 
 		///FINISH THE RENDER PASS///
 		setupRenderTargetMerge();

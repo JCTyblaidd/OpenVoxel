@@ -12,8 +12,6 @@ import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_ShaderCach
 import net.openvoxel.client.renderer.gl3.worldrender.shader.OGL3World_UniformCache;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.utility.MatrixUtils;
-import net.openvoxel.world.World;
-import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
@@ -27,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -77,7 +74,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		//Update Per Frame Uniform//
 		int animCounter = 0;
 		float aspectRatio = (float)ClientInput.currentWindowWidth.get() / ClientInput.currentWindowHeight.get();
-		float fov = 80.0F;
+		float fov = 30.0F;
 		cameraPosVector.set((float)player.xPos,(float)player.yPos,(float)player.zPos);
 		float yaw = player.getYaw();
 		float pitch = player.getPitch();
@@ -105,10 +102,12 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		OGL3World_UniformCache.setChunkUniform(matrix);
 	}
 
-
-	private void handleLimitedGenSections(int lim) {
+	/**
+	 * Execute the target a limited number of executions
+	 */
+	private void handleLimitedGenSections() {
 		int listSize;
-		for(int i = 0; i < lim && (listSize = toGenerateSections.size()) != 0; i++) {
+		for(int i = 0; i < 5 && (listSize = toGenerateSections.size()) != 0; i++) {
 			ClientChunk chunk = toGenerateSections.get(listSize-1);
 			cacheManager.handleChunkLoad(chunk);
 			enabledChunks.add(chunk);
@@ -116,9 +115,12 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		}
 	}
 
-	private void handleLimitedRemoveSections(int lim) {
+	/**
+	 * Execute the target a limited number of executions
+	 */
+	private void handleLimitedRemoveSections() {
 		int listSize;
-		for(int i = 0; i < lim && (listSize = toRemoveSections.size()) != 0; i++) {
+		for(int i = 0; i < 5 && (listSize = toRemoveSections.size()) != 0; i++) {
 			ClientChunk chunk = toRemoveSections.get(listSize-1);
 			cacheManager.handleChunkUnload(chunk);
 			enabledChunks.remove(chunk);
@@ -133,12 +135,10 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	 * TODO: limit the processing rate to stop large stutters
 	 */
 	private void updateChunks() {
-		//Update Valid Chunk Info Cache//
 		sectionLock.lock();
-		handleLimitedGenSections(1);
-		handleLimitedRemoveSections(1);
+		handleLimitedGenSections();
+		handleLimitedRemoveSections();
 		sectionLock.unlock();
-		//Handle dirt update TODO: add another queue
 		for(ClientChunk chunk : enabledChunks) {
 			for(int y = 0; y < 16; y++) {
 				ClientChunkSection section = chunk.getSectionAt(y);
@@ -166,16 +166,19 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	 */
 	@Override
 	public void renderWorld(EntityPlayerSP player, ClientWorld world) {
+		setupUniforms(player,world);
+		if(!currentSettings.useDeferredPipeline) {
+			deferredWorldRenderer.preRenderWorld(player,enabledChunks);
+		}
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 		updateChunks();
 		checkForSettingsChange();
 		generateWorldBackground(player, world);
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
-		setupUniforms(player,world);
 		if(!currentSettings.useDeferredPipeline) {//TODO: change back
-			deferredWorldRenderer.renderWorld(player,world,enabledChunks);
+			deferredWorldRenderer.renderWorld(player,world);
 		}else{
-			forwardWorldRenderer.renderWorld(player,world,enabledChunks);
+			//forwardWorldRenderer.renderWorld(player,world,enabledChunks);
 		}
 	}
 

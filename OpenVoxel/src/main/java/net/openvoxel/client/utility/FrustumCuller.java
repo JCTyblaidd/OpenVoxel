@@ -19,9 +19,9 @@ public class FrustumCuller {
 		projectionViewMatrix = new Matrix4f();
 	}
 
-	public void updateFrustum(Matrix4f projectionMatrix, Matrix4f cameraMatrix) {
-		projectionViewMatrix.set(projectionMatrix).mul(cameraMatrix);
-		intersection.set(projectionViewMatrix);
+	public void updateFrustum(Matrix4f projectionViewMatrix) {
+		this.projectionViewMatrix.set(projectionViewMatrix);
+		intersection.set(this.projectionViewMatrix);
 	}
 
 	public boolean chunkSectionCollides(int X, int Y, int Z) {

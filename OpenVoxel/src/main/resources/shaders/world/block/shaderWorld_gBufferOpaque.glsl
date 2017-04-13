@@ -70,19 +70,20 @@ vec2 parallax() {
     return uv - p;
 }
 
-
+//TODO: edit depth value from parallax
 void main() {
     vec2 parallax_uv = parallax();
     vec4 sampleDiffuse = texture(tDiffuse,parallax_uv);
     vec4 sampleNormal = texture(tNormal,parallax_uv);
     vec4 samplePBR = texture(tPBR,parallax_uv);
-    //Write Information//
     if(sampleDiffuse.a < 0.95) {
-        discard;//discard transparent pixels//
+        discard;
     }
-    w_diffuse = sampleDiffuse.rgb;//(colmask * sampleDiffuse).rgb;
+    vec2 smoothReflect = samplePBR.rg;
+    float occlusion = samplePBR.b;
+    w_diffuse = (colmask * sampleDiffuse).rgb;
     w_pbr = samplePBR;
-    w_lighting = light;
+    w_lighting = light * occlusion;
     w_normal = sampleNormal.rgb * tangentMat;
 }
 

@@ -62,13 +62,11 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 		ClientChunk clientChunk = world.requestChunk(x,z);
 		loadManager.loadedChunk(clientChunk);
 		Renderer.renderer.getWorldRenderer().onChunkLoaded(clientChunk);
-		System.out.println("load: "+x+","+z);
 	}
 
 	public void requestChunkUnload(ClientWorld world, int x, int z) {
 		ClientChunk clientChunk = world.requestChunk(x,z);
 		Renderer.renderer.getWorldRenderer().onChunkUnloaded(clientChunk);
-		System.out.println("unload: "+x+","+z);
 		world.unloadChunk(x,z);
 	}
 

@@ -38,8 +38,8 @@ public class MatrixUtils {
 
 	private static final Matrix4f projectionViewMatrix = new Matrix4f();
 	public static Matrix4f getLastProjectionViewMatrix() {
-		projectionMatrix.set(cameraMatrix).mul(projectionMatrix);
+		//projectionMatrix.set(cameraMatrix).mul(projectionMatrix);
+		projectionViewMatrix.set(projectionMatrix).mul(cameraMatrix);
 		return projectionViewMatrix;
 	}
-
 }

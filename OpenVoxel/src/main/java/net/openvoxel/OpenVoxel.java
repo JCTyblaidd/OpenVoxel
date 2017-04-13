@@ -1,5 +1,6 @@
 package net.openvoxel;
 
+import com.jc.util.reflection.Reflect;
 import com.jc.util.utils.ArgumentParser;
 import net.openvoxel.api.logger.GLFWLogWrapper;
 import net.openvoxel.api.logger.LWJGLLogWrapper;
@@ -34,6 +35,8 @@ import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
+import org.lwjgl.system.Configuration;
+import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
 import java.net.SocketAddress;
@@ -339,8 +342,20 @@ public class OpenVoxel implements EventListener{
 			ProgramShutdownEvent e2 = new ProgramShutdownEvent(isCrash);
 			eventBus.push(e2);
 			if(isCrash) {
+				preCrash();
 				System.exit(-1);
 			}
+		}
+	}
+
+	/**
+	 * Stop Memory Leak Reports Cluttering up the system information pane on crashes
+	 */
+	private void preCrash() {
+		if(Configuration.DEBUG_MEMORY_ALLOCATOR.get(false)) {
+			Object debugAllocator = Reflect.byName("org.lwjgl.system.MemoryUtil$LazyInit").getField("ALLOCATOR").getStatic();
+			Object allocationMap = Reflect.on(debugAllocator).get("ALLOCATIONS");
+			Reflect.on(allocationMap).invoke("clear");
 		}
 	}
 }
