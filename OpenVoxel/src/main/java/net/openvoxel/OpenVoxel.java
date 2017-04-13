@@ -248,7 +248,10 @@ public class OpenVoxel implements EventListener{
 		}else if(args.hasFlag("debugChecks")) {
 			openVoxelLogger.Info("Enabled Maximum Debug Mode");
 			System.setProperty("org.lwjgl.util.Debug","true");
-			args.storeRuntimeFlag("debugAllocator");
+			if(!args.hasFlag("noDebugAllocator")) {
+				args.storeRuntimeFlag("debugAllocator");
+			}
+			openVoxelLogger.Info("Enabling Debugging Logging");;
 			args.storeRuntimeFlag("bonusLogging");
 		}
 		if(args.hasFlag("debugAllocator")) {
@@ -257,6 +260,7 @@ public class OpenVoxel implements EventListener{
 		}
 		openVoxelLogger.Info("Loaded Open Voxel "+currentVersion.getValString());
 		if(args.hasFlag("bonusLogging")) {
+			openVoxelLogger.Info("Enabling Additional Logging Frameworks");
 			NettyLogWrapper.Load();
 			if (isClient) {
 				LWJGLLogWrapper.Load();

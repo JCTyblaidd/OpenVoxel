@@ -38,6 +38,8 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	public static final float Z_NEAR = 0.1F;
 	public static final float Z_FAR = 1000.0F;
 
+	private static final int UPDATE_ITERATION_COUNT = 2;
+
 	private RenderConfig currentSettings;
 	private AtomicBoolean settingsDirty = new AtomicBoolean(true);
 	private OGL3DeferredWorldRenderer deferredWorldRenderer;
@@ -107,7 +109,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	 */
 	private void handleLimitedGenSections() {
 		int listSize;
-		for(int i = 0; i < 5 && (listSize = toGenerateSections.size()) != 0; i++) {
+		for(int i = 0; i < UPDATE_ITERATION_COUNT && (listSize = toGenerateSections.size()) != 0; i++) {
 			ClientChunk chunk = toGenerateSections.get(listSize-1);
 			cacheManager.handleChunkLoad(chunk);
 			enabledChunks.add(chunk);
@@ -120,7 +122,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	 */
 	private void handleLimitedRemoveSections() {
 		int listSize;
-		for(int i = 0; i < 5 && (listSize = toRemoveSections.size()) != 0; i++) {
+		for(int i = 0; i < UPDATE_ITERATION_COUNT && (listSize = toRemoveSections.size()) != 0; i++) {
 			ClientChunk chunk = toRemoveSections.get(listSize-1);
 			cacheManager.handleChunkUnload(chunk);
 			enabledChunks.remove(chunk);
