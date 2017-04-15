@@ -37,9 +37,9 @@ public class AsyncRunnablePool {
 	}
 
 	RingBuffer<RunnableRef> ringBuffer;
-	AtomicBoolean running = new AtomicBoolean(false);
-	ConcurrentLinkedQueue<RunnableRefWorker> workerQueue = new ConcurrentLinkedQueue<>();
-	int workerCount;
+	private AtomicBoolean running = new AtomicBoolean(false);
+	private ConcurrentLinkedQueue<RunnableRefWorker> workerQueue = new ConcurrentLinkedQueue<>();
+	private int workerCount;
 	Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
 	SequenceBarrier barrier;
 	ThreadGroup threadGroup;
@@ -53,6 +53,7 @@ public class AsyncRunnablePool {
 		ringBuffer = RingBuffer.createSingleProducer(RunnableRef::new,512,new PhasedBackoffWaitStrategy(10,100, TimeUnit.NANOSECONDS,new BlockingWaitStrategy()));
 		barrier = ringBuffer.newBarrier();
 		threadGroup = new ThreadGroup(name);
+		this.workerCount = workerCount;
 		for(int i = 0; i < workerCount; i++) {
 			workerQueue.add(new RunnableRefWorker(this));
 		}
@@ -102,9 +103,9 @@ public class AsyncRunnablePool {
 		private AtomicBoolean running = new AtomicBoolean(false);
 		private SequenceBarrier barrier;
 		private Sequence workSequence;
-		private Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);;
+		private Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
 		private RingBuffer<RunnableRef> ringBuffer;
-		public RunnableRefWorker(AsyncRunnablePool pool) {
+		RunnableRefWorker(AsyncRunnablePool pool) {
 			this_pool = pool;
 			workSequence = pool.sequence;
 			barrier = pool.barrier;

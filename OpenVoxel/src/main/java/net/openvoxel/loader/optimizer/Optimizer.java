@@ -13,6 +13,8 @@ import java.util.List;
  * Created by James on 09/04/2017.
  *
  * Run Optimization Transform Passes on the code as it is loading
+ *
+ * Optimizations: Remove Validation Code
  */
 public class Optimizer extends ClassNodeTweaker{
 

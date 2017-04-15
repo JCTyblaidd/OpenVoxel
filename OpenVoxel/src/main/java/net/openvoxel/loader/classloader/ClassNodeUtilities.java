@@ -1,9 +1,13 @@
 package net.openvoxel.loader.classloader;
 
+import net.openvoxel.api.logger.Logger;
+import net.openvoxel.api.side.Side;
+import net.openvoxel.api.side.SideOnly;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.*;
+
+import static org.objectweb.asm.Opcodes.*;
 
 /**
  * Created by James on 09/04/2017.
@@ -11,6 +15,81 @@ import org.objectweb.asm.tree.MethodNode;
  * Class Node Modification Utilities
  */
 public abstract class ClassNodeUtilities {
+
+	public static void RemoveFieldSections(InsnList instructions,String clazz,String field,boolean value) {
+		int idx = 0;
+		while(idx < instructions.size()) {
+			AbstractInsnNode node = instructions.get(idx);
+			boolean modify = false;
+			if(node instanceof FieldInsnNode) {
+				FieldInsnNode fNode = (FieldInsnNode) node;
+				if(fNode.name.equals(field) && fNode.owner.equals(clazz) && fNode.getOpcode() == GETSTATIC) {
+					modify = performRemoval(instructions,idx,value);
+				}
+			}
+			if(!modify) idx++;
+		}
+	}
+
+	private static boolean performRemoval(InsnList instructions,int index,boolean value) {
+		AbstractInsnNode nextNode = instructions.get(index+1);
+		if(nextNode instanceof JumpInsnNode) {
+			JumpInsnNode jumpNode = (JumpInsnNode) nextNode;
+			if(jumpNode.getOpcode() == IFEQ || jumpNode.getOpcode() == IFNE) {
+				boolean jumpFlag = jumpNode.getOpcode() == IFEQ;
+				if(jumpFlag == value) {
+					//Remove Code//
+					//System.out.println("INFO: CODE IF REMOVAL - ");
+					//FIXME: correct the removal code
+					//while(instructions.get(index) != jumpNode.label) {
+					//	instructions.remove(instructions.get(index));
+					//}
+				}
+			}
+		}else if(nextNode instanceof InsnNode) {
+			if(nextNode.getOpcode() == ICONST_0 || nextNode.getOpcode() == ICONST_1) {
+				boolean constFlag = nextNode.getOpcode() == ICONST_1;
+				AbstractInsnNode finalNode = instructions.get(index + 2);
+				if (finalNode instanceof JumpInsnNode) {
+					JumpInsnNode jumpNode = (JumpInsnNode) finalNode;
+					if(jumpNode.getOpcode() == IF_ICMPNE || jumpNode.getOpcode() == IF_ICMPEQ) {
+						boolean jumpFlag = jumpNode.getOpcode() == IF_ICMPEQ;
+						if(constFlag) jumpFlag = !jumpFlag;
+						if(jumpFlag == value) {
+							//Remove Code//
+							/*
+							System.out.println("INFO: CODE IF REMOVAL COMPLICATED");
+							while(instructions.get(index) != jumpNode.label) {
+								instructions.remove(instructions.get(index));
+							}
+						    */
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	//Test Code TODO: remove
+	public void test() {
+		System.out.println(4 * 4);
+		if(Side.isClient) {
+			System.out.println("a");
+		}
+		System.out.println(42 + "#");
+		if(!Side.isClient) {
+			System.out.println("d");
+		}
+		int lim = -42;
+		if(Side.isClient == true) {
+			lim = 3;
+		}
+		if(Side.isClient == false) {
+			lim *=2;
+		}
+		System.out.println(lim);
+	}
 
 	public static void MakeMethodUseless(MethodNode node) {
 		Type return_type = Type.getReturnType(node.desc);

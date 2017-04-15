@@ -60,6 +60,10 @@ layout(location = 2) out vec3 w_normal;
 layout(location = 3) out vec4 w_lighting;
 
 
+float get_height(in vec2 uvpos) {
+    return 1.0 - texture(tPBR,uvpos).a;
+}
+
 /**
  * Execute Parallax : Returns UV Coordinate
 **/
@@ -75,11 +79,12 @@ vec2 parallax() {
  * Execute Parallax : Returns UV Coordinate
 **/
 vec2 parallax_occlusion() {
-    const float height_scale = 0.005f;
-    const float min_layers = 8;
-    const float max_layers = 32;
-    vec3 tangentViewDir = tangentViewPos - tangentFragPos;
-    float num_layers = mix(max_layers, min_layers, abs(dot(vec3(0.0, 0.0, 1.0), tangentViewDir)));
+    const float height_scale = 0.2f;
+    const float min_layers = 32;
+    const float max_layers = 64;
+    vec3 tangentViewDir = normalize(tangentViewPos - tangentFragPos);
+    //float num_layers = mix(max_layers, min_layers, abs(dot(vec3(0.0, 0.0, 1.0), tangentViewDir)));
+    const float num_layers = 64;
 
     float layer_depth = 1.0 / num_layers;
     float current_layer_depth = 0.0;
@@ -87,7 +92,7 @@ vec2 parallax_occlusion() {
     vec2 deltaTex = p / num_layers;
 
     vec2 current_uv = uv;
-    float current_depth = texture(tPBR,current_uv).a;
+    float current_depth = get_height(current_uv);
 
     /**while(current_layer_depth < current_depth) {
         current_uv -= deltaTex;
@@ -97,7 +102,7 @@ vec2 parallax_occlusion() {
     for(int i = 0; i < num_layers; i++) {
         if(current_layer_depth < current_depth) {
             current_uv -= deltaTex;
-            current_depth = texture(tPBR,current_uv).a;
+            current_depth = get_height(current_uv);
             current_layer_depth += layer_depth;
         }
     }

@@ -16,6 +16,7 @@ import org.joml.Matrix4f;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
@@ -74,6 +75,9 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 		glVertexAttribPointer(2,4,GL_UNSIGNED_BYTE,true,0,0);
 		glEnableVertexAttribArray(2);
 		glBindVertexArray(0);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
 	}
 
 	private float[] PositionArray;

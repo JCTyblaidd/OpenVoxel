@@ -10,6 +10,7 @@ import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.vulkan.VK10.*;
 
@@ -74,7 +75,12 @@ public class VkDeviceState {
 	}
 
 	public void initDevice() {
-
+		try(MemoryStack stack = MemoryStack.stackPush()) {
+			IntBuffer deviceCount = stack.mallocInt(1);
+			vkEnumeratePhysicalDevices(instance,deviceCount,null);
+			PointerBuffer devices = stack.callocPointer(deviceCount.get(0));
+			//vkEnumeratePhysicalDevices(instance,)
+		}
 	}
 
 }

@@ -8,9 +8,11 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 
@@ -18,6 +20,8 @@ import static org.lwjgl.opengl.GL30.glGenVertexArrays;
  * Created by James on 09/04/2017.
  *
  * Cache Associated with a chunk section
+ *
+ * TODO: kill and regenerate buffers to allow for updating them
  */
 public class OGL3RenderCache implements IRenderDataCache {
 
@@ -89,6 +93,13 @@ public class OGL3RenderCache implements IRenderDataCache {
 		glEnableVertexAttribArray(5);
 		glEnableVertexAttribArray(6);
 		glBindVertexArray(0);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
+		glDisableVertexAttribArray(3);
+		glDisableVertexAttribArray(4);
+		glDisableVertexAttribArray(5);
+		glDisableVertexAttribArray(6);
 	}
 
 	private void set_data(int buffer,ByteBuffer data) {
@@ -96,6 +107,9 @@ public class OGL3RenderCache implements IRenderDataCache {
 		glBufferData(GL_ARRAY_BUFFER,data,GL_DYNAMIC_DRAW);
 	}
 
+	/**
+	 * Called in the render loop to allow for updating the buffers before any draws occur
+	 */
 	public void updateGLAndRelease() {
 		if(dataPos != null) {
 			set_data(bufferPos, dataPos);
@@ -122,11 +136,15 @@ public class OGL3RenderCache implements IRenderDataCache {
 		}
 	}
 
-	public void removeGL() {
+	/**
+	 * Cleanup All OpenGL Information
+	 */
+	void removeGL() {
 		int[] bufferArray = new int[]{
 				bufferPos,bufferUV,bufferNormal,bufferTangent,bufferColourMask,bufferLighting
 		};
 		glDeleteBuffers(bufferArray);
+		glDeleteVertexArrays(VAO);
 	}
 
 	public boolean cacheExists() {

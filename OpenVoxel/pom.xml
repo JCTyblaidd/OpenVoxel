@@ -40,34 +40,7 @@
 
 
     <dependencies>
-		<!-- LWJGL OLD
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl</artifactId>
-		    <version>3.0.0</version>
-	    </dependency>
-
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-platform</artifactId>
-		    <version>3.0.0</version>
-		    <classifier>natives-windows</classifier>
-	    </dependency>
-
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-platform</artifactId>
-		    <version>3.0.0</version>
-		    <classifier>natives-osx</classifier>
-	    </dependency>
-
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-platform</artifactId>
-		    <version>3.0.0</version>
-		    <classifier>natives-linux</classifier>
-	    </dependency>
-		-->
+		<!-- LWJGL-3 Dependencies -->
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
@@ -270,6 +243,12 @@
             <artifactId>disruptor</artifactId>
             <version>3.3.5</version>
         </dependency>
+
+	    <dependency>
+		    <groupId>com.github.oshi</groupId>
+		    <artifactId>oshi-core</artifactId>
+		    <version>3.4.2</version>
+	    </dependency>
 
     </dependencies>
 </project>

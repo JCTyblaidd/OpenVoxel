@@ -98,6 +98,8 @@ public class OGL3DeferredWorldRenderer {
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glBindVertexArray(0);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 		update_textures(width, height);
 		bind_textures();
 		bind_render_targets();

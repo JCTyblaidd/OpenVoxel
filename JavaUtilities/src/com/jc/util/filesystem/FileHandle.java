@@ -27,8 +27,7 @@ public class FileHandle {
 	
 	public byte[] getBytes() {
 		if(!handle.exists()) return null;
-		try{
-			FileInputStream fin = new FileInputStream(handle);
+		try(FileInputStream fin = new FileInputStream(handle)){
 			byte[] arr = new byte[fin.available()];
 			fin.read(arr);
 			fin.close();

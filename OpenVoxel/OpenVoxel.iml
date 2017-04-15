@@ -41,5 +41,10 @@
     <orderEntry type="library" name="Maven: org.joml:joml:1.9.2" level="project" />
     <orderEntry type="library" name="Maven: net.sf.trove4j:trove4j:3.0.3" level="project" />
     <orderEntry type="library" name="Maven: com.lmax:disruptor:3.3.5" level="project" />
+    <orderEntry type="library" name="Maven: com.github.oshi:oshi-core:3.4.2" level="project" />
+    <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:4.3.0" level="project" />
+    <orderEntry type="library" name="Maven: net.java.dev.jna:jna:4.3.0" level="project" />
+    <orderEntry type="library" name="Maven: org.threeten:threetenbp:1.3.3" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.24" level="project" />
   </component>
 </module>

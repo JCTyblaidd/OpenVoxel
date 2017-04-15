@@ -5,7 +5,9 @@ import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.statistics.SystemStatistics;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -58,8 +60,16 @@ public class ScreenDebugInfo extends Screen{
 		}
 	}
 
+	private static String _perc(double percent) {
+		DecimalFormat decimalFormat = new DecimalFormat();
+		decimalFormat.setMaximumFractionDigits(2);
+		decimalFormat.setMinimumFractionDigits(2);
+		return decimalFormat.format(percent) + '%';
+	}
+
 	@Override
 	public void DrawScreen(GUIRenderer.GUITessellator tess) {
+		SystemStatistics.requestUpdate();
 		int debug = debugLevel.get().getVal();
 		int h = ClientInput.currentWindowHeight.get();
 		//int w = ClientInput.currentWindowWidth;
@@ -79,13 +89,11 @@ public class ScreenDebugInfo extends Screen{
 		}
 		if(debug > 1) {//At Least Level::FPS_BONUS
 			//RUNTIME INFO//
-			Runtime runtime = Runtime.getRuntime();
-			long totalMem = runtime.totalMemory();
-			tess.DrawText(x_pos,y_pos,height,"Total memory: " + _memory(totalMem));
+			tess.DrawText(x_pos,y_pos,height,"Process memory: " + _memory(SystemStatistics.getProcessMemoryUsage()));
 			y_pos -= height;
-			tess.DrawText(x_pos,y_pos,height,"Used memory: " + _memory(totalMem-runtime.freeMemory()));
+			tess.DrawText(x_pos,y_pos,height,"JVM memory: " + _memory(SystemStatistics.getJVMMemoryUsage()));
 			y_pos -= height;
-			tess.DrawText(x_pos,y_pos,height,"Processor Count: " + runtime.availableProcessors());
+			tess.DrawText(x_pos,y_pos,height,"Processor Count: " + SystemStatistics.getProcessorCount());
 			y_pos -= height;
 			//RENDERER INFO//
 			float width1 = tess.GetTextWidthRatio(RendererType) * height;
@@ -99,7 +107,10 @@ public class ScreenDebugInfo extends Screen{
 			y_pos2 -= height;
 		}
 		if(debug > 2) {//Contains Extreme Detail
-
+			tess.DrawText(x_pos,y_pos,height,"Processor Usage: " +_perc(SystemStatistics.getProcessingUsage()));
+			y_pos -= height;
+			tess.DrawText(x_pos,y_pos,height,"Thread Count: " + SystemStatistics.getThreadCount());
+			y_pos -= height;
 		}
 	}
 

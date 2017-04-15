@@ -8,6 +8,7 @@ import net.openvoxel.common.resources.ResourceType;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
@@ -78,6 +79,8 @@ public class OGL3FontRenderer {
 
 		glBindBuffer(GL_ARRAY_BUFFER,0);
 		glBindVertexArray(0);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 	}
 
 	public void DrawText(float X, float Y, float Z, float Height,String text,boolean reversed) {

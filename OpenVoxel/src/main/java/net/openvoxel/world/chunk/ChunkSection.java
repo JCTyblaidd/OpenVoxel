@@ -1,5 +1,6 @@
 package net.openvoxel.world.chunk;
 
+import net.openvoxel.statistics.MemoryStatistics;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -26,7 +27,11 @@ public class ChunkSection {
 	 */
 	protected ByteBuffer chunkSideInfo = MemoryUtil.memCalloc(6);
 
+	private static final long DIFF = (4*16*16*16) + (2*16*16*16)+6;
 
+	public ChunkSection() {
+		MemoryStatistics.trackChunk(DIFF);
+	}
 
 	/**
 	 * 6x side dirty information
@@ -58,5 +63,6 @@ public class ChunkSection {
 		MemoryUtil.memFree(blockInformation);
 		MemoryUtil.memFree(blockLightInfo);
 		MemoryUtil.memFree(chunkSideInfo);
+		MemoryStatistics.trackChunk(-DIFF);
 	}
 }

@@ -53,6 +53,9 @@ public class SideSpecificTweaker extends ClassNodeTweaker {
 			}
 		}
 		node.fields.remove(removedFields);
+		for(MethodNode methodNode : (List<MethodNode>)node.methods) {
+			ClassNodeUtilities.RemoveFieldSections(methodNode.instructions,"net/openvoxel/api/side/Side","isClient",ClientSide);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
