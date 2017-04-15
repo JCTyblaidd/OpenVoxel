@@ -14,7 +14,7 @@ public class STD140Layout {
 	private int size;
 
 	public enum LayoutType {
-		BOOL(4,4),
+		BOOL(1,1),
 		FLOAT(4,4),
 		INT(4,4),
 		VEC2(8,8),

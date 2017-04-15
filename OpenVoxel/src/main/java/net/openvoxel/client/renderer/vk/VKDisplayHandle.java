@@ -1,27 +1,33 @@
 package net.openvoxel.client.renderer.vk;
 
+import net.openvoxel.OpenVoxel;
+import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
+import static org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout;
+import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 
 /**
  * Created by James on 01/09/2016.
+ *
+ * Vulkan Display Handle
  */
 public class VKDisplayHandle implements DisplayHandle{
 
 	private long window;
 
-	public VKDisplayHandle(long window) {
+	VKDisplayHandle(long window) {
 		this.window = window;
-	}
-
-	public void nextFrame() {
-
 	}
 
 	@Override
 	public void pollEvents() {
-		glfwPollEvents();
+		glfwWaitEventsTimeout(1.0 / 60.0);
+		if(glfwWindowShouldClose(window)) {
+			OpenVoxel.getInstance().AttemptShutdownSequence(false);
+		}
+		//TODO: hook to main handle
 	}
 
 	@Override

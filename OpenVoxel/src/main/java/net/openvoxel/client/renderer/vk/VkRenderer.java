@@ -14,6 +14,8 @@ import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * Created by James on 28/08/2016.
+ *
+ * Vulkan Renderer
  */
 public class VkRenderer implements GlobalRenderer {
 
@@ -78,8 +80,7 @@ public class VkRenderer implements GlobalRenderer {
 
 	@Override
 	public void nextFrame() {
-		// TODO: 01/09/2016 Await Frame Finish 
-		displayHandle.nextFrame();
+
 	}
 
 	@Override

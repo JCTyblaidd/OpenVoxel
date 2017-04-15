@@ -15,6 +15,8 @@ import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 /**
  * Created by James on 04/09/2016.
+ *
+ * Font Renderer
  */
 public class OGL3FontRenderer {
 
@@ -27,6 +29,8 @@ public class OGL3FontRenderer {
 
 	private int VAO;
 	private int triCount;
+
+	private static final int ALLOC_SIZE = 2048;
 
 	private static final float[] CharSizes = new float[]{0,13,13,13,13,13,13,13,13,13,13,13,13,0,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,
 			6,8,10,12,13,18,17,6,8,8,12,12,6,8,6,10,13,13,13,13,13,13,13,13,13,13,7,7,12,12,12,12,22,14,14,13,15,12,11,16,16,6,8,13,11,21,
@@ -45,28 +49,30 @@ public class OGL3FontRenderer {
 		inst = new OGL3FontRenderer();
 	}
 
-	public OGL3Texture fontTexture = OGL3Texture.getTexture(ResourceManager.getImage("font/font"));
-	public OGL3ReloadableShader<OGL3FontShader> fontShader = new OGL3ReloadableShader<OGL3FontShader>(ResourceManager.getResource(ResourceType.SHADER,"font/fontShader")) {
+	private OGL3Texture fontTexture = OGL3Texture.getTexture(ResourceManager.getImage("font/font"));
+	private OGL3ReloadableShader<OGL3FontShader> fontShader = new OGL3ReloadableShader<OGL3FontShader>(ResourceManager.getResource(ResourceType.SHADER,"font/fontShader")) {
 		@Override
 		public OGL3FontShader newShader(String src) {
 			return new OGL3FontShader(src);
 		}
 	};
 
-	public OGL3FontRenderer() {
+	private OGL3FontRenderer() {
 		fontTexture.makeLinear();
-		posData = new float[3 * 2 * 1024];
-		uvData = new float[2 * 2 * 1024];
+		posData = new float[3 * ALLOC_SIZE];
+		uvData = new float[2 * ALLOC_SIZE];
 		bufferPos = glGenBuffers();
 		bufferUV = glGenBuffers();
 		VAO = glGenVertexArrays();
 		glBindVertexArray(VAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER,bufferPos);
+		glBufferData(GL_ARRAY_BUFFER,posData,GL_STREAM_DRAW);
 		glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
 		glEnableVertexAttribArray(0);
 		//
 		glBindBuffer(GL_ARRAY_BUFFER,bufferUV);
+		glBufferData(GL_ARRAY_BUFFER,uvData,GL_STREAM_DRAW);
 		glVertexAttribPointer(1,2,GL_FLOAT,false,0,0);
 		glEnableVertexAttribArray(1);
 
@@ -156,9 +162,9 @@ public class OGL3FontRenderer {
 			runningOffset += DrawChar(X+runningOffset,Y,Z,Height,c,Reversed,aspect);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER,bufferPos);
-		glBufferData(GL_ARRAY_BUFFER,posData,GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER,0,posData);
 		glBindBuffer(GL_ARRAY_BUFFER,bufferUV);
-		glBufferData(GL_ARRAY_BUFFER,uvData,GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER,0,uvData);
 		glBindBuffer(GL_ARRAY_BUFFER,0);
 		OGL3FontShader shader =  fontShader.getShader();
 		fontTexture.bind(0);

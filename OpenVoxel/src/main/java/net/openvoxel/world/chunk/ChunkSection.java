@@ -12,20 +12,21 @@ import java.nio.ShortBuffer;
  * 16x16x16 section of chunk information
  */
 public class ChunkSection {
-
 	/**
 	 * Block Data
 	 */
-	protected IntBuffer blockInformation = MemoryUtil.memAllocInt(16*16*16);
+	protected IntBuffer blockInformation = MemoryUtil.memCallocInt(16*16*16);
 	/**
 	 * Short based 4xNibble [red,green,blue,sunlight]
 	 */
-	protected ShortBuffer blockLightInfo = MemoryUtil.memAllocShort(16*16*16);
+	protected ShortBuffer blockLightInfo = MemoryUtil.memCallocShort(16*16*16);
 	/**
 	 * 6x side mapping information
 	 * each side [z+,z-,x+,x-,y+,y-] used for culling
 	 */
-	protected ByteBuffer chunkSideInfo = MemoryUtil.memAlloc(6);
+	protected ByteBuffer chunkSideInfo = MemoryUtil.memCalloc(6);
+
+
 
 	/**
 	 * 6x side dirty information

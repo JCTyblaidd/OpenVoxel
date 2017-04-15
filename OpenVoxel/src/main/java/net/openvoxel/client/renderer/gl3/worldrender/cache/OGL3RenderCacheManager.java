@@ -42,7 +42,13 @@ public class OGL3RenderCacheManager {
 	public void handleChunkUnload(ClientChunk chunk) {
 		for(int y = 0; y < 16; y++) {
 			ClientChunkSection section = chunk.getSectionAt(y);
-			loadRenderCache(section).removeGL();
+			OGL3RenderCache cache = loadRenderCache(section);
+			if(cache != null) {
+				cache.removeGL();
+			}else{
+				//TODO: handle this situation: add to queue to clean after the data has been generated
+				System.out.println("WARN : Unload No Cache: Leak?");
+			}
 		}
 	}
 

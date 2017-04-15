@@ -233,7 +233,7 @@ public class OGL3Renderer implements GlobalRenderer{
 		if(stateChangeRequested) {
 			if(stateChangeLock.get()) {
 				updateFullScreenState();
-				glfwMakeContextCurrent(0);
+				//EH//
 				stateChangeRequested = false;
 				stateChangeLock.set(false);
 			}

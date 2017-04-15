@@ -32,6 +32,8 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 		screen.DrawScreen(this);
 	}
 
+	private static final int ALLOC_SIZE = 128 * 3;
+
 	@Override
 	public void beginDraw() {
 		//Set State//
@@ -51,21 +53,24 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 				return new OGL3GUIShader(src);
 			}
 		};
-		PositionArray = new float[128 * 3];
-		UVArray = new float[128 * 3];
-		ColArray = new int[128];
+		PositionArray = new float[ALLOC_SIZE * 3];
+		UVArray = new float[ALLOC_SIZE * 3];
+		ColArray = new int[ALLOC_SIZE];
 		PositionBuffer = glGenBuffers();
 		UVBuffer = glGenBuffers();
 		ColBuffer = glGenBuffers();
 		VAO = glGenVertexArrays();
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER,PositionBuffer);
+		glBufferData(GL_ARRAY_BUFFER,PositionArray,GL_STREAM_DRAW);
 		glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER,UVBuffer);
+		glBufferData(GL_ARRAY_BUFFER,UVArray,GL_STREAM_DRAW);
 		glVertexAttribPointer(1,2,GL_FLOAT,false,0,0);
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER,ColBuffer);
+		glBufferData(GL_ARRAY_BUFFER,UVArray,GL_STREAM_DRAW);
 		glVertexAttribPointer(2,4,GL_UNSIGNED_BYTE,true,0,0);
 		glEnableVertexAttribArray(2);
 		glBindVertexArray(0);
@@ -109,6 +114,9 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 	@Override
 	public void Draw() {
 		if(!Drawing) throw new RuntimeException("Cannot Draw State That Hasn't Been Drawn");
+		if(DrawIndex >= ALLOC_SIZE) {
+			throw new RuntimeException("GUI Area - Too Large to Draw");
+		}
 		Drawing = false;
 		OGL3GUIShader shader = guiShader.getShader();
 		shader.Use();
@@ -117,14 +125,16 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 		shader.setMatrix(mat);
 		shader.setZOffset(Z_Position);
 		shader.setTexture(0);
-		tex.bind(0);
+		if(tex != null) {
+			tex.bind(0);
+		}
 		//Draw//
 		glBindBuffer(GL_ARRAY_BUFFER,PositionBuffer);
-		glBufferData(GL_ARRAY_BUFFER,PositionArray,GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER,0,PositionArray);
 		glBindBuffer(GL_ARRAY_BUFFER,UVBuffer);
-		glBufferData(GL_ARRAY_BUFFER,UVArray,GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER,0,UVArray);
 		glBindBuffer(GL_ARRAY_BUFFER,ColBuffer);
-		glBufferData(GL_ARRAY_BUFFER,ColArray,GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER,0,ColArray);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES,0,DrawIndex);
 	}

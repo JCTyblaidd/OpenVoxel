@@ -34,6 +34,7 @@ layout(std140) uniform FinalFrame {
     mat4 camMatrix;//The Camera Matrix
     mat3 camNormMatrix;//Similar to camMatrix//
     mat3 invCamNormMatrix;//Inverse
+    vec3 playerPosition;//Player Position//
 
     //Per Dimension Information//
     float dayProgress;//Current Day Progress//

@@ -38,7 +38,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 	public static final float Z_NEAR = 0.1F;
 	public static final float Z_FAR = 1000.0F;
 
-	private static final int UPDATE_ITERATION_COUNT = 2;
+	private static final int UPDATE_ITERATION_COUNT = 7;
 
 	private RenderConfig currentSettings;
 	private AtomicBoolean settingsDirty = new AtomicBoolean(true);
@@ -76,7 +76,7 @@ public final class OGL3WorldRenderer implements WorldRenderer{
 		//Update Per Frame Uniform//
 		int animCounter = 0;
 		float aspectRatio = (float)ClientInput.currentWindowWidth.get() / ClientInput.currentWindowHeight.get();
-		float fov = 30.0F;
+		float fov = 50.0F;
 		cameraPosVector.set((float)player.xPos,(float)player.yPos,(float)player.zPos);
 		float yaw = player.getYaw();
 		float pitch = player.getPitch();

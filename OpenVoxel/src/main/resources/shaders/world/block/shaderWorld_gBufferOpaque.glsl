@@ -33,7 +33,7 @@ void main() {
     light = i_light;
     tangentMat = mat3(normalize(tangent),normalize(bitangent),normalize(normal));
     tangentFragPos = tangentMat * fragPos;
-    tangentViewPos = tangentMat * vec3(100,105,100);//TODO: fix properly
+    tangentViewPos = tangentMat * frame.playerPosition;
 }
 
 
@@ -64,7 +64,7 @@ layout(location = 3) out vec4 w_lighting;
  * Execute Parallax : Returns UV Coordinate
 **/
 vec2 parallax() {
-    const float height_scale = 0.1f;
+    const float height_scale = 0.05f;
     float height = texture(tPBR,uv).a;
     vec3 tangentViewDir = tangentViewPos - tangentFragPos;
     vec2 p = tangentViewDir.xy / tangentViewDir.z * (height * height_scale);
@@ -75,7 +75,7 @@ vec2 parallax() {
  * Execute Parallax : Returns UV Coordinate
 **/
 vec2 parallax_occlusion() {
-    const float height_scale = 0.1f;
+    const float height_scale = 0.005f;
     const float min_layers = 8;
     const float max_layers = 32;
     vec3 tangentViewDir = tangentViewPos - tangentFragPos;
@@ -87,11 +87,19 @@ vec2 parallax_occlusion() {
     vec2 deltaTex = p / num_layers;
 
     vec2 current_uv = uv;
-    float current_depth = texture(tPBR,uv).a;
-    while(current_layer_depth < current_depth) {
+    float current_depth = texture(tPBR,current_uv).a;
+
+    /**while(current_layer_depth < current_depth) {
         current_uv -= deltaTex;
         current_depth = texture(tPBR,current_uv).a;
         current_layer_depth += layer_depth;
+    }**/
+    for(int i = 0; i < num_layers; i++) {
+        if(current_layer_depth < current_depth) {
+            current_uv -= deltaTex;
+            current_depth = texture(tPBR,current_uv).a;
+            current_layer_depth += layer_depth;
+        }
     }
 
     vec2 prev_uv = current_uv + deltaTex;
@@ -103,10 +111,18 @@ vec2 parallax_occlusion() {
     return final_uv;
 }
 
+void wrap_uv(inout vec2 uv) {
+    //TODO: implement
+}
 
 //TODO: edit depth value from parallax
+void update_depth() {
+
+}
+
 void main() {
-    vec2 parallax_uv = parallax();//_occlusion();
+    vec2 parallax_uv = parallax_occlusion();
+    wrap_uv(parallax_uv);
     vec4 sampleDiffuse = texture(tDiffuse,parallax_uv);
     vec4 sampleNormal = texture(tNormal,parallax_uv);
     vec4 samplePBR = texture(tPBR,parallax_uv);

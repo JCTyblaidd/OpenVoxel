@@ -72,10 +72,10 @@ public class OGL3DeferredWorldRenderer {
 		this.worldRenderer = worldRenderer;
 		shadowCascades = new OGL3CascadeManager();
 		nearGI = new OGL3NearGlobalIlluminationHandler(this);
-		initialize();
+		initialize(ClientInput.currentWindowWidth.get(),ClientInput.currentWindowHeight.get());
 	}
 
-	private void initialize() {
+	private void initialize(int width, int height) {
 		frameBufferTarget_GBuffer = glGenFramebuffers();
 		frameBufferTarget_Post = glGenFramebuffers();
 		gBuffer_Diffuse = glGenTextures();
@@ -98,7 +98,7 @@ public class OGL3DeferredWorldRenderer {
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glBindVertexArray(0);
-		update_textures(ClientInput.currentWindowWidth.get(),ClientInput.currentWindowHeight.get());
+		update_textures(width, height);
 		bind_textures();
 		bind_render_targets();
 		culler = new OGL3DeferredCuller();
@@ -136,10 +136,18 @@ public class OGL3DeferredWorldRenderer {
 		glBindFramebuffer(GL_FRAMEBUFFER,frameBufferTarget_Post);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mergeTarget_Colour, 0);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
+		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			OGL3Renderer.gl3Log.Severe("GBuffer Target is Not Complete!!!");
+			OGL3Renderer.gl3Log.Severe("err code = "+glCheckFramebufferStatus(GL_FRAMEBUFFER));
+			System.exit(-1);
+		}
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 	}
 
+	private void cleanup_delete() {
+		glDeleteFramebuffers(new int[]{frameBufferTarget_GBuffer,frameBufferTarget_Post});
+		glDeleteTextures(new int[]{gBuffer_Diffuse,gBuffer_PBR,gBuffer_Normal,gBuffer_Lighting,gBuffer_Depth});
+	}
 
 	private void drawFullScreen() {
 		glBindVertexArray(fullScreenVAO);
@@ -159,6 +167,8 @@ public class OGL3DeferredWorldRenderer {
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	}
+
+
 
 	private void update_textures(int width, int height) {
 		glActiveTexture(GL_TEXTURE0);
@@ -209,6 +219,7 @@ public class OGL3DeferredWorldRenderer {
 	}
 
 	public void renderWorld(EntityPlayerSP player, ClientWorld world) {
+		//Draw Standard Output
 		setupRenderTargetGBuffer();
 		OGL3World_ShaderCache.GBUFFER_OPAQUE.use();
 		List<OGL3RenderCache> standardCull = culler.requestCullStandard();
@@ -220,11 +231,16 @@ public class OGL3DeferredWorldRenderer {
 		}
 		//Draw FoV Opaque
 		//setupRenderTargetTransparentGBuffer();
-		//TODO: implement
+		//for(OGL3RenderCache cache : standardCull) {
+		//  if(cache.cacheExists()) {
+		//      worldRenderer.setupCacheUniform(cache.chunk,cache.yPos);
+		//      cache.draw();
+		//  }
+		//}
 
-		//Draw FoV Transparency
-		//setupRenderTargetShadows();
-		//Draw ShadowMaps
+		//Draw ShadowMap//
+		//setupRenderTarget
+
 
 		///FINISH THE RENDER PASS///
 		setupRenderTargetMerge();
@@ -236,7 +252,8 @@ public class OGL3DeferredWorldRenderer {
 	}
 
 	public void onFrameResize(int newWidth, int newHeight) {
-		update_textures(newWidth,newHeight);
+		cleanup_delete();
+		initialize(newWidth,newHeight);
 	}
 
 	public void updateUniforms() {

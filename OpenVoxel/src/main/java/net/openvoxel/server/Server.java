@@ -21,7 +21,7 @@ public class Server extends BaseServer implements Producer<SimpleChannelInboundH
 	private ServerNetworkHandler serverNetworkHandler;
 
 	public Server() {
-		asyncExecutionService = new AsyncRunnablePool("server_update",4);
+		asyncExecutionService = new AsyncRunnablePool("server_update",AsyncRunnablePool.getWorkerCount("serverUpdateThreadCount",4));
 		serverNetworkHandler = new ServerNetworkHandler(this);
 	}
 

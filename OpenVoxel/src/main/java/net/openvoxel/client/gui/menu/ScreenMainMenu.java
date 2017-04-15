@@ -11,7 +11,6 @@ import net.openvoxel.client.gui_framework.*;
  */
 public class ScreenMainMenu extends Screen{
 
-	private GUIObjectImage backgroundImage;
 	private GUIButton buttonSinglePlayer;
 	private GUIButton buttonMultiPlayer;
 	private GUIButton buttonSettings;
@@ -22,9 +21,6 @@ public class ScreenMainMenu extends Screen{
 	private GUIColour background;
 
 	public ScreenMainMenu() {
-		backgroundImage = new GUIObjectImage("gui/BG");
-		backgroundImage.setupFullscreen();
-		//guiObjects.add(backgroundImage);
 
 		buttonSinglePlayer = new GUIButton("Single Player");
 		buttonMultiPlayer = new GUIButton("Multi Player");
@@ -64,7 +60,8 @@ public class ScreenMainMenu extends Screen{
 	}
 
 	private void onPressSinglePlayer(GUIButton button) {
-		GUI.addScreen(new ScreenSinglePlayer());
+		GUI.removeScreen(this);
+		GUI.addScreen(new ScreenSinglePlayer(this));
 	}
 	private void onPressMultiPlayer(GUIButton button) {
 		GUI.addScreen(new ScreenMultiPlayer());

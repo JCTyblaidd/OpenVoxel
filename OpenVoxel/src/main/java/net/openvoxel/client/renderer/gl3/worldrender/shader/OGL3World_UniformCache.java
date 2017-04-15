@@ -64,6 +64,7 @@ public class OGL3World_UniformCache {
 	private static final int offsetFrame_CamMatrix;
 	private static final int offsetFrame_CamNormMatrix;
 	private static final int offsetFrame_InvCamNormMatrix;
+	private static final int offsetFrame_PlayerPosition;
 	private static final int offsetFrame_DayProgress;
 	private static final int offsetFrame_DayProgressMatrix;
 	private static final int offsetFrame_SunlightPower;
@@ -98,6 +99,7 @@ public class OGL3World_UniformCache {
 			MAT4,   //camMatrix;
 			MAT3,   //camNormMatrix;
 			MAT3,   //invCamNormMatrix;
+		    VEC3,   //Player position
 			FLOAT,  //dayProgress;
 			FLOAT,  //skyLightPower;
 			MAT3,   //dayProgressMatrix;
@@ -117,16 +119,17 @@ public class OGL3World_UniformCache {
 		offsetFrame_CamMatrix           = layoutFrameData.getOffset(5);
 		offsetFrame_CamNormMatrix       = layoutFrameData.getOffset(6);
 		offsetFrame_InvCamNormMatrix    = layoutFrameData.getOffset(7);
-		offsetFrame_DayProgress         = layoutFrameData.getOffset(8);
-		offsetFrame_SunlightPower       = layoutFrameData.getOffset(9);
-		offsetFrame_DayProgressMatrix   = layoutFrameData.getOffset(10);
-		offsetFrame_DirSun              = layoutFrameData.getOffset(11);
-		offsetFrame_SkyEnabled          = layoutFrameData.getOffset(12);
-		offsetFrame_FogColour           = layoutFrameData.getOffset(13);
-		offsetFrame_SkyLightColour      = layoutFrameData.getOffset(14);
-		offsetFrame_IsRaining           = layoutFrameData.getOffset(15);
-		offsetFrame_IsThunder           = layoutFrameData.getOffset(16);
-		offsetFrame_TileSize            = layoutFrameData.getOffset(17);
+		offsetFrame_PlayerPosition      = layoutFrameData.getOffset(8);
+		offsetFrame_DayProgress         = layoutFrameData.getOffset(9);
+		offsetFrame_SunlightPower       = layoutFrameData.getOffset(10);
+		offsetFrame_DayProgressMatrix   = layoutFrameData.getOffset(11);
+		offsetFrame_DirSun              = layoutFrameData.getOffset(12);
+		offsetFrame_SkyEnabled          = layoutFrameData.getOffset(13);
+		offsetFrame_FogColour           = layoutFrameData.getOffset(14);
+		offsetFrame_SkyLightColour      = layoutFrameData.getOffset(15);
+		offsetFrame_IsRaining           = layoutFrameData.getOffset(16);
+		offsetFrame_IsThunder           = layoutFrameData.getOffset(17);
+		offsetFrame_TileSize            = layoutFrameData.getOffset(18);
 		offsetFrame_SIZE = layoutFrameData.getTotalSize();
 
 		STD140Layout layoutChunkData = new STD140Layout(
@@ -168,10 +171,11 @@ public class OGL3World_UniformCache {
 		Matrix4f projMatrix = MatrixUtils.genProjectionMatrix(FoV,aspectRatio,zLims);
 		Matrix3f camNormMatrix = MatrixUtils.genCameraNormalMatrix(pitch,yaw);
 		Matrix4f camMatrix = MatrixUtils.genCameraMatrix(cameraPos,camNormMatrix);
+		cameraPos.negate();//Undo Camera Position Negation
 		int worldTick = animCounter % 128;
 		Matrix3f dayProgressMatrix = new Matrix3f();
 		Vector3f dirSun = new Vector3f(1,0,0);
-		updateFrameInformation(animCounter,worldTick,projMatrix,zLims,camMatrix,camNormMatrix,dayProgress,
+		updateFrameInformation(animCounter,worldTick,projMatrix,zLims,camMatrix,camNormMatrix,cameraPos,dayProgress,
 				skylightPower,dayProgressMatrix,dirSun,skyEnabled,fogColour,skyLightColour,isRaining,isThunder,tileSize);
 	}
 
@@ -180,7 +184,7 @@ public class OGL3World_UniformCache {
 	 * Important Usage Notice all matrix values could be inverted and changed
 	 */
 	private static void updateFrameInformation(int animIndex, int worldTick, Matrix4f projMatrix,Vector2f zLimits,
-	                                          Matrix4f camMatrix, Matrix3f camNormMatrix, float dayProgress,
+	                                          Matrix4f camMatrix, Matrix3f camNormMatrix,Vector3f playerPosition, float dayProgress,
 	                                          float skylightPower, Matrix3f dayProgressMatrix,Vector3f dirSun,
 	                                          boolean skyEnabled, Vector3f fogColour,Vector3f skyLightColour,
 	                                          boolean isRaining,boolean isThunder,Vector2f tileSize) {
@@ -192,6 +196,7 @@ public class OGL3World_UniformCache {
 		storeMat4(buf_final_frame,offsetFrame_CamMatrix,camMatrix);
 		storeMat3(buf_final_frame,offsetFrame_CamNormMatrix,camNormMatrix);// camNormMatrix.invert();
 		storeMat3(buf_final_frame,offsetFrame_InvCamNormMatrix,camNormMatrix);
+		storeVec3(buf_final_frame,offsetFrame_PlayerPosition,playerPosition);
 		buf_final_frame.putFloat(offsetFrame_DayProgress,dayProgress);
 		buf_final_frame.putFloat(offsetFrame_SunlightPower,skylightPower);
 		storeMat3(buf_final_frame,offsetFrame_DayProgressMatrix,dayProgressMatrix);
@@ -218,11 +223,11 @@ public class OGL3World_UniformCache {
 		buf_chunk_constants = MemoryUtil.memAlloc(offsetChunk_SIZE);
 		buf_shadow_info = MemoryUtil.memAlloc(offsetShadow_SIZE);
 		buf_voxel_info = MemoryUtil.memAlloc(offsetVoxel_SIZE);
-		updateSettings();
-		updateFinalFrame();
-		updateChunkConstants();
-		updateShadowInfo();
-		updateVoxelInfo();
+		initSettings();
+		initFinalFrame();
+		initChunkConstants();
+		initShadowInfo();
+		initVoxelInfo();
 	}
 
 	public static void FreeMemory() {
@@ -233,35 +238,47 @@ public class OGL3World_UniformCache {
 		MemoryUtil.memFree(buf_voxel_info);
 	}
 
-	private static void updateSettings() {
+	private static void initSettings() {
 		buf_settings.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_Settings);
 		glBufferData(GL_UNIFORM_BUFFER,buf_settings,GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_Settings,UBO_Settings);
 	}
 
-	private static void updateFinalFrame() {
+	private static void initFinalFrame() {
 		buf_final_frame.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_FinalFrame);
 		glBufferData(GL_UNIFORM_BUFFER, buf_final_frame,GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_UNIFORM_BUFFER,OGL3Renderer.UniformBlockBinding_FrameInfo,UBO_FinalFrame);
 	}
 
-	private static void updateChunkConstants() {
+	private static void updateFinalFrame() {
+		buf_final_frame.position(0);
+		glBindBuffer(GL_UNIFORM_BUFFER,UBO_FinalFrame);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0,buf_final_frame);
+	}
+
+	private static void initChunkConstants() {
 		buf_chunk_constants.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER,UBO_ChunkConstants);
 		glBufferData(GL_UNIFORM_BUFFER,buf_chunk_constants,GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_ChunkInfo,UBO_ChunkConstants);
 	}
 
-	private static void updateShadowInfo() {
+	private static void updateChunkConstants() {
+		buf_chunk_constants.position(0);
+		glBindBuffer(GL_UNIFORM_BUFFER,UBO_ChunkConstants);
+		glBufferSubData(GL_UNIFORM_BUFFER,0,buf_chunk_constants);
+	}
+
+	private static void initShadowInfo() {
 		buf_shadow_info.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER, UBO_ShadowInfo);
 		glBufferData(GL_UNIFORM_BUFFER, buf_shadow_info,GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_UNIFORM_BUFFER, OGL3Renderer.UniformBlockBinding_ShadowInfo,UBO_ShadowInfo);
 	}
 
-	private static void updateVoxelInfo() {
+	private static void initVoxelInfo() {
 		buf_voxel_info.position(0);
 		glBindBuffer(GL_UNIFORM_BUFFER, UBO_VoxelInfo);
 		glBufferData(GL_UNIFORM_BUFFER, buf_voxel_info,GL_DYNAMIC_DRAW);

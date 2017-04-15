@@ -18,7 +18,7 @@ public class AsyncFileIO {
 	private static final AsyncRunnablePool fileIOPool;
 	private static final Logger ioLogger;
 	static {
-		fileIOPool = new AsyncRunnablePool("File-IO",2);
+		fileIOPool = new AsyncRunnablePool("File-IO",AsyncRunnablePool.getWorkerCount("IOThreadCount",2));
 		ioLogger = Logger.getLogger("File IO");
 	}
 	public static void asyncStore(File file, ByteBuffer buffer) {
@@ -42,8 +42,17 @@ public class AsyncFileIO {
 	 * Asynchronous Store & Free the Memory
 	 */
 	public static void asyncStoreFree(File file,ByteBuffer buffer) {
-		asyncStore(file, buffer);
-		MemoryUtil.memFree(buffer);
+		addTask(() -> {
+			try {
+				FileOutputStream fout = new FileOutputStream(file);
+				fout.getChannel().write(buffer);
+				fout.close();
+				MemoryUtil.memFree(buffer);
+			}catch (Exception ex) {
+				ioLogger.Severe("Failed To Execute File IO");
+				ioLogger.StackTrace(ex);
+			}
+		});
 	}
 
 }

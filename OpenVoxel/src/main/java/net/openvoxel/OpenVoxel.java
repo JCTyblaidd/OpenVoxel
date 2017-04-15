@@ -256,7 +256,7 @@ public class OpenVoxel implements EventListener{
 		}
 		if(args.hasFlag("debugAllocator")) {
 			openVoxelLogger.Info("Enabled LWJGL Debug Memory Allocator");
-			System.setProperty("org.lwjgl.util.DebugAllocator","true");
+			//System.setProperty("org.lwjgl.util.DebugAllocator","true");
 		}
 		openVoxelLogger.Info("Loaded Open Voxel "+currentVersion.getValString());
 		if(args.hasFlag("bonusLogging")) {

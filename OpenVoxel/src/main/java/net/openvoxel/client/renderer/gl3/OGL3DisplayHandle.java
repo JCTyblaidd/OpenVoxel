@@ -27,6 +27,10 @@ public class OGL3DisplayHandle implements DisplayHandle, EventListener{
 		Renderer = ref;
 	}
 
+	public long getWindow() {
+		return window;
+	}
+
 	public void changeWindow(long w) {
 		window = w;
 	}

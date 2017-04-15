@@ -51,7 +51,7 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 	@Override
 	public void run() {
 		loadManager.tick();
-		serverConnection.handleAllRecievedPackets(this);
+		//serverConnection.handleAllRecievedPackets(this);
 		//simulate client side//
 
 		//Await Timeout//

@@ -124,7 +124,7 @@ public class OGL3RenderCache implements IRenderDataCache {
 
 	public void removeGL() {
 		int[] bufferArray = new int[]{
-				bufferPos,bufferUV,bufferNormal,bufferColourMask,bufferLighting
+				bufferPos,bufferUV,bufferNormal,bufferTangent,bufferColourMask,bufferLighting
 		};
 		glDeleteBuffers(bufferArray);
 	}

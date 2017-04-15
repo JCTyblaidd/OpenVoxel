@@ -27,6 +27,18 @@ public class Version implements Comparable<Version>{
 		major = (byte)((ID >> 12) & 0xFF);
 	}
 
+	public int getMajor() {
+		return major;
+	}
+
+	public int getMinor() {
+		return minor;
+	}
+
+	public int getPatch() {
+		return patch;
+	}
+
 	/****
 	 * Parse Version:
 	 *  valid:  x.y.z
