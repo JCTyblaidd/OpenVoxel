@@ -24,8 +24,8 @@ public class Renderer {
 
 	static {
 		//TODO: remove after vulkan renderer is implemented
-		OpenVoxel.getLaunchParameters().storeRuntimeFlag("openGL");
-		Logger.getLogger("SHODDY FIXES").Severe("Prevented Vulkan Renderer From Being Used {Reason: Not Yet Implemented}");
+		//OpenVoxel.getLaunchParameters().storeRuntimeFlag("openGL");
+		//Logger.getLogger("SHODDY FIXES").Severe("Prevented Vulkan Renderer From Being Used {Reason: Not Yet Implemented}");
 	}
 
 	public static void Initialize() {
