@@ -107,8 +107,8 @@ public abstract class AbstractConfigEntry implements IConfigEntry{
 	public List<Boolean> getBoolList(String name) {
 		boolean[] arr = getBoolArray(name);
 		List<Boolean> list = new ArrayList<>(arr.length);
-		for(int i = 0; i < arr.length; i++) {
-			list.add(arr[i]);
+		for (boolean anArr : arr) {
+			list.add(anArr);
 		}
 		return list;
 	}
@@ -117,8 +117,8 @@ public abstract class AbstractConfigEntry implements IConfigEntry{
 	public List<Float> getFloatList(String name) {
 		float[] arr = getFloatArray(name);
 		List<Float> list = new ArrayList<>(arr.length);
-		for(int i = 0; i < arr.length; i++) {
-			list.add(arr[i]);
+		for (float anArr : arr) {
+			list.add(anArr);
 		}
 		return list;
 	}
@@ -127,8 +127,8 @@ public abstract class AbstractConfigEntry implements IConfigEntry{
 	public List<Integer> getIntList(String name) {
 		int[] arr = getIntArray(name);
 		List<Integer> list = new ArrayList<>(arr.length);
-		for(int i = 0; i < arr.length; i++) {
-			list.add(arr[i]);
+		for (int anArr : arr) {
+			list.add(anArr);
 		}
 		return list;
 	}

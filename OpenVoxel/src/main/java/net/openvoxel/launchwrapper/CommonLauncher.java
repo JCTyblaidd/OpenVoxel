@@ -9,7 +9,6 @@ import net.openvoxel.loader.optimizer.Optimizer;
 import net.openvoxel.utility.debug.RenderDocAutoHook;
 
 import java.io.File;
-import java.lang.ref.PhantomReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;

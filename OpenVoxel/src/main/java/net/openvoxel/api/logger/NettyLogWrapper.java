@@ -25,18 +25,18 @@ public class NettyLogWrapper extends InternalLoggerFactory{
 	private static class NettyLogInternalLogger extends AbstractInternalLogger {
 
 		private String _format(String str,Object... args) {
-			String v = str;
+			StringBuilder v = new StringBuilder(str);
 			for(Object arg : args) {
 				int index = v.indexOf("{}");
 				if(index != -1) {
 					String pre = v.substring(0,index);
 					String post = v.substring(index + 2,v.length());
-					v = pre + arg.toString() + post;
+					v = new StringBuilder(pre + arg.toString() + post);
 				}else {
-					v = v + " " + arg.toString();
+					v.append(" ").append(arg.toString());
 				}
 			}
-			return v;
+			return v.toString();
 		}
 
 		/**

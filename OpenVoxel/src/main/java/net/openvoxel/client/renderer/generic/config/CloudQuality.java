@@ -6,5 +6,5 @@ package net.openvoxel.client.renderer.generic.config;
 public enum CloudQuality {
 	NO_CLOUDS,
 	BLOCK_CLOUDS,
-	VOLUMETRIC_CLOUDS;
+	VOLUMETRIC_CLOUDS
 }

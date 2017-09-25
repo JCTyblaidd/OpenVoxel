@@ -22,7 +22,6 @@ public class GUISlot extends GUIObjectSizable {
 		this(slotImg,inv,ID);
 	}
 	public GUISlot(ResourceHandle handle,GUIInventory inv,int ID) {
-		;
 		this.inv = inv;
 		this.slotID = ID;
 	}

@@ -1,11 +1,9 @@
 package net.openvoxel.client.renderer.vk;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 
-import static org.lwjgl.glfw.GLFW.glfwPollEvents;
 import static org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 

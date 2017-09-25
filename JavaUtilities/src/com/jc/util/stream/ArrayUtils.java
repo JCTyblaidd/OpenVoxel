@@ -8,11 +8,12 @@ import java.util.Iterator;
 public class ArrayUtils {
 
 	public static Iterable<Boolean> Iterate(boolean[] arr) {
-		return new Iterable<Boolean>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Boolean> iterator() {
-				return new Iterator<Boolean>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -28,11 +29,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Byte> Iterate(byte[] arr) {
-		return new Iterable<Byte>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Byte> iterator() {
-				return new Iterator<Byte>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -48,11 +50,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Character> Iterate(char[] arr) {
-		return new Iterable<Character>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Character> iterator() {
-				return new Iterator<Character>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -68,11 +71,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Short> Iterate(short[] arr) {
-		return new Iterable<Short>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Short> iterator() {
-				return new Iterator<Short>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -88,11 +92,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Integer> Iterate(int[] arr) {
-		return new Iterable<Integer>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Integer> iterator() {
-				return new Iterator<Integer>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -108,11 +113,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Long> Iterate(long[] arr) {
-		return new Iterable<Long>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Long> iterator() {
-				return new Iterator<Long>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -128,11 +134,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Float> Iterate(float[] arr) {
-		return new Iterable<Float>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Float> iterator() {
-				return new Iterator<Float>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -148,11 +155,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Double> Iterate(double[] arr) {
-		return new Iterable<Double>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Double> iterator() {
-				return new Iterator<Double>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;
@@ -168,11 +176,12 @@ public class ArrayUtils {
 	}
 
 	public static Iterable<Character> Iterate(String str) {
-		return new Iterable<Character>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<Character> iterator() {
-				return new Iterator<Character>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != str.length();
@@ -188,11 +197,12 @@ public class ArrayUtils {
 	}
 
 	public static <T> Iterable<T> Iterate(T[] arr) {
-		return new Iterable<T>() {
+		return new Iterable<>() {
 			private int loc = -1;
+
 			@Override
 			public Iterator<T> iterator() {
-				return new Iterator<T>() {
+				return new Iterator<>() {
 					@Override
 					public boolean hasNext() {
 						return (loc + 1) != arr.length;

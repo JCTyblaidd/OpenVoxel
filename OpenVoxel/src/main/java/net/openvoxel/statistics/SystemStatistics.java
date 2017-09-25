@@ -2,7 +2,6 @@ package net.openvoxel.statistics;
 
 import oshi.SystemInfo;
 
-import javax.management.Attribute;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 

@@ -36,9 +36,7 @@ public class EventBus {
 	}
 	private void _push(AbstractEvent event, Class<? extends AbstractEvent> clazz) {
 		if(HandlerList.containsKey(clazz)) {
-			HandlerList.get(clazz).forEach(handler -> {
-				handler.push(event);
-			});
+			HandlerList.get(clazz).forEach(handler -> handler.push(event));
 		}
 	}
 
@@ -69,9 +67,7 @@ public class EventBus {
 		HandlerList.get(type).remove(listener);
 	}
 	public void unregisterAll(EventListener listener) {
-		HandlerList.values().forEach(handler -> {
-			handler.remove(listener);
-		});
+		HandlerList.values().forEach(handler -> handler.remove(listener));
 	}
 
 	private static class WrappedHandler {

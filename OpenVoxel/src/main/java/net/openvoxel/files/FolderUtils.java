@@ -4,7 +4,6 @@ import com.jc.util.filesystem.FileHandle;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.stb.STBImageWrite;
-import org.lwjgl.stb.STBRectPack;
 import org.lwjgl.system.MemoryUtil;
 
 import javax.imageio.ImageIO;

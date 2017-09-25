@@ -15,7 +15,7 @@ public class WrappedReflection<E> {
 		objectcache=cache;clazz=clz;reflect = new Reflector<>(clazz);
 	}
 	protected WrappedReflection(E cache) {
-		objectcache=cache;clazz=(Class<? extends E>)cache.getClass();reflect = new Reflector<>(clazz);
+		objectcache=cache;clazz= cache.getClass();reflect = new Reflector<>(clazz);
 	}
 	////////MORE USFULE//////////////////////////////
 	public Reflector<E> deeply() {

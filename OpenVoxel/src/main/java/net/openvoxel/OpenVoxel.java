@@ -16,7 +16,6 @@ import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui.menu.ScreenMainMenu;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
-import net.openvoxel.client.renderer.vk.util.VkShaderCompiler;
 import net.openvoxel.common.GameLoaderThread;
 import net.openvoxel.common.event.AbstractEvent;
 import net.openvoxel.common.event.EventBus;
@@ -37,13 +36,9 @@ import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.system.Configuration;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.vulkan.VkExtent2D;
 
 import java.io.File;
 import java.net.SocketAddress;
-import java.nio.IntBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -255,7 +250,7 @@ public class OpenVoxel implements EventListener{
 			if(!args.hasFlag("noDebugAllocator")) {
 				args.storeRuntimeFlag("debugAllocator");
 			}
-			openVoxelLogger.Info("Enabling Debugging Logging");;
+			openVoxelLogger.Info("Enabling Debugging Logging");
 			args.storeRuntimeFlag("bonusLogging");
 		}
 		if(args.hasFlag("debugAllocator")) {

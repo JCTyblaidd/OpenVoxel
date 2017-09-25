@@ -1,11 +1,9 @@
 package net.openvoxel.client.renderer.gl3.worldrender.deferred_path;
 
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCache;
 import net.openvoxel.client.utility.FrustumCuller;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.utility.AsyncRunnablePool;
 import net.openvoxel.utility.MatrixUtils;
 import net.openvoxel.utility.collection.ChunkMap;
 import net.openvoxel.world.client.ClientChunk;

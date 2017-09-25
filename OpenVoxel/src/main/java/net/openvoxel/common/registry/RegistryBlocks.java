@@ -96,9 +96,7 @@ public class RegistryBlocks {
 
 	public TObjectIntMap<String> getDataMap() {
 		TObjectIntMap<String> required = new TObjectIntHashMap<>();
-		block_map.keySet().forEach(k -> {
-			required.put(k,getIDFromName(k));
-		});
+		block_map.keySet().forEach(k -> required.put(k,getIDFromName(k)));
 		return required;
 	}
 

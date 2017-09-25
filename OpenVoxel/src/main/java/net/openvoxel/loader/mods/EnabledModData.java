@@ -34,22 +34,14 @@ public class EnabledModData {
 	}
 
 	public boolean requiresClient() {
-		if(handle != null) {
-			return handle.getInformation().requiresClient();
-		}else{
-			return true;
-		}
+		return handle == null || handle.getInformation().requiresClient();
 	}
 
 	public boolean requiresServer() {
-		if(handle != null) {
-			return handle.getInformation().requiresServer();
-		}else{
-			return true;
-		}
+		return handle == null || handle.getInformation().requiresServer();
 	}
 
 	public long longHash() {
-		return ID.hashCode() | version.hashCode() << 32;
+		return ID.hashCode() | (long)version.hashCode() << 32;
 	}
 }

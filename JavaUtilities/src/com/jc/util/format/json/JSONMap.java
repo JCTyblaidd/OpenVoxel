@@ -145,9 +145,7 @@ public class JSONMap<V extends JSONObject> extends JSONObject {
 	}
 
 	public void forEach(BiConsumer<JSONString,V> consumer) {
-		backing.forEach((a,b) -> {
-			consumer.accept(a,b);
-		});
+		backing.forEach(consumer::accept);
 	}
 	
 }

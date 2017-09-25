@@ -8,5 +8,5 @@ public enum EventOrdering {
 	EARLY,
 	NORMAL,
 	LATE,
-	LATEST;
+	LATEST
 }

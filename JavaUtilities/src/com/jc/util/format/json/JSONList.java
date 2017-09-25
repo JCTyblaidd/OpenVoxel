@@ -95,10 +95,8 @@ public class JSONList<T extends JSONObject> extends JSONObject implements Iterab
 	}
 	
 	public List<JSONObject> getJavaList() {
-		List<JSONObject> list = new ArrayList<JSONObject>();
-		for (JSONObject obj : this.backing) {
-			list.add(obj);
-		}
+		List<JSONObject> list = new ArrayList<>();
+		list.addAll(this.backing);
 		return list;
 	}
 

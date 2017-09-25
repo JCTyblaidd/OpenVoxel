@@ -2,7 +2,6 @@ package net.openvoxel.server;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.control.Renderer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.networking.ClientNetworkHandler;

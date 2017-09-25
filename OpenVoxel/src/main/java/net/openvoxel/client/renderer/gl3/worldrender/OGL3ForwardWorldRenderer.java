@@ -8,7 +8,6 @@ import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
 
-import java.util.List;
 import java.util.Set;
 
 /**

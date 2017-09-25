@@ -16,6 +16,7 @@ import java.util.List;
  *
  * Applies the side specific tweaks to functions, include code removal of entire function removal
  */
+@SuppressWarnings("SpellCheckingInspection")
 public class SideSpecificTweaker extends ClassNodeTweaker {
 
 	private boolean ClientSide;

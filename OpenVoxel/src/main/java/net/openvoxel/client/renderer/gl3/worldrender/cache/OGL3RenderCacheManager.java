@@ -33,9 +33,7 @@ public class OGL3RenderCacheManager {
 			OGL3RenderCache cache = new OGL3RenderCache();
 			cache.initGL();
 			section.renderCache.set(cache);
-			Renderer.renderCacheManager.addWork(() -> {
-				GenerateData(section,cache);
-			});
+			Renderer.renderCacheManager.addWork(() -> GenerateData(section,cache));
 		}
 	}
 

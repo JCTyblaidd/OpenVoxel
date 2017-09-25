@@ -32,7 +32,7 @@ class JSONBinaryParser {
 		return bytes[0] << 24 | (bytes[1] & 0xFF) << 16 | (bytes[2] & 0xFF) << 8 | (bytes[3] & 0xFF);
 	}
 	private static long fromLongByteArray(byte[] bytes) {
-		return bytes[0] << 56 | (bytes[1] & 0xFF) << 48 | (bytes[2] & 0xFF) << 40 | (bytes[3] & 0xFF) << 32 |
+		return (long)bytes[0] << 56 | (long)(bytes[1] & 0xFF) << 48 | (long)(bytes[2] & 0xFF) << 40 | (long)(bytes[3] & 0xFF) << 32 |
 		(bytes[4] & 0xFF) << 24 | (bytes[5] & 0xFF) << 16 | (bytes[6] & 0xFF) << 8 | (bytes[7] & 0xFF);
 	}
 

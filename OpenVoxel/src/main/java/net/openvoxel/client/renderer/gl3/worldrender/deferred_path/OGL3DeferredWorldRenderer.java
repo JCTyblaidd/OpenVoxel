@@ -1,8 +1,6 @@
 package net.openvoxel.client.renderer.gl3.worldrender.deferred_path;
 
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
-import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import net.openvoxel.client.renderer.gl3.OGL3WorldRenderer;
 import net.openvoxel.client.renderer.gl3.worldrender.cache.OGL3RenderCache;

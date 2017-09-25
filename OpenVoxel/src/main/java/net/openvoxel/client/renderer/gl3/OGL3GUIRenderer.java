@@ -48,7 +48,7 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 	private OGL3ReloadableShader<OGL3GUIShader> guiShader;
 
 	public OGL3GUIRenderer() {
-		guiShader = new OGL3ReloadableShader<OGL3GUIShader>(ResourceManager.getResource(ResourceType.SHADER,"gui/guiShader")) {
+		guiShader = new OGL3ReloadableShader<>(ResourceManager.getResource(ResourceType.SHADER, "gui/guiShader")) {
 			@Override
 			public OGL3GUIShader newShader(String src) {
 				return new OGL3GUIShader(src);

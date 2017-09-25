@@ -82,12 +82,8 @@ public class ModLoader {
 		loadedMods.forEach((k,obj) -> {
 			List<String> softLoadAfter = obj.getSoftLoadAfter();
 			List<String> softLoadBefore = obj.getSoftLoadBefore();
-			softLoadAfter.stream().filter(ModLoader::isModLoaded).forEach(loadAfter -> {
-				res.get(k).add(loadAfter);
-			});
-			softLoadBefore.stream().filter(ModLoader::isModLoaded).forEach(loadBefore -> {
-				res.get(loadBefore).add(k);
-			});
+			softLoadAfter.stream().filter(ModLoader::isModLoaded).forEach(loadAfter -> res.get(k).add(loadAfter));
+			softLoadBefore.stream().filter(ModLoader::isModLoaded).forEach(loadBefore -> res.get(loadBefore).add(k));
 		});
 		//Convert to Deep Mapping//
 		Logger.getLogger("Mod Loader").Info("Generating Deep Dependency Maps");

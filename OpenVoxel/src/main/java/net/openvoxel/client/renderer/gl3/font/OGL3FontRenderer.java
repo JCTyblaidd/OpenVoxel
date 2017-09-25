@@ -51,7 +51,7 @@ public class OGL3FontRenderer {
 	}
 
 	private OGL3Texture fontTexture = OGL3Texture.getTexture(ResourceManager.getImage("font/font"));
-	private OGL3ReloadableShader<OGL3FontShader> fontShader = new OGL3ReloadableShader<OGL3FontShader>(ResourceManager.getResource(ResourceType.SHADER,"font/fontShader")) {
+	private OGL3ReloadableShader<OGL3FontShader> fontShader = new OGL3ReloadableShader<>(ResourceManager.getResource(ResourceType.SHADER, "font/fontShader")) {
 		@Override
 		public OGL3FontShader newShader(String src) {
 			return new OGL3FontShader(src);

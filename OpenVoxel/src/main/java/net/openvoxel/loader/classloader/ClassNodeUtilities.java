@@ -1,8 +1,6 @@
 package net.openvoxel.loader.classloader;
 
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
-import net.openvoxel.api.side.SideOnly;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -69,26 +67,6 @@ public abstract class ClassNodeUtilities {
 			}
 		}
 		return false;
-	}
-
-	//Test Code TODO: remove
-	public void test() {
-		System.out.println(4 * 4);
-		if(Side.isClient) {
-			System.out.println("a");
-		}
-		System.out.println(42 + "#");
-		if(!Side.isClient) {
-			System.out.println("d");
-		}
-		int lim = -42;
-		if(Side.isClient == true) {
-			lim = 3;
-		}
-		if(Side.isClient == false) {
-			lim *=2;
-		}
-		System.out.println(lim);
 	}
 
 	public static void MakeMethodUseless(MethodNode node) {

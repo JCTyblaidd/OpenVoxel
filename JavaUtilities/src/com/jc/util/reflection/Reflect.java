@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 public class Reflect {
 ///////////////////////// QUICK INITIATION//////////////////////////
 	public static <E extends Object> WrappedReflection<E> on(E obj) {
-		return new WrappedReflection<E>(obj);
+		return new WrappedReflection<>(obj);
 	}
 	
 	public static <E> Reflector<E> on(Class<E> clazz) {
@@ -19,11 +19,11 @@ public class Reflect {
 	}
 	
 	public static <E extends Enum<E>> EnumBuster<E> onEnum(Class<E> clazz) {
-		return new EnumBuster<E>(clazz,Reflect.on(clazz));
+		return new EnumBuster<>(clazz, Reflect.on(clazz));
 	}
 	
 	public static <E> ReflectedReflectionFactory<E> byFactory(Class<E> clazz) {
-		return new ReflectedReflectionFactory<E>(clazz, Reflect.on(clazz));
+		return new ReflectedReflectionFactory<>(clazz, Reflect.on(clazz));
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })

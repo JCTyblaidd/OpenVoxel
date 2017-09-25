@@ -69,14 +69,14 @@ public class Reflector<E> {
 			}
 			return null;
 		}else {
-			return new ReflectedField<E>(clazz, fields[number],this);
+			return new ReflectedField<>(clazz, fields[number], this);
 		}
 	}
 	
 	/**Gets The Field With The Name**/
 	public ReflectedField<E> getField(String name) {
 		try{
-			return new ReflectedField<E>(clazz,clazz.getDeclaredField(name),this);
+			return new ReflectedField<>(clazz, clazz.getDeclaredField(name), this);
 		}catch(Exception e) {
 			if(debugmode) {
 				System.err.println("[Reflector] Field Not Found!");
@@ -93,7 +93,7 @@ public class Reflector<E> {
 			if(field.getType() == type) {
 				count++;
 				if(count == number) {
-					return new ReflectedField<E>(clazz,field,this);
+					return new ReflectedField<>(clazz, field, this);
 				}
 			}
 		}
@@ -111,7 +111,7 @@ public class Reflector<E> {
 			if(field.getType().isAssignableFrom(type)) {//FUZZYNESS
 				count++;
 				if(count == number) {
-					return new ReflectedField<E>(clazz,field,this);
+					return new ReflectedField<>(clazz, field, this);
 				}
 			}
 		}
@@ -154,7 +154,7 @@ public class Reflector<E> {
 		Method[] ms = clazz.getDeclaredMethods();
 		for(Method m : ms) {
 			if(m.getName().equals(name)) {
-				return new ReflectedMethod<E>(clazz,m,this);
+				return new ReflectedMethod<>(clazz, m, this);
 			}
 		}
 		if(debugmode) {
@@ -167,7 +167,7 @@ public class Reflector<E> {
 		Method[] ms = clazz.getDeclaredMethods();
 		for(Method m : ms) {
 			if(m.getName().equals(name) && m.getParameterCount() == paramcount) {
-				return new ReflectedMethod<E>(clazz,m,this);
+				return new ReflectedMethod<>(clazz, m, this);
 			}
 		}
 		if(debugmode) {
@@ -181,7 +181,7 @@ public class Reflector<E> {
 		Method[] ms = clazz.getDeclaredMethods();
 		for(Method m : ms) {
 			if(m.getName().equals(name) && m.getParameterCount() == paramcount && m.getReturnType() == returntype) {
-				return new ReflectedMethod<E>(clazz,m,this);
+				return new ReflectedMethod<>(clazz, m, this);
 			}
 		}
 		if(debugmode) {
@@ -192,7 +192,7 @@ public class Reflector<E> {
 	/**Get Method With Name, And Class Parameter Array**/
 	public ReflectedMethod<E> getMethod(String name,Class<?>... objs) {
 		try{
-			return new ReflectedMethod<E>(clazz,clazz.getDeclaredMethod(name, (Class[])objs),this);
+			return new ReflectedMethod<>(clazz, clazz.getDeclaredMethod(name, (Class[]) objs), this);
 		}catch(Exception e) {
 			if(debugmode) {
 				System.err.println("[Reflector] Method Not Found!");
@@ -312,7 +312,7 @@ public class Reflector<E> {
 	///////CONSTRUCTOR ACCESSING///////
 	public ReflectedConstructor<E> getConstructor(Class<?>... data) {
 		try {
-			return new ReflectedConstructor<E>(clazz, clazz.getDeclaredConstructor((Class[])data),this);
+			return new ReflectedConstructor<>(clazz, clazz.getDeclaredConstructor((Class[]) data), this);
 		} catch (Exception e) {
 			if(debugmode) {
 				System.err.println("Constructor not found: @"+data.length+" params");
@@ -322,7 +322,7 @@ public class Reflector<E> {
 	}
 	public ReflectedConstructor<E> getConstructor() {
 		try {
-			return new ReflectedConstructor<E>(clazz, clazz.getDeclaredConstructor(),this);
+			return new ReflectedConstructor<>(clazz, clazz.getDeclaredConstructor(), this);
 		} catch (Exception e) {
 			if(debugmode) {
 				System.err.println("Constructor not found: @0 params");
@@ -336,7 +336,7 @@ public class Reflector<E> {
 		Constructor<?>[] constructs = clazz.getDeclaredConstructors();
 		for(Constructor<?> constr : constructs) {
 			if(constr.getParameterCount() == paramnum) {
-				return new ReflectedConstructor<E>(clazz, (Constructor<E>) constr,this);
+				return new ReflectedConstructor<>(clazz, (Constructor<E>) constr, this);
 			}
 		}
 		if(debugmode) {
@@ -451,7 +451,7 @@ public class Reflector<E> {
 //////ADVANCED CLASS ACCESSING FUNCTIONALITY/////
 	
 	public ClassModifier<E> getModifiers() {
-		return new ClassModifier<E>(clazz);
+		return new ClassModifier<>(clazz);
 	}
 	
 	/**Gets Annotations For The Class**/
@@ -471,7 +471,7 @@ public class Reflector<E> {
 	}
 	/**Gets A Reflection Wrapped Instance Of The Reflection Factory [ADVANCED]**/
 	public ReflectedReflectionFactory<E> getReflectionFactory() {
-		return new ReflectedReflectionFactory<E>(clazz,this);
+		return new ReflectedReflectionFactory<>(clazz, this);
 	}
 	/**Cast This Reflector To One Of That Class*/
 	@SuppressWarnings("unchecked")
@@ -493,15 +493,15 @@ public class Reflector<E> {
 	
 	/**Gets The Referenced Package**/
 	public ReflectedPackage<E> getPackage() {
-		return new ReflectedPackage<E>(clazz);
+		return new ReflectedPackage<>(clazz);
 	}
 	
 	/**Gets An Experimental Framework for interfaces manipulation**/
 	public ClassInterfaceReflector<E> getInterfaceModifier() {
-		return new ClassInterfaceReflector<E>(clazz);
+		return new ClassInterfaceReflector<>(clazz);
 	}
 	public ReflectedClassTypes<E, Class<E>> getGenerics() {
-		return new ReflectedClassTypes<E,Class<E>>(clazz);
+		return new ReflectedClassTypes<>(clazz);
 	}
 	
 	//////////////MONOLITHIC DEEPLY REFLECTIVE TOSTRING FUNCTION
@@ -517,7 +517,7 @@ public class Reflector<E> {
 		builder.append("class ");
 		builder.append(getName());
 		//CLASS EXTENTION
-		builder.append(" extends "+getSuperClass().getName()+" ");
+		builder.append(" extends ").append(getSuperClass().getName()).append(" ");
 		if(getInterfaceCount() != 0) {
 			builder.append("implements ");
 			for(int i = 0; i < getInterfaceCount(); i++) {
@@ -531,22 +531,22 @@ public class Reflector<E> {
 		//ALL FIELDS
 		Field[] fields = clazz.getDeclaredFields();
 		for(Field field : fields) {
-			ReflectedField<E> rf = new ReflectedField<E>(clazz, field,this);
-			builder.append(rf.toString()+"\n");
+			ReflectedField<E> rf = new ReflectedField<>(clazz, field, this);
+			builder.append(rf.toString()).append("\n");
 		}
 		builder.append("\n\n");
 		//ALL CONSTRUCTORS//
 		Constructor<?>[] constructs = clazz.getDeclaredConstructors();
 		for(Constructor<?> constr : constructs) {
-			ReflectedConstructor<E> rc = new ReflectedConstructor<E>(clazz,(Constructor<E>) constr,this);
-			builder.append(rc.toString()+"\n");
+			ReflectedConstructor<E> rc = new ReflectedConstructor<>(clazz, (Constructor<E>) constr, this);
+			builder.append(rc.toString()).append("\n");
 		}
 		builder.append("\n\n");
 		//ALL METHODS
 		Method[] methods = clazz.getDeclaredMethods();
 		for(Method method : methods) {
-			ReflectedMethod<E> rm = new ReflectedMethod<E>(clazz, method,this);
-			builder.append(rm.toString()+"\n");
+			ReflectedMethod<E> rm = new ReflectedMethod<>(clazz, method, this);
+			builder.append(rm.toString()).append("\n");
 		}
 		builder.append("\n\n");
 		///ALL SUBCLASSES
@@ -556,7 +556,7 @@ public class Reflector<E> {
 				subclasstr = subclasstr.replace("\n", "\n     ");
 				subclasstr = subclasstr.substring(0,subclasstr.length() - 5);
 				subclasstr = subclasstr +  "}";
-				builder.append(subclasstr+"\n\n");
+				builder.append(subclasstr).append("\n\n");
 			}
 		}
 		
@@ -612,7 +612,7 @@ public class Reflector<E> {
 			return new ConstructorModifier<>(this, clazz);
 		}
 		public ReflectedAnnotations<E> getAnnotations() {
-			return new ReflectedAnnotations<E>(clazz, reference);
+			return new ReflectedAnnotations<>(clazz, reference);
 		}
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public ReflectedConstructorAccessor<E> genAccessor() {
@@ -622,14 +622,14 @@ public class Reflector<E> {
 			return reflect;
 		}
 		public ReflectedClassTypes<E, Constructor<E>> getGenerics() {
-			return new ReflectedClassTypes<E,Constructor<E>>(clazz,reference);
+			return new ReflectedClassTypes<>(clazz, reference);
 		}
 		//////STRING UTIL FUNCTIONS////
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 			builder.append(getModifiers().toString());
-			builder.append(clazz.getSimpleName()+"( ");
+			builder.append(clazz.getSimpleName()).append("( ");
 			Class<?>[] params = reference.getParameterTypes();
 			for(int i = 0; i < params.length; i++) {
 				builder.append(params[i].getSimpleName());
@@ -696,7 +696,7 @@ public class Reflector<E> {
 			return new MethodModifier<>(this, clazz);
 		}
 		public ReflectedAnnotations<E> getAnnotations() {
-			return new ReflectedAnnotations<E>(clazz, reference);
+			return new ReflectedAnnotations<>(clazz, reference);
 		}
 		public ReflectedMethodAccessor<E> genAccessor() {
 			return reflect.getReflectionFactory().generateMethodAccessor(reference);
@@ -705,7 +705,7 @@ public class Reflector<E> {
 			return reflect;
 		}
 		public ReflectedClassTypes<E, Method> getGenerics() {
-			return new ReflectedClassTypes<E,Method>(clazz,reference);
+			return new ReflectedClassTypes<>(clazz, reference);
 		}
 		///////STRING UTIL FUNCS/////
 		public String getName() {
@@ -716,11 +716,11 @@ public class Reflector<E> {
 			StringBuilder builder = new StringBuilder();
 			builder.append(getModifiers().toString());
 			if(returnType() != Void.class) {
-				builder.append(returnType().getSimpleName()+" ");
+				builder.append(returnType().getSimpleName()).append(" ");
 			}else {
 				builder.append("void ");//LOWERCASE
 			}
-			builder.append(getName()+"( ");
+			builder.append(getName()).append("( ");
 			Class<?>[] params = reference.getParameterTypes();
 			for(int i = 0; i < params.length; i++) {
 				builder.append(params[i].getSimpleName());
@@ -784,7 +784,7 @@ public class Reflector<E> {
 		}
 		public void set(E obj,Object val) {
 			try{
-				reference.set(obj, val);;
+				reference.set(obj, val);
 			}catch(Exception e) {
 				if(debugmode) {
 					System.err.println("[Reflector] Error Setting Field");
@@ -924,7 +924,7 @@ public class Reflector<E> {
 			return new FieldModifier<>(this, clazz);
 		}
 		public ReflectedAnnotations<E> getAnnotations() {
-			return new ReflectedAnnotations<E>(clazz, reference);
+			return new ReflectedAnnotations<>(clazz, reference);
 		}
 		public ReflectedFieldAccessor<E> genAccessor() {
 			return reflect.getReflectionFactory().generateFieldAccessor(reference);
@@ -938,11 +938,10 @@ public class Reflector<E> {
 		}
 		@Override
 		public String toString() {
-			StringBuilder builder = new StringBuilder();
-			builder.append(getModifiers().toString());
-			builder.append(Type().getSimpleName()+" ");
-			builder.append(getName()+";");
-			return builder.toString();
+			String builder = getModifiers().toString() +
+					                 Type().getSimpleName() + " " +
+					                 getName() + ";";
+			return builder;
 		}
 	}
 	
@@ -1121,8 +1120,8 @@ public class Reflector<E> {
 		}
 		public void setMethodParameterTypes(Class<?>... parameters) {
 			try{
-				Object[] objs = new Object[1];objs[0] = (Class[])parameters;
-				parameterTypeField.set(method.reference,(Object[])objs);
+				Object[] objs = new Object[1];objs[0] = parameters;
+				parameterTypeField.set(method.reference, objs);
 			}catch(Exception e) {
 				if(debugmode) {
 					System.err.println("[Reflector] Method Modifier Setting Parameter Types Error");
@@ -1347,7 +1346,7 @@ public class Reflector<E> {
 			annotates = new ArrayList<>();
 			Annotation[] anns = this.ref.getDeclaredAnnotations();
 			for(Annotation ann : anns) {
-				annotates.add(new ReflectedAnnotation<E>(ann));
+				annotates.add(new ReflectedAnnotation<>(ann));
 			}
 		}
 		public Class<E> Class() {
@@ -1391,7 +1390,7 @@ public class Reflector<E> {
 			return pack.isSealed();
 		}
 		public ReflectedAnnotations<E> getAnnotations() {
-			return new ReflectedAnnotations<E>(clz, pack);
+			return new ReflectedAnnotations<>(clz, pack);
 		}
 		//TODO WORK OUT GETTING CLASSES IN THE PACKAGE
 	}

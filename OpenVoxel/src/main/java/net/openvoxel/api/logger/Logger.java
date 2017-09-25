@@ -70,8 +70,7 @@ public class Logger {
 	}
 
 	private boolean shouldLog(LogLevel level) {
-		if(level == LogLevel.NONE) return false;
-		return level.ordinal() >= current_level.ordinal();
+		return level != LogLevel.NONE && level.ordinal() >= current_level.ordinal();
 	}
 
 	public boolean isEnabled(LogLevel level) {

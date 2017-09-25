@@ -85,68 +85,68 @@ public class WriteOnlyBuffer {
 	}
 	public void writeShorts(short[] val) {
 		backing.writeInt(val.length);
-		for(int i = 0; i < val.length; i++) {
-			backing.writeShort(val[i]);
+		for (short aVal : val) {
+			backing.writeShort(aVal);
 		}
 	}
 	public void writeShortsFixedLen(short[] val) {
-		for(int i = 0; i < val.length; i++) {
-			backing.writeShort(val[i]);
+		for (short aVal : val) {
+			backing.writeShort(aVal);
 		}
 	}
 	public void writeInts(int[] val) {
 		backing.writeInt(val.length);
-		for(int i = 0; i < val.length; i++) {
-			backing.writeInt(val[i]);
+		for (int aVal : val) {
+			backing.writeInt(aVal);
 		}
 	}
 	public void writeIntsFixedLen(int[] val) {
-		for(int i = 0; i < val.length; i++) {
-			backing.writeInt(val[i]);
+		for (int aVal : val) {
+			backing.writeInt(aVal);
 		}
 	}
 	public void writeLongs(long[] val) {
 		backing.writeInt(val.length);
-		for(int i = 0; i < val.length; i++) {
-			backing.writeLong(val[i]);
+		for (long aVal : val) {
+			backing.writeLong(aVal);
 		}
 	}
 	public void writeLongsFixedLen(long[] val) {
-		for(int i = 0; i < val.length; i++) {
-			backing.writeLong(val[i]);
+		for (long aVal : val) {
+			backing.writeLong(aVal);
 		}
 	}
 	public void writeFloats(float[] val) {
 		backing.writeInt(val.length);
-		for(int i = 0; i < val.length; i++) {
-			backing.writeFloat(val[i]);
+		for (float aVal : val) {
+			backing.writeFloat(aVal);
 		}
 	}
 	public void writeFloatsFixedLen(float[] val) {
-		for(int i = 0; i < val.length; i++) {
-			backing.writeFloat(val[i]);
+		for (float aVal : val) {
+			backing.writeFloat(aVal);
 		}
 	}
 	public void writeDoubles(double[] val) {
 		backing.writeInt(val.length);
-		for(int i = 0; i < val.length; i++) {
-			backing.writeDouble(val[i]);
+		for (double aVal : val) {
+			backing.writeDouble(aVal);
 		}
 	}
 	public void writeDoublesFixedLen(double[] val) {
-		for(int i = 0; i < val.length; i++) {
-			backing.writeDouble(val[i]);
+		for (double aVal : val) {
+			backing.writeDouble(aVal);
 		}
 	}
 	public void writeBooleans(boolean[] val) {
 		backing.writeInt(val.length);
-		for(int i = 0; i < val.length; i++) {
-			backing.writeByte(val[i] ? 1 : 0);
+		for (boolean aVal : val) {
+			backing.writeByte(aVal ? 1 : 0);
 		}
 	}
 	public void writeBooleansFixedLen(boolean[] val) {
-		for(int i = 0; i < val.length; i++) {
-			backing.writeByte(val[i] ? 1 : 0);
+		for (boolean aVal : val) {
+			backing.writeByte(aVal ? 1 : 0);
 		}
 	}
 	public void writeBooleansCompressed(boolean[] val) {
@@ -186,8 +186,8 @@ public class WriteOnlyBuffer {
 	}
 	public void writeStrings(String[] val,Charset charset) {
 		backing.writeInt(val.length);
-		for(int i = 0; i < val.length; i++) {
-			writeString(val[i],charset);
+		for (String aVal : val) {
+			writeString(aVal, charset);
 		}
 	}
 	public void writeStrings(String[] val) {

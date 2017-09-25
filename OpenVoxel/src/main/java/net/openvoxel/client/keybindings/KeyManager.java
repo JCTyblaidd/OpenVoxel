@@ -30,17 +30,13 @@ public class KeyManager {
 		try {
 			JSONObject json = JSON.fromFile(configFile);
 			JSONMap<JSONInteger> data = (JSONMap<JSONInteger>)json;
-			data.forEach((str,id) -> {
-				bindings.put(str.asString(),new KeyBinding(id.asInteger()));
-			});
+			data.forEach((str,id) -> bindings.put(str.asString(),new KeyBinding(id.asInteger())));
 		}catch(Exception e) {}
 	}
 
 	static void saveID() {
 		JSONMap<JSONInteger> Data = new JSONMap<>();
-		bindings.forEach((id,val) -> {
-			Data.put(new JSONString(id),new JSONInteger(val.KEY));
-		});
+		bindings.forEach((id,val) -> Data.put(new JSONString(id),new JSONInteger(val.KEY)));
 		try{
 			FileOutputStream file_out = new FileOutputStream(configFile);
 			file_out.write(Data.toPrettyJSONString().getBytes());

@@ -10,11 +10,11 @@ public class EscapeUtils {
 		boolean escaping = false;
 		boolean deepescape = false;
 		int deepescapecount = 0;
-		String escapeBuildQueue = "";
+		StringBuilder escapeBuildQueue = new StringBuilder();
 		for(char c : chars) {
 			if(deepescape) {  ///// \uFFFF <FORMAT
 				if(deepescapecount == 3) {
-					escapeBuildQueue = escapeBuildQueue + c;
+					escapeBuildQueue.append(c);
 					////BUILD THE ESCAPED CHAR///
 					char h1 = escapeBuildQueue.charAt(2);
 					char h2 = escapeBuildQueue.charAt(3);
@@ -30,9 +30,9 @@ public class EscapeUtils {
 					build.append(nc);
 					escaping = false;
 					deepescape = false;
-					escapeBuildQueue = "";
+					escapeBuildQueue = new StringBuilder();
 				}else{
-					escapeBuildQueue = escapeBuildQueue + c;
+					escapeBuildQueue.append(c);
 					deepescapecount++;
 				}
 			}else
@@ -66,7 +66,7 @@ public class EscapeUtils {
 					escaping = false;
 				}else
 				if(c == 'u') {
-					escapeBuildQueue = "\\" + c;
+					escapeBuildQueue = new StringBuilder("\\" + c);
 					deepescape = true;
 					deepescapecount = 0;
 				}

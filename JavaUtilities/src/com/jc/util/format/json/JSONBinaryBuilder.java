@@ -33,7 +33,7 @@ public class JSONBinaryBuilder {
 		out.write(bytes,0,bytes.length);
 	}
 
-	private static final byte[] intToByteArray(int value) {
+	private static byte[] intToByteArray(int value) {
 		return new byte[] {
 				(byte)(value >>> 24),
 				(byte)(value >>> 16),

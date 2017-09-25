@@ -183,22 +183,22 @@ public class EnumBuster<E extends Enum<E>> {
 	/**Get The Ordinal Enum Value**/
 	@SuppressWarnings("rawtypes")
 	public int getOrdinal(E val) {
-		return (int)enumReflector().getField(ORDINAL_FIELD).get((Enum)val);
+		return (int)enumReflector().getField(ORDINAL_FIELD).get(val);
 	}
 	/**Set The Ordinal Enum Value**/
 	@SuppressWarnings("rawtypes")
 	public void setOrdinal(E val, int newordinal) {
-		enumReflector().getField(ORDINAL_FIELD).setFinal((Enum)val, newordinal);
+		enumReflector().getField(ORDINAL_FIELD).setFinal(val, newordinal);
 	}
 	/**Get The Enum Name Value**/
 	@SuppressWarnings("rawtypes")
 	public String getName(E val) {
-		return (String)enumReflector().getField(NAMES_FIELD).get((Enum)val);
+		return (String)enumReflector().getField(NAMES_FIELD).get(val);
 	}
 	/**Set The Enum Name Value**/
 	@SuppressWarnings("rawtypes")
 	public void setName(E val, String newname) {
-		enumReflector().getField(NAMES_FIELD).setFinal((Enum)val, newname);
+		enumReflector().getField(NAMES_FIELD).setFinal(val, newname);
 	}
 	
 //////////////////////PRIVATE SHIZZLE////////////////////////////
@@ -231,7 +231,7 @@ public class EnumBuster<E extends Enum<E>> {
 		if(instance != null) {
 			return instance;
 		}
-		instance = new Reflector<Enum>(Enum.class);
+		instance = new Reflector<>(Enum.class);
 		return instance;
 	}
 	
