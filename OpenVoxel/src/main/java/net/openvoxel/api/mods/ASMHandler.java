@@ -7,6 +7,8 @@ import java.lang.annotation.Target;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Marks a class as an ASM Code Tweaker
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

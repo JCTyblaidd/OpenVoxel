@@ -5,6 +5,8 @@ import org.joml.Matrix4f;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Abstract Wrapper around Entity Rendering Code
  */
 public interface EntityRenderer {
 

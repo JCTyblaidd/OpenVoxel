@@ -42,7 +42,7 @@ public class NettyLogWrapper extends InternalLoggerFactory{
 		/**
 		 * Creates a new instance.
 		 **/
-		protected NettyLogInternalLogger() {
+		NettyLogInternalLogger() {
 			super("netty internal");
 		}
 

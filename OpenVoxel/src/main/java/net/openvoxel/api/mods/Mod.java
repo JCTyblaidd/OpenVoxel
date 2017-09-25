@@ -7,6 +7,8 @@ import java.lang.annotation.Target;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Marks a class as a value mod
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -18,7 +20,7 @@ public @interface Mod {
 	String id();
 
 	/**
-	 * @return
+	 * @return the actual name of the mod
 	 */
 	String name() default "";
 
@@ -72,7 +74,7 @@ public @interface Mod {
 
 	/**
 	 * Used to bring similar mods together
-	 * @return
+	 * @return the name of any parent mod
 	 */
 	String parent() default "";
 }

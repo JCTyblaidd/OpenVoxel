@@ -9,6 +9,8 @@ import net.openvoxel.loader.optimizer.Optimizer;
 import net.openvoxel.utility.debug.RenderDocAutoHook;
 
 import java.io.File;
+import java.lang.ref.PhantomReference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
@@ -18,6 +20,18 @@ import java.util.Arrays;
  * Common Launching Functionality
  */
 class CommonLauncher {
+
+	/**
+	 * Await Garbage Collection
+	 */
+	private static void awaitClassGarbageCollection(WeakReference<TweakableClassLoader> gcTarget) {
+		System.gc();
+		while(!gcTarget.isEnqueued()) {
+			try{
+				Thread.sleep(100);
+			}catch (Exception ignored) {}
+		}
+	}
 
 	static void defaultLaunch(String[] args, boolean isClient) {
 		if(new ArgumentParser(args).hasFlag("renderDocWait")) {
@@ -36,7 +50,9 @@ class CommonLauncher {
 			//Cleanup//
 			TweakableClassLoader.INSTANCE.unregisterAllTransformers();
 			TweakableClassLoader.INSTANCE.unloadLibraries();
+			WeakReference<TweakableClassLoader> weakReference = new WeakReference<>(TweakableClassLoader.INSTANCE);
 			TweakableClassLoader.INSTANCE = null;
+			awaitClassGarbageCollection(weakReference);
 		}while (reloadRequest);
 	}
 

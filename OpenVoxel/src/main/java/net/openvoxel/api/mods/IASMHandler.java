@@ -4,6 +4,8 @@ import net.openvoxel.loader.classloader.TweakableClassLoader;
 
 /**
  * Created by James on 25/08/2016.
+ *
+ * Interface Used By @ASMHandler Data
  */
 public interface IASMHandler {
 

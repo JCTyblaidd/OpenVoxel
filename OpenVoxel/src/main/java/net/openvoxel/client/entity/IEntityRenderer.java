@@ -12,7 +12,7 @@ public interface IEntityRenderer<T extends Entity> {
 
 	/**
 	 * Main Renderer Function
-	 * @param entityRenderHandle
+	 * @param entityRenderHandle the handle to the render api
 	 */
 	void render(T object,EntityRenderer entityRenderHandle);
 

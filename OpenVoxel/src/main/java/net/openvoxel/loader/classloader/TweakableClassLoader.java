@@ -9,6 +9,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -129,8 +131,7 @@ public class TweakableClassLoader extends ClassLoader{
 	}
 
 	private boolean allowTweaks(String classID) {
-		if(classID.startsWith("net.openvoxel.loader.")) return false;
-		return !classID.startsWith("java.");
+		return !classID.startsWith("net.openvoxel.loader.") && !classID.startsWith("java.");
 	}
 
 
@@ -140,7 +141,8 @@ public class TweakableClassLoader extends ClassLoader{
 				data = transformer.transform(data, classID);
 			}
 		}
-		return defineClass(classID,data,0,data.length);
+		final byte[] finalData = data;
+		return AccessController.doPrivileged((PrivilegedAction<Class<?>>)() -> defineClass(classID, finalData, 0,finalData.length));
 	}
 
 

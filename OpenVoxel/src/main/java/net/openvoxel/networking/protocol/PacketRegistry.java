@@ -104,7 +104,7 @@ public class PacketRegistry {
 	}
 	public AbstractPacket getNewObject(int ID) {
 		try {
-			return getPacket(ID).newInstance();
+			return getPacket(ID).getConstructor().newInstance();
 		}catch (Exception e) {
 			return null;
 		}

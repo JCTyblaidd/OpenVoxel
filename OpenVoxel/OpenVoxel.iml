@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_9">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
@@ -9,38 +9,35 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
+    <orderEntry type="jdk" jdkName="1.9" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="JavaUtilities" exported="" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:natives-windows:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:natives-osx:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:natives-linux:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:natives-windows:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:natives-osx:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:natives-linux:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-vulkan:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-vulkan:natives-windows:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-vulkan:natives-osx:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-vulkan:natives-linux:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:natives-windows:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:natives-osx:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:natives-linux:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:natives-windows:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:natives-osx:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:natives-linux:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:natives-windows:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:natives-osx:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:natives-linux:3.1.1" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.4.Final" level="project" />
-    <orderEntry type="library" name="Maven: org.ow2.asm:asm-all:5.0.3" level="project" />
-    <orderEntry type="library" name="Maven: org.joml:joml:1.9.2" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:natives-windows:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:natives-macos:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:natives-linux:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:natives-windows:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:natives-macos:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-opengl:natives-linux:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-vulkan:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:natives-windows:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:natives-macos:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-glfw:natives-linux:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:natives-windows:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:natives-macos:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-stb:natives-linux:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:natives-windows:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:natives-macos:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:natives-linux:3.1.3" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.15.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-all:6.0_BETA" level="project" />
+    <orderEntry type="library" name="Maven: org.joml:joml:1.9.4" level="project" />
     <orderEntry type="library" name="Maven: net.sf.trove4j:trove4j:3.0.3" level="project" />
-    <orderEntry type="library" name="Maven: com.lmax:disruptor:3.3.5" level="project" />
+    <orderEntry type="library" name="Maven: com.lmax:disruptor:3.3.6" level="project" />
     <orderEntry type="library" name="Maven: com.github.oshi:oshi-core:3.4.2" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:4.3.0" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:4.3.0" level="project" />

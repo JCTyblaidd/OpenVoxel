@@ -15,12 +15,12 @@ public class LoggerOutputStream extends OutputStream{
 	private ByteBuffer currentLine;
 	private String _trim;
 
-	public LoggerOutputStream(Logger logger) {
+	LoggerOutputStream(Logger logger) {
 		log = logger;
 		currentLine = ByteBuffer.allocate(2048);
 	}
 
-	public LoggerOutputStream setTrim(String trim) {
+	LoggerOutputStream setTrim(String trim) {
 		_trim = trim;
 		return this;
 	}

@@ -3,7 +3,6 @@ package net.openvoxel.lauch.github;
 import com.jc.util.format.json.JSONMap;
 import com.jc.util.format.json.JSONObject;
 import com.jc.util.network.NetworkConnection;
-import sun.nio.ch.Net;
 
 import java.util.ArrayList;
 import java.util.List;

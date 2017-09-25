@@ -46,7 +46,7 @@ public class ModHandle {
 	ModHandle(String type) throws Exception {
 		modClass = Class.forName(type);
 		try {
-			modInstance = modClass.newInstance();
+			modInstance = modClass.getConstructor().newInstance();
 		}catch (Exception ex) {
 			Logger crashLogger = Logger.getLogger("Mods");
 			crashLogger.Severe("Failed to Instantiate Constructor");

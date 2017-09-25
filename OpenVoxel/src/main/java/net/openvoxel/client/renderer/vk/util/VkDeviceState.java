@@ -6,13 +6,10 @@ import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.system.MathUtil;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
@@ -56,7 +53,7 @@ public class VkDeviceState {
 	private int chosenImageFormat;
 	private int chosenColourSpace;
 	private int chosenImageCount;
-	private VkExtent2D swapExtent = VkExtent2D.calloc();
+	public VkExtent2D swapExtent = VkExtent2D.calloc();
 
 	public VkDeviceState() {
 		vkLogger = Logger.getLogger("Vulkan");
@@ -65,8 +62,8 @@ public class VkDeviceState {
 		choosePhysicalDevice();
 		renderDevice.createDevice();
 		initSurface();
-		initSwapChain();
-		System.out.println("GLSL: "+instance.getCapabilities().VK_NV_glsl_shader);
+		initSwapChain();instance.getCapabilities();
+		//System.out.println("GLSL: "+instance.getCapabilities().VK_NV_glsl_shader);
 		System.exit(0);
 	}
 
@@ -278,7 +275,7 @@ public class VkDeviceState {
 			LongBuffer swapChainBuf = stack.callocLong(1);
 			VkSwapchainCreateInfoKHR createInfoKHR = VkSwapchainCreateInfoKHR.callocStack(stack);
 			createInfoKHR.sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
-			createInfoKHR.pNext(0);
+			createInfoKHR.pNext(VK_NULL_HANDLE);
 			createInfoKHR.flags(0);
 			createInfoKHR.surface(window_surface);
 			createInfoKHR.minImageCount(chosenImageCount);
@@ -319,7 +316,7 @@ public class VkDeviceState {
 			LongBuffer imageViewResult = stack.callocLong(1);
 			for(int i = 0; i < sizeRef.get(0); i++) {
 				imageViewCreateInfo.sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO);
-				imageViewCreateInfo.pNext(0);
+				imageViewCreateInfo.pNext(VK_NULL_HANDLE);
 				imageViewCreateInfo.flags(0);
 				imageViewCreateInfo.image(swapChainImages.get(i));
 				imageViewCreateInfo.viewType(VK_IMAGE_VIEW_TYPE_2D);

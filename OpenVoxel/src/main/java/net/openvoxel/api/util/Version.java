@@ -47,7 +47,7 @@ public class Version implements Comparable<Version>{
 	 *          x.y-TEXT
 	 *          x
 	 *          x-TEXT
-	 * @param str
+	 * @param str the version as a string
 	 * @return a version
 	 */
 	public static Version parseVersion(String str) {

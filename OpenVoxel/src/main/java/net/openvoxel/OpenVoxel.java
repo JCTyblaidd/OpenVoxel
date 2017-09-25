@@ -16,6 +16,7 @@ import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui.menu.ScreenMainMenu;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
+import net.openvoxel.client.renderer.vk.util.VkShaderCompiler;
 import net.openvoxel.common.GameLoaderThread;
 import net.openvoxel.common.event.AbstractEvent;
 import net.openvoxel.common.event.EventBus;
@@ -36,10 +37,13 @@ import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.system.Configuration;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.vulkan.VkExtent2D;
 
 import java.io.File;
 import java.net.SocketAddress;
+import java.nio.IntBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -357,6 +361,7 @@ public class OpenVoxel implements EventListener{
 	 */
 	private void preCrash() {
 		if(Configuration.DEBUG_MEMORY_ALLOCATOR.get(false)) {
+			openVoxelLogger.Info("Hiding Memory Leak Info From Crash Report");
 			Object debugAllocator = Reflect.byName("org.lwjgl.system.MemoryUtil$LazyInit").getField("ALLOCATOR").getStatic();
 			Object allocationMap = Reflect.on(debugAllocator).get("ALLOCATIONS");
 			Reflect.on(allocationMap).invoke("clear");

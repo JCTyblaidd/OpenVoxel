@@ -8,6 +8,8 @@ import java.util.UUID;
 
 /**
  * Created by James on 03/09/2016.
+ *
+ * User ID Reference
  */
 public class UserData {
 

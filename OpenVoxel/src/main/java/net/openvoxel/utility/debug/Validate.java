@@ -16,4 +16,14 @@ public class Validate {
 	public static void ServerExists() {
 
 	}
+
+	@Validation
+	public static void IsMainThread() {
+
+	}
+
+	@Validation
+	public static void IsRenderThread() {
+
+	}
 }

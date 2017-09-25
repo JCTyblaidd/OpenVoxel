@@ -3,18 +3,27 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>groupId</groupId>
     <artifactId>OpenVoxel</artifactId>
     <version>0.0.1</version>
+	<!--Dependency Versions-->
+	<properties>
+		<lwjgl.version>3.1.3</lwjgl.version>
+		<netty.version>4.1.15.Final</netty.version>
+		<owasm.version>LATEST</owasm.version>
+		<joml.version>LATEST</joml.version>
+		<trove.version>LATEST</trove.version>
+		<disruptor.version>LATEST</disruptor.version>
+	</properties>
+	<!--Build Configuration-->
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>9</source>
+                    <target>9</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -44,162 +53,121 @@
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
-			<version>3.1.1</version>
+			<version>${lwjgl.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
-			<version>3.1.1</version>
+			<version>${lwjgl.version}</version>
 			<classifier>natives-windows</classifier>
 		</dependency>
-
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
-			<version>3.1.1</version>
-			<classifier>natives-osx</classifier>
+			<version>${lwjgl.version}</version>
+			<classifier>natives-macos</classifier>
 		</dependency>
-
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
-			<version>3.1.1</version>
+			<version>${lwjgl.version}</version>
 			<classifier>natives-linux</classifier>
 		</dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-opengl</artifactId>
-		    <version>3.1.1</version>
+		    <version>${lwjgl.version}</version>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-opengl</artifactId>
-		    <version>3.1.1</version>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-windows</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-opengl</artifactId>
-		    <version>3.1.1</version>
-		    <classifier>natives-osx</classifier>
+		    <version>${lwjgl.version}</version>
+		    <classifier>natives-macos</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-opengl</artifactId>
-		    <version>3.1.1</version>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-linux</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-vulkan</artifactId>
-		    <version>3.1.1</version>
+		    <version>${lwjgl.version}</version>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-vulkan</artifactId>
-		    <version>3.1.1</version>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>${lwjgl.version}</version>
+	    </dependency>
+	    <dependency>
+		    <groupId>org.lwjgl</groupId>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-windows</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-vulkan</artifactId>
-		    <version>3.1.1</version>
-		    <classifier>natives-osx</classifier>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>${lwjgl.version}</version>
+		    <classifier>natives-macos</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-vulkan</artifactId>
-		    <version>3.1.1</version>
+		    <artifactId>lwjgl-glfw</artifactId>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-linux</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-glfw</artifactId>
-		    <version>3.1.1</version>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>${lwjgl.version}</version>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-glfw</artifactId>
-		    <version>3.1.1</version>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-windows</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-glfw</artifactId>
-		    <version>3.1.1</version>
-		    <classifier>natives-osx</classifier>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>${lwjgl.version}</version>
+		    <classifier>natives-macos</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-glfw</artifactId>
-		    <version>3.1.1</version>
+		    <artifactId>lwjgl-stb</artifactId>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-linux</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-stb</artifactId>
-		    <version>3.1.1</version>
+		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <version>${lwjgl.version}</version>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-stb</artifactId>
-		    <version>3.1.1</version>
+		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-windows</classifier>
 	    </dependency>
-
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-stb</artifactId>
-		    <version>3.1.1</version>
-		    <classifier>natives-osx</classifier>
-	    </dependency>
-
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-stb</artifactId>
-		    <version>3.1.1</version>
-		    <classifier>natives-linux</classifier>
-	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-jemalloc</artifactId>
-		    <version>3.1.1</version>
+		    <version>${lwjgl.version}</version>
+		    <classifier>natives-macos</classifier>
 	    </dependency>
-
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-jemalloc</artifactId>
-		    <version>3.1.1</version>
-		    <classifier>natives-windows</classifier>
-	    </dependency>
-
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-jemalloc</artifactId>
-		    <version>3.1.1</version>
-		    <classifier>natives-osx</classifier>
-	    </dependency>
-
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-jemalloc</artifactId>
-		    <version>3.1.1</version>
+		    <version>${lwjgl.version}</version>
 		    <classifier>natives-linux</classifier>
 	    </dependency>
 
@@ -208,8 +176,7 @@
         <dependency><!-- Netty Project -->
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.4.Final</version>
-            <scope>compile</scope>
+            <version>${netty.version}</version>
         </dependency>
 
 	    <!--
@@ -223,25 +190,25 @@
         <dependency><!--ObjectWeb ASM-->
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>
-            <version>5.0.3</version>
+            <version>${owasm.version}</version>
         </dependency>
 
 	    <dependency><!-- Java Math Library -->
 		    <groupId>org.joml</groupId>
 		    <artifactId>joml</artifactId>
-		    <version>LATEST</version>
+		    <version>${joml.version}</version>
 	    </dependency>
 
         <dependency><!--Trove Library-->
             <groupId>net.sf.trove4j</groupId>
             <artifactId>trove4j</artifactId>
-	        <version>3.0.3</version>
+	        <version>${trove.version}</version>
         </dependency>
 
         <dependency><!--Disruptor Library-->
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
-            <version>3.3.5</version>
+            <version>${disruptor.version}</version>
         </dependency>
 
 	    <dependency>

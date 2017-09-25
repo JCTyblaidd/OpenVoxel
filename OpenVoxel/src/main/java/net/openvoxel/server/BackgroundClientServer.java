@@ -37,7 +37,7 @@ public class BackgroundClientServer extends ClientServer{
 	@Override
 	public void run() {
 		super.run();
-		debug_tick();
+		//debug_tick();
 	}
 	private void debug_tick() {
 		//thePlayer.setYaw(thePlayer.getYaw() + 0.004F);

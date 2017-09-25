@@ -1,9 +1,11 @@
 package net.openvoxel.client.gui.menu.settings;
 
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by James on 11/09/2016.
@@ -12,17 +14,19 @@ import java.util.Arrays;
  */
 public class ScreenSettings extends Screen{
 
-	public GUIButton settings_renderer;
-	public GUIButton settings_input;
-	public GUIButton settings_texture;
-	public GUIButton settings_audio;
-	public GUISlider setting_foV;
-	public GUIToggleButton setting_debugmode;
+	private GUIButton settings_renderer;
+	private GUIButton settings_input;
+	private GUIButton settings_texture;
+	private GUIButton settings_audio;
+	private GUISlider setting_foV;
+	private GUIToggleButton setting_debugmode;
 
-	public GUIColour background;
-	public GUIColour colourHint;
+	private GUIColour background;
+	private GUIColour colourHint;
 
-	public GUIButton backButton;
+	private GUIButton backButton;
+
+	private static final List<String> settings_list = Arrays.asList("No Debug","FPS Only","FPS+","Extreme Debug");
 
 	public ScreenSettings() {
 		background = new GUIColour(0xFF000000,0x00000000,false);
@@ -32,7 +36,7 @@ public class ScreenSettings extends Screen{
 		settings_input = new GUIButton("Input Settings");
 		settings_renderer = new GUIButton("Graphics Settings");
 		settings_texture = new GUIButton("Resource Packs");
-		setting_debugmode = new GUIToggleButton(Arrays.asList("No Debug","FPS Only","FPS+","Extreme Debug"),getDebugMode());
+		setting_debugmode = new GUIToggleButton(settings_list,getDebugMode());
 		colourHint = new GUIColour(0x66000000);
 		backButton = new GUIButton("Go Back");
 
@@ -57,20 +61,20 @@ public class ScreenSettings extends Screen{
 		guiObjects.add(setting_debugmode);
 
 		backButton.setAction(this::onBack);
-		setting_foV.setUpdateFunc(this::onFPSChange);
+		setting_foV.setUpdateFunc(this::onFOVChange);
 		setting_debugmode.setToggleAction(this::onDebugChange);
 		settings_input.setAction(this::gotoInputSettings);
 	}
 
-	private void gotoInputSettings(GUIButton guiButton) {
+	private void gotoInputSettings() {
 		GUI.addScreen(new ScreenInputSettings());
 	}
 
-	private void onFPSChange(GUISlider slider,int value) {
-
+	private void onFOVChange(GUISlider slider, int value) {
+		//OpenVoxel.getClientServer().getThePlayer().setFoV(value):
 	}
 
-	private void onBack(GUIButton button) {
+	private void onBack() {
 		GUI.removeScreen(this);
 	}
 
@@ -88,7 +92,7 @@ public class ScreenSettings extends Screen{
 		return "No Debug";
 	}
 
-	private void onDebugChange(GUIToggleButton button,String ID) {
+	private void onDebugChange(String ID) {
 		ScreenDebugInfo.GUIDebugLevel level;
 		switch(ID) {
 			case "No Debug":

@@ -19,8 +19,8 @@ public class GLFWLogWrapper extends GLFWErrorCallback{
 		return INSTANCE;
 	}
 
-	public Logger glfwLog;
-	public GLFWLogWrapper() {
+	private Logger glfwLog;
+	private GLFWLogWrapper() {
 		glfwLog = Logger.getLogger("GLFW");
 	}
 

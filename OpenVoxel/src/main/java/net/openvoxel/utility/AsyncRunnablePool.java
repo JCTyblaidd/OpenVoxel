@@ -122,8 +122,7 @@ public class AsyncRunnablePool {
 		}
 		@Override
 		public void run() {
-			if (!running.compareAndSet(false, true))
-			{
+			if (!running.compareAndSet(false, true)) {
 				throw new IllegalStateException("Thread is already running");
 			}
 			barrier.clearAlert();
@@ -131,23 +130,16 @@ public class AsyncRunnablePool {
 			long cachedAvailableSequence = Long.MIN_VALUE;
 			long nextSequence = sequence.get();
 			RunnableRef event;
-			while (true)
-			{
-				try
-				{
-					if (processedSequence)
-					{
+			while(true){
+				try{
+					if(processedSequence) {
 						processedSequence = false;
-						do
-						{
+						do {
 							nextSequence = workSequence.get() + 1L;
 							sequence.set(nextSequence - 1L);
-						}
-						while (!workSequence.compareAndSet(nextSequence - 1L, nextSequence));
+						}while (!workSequence.compareAndSet(nextSequence - 1L, nextSequence));
 					}
-
-					if (cachedAvailableSequence >= nextSequence)
-					{
+					if(cachedAvailableSequence >= nextSequence) {
 						event = ringBuffer.get(nextSequence);
 						//HANDLE//
 						try{
@@ -157,25 +149,16 @@ public class AsyncRunnablePool {
 						}
 						//STOP HANDLE//
 						processedSequence = true;
-					}
-					else
-					{
+					}else{
 						cachedAvailableSequence = barrier.waitFor(nextSequence);
 					}
-				}
-				catch (final TimeoutException e)
-				{
+				}catch (final TimeoutException e){
 					//IGNORE//
-				}
-				catch (final AlertException ex)
-				{
-					if (!running.get())
-					{
+				}catch (final AlertException ex){
+					if (!running.get()){
 						break;
 					}
-				}
-				catch (final Throwable ex)
-				{
+				}catch (final Throwable ex){
 					// handle, mark as processed, unless the exception handler threw an exception
 					Logger.getLogger("Worker Thread").StackTrace(ex);
 					processedSequence = true;

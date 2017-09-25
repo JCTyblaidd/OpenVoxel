@@ -1,27 +1,28 @@
 package net.openvoxel.utility;
 
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventTranslatorOneArg;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.SequenceBarrier;
+import com.lmax.disruptor.*;
 
 /**
  * Created by James on 15/04/2017.
  *
- * Asynchronous Queue from thread to thread : Single Input
+ * Asynchronous Queue from thread to thread : Single Input, Single Output
  */
 public class AsyncQueue<T> {
 	private class ObjectRef {
 		T obj;
 	}
 	private RingBuffer<ObjectRef> buffer;
-
 	private EventTranslatorOneArg<ObjectRef,T> TRANSLATE = (event, sequence, type) -> event.obj = type;
 	private SequenceBarrier barrier;
+	private Sequence sequence;
 
+	/**
+	 * Initialize The Queue
+	 */
 	public AsyncQueue(int size) {
 		buffer = RingBuffer.createSingleProducer(ObjectRef::new,size,new BlockingWaitStrategy());
 		barrier = buffer.newBarrier();
+		sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
 	}
 
 	/**
@@ -34,15 +35,38 @@ public class AsyncQueue<T> {
 	/**
 	 * Check if the queue is currently empty
 	 */
-	public void isEmpty() {
-
+	public boolean isEmpty() {
+		long writeHead = buffer.getCursor();
+		long readHead = sequence.get();
+		return writeHead <= readHead;
 	}
 
+	/**
+	 * Get and Object or Null From The Queue
+	 */
 	public T attemptNext() {
-		return null;
+		long nextSequence, writeSequence;
+		nextSequence = sequence.get() + 1L;
+		writeSequence = buffer.getCursor();
+		if(nextSequence == writeSequence) return null;
+		sequence.set(nextSequence);
+		return buffer.get(nextSequence).obj;
 	}
 
+	/**
+	 * Wait For An Object From The Queue
+	 */
 	public T awaitNext() {
-		return null;
+		long nextSequence, writeSequence;
+		nextSequence = sequence.get() + 1L;
+		writeSequence = buffer.getCursor();
+		if(nextSequence == writeSequence) return null;
+		sequence.set(nextSequence);
+		try {
+			barrier.waitFor(nextSequence);
+		}catch (Exception ignored) {
+			//NO OP//
+		}
+		return buffer.get(nextSequence).obj;
 	}
 }

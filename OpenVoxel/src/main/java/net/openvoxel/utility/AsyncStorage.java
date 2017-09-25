@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
  *
  * Asynchronous Storage of data from 1 thread for another to handle later
  */
+@Deprecated
 public class AsyncStorage<ID,T> {
 
 	private static class StorageRef<ID,T> {

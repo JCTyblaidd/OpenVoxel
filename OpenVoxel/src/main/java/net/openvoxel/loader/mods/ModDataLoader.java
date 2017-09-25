@@ -66,7 +66,7 @@ public class ModDataLoader {
 		try {
 			for (String a : asmHandles) {
 				Class<? extends IASMHandler> clz = (Class<? extends IASMHandler>) Class.forName(a);
-				IASMHandler Handle = clz.newInstance();
+				IASMHandler Handle = clz.getConstructor().newInstance();
 				TweakableClassLoader.IASMTransformer[] transformers = Handle.getASMTransformers();
 				TweakableClassLoader.IBytecodeSource[] sources =  Handle.getBytecodeSources();
 				ArrayUtils.Iterate(transformers).forEach(TweakableClassLoader.INSTANCE::registerTransformer);

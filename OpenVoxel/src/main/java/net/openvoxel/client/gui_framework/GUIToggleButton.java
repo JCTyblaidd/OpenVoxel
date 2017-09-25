@@ -24,6 +24,10 @@ public class GUIToggleButton extends GUIButton implements Consumer<GUIButton>{
 		action = update;
 	}
 
+	public void setToggleAction(Consumer<String> update) {
+		action = (button,str) -> update.accept(str);
+	}
+
 	@Override
 	public void accept(GUIButton guiButton) {
 		int id = validValues.indexOf(str);

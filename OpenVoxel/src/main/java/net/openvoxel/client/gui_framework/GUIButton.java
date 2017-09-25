@@ -27,6 +27,10 @@ public class GUIButton extends GUIObjectSizable {
 		onButtonPressFunc = handler;
 	}
 
+	public void setAction(Runnable handler) {
+		onButtonPressFunc = (button) -> handler.run();
+	}
+
 	@Override
 	public void Draw(GUIRenderer.GUITessellator drawHandle) {
 		if(inButton) {

@@ -17,8 +17,8 @@ import static org.lwjgl.vulkan.VK10.*;
  */
 public abstract class AbstractVkShaderPipeline {
 
-	private VkDeviceState deviceState;
-	private ResourceHandle resourceHandle;
+	protected VkDeviceState deviceState;
+	protected ResourceHandle resourceHandle;
 	protected long pipelineHandle;
 
 	public long getPipeline() {
@@ -36,10 +36,8 @@ public abstract class AbstractVkShaderPipeline {
 	}
 
 	public void regenerate() {
-		if(resourceHandle.checkIfChanged()) {
-			vkDestroyPipeline(deviceState.renderDevice.device,pipelineHandle,null);
-			generatePipeline();
-		}
+		vkDestroyPipeline(deviceState.renderDevice.device,pipelineHandle,null);
+		generatePipeline();
 	}
 
 	protected abstract void generatePipeline();
@@ -48,7 +46,7 @@ public abstract class AbstractVkShaderPipeline {
 		try(MemoryStack stack = MemoryStack.stackPush()) {
 			VkGraphicsPipelineCreateInfo.Buffer createInfo = VkGraphicsPipelineCreateInfo.callocStack(1);
 			createInfo.sType(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO);
-			createInfo.pNext(0);
+			createInfo.pNext(VK_NULL_HANDLE);
 			createInfo.flags(getPipelineFlags());
 			createInfo.pStages(genPipelineStages(stack));
 			createInfo.pVertexInputState(genVertexInput(stack));
@@ -79,7 +77,7 @@ public abstract class AbstractVkShaderPipeline {
 	protected VkPipelineInputAssemblyStateCreateInfo genInputAssembly(MemoryStack stack) {
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkPipelineInputAssemblyStateCreateInfo.callocStack(stack);
 		inputAssembly.sType(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO);
-		inputAssembly.pNext(0);
+		inputAssembly.pNext(VK_NULL_HANDLE);
 		inputAssembly.flags(0);
 		inputAssembly.topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 		inputAssembly.primitiveRestartEnable(false);
@@ -96,7 +94,7 @@ public abstract class AbstractVkShaderPipeline {
 		try(MemoryStack stack = MemoryStack.stackPush()) {
 			VkShaderModuleCreateInfo createInfo = VkShaderModuleCreateInfo.callocStack(stack);
 			createInfo.sType(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
-			createInfo.pNext(0);
+			createInfo.pNext(VK_NULL_HANDLE);
 			createInfo.flags(0);
 			createInfo.pCode(code);
 			LongBuffer moduleHandle = stack.callocLong(1);

@@ -160,7 +160,7 @@ public class VkRenderDevice {
 		{
 			queueInfo.position(0);
 			queueInfo.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
-			queueInfo.pNext(0);
+			queueInfo.pNext(VK_NULL_HANDLE);
 			queueInfo.flags(0);
 			queueInfo.queueFamilyIndex(queueFamilyIndexRender);
 			if(dualQueue) {
@@ -172,7 +172,7 @@ public class VkRenderDevice {
 		if(!dualQueue) {
 			queueInfo.position(1);
 			queueInfo.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
-			queueInfo.pNext(0);
+			queueInfo.pNext(VK_NULL_HANDLE);
 			queueInfo.flags(0);
 			queueInfo.queueFamilyIndex(queueFamilyIndexTransfer);
 			queueInfo.pQueuePriorities(stack.floats(0.0f));
@@ -187,7 +187,7 @@ public class VkRenderDevice {
 			PointerBuffer pointer = stack.callocPointer(1);
 			VkDeviceCreateInfo createInfo = VkDeviceCreateInfo.callocStack(stack);
 			createInfo.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
-			createInfo.pNext(0);
+			createInfo.pNext(VK_NULL_HANDLE);
 			createInfo.flags(0);
 			createInfo.ppEnabledLayerNames(enabledLayers(stack));
 			createInfo.ppEnabledExtensionNames(enabledExtensions(stack));
