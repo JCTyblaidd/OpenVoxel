@@ -1,5 +1,7 @@
 package net.openvoxel.api.mods;
 
+import net.openvoxel.api.PublicAPI;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,6 +13,7 @@ import java.lang.annotation.Target;
  * Marks a method in the @Mod class to handle cross mod communication
  *
  */
+@PublicAPI
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CrossModCommsHandler {

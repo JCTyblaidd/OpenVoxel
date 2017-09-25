@@ -175,7 +175,7 @@ public class ModLoader {
 		for(String asmClz : asmClasses) {
 			try {
 				ASMHandler h = Class.forName(asmClz).getAnnotation(ASMHandler.class);
-				if(h.isSeperateMod()) {
+				if(h.isSeparateMod()) {
 					enabledModDataList.add(new EnabledModData(h));
 				}
 			}catch(Exception e) {e.printStackTrace();}

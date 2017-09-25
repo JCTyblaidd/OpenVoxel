@@ -4,20 +4,23 @@ import net.openvoxel.api.logger.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by James on 15/09/2016.
  *
  * Detailed Error Information
  */
-public class CrashReport extends RuntimeException{
+public class CrashReport {
 
-	private String mainError;
+	private final String mainError;
 	private List<String> state = new ArrayList<>();
+	private final List<StackWalker.StackFrame> frames;
 
 	public CrashReport(String mainError) {
 		super();
 		this.mainError = mainError;
+		frames = StackWalker.getInstance().walk(s -> s.collect(Collectors.toList()));
 	}
 
 	public CrashReport invalidState(String error) {
@@ -45,11 +48,10 @@ public class CrashReport extends RuntimeException{
 		return this;
 	}
 
-	@Override
 	public void printStackTrace() {
 		Logger.INSTANCE.Severe("===Reported Crash===");
 		state.forEach(Logger.INSTANCE::Severe);
-		Logger.INSTANCE.StackTrace(this);
+		frames.forEach(Logger.INSTANCE::Severe);
 	}
 
 	@Override

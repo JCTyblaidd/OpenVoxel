@@ -1,5 +1,7 @@
 package net.openvoxel.api.side;
 
+import net.openvoxel.api.PublicAPI;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -10,7 +12,7 @@ import java.lang.annotation.Target;
  *
  * Enable to prevent the loading a particular function for the client or the server
  */
-@SuppressWarnings("unused")
+@PublicAPI
 @Target({ElementType.FIELD,ElementType.METHOD,ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SideOnly {

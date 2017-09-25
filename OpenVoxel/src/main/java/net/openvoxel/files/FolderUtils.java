@@ -31,6 +31,8 @@ public class FolderUtils {
 	public static final File StatsDir;
 	public static final File LogsDir;
 	public static final File CrashDir;
+	private static final Logger folderLogger = Logger.getLogger("Folder Manager");
+	private static final Logger saveManagerLogger = Logger.getLogger("Save Manager");
 	static {
 		ConfigDir = getFolder("config");
 		SaveDir = getFolder("save");
@@ -42,7 +44,9 @@ public class FolderUtils {
 	}
 	private static File getFolder(String str) {
 		File f = new File(str);
-		f.mkdir();
+		if(f.mkdir()) {
+			folderLogger.Info("Created Folder: " + str);
+		}
 		return f;
 	}
 
@@ -96,7 +100,7 @@ public class FolderUtils {
 	public static GameSave loadGameSave(String saveName) {
 		File f = new File(SaveDir,saveName);
 		if(!f.exists()) {
-			Logger.getLogger("Save Manager").Severe("Loading Imaginary Save File");
+			saveManagerLogger.Severe("Loading Imaginary Save File");
 			throw new RuntimeException("bad save create");
 		}
 		return new GameSave(f);
@@ -105,8 +109,8 @@ public class FolderUtils {
 	public static GameSave newSave(String saveName) {
 		File f = new File(SaveDir,saveName);
 		if(f.exists()) {
-			Logger.getLogger("Save Manager").Severe("Save exists where new one was requested");
-			Logger.getLogger("Save Manager").Info("Result - the save was loaded instead");
+			saveManagerLogger.Severe("Save exists where new one was requested");
+			saveManagerLogger.Info("Result - the save was loaded instead");
 		}
 		return new GameSave(f);
 	}

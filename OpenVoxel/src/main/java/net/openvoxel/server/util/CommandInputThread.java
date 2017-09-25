@@ -33,7 +33,12 @@ public class CommandInputThread implements Runnable{
 		try {
 			while (true) {
 				String CMD = reader.readLine();
-				handleCmd(CMD);
+				if(CMD.equals("exit")) {
+					//Custom Handling
+					break;
+				}else {
+					handleCmd(CMD);
+				}
 			}
 		}catch(IOException e) {
 			throw new RuntimeException(e);

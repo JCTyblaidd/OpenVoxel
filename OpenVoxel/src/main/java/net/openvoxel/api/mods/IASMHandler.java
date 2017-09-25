@@ -1,5 +1,6 @@
 package net.openvoxel.api.mods;
 
+import net.openvoxel.api.PublicAPI;
 import net.openvoxel.loader.classloader.TweakableClassLoader;
 
 /**
@@ -7,6 +8,7 @@ import net.openvoxel.loader.classloader.TweakableClassLoader;
  *
  * Interface Used By @ASMHandler Data
  */
+@PublicAPI
 public interface IASMHandler {
 
 	TweakableClassLoader.IBytecodeSource[] getBytecodeSources();

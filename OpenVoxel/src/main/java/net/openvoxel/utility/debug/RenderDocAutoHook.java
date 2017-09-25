@@ -10,13 +10,9 @@ import java.lang.management.ManagementFactory;
 public class RenderDocAutoHook {
 
 	private static int getPID() {
-		String val = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-		System.out.println("Process ID[debug]=" + val);
-		try {
-			return Integer.parseInt(val);
-		}catch (Exception ex) {
-			return -1;
-		}
+		long processID = ProcessHandle.current().pid();
+		System.out.println("Process ID[debug]=" + processID);
+		return (int)processID;
 	}
 
 	public static void callRenderDocInject() {

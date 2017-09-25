@@ -1,4 +1,4 @@
-package net.openvoxel.loader.optimizer.tags;
+package net.openvoxel.loader.classloader;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

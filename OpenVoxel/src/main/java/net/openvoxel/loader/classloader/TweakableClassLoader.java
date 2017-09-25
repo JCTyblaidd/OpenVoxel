@@ -127,11 +127,11 @@ public class TweakableClassLoader extends ClassLoader{
 	}
 
 	private boolean forceSystem(String classID) {
-		return classID.startsWith("sun.");
+		return classID.startsWith("sun.") || classID.startsWith("jdk.internal.reflect.");
 	}
 
 	private boolean allowTweaks(String classID) {
-		return !classID.startsWith("net.openvoxel.loader.") && !classID.startsWith("java.");
+		return !classID.startsWith("net.openvoxel.loader.") && !classID.startsWith("java.") && !classID.startsWith("jdk.");
 	}
 
 
@@ -151,16 +151,6 @@ public class TweakableClassLoader extends ClassLoader{
 		// First, check if the class has already been loaded
 		Class<?> c = findLoadedClass(name);
 		if(c == null) {
-			/**
-			try{
-				//Try Get System Class//
-				InputStream in = getSystemResourceAsStream(name.replace(".","/")+".class");
-				byte[] arr = new byte[in.available()];
-				in.read(arr);
-				in.close();
-				return defineClass(name,arr,0,arr.length);
-			}catch(Exception e) {}
-			 **/
 			//Try Java Class//
 			if(name.startsWith("java.") || name.startsWith("javax.")) {
 				return getSystemClassLoader().loadClass(name);
@@ -182,7 +172,7 @@ public class TweakableClassLoader extends ClassLoader{
 				output.close();
 				in_def = new ByteArrayInputStream(output.toByteArray());
 			}catch(Exception e) {
-				throw new ClassNotFoundException();
+				in_def = null;
 			}
 			if(in_def == null) {
 				//Try Additional Handlers//
@@ -204,11 +194,10 @@ public class TweakableClassLoader extends ClassLoader{
 				}
 			}
 			try {
-				byte[] arr = new byte[in_def.available()];
-				in_def.read(arr);
+				byte[] arr = in_def.readAllBytes();
 				in_def.close();
 				c = generateClass(arr,name);
-			}catch(Exception e) {
+			}catch(Throwable e) {
 				System.err.println("Error Generating: " + name);
 				e.printStackTrace();
 				throw new ClassNotFoundException();
