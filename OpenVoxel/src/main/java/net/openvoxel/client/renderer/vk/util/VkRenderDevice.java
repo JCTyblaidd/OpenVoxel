@@ -9,7 +9,9 @@ import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static org.lwjgl.vulkan.VK10.*;
@@ -36,7 +38,7 @@ public class VkRenderDevice {
 
 	/*State Information About Queues*/
 	int queueFamilyIndexRender;//needed for surface check
-	private int queueIndexRender;
+	public int queueIndexRender;
 	private int queueFamilyIndexTransfer, queueIndexTransfer;
 
 	VkRenderDevice(VkDeviceState state,long handle) {
@@ -236,6 +238,7 @@ public class VkRenderDevice {
 
 
 	String getDeviceInfo() {
+		if(properties == null) return null;
 		return properties.deviceNameString() + " : " + VK_VERSION_MAJOR(properties.apiVersion())
 				+ "." + VK_VERSION_MINOR(properties.apiVersion()) + "." + VK_VERSION_PATCH(properties.apiVersion());
 	}
@@ -250,5 +253,34 @@ public class VkRenderDevice {
 	void freeDevice() {
 		freeInitial();
 		vkDestroyDevice(device,null);
+	}
+
+	private int findMemoryType(int typeFilter,int flags) {
+		for (int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
+			if ((typeFilter & (1 << i)) != 0 && (memoryProperties.memoryTypes(i).propertyFlags() & flags) == flags) {
+				return i;
+			}
+		}
+		state.vkLogger.Severe("Failed to find valid memory type");
+		//TODO: handle better
+		throw new RuntimeException("Failure");
+	}
+
+	/**
+	 * The callee owns any non-null memory that is returned, and it is not automatically cleaned up
+	 */
+	public long allocMemory(MemoryStack stack,VkMemoryRequirements requirements,int propertyFlags) {
+		VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.mallocStack(stack);
+		allocateInfo.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
+		allocateInfo.pNext(VK_NULL_HANDLE);
+		allocateInfo.allocationSize(requirements.size());
+		allocateInfo.memoryTypeIndex(findMemoryType(requirements.memoryTypeBits(),propertyFlags));
+		LongBuffer lb = stack.mallocLong(1);
+		int res = vkAllocateMemory(device,allocateInfo,null,lb);
+		if(res < 0) {
+			state.vkLogger.Severe("Failed to allocate memory");
+			return VK_NULL_HANDLE;
+		}
+		return lb.get(0);
 	}
 }

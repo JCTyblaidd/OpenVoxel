@@ -25,6 +25,8 @@ public class VkRenderer implements GlobalRenderer {
 	private VKGUIRenderer guiRenderer;
 	private VKWorldRenderer worldRenderer;
 
+	private VKTexAtlas texAtlas = new VKTexAtlas();//TEMP//
+
 	public VkRenderer() {
 		vkLog.Info("Creating Vulkan Renderer");
 		Vkrenderer = this;
@@ -54,13 +56,13 @@ public class VkRenderer implements GlobalRenderer {
 	public void loadPreRenderThread() {
 		deviceState = new VkDeviceState();
 		displayHandle = new VKDisplayHandle(deviceState);
-		guiRenderer = new VKGUIRenderer();
+		guiRenderer = new VKGUIRenderer(deviceState);
 		worldRenderer = new VKWorldRenderer();
 	}
 
 	@Override
 	public void loadPostRenderThread() {
-
+		//NO OP//
 	}
 
 	@Override
@@ -75,11 +77,13 @@ public class VkRenderer implements GlobalRenderer {
 
 	@Override
 	public void kill() {
+		//worldRenderer.cleanup();
+		guiRenderer.cleanup();
 		deviceState.terminateAndFree();
 	}
 
 	@Override
 	public IconAtlas getBlockAtlas() {
-		return null;
+		return texAtlas;
 	}
 }

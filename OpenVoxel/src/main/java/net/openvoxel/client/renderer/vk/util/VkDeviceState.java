@@ -55,6 +55,10 @@ public class VkDeviceState {
 	private int chosenImageCount;
 	public VkExtent2D swapExtent = VkExtent2D.calloc();
 
+	/*Synchronisation*/
+	public long semaphore_img_available;
+	public long semaphone_render_finished;
+
 	public VkDeviceState() {
 		vkLogger = Logger.getLogger("Vulkan");
 		create_window();
@@ -62,9 +66,7 @@ public class VkDeviceState {
 		choosePhysicalDevice();
 		renderDevice.createDevice();
 		initSurface();
-		initSwapChain();instance.getCapabilities();
-		//System.out.println("GLSL: "+instance.getCapabilities().VK_NV_glsl_shader);
-		System.exit(0);
+		initSwapChain();
 	}
 
 	private void create_window() {

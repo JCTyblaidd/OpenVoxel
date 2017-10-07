@@ -37,7 +37,7 @@
     <orderEntry type="library" name="Maven: org.ow2.asm:asm-all:6.0_BETA" level="project" />
     <orderEntry type="library" name="Maven: org.joml:joml:1.9.4" level="project" />
     <orderEntry type="library" name="Maven: net.sf.trove4j:trove4j:3.0.3" level="project" />
-    <orderEntry type="library" name="Maven: com.lmax:disruptor:3.3.6" level="project" />
+    <orderEntry type="library" name="Maven: com.lmax:disruptor:3.3.7" level="project" />
     <orderEntry type="library" name="Maven: com.github.oshi:oshi-core:3.4.2" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:4.3.0" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:4.3.0" level="project" />
