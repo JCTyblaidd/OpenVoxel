@@ -47,12 +47,13 @@ class CommonLauncher {
 			modData.handleASMDependencies(asmList);
 			reloadRequest = CommonLauncher.StartOpenVoxelClassLoaded(args, classList, asmList, isClient);
 			//Cleanup//
-			TweakableClassLoader.INSTANCE.unregisterAllTransformers();
-			TweakableClassLoader.INSTANCE.unloadLibraries();
-			WeakReference<TweakableClassLoader> weakReference = new WeakReference<>(TweakableClassLoader.INSTANCE);
-			TweakableClassLoader.INSTANCE = null;
-			awaitClassGarbageCollection(weakReference);
+			//TweakableClassLoader.INSTANCE.unregisterAllTransformers();
+			//TweakableClassLoader.INSTANCE.unloadLibraries();
+			//WeakReference<TweakableClassLoader> weakReference = new WeakReference<>(TweakableClassLoader.INSTANCE);
+			//TweakableClassLoader.INSTANCE = null;
+			//awaitClassGarbageCollection(weakReference);
 		}while (reloadRequest);
+		System.exit(0);
 	}
 
 

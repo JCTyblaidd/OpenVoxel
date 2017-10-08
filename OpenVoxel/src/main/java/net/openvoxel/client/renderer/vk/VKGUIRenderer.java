@@ -12,6 +12,7 @@ import org.lwjgl.vulkan.*;
 
 import java.nio.LongBuffer;
 
+import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
 /**
@@ -31,7 +32,7 @@ public class VKGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	VKGUIRenderer(VkDeviceState state) {
 		this.state = state;
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
 			VkBufferCreateInfo bufferCreateInfo = VkBufferCreateInfo.callocStack(stack);
 			bufferCreateInfo.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
 			bufferCreateInfo.pNext(VK_NULL_HANDLE);

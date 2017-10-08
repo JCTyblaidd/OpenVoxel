@@ -11,9 +11,9 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
+import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
 /**
@@ -21,7 +21,7 @@ import static org.lwjgl.vulkan.VK10.*;
  *
  * Wrapper around a physical device and a device
  */
-public class VkRenderDevice {
+public class VkRenderDevice{
 
 	private VkDeviceState state;
 	VkPhysicalDevice physicalDevice;
@@ -32,14 +32,16 @@ public class VkRenderDevice {
 
 	/*Created Device State Information*/
 	public VkDevice device;
-	private VkQueue renderQueue;
-	private VkQueue asyncTransferQueue;
-	private boolean asyncTransfer;
+	public VkQueue renderQueue;
+	public VkQueue asyncTransferQueue;
+	public boolean asyncTransfer;
 
 	/*State Information About Queues*/
-	int queueFamilyIndexRender;//needed for surface check
 	public int queueIndexRender;
-	private int queueFamilyIndexTransfer, queueIndexTransfer;
+	public int queueFamilyIndexTransfer, queueIndexTransfer;
+
+
+	int queueFamilyIndexRender;//needed for surface check TODO: remove
 
 	VkRenderDevice(VkDeviceState state,long handle) {
 		this.state = state;
@@ -185,7 +187,7 @@ public class VkRenderDevice {
 
 
 	void createDevice() {
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
 			PointerBuffer pointer = stack.callocPointer(1);
 			VkDeviceCreateInfo createInfo = VkDeviceCreateInfo.callocStack(stack);
 			createInfo.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);

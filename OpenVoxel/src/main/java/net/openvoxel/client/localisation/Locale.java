@@ -1,5 +1,8 @@
 package net.openvoxel.client.localisation;
 
+import net.openvoxel.api.PublicAPI;
+import net.openvoxel.api.logger.Logger;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,21 +24,23 @@ import java.util.Map;
  */
 public class Locale {
 
-	public static final Locale englishInternational;
-	public static final Locale englishUnitedKingdom;
-	public static final Locale englishUnitedStates;
-	public static final Locale german;
-	public static final Locale spanish;
-	public static final Locale french;
-	public static final Locale italian;
-	public static final Locale korean;
-	public static final Locale czech;
-	public static final Locale russian;
-
+	private static final Locale englishInternational;
 	private static Map<String,Locale> localeMap;
 
+	@PublicAPI
 	public static Locale getLocaleFromName(String name) {
 		return localeMap.get(name);
+	}
+
+	@PublicAPI
+	public static Locale registerNewLocale(String localeName,String... altNames) {
+		Locale exist_locale = getLocaleFromName(localeName);
+		if(exist_locale == null) {
+			return _create(localeName,altNames);
+		}else{
+			Logger.getLogger("Locale").Warning("Error registering locale: " + localeName);
+			return null;
+		}
 	}
 
 	private static Locale _create(String name,String... altNames) {
@@ -50,15 +55,15 @@ public class Locale {
 	static {
 		localeMap = new HashMap<>();
 		englishInternational = _create("int","ini","english","international");
-		englishUnitedKingdom = _create("uk","eng_uk","english_uk");
-		englishUnitedStates = _create("usa","us","eng_usa","english_usa");
-		german = _create("det","german");
-		spanish = _create("est","spanish");
-		french = _create("frt","french","fr");
-		italian = _create("itt","italian");
-		korean = _create("kot","korean");
-		czech = _create("tct","czech");
-		russian = _create("rut","russian");
+		_create("uk","eng_uk","english_uk");
+		_create("usa","us","eng_usa","english_usa");
+		_create("det","german");
+		_create("est","spanish");
+		_create("frt","french","fr");
+		_create("itt","italian");
+		_create("kot","korean");
+		_create("tct","czech");
+		_create("rut","russian");
 	}
 
 	private static Locale currentLocale = englishInternational;
@@ -67,13 +72,14 @@ public class Locale {
 		return currentLocale;
 	}
 
-	public void setLocale(Locale locale) {
+
+	public static void setLocale(Locale locale) {
 		currentLocale = locale;
 	}
 
 	private String type;
 	private HashMap<String,String> cache;
-	public Locale(String type) {
+	private Locale(String type) {
 		this.type = type;
 		cache = new HashMap<>();
 	}
@@ -82,6 +88,7 @@ public class Locale {
 		return "locale."+type;
 	}
 
+	@PublicAPI
 	public void registerLocalisation(String a,String b) {
 		cache.put(a,b);
 	}

@@ -5,9 +5,7 @@ import org.lwjgl.vulkan.*;
 
 import java.nio.LongBuffer;
 
-import static org.lwjgl.vulkan.VK10.VK_NULL_HANDLE;
-import static org.lwjgl.vulkan.VK10.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-import static org.lwjgl.vulkan.VK10.vkCreateRenderPass;
+import static org.lwjgl.vulkan.VK10.*;
 
 /**
  * Created by James on 12/05/2017.

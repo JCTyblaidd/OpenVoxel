@@ -2,9 +2,7 @@ package net.openvoxel.statistics;
 
 import oshi.SystemInfo;
 
-import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
-import java.time.Duration;
 
 /**
  * Created by James on 15/04/2017.

@@ -8,6 +8,7 @@ import org.lwjgl.vulkan.*;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 
+import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
 /**
@@ -43,7 +44,7 @@ public abstract class AbstractVkShaderPipeline {
 	protected abstract void generatePipeline();
 
 	protected void genPipelineObject() {
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
 			VkGraphicsPipelineCreateInfo.Buffer createInfo = VkGraphicsPipelineCreateInfo.callocStack(1);
 			createInfo.sType(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO);
 			createInfo.pNext(VK_NULL_HANDLE);
@@ -91,7 +92,7 @@ public abstract class AbstractVkShaderPipeline {
 
 	private long createModule(ByteBuffer code) {
 		long module;
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
 			VkShaderModuleCreateInfo createInfo = VkShaderModuleCreateInfo.callocStack(stack);
 			createInfo.sType(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
 			createInfo.pNext(VK_NULL_HANDLE);

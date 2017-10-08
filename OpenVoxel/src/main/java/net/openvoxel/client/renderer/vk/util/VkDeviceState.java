@@ -19,6 +19,8 @@ import java.util.List;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface;
 import static org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions;
+import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.vulkan.EXTDebugReport.vkDestroyDebugReportCallbackEXT;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
@@ -28,36 +30,26 @@ import static org.lwjgl.vulkan.VK10.*;
  *
  * Vulkan Global State Information : Stores all required information for drawing
  */
-public class VkDeviceState {
+public class VkDeviceState extends VkRenderManager{
 
 	public VkInstance instance;
-	public VkRenderDevice renderDevice;
 	public long glfw_window;
 	private long window_surface;
 	private long window_swapchain;
-	private LongBuffer swapChainImages;
-	private LongBuffer swapChainImageViews;
+
+	private long debug_report_callback_ext;
 
 	public Logger vkLogger;
 
-	boolean vulkanDebug = OpenVoxel.getLaunchParameters().hasFlag("vkDebug");
-	boolean vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
+	static boolean vulkanDetailLog = OpenVoxel.getLaunchParameters().hasFlag("vkDebugDetailed");
+	static boolean vulkanDebug = OpenVoxel.getLaunchParameters().hasFlag("vkDebug") || vulkanDetailLog;
+	static boolean vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
 
 	/*Surface and SwapChain Information*/
 	private VkSurfaceCapabilitiesKHR surfaceCapabilities = VkSurfaceCapabilitiesKHR.calloc();
-	private VkSurfaceFormatKHR.Buffer surfaceFormats;
-	private IntBuffer presentModes;
+	public VkSurfaceFormatKHR.Buffer surfaceFormats;
+	public IntBuffer presentModes;
 
-	/*Chosen SwapChain Info*/
-	private int chosenPresentMode;
-	private int chosenImageFormat;
-	private int chosenColourSpace;
-	private int chosenImageCount;
-	public VkExtent2D swapExtent = VkExtent2D.calloc();
-
-	/*Synchronisation*/
-	public long semaphore_img_available;
-	public long semaphone_render_finished;
 
 	public VkDeviceState() {
 		vkLogger = Logger.getLogger("Vulkan");
@@ -67,6 +59,12 @@ public class VkDeviceState {
 		renderDevice.createDevice();
 		initSurface();
 		initSwapChain();
+		initMemory();
+		initRenderPasses();
+		initRenderPasses();
+		initGraphicsPipeline();
+		initFrameBuffers();
+		initCommandBuffers();
 	}
 
 	private void create_window() {
@@ -99,7 +97,8 @@ public class VkDeviceState {
 
 
 	private void initInstance() {
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
+			boolean enabled_debug_report_extension = false;
 			PointerBuffer pointer = stack.callocPointer(1);
 			ByteBuffer appNameBuf = stack.UTF8("Open Voxel");
 			VkApplicationInfo appInfo = VkApplicationInfo.mallocStack(stack);
@@ -167,6 +166,7 @@ public class VkDeviceState {
 					if(extensionPropertyList.extensionNameString().equals("VK_EXT_debug_report")) {
 						enabledExtensions.add(extensionPropertyList.extensionName());
 						vkLogger.Info("Enabled Debug Report");
+						enabled_debug_report_extension = true;
 					}
 				}
 			}
@@ -187,6 +187,17 @@ public class VkDeviceState {
 				OpenVoxel.reportCrash(report);
 			}
 			instance = new VkInstance(pointer.get(),createInfo);
+			int vk_version = instance.getCapabilities().apiVersion;
+			vkLogger.Info("Instance Version: " +
+					              VK_VERSION_MAJOR(vk_version) +
+					              "." + VK_VERSION_MINOR(vk_version) +
+					              "." + VK_VERSION_PATCH(vk_version));
+			if(enabled_debug_report_extension) {
+				vkLogger.Info("Creating Debug Report Callback");
+				debug_report_callback_ext = VkLogUtil.Init(instance,vulkanDetailLog);
+			}else{
+				debug_report_callback_ext = VK_NULL_HANDLE;
+			}
 		}catch (RuntimeException ex) {
 			CrashReport report = new CrashReport("Error Initializing Vulkan").
 										 caughtException(ex);
@@ -195,7 +206,7 @@ public class VkDeviceState {
 	}
 
 	private void initSurface() {
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
 			LongBuffer target = stack.callocLong(1);
 			success(glfwCreateWindowSurface(instance, glfw_window, null, target),"Error Creating Window Surface");
 			window_surface = target.get(0);
@@ -208,7 +219,7 @@ public class VkDeviceState {
 	}
 
 	private void initSwapChain() {
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
 			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice.physicalDevice,window_surface,surfaceCapabilities);
 			IntBuffer sizeRef = stack.callocInt(1);
 			vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice.physicalDevice,window_surface,sizeRef,null);
@@ -326,20 +337,42 @@ public class VkDeviceState {
 				imageViewCreateInfo.components(componentMapping);
 				imageViewCreateInfo.subresourceRange(subResourceRange);
 				success(vkCreateImageView(renderDevice.device, imageViewCreateInfo, null,imageViewResult),"Error Creating SwapChain Image View");
+				swapChainImageViews.put(i,imageViewResult.get(0));
 			}
+		}
+	}
+
+	private void destroySwapChain() {
+		try(MemoryStack stack = stackPush()) {
+			destroyFrameBuffers();
+			destroyCommandBuffers(stack);
+			destroyPipelineAndLayout(stack);
+			destroyRenderPasses(stack);
+			for(int i = 0; i < swapChainImageViews.capacity();i++) {
+				vkDestroyImageView(renderDevice.device,swapChainImageViews.get(i),null);
+			}
+			MemoryUtil.memFree(swapChainImages);
+			MemoryUtil.memFree(swapChainImageViews);
+			MemoryUtil.memFree(presentModes);
+			surfaceFormats.free();
+			vkDestroySwapchainKHR(renderDevice.device,window_swapchain,null);
+			window_swapchain = VK_NULL_HANDLE;
 		}
 	}
 
 	//TODO: implement
 	private void recreateSwapchain() {
-		try(MemoryStack stack = MemoryStack.stackPush()) {
-
-
-		}
+		vkDeviceWaitIdle(renderDevice.device);
+		destroySwapChain();
+		initSwapChain();
+		initRenderPasses();
+		initGraphicsPipeline();
+		initFrameBuffers();
+		initCommandBuffers();
 	}
 
 	private void choosePhysicalDevice() {
-		try(MemoryStack stack = MemoryStack.stackPush()) {
+		try(MemoryStack stack = stackPush()) {
 			IntBuffer deviceCount = stack.mallocInt(1);
 			success(vkEnumeratePhysicalDevices(instance,deviceCount,null),"Error Enumerating Physical Devices");
 			PointerBuffer devices = stack.callocPointer(deviceCount.get(0));
@@ -362,7 +395,7 @@ public class VkDeviceState {
 				throw new RuntimeException("No Valid Vulkan Device");
 			}
 			//FIND BEST DEVICE//
-			VkRenderDevice bestDevice = null;
+			VkRenderDevice bestDevice = deviceList.get(0);
 			int bestScore = Integer.MIN_VALUE;
 			for(VkRenderDevice device : deviceList) {
 				int newScore = device.rateDevice();
@@ -380,8 +413,19 @@ public class VkDeviceState {
 
 
 	public void terminateAndFree() {
+		destroySwapChain();
+		destroyMemory();
+		destroyCommandPools();
 		renderDevice.freeDevice();
+		vkDestroySurfaceKHR(instance,window_surface,null);
+		if(debug_report_callback_ext != VK_NULL_HANDLE) {
+			vkLogger.Info("Disabling Debug Report");
+			vkDestroyDebugReportCallbackEXT(instance,debug_report_callback_ext,null);
+		}
+		vkLogger.Info("Destroying Instance");
 		vkDestroyInstance(instance,null);
+		glfwDestroyWindow(glfw_window);
+		glfwTerminate();
 	}
 
 }
