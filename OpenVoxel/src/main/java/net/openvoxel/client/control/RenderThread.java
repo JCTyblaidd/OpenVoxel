@@ -56,9 +56,9 @@ public class RenderThread implements Runnable{
 	public void run() {
 		OpenVoxel inst = OpenVoxel.getInstance();
 		GlobalRenderer renderer = Renderer.renderer;
+		renderer.loadPostRenderThread();
 		WorldRenderer worldRenderer = renderer.getWorldRenderer();
 		GUIRenderer guiRenderer = renderer.getGUIRenderer();
-		renderer.loadPostRenderThread();
 		while(inst.isRunning.get()) {
 			//Render World//
 			try {

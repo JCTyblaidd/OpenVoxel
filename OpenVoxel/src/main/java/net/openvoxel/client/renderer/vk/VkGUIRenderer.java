@@ -20,7 +20,7 @@ import static org.lwjgl.vulkan.VK10.*;
  *
  * Vulkan GUI Renderer
  */
-public class VKGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
+public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	//vulkan buffer information
 	private long gui_render_buffer = 0;
@@ -30,7 +30,7 @@ public class VKGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private long draw_gui_cmd_pool;
 	private VkCommandBuffer draw_gui_cmd_buffer;
 
-	VKGUIRenderer(VkDeviceState state) {
+	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		try(MemoryStack stack = stackPush()) {
 			VkBufferCreateInfo bufferCreateInfo = VkBufferCreateInfo.callocStack(stack);

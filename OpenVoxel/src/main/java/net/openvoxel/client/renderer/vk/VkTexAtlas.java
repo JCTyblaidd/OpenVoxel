@@ -4,7 +4,7 @@ import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.resources.ResourceHandle;
 
-public class VKTexAtlas implements IconAtlas{
+public class VkTexAtlas implements IconAtlas{
 	@Override
 	public Icon register(ResourceHandle handle_diffuse, ResourceHandle handle_normal, ResourceHandle handle_pbr) {
 		return null;

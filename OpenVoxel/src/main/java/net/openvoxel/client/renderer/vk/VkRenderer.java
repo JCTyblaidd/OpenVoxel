@@ -9,6 +9,8 @@ import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.textureatlas.IconAtlas;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Created by James on 28/08/2016.
  *
@@ -19,13 +21,19 @@ public class VkRenderer implements GlobalRenderer {
 	public static Logger vkLog = Logger.getLogger("Vulkan");
 	public static VkRenderer Vkrenderer;
 
-	private VKDisplayHandle displayHandle;
+	private VkDisplayHandle displayHandle;
 	private VkDeviceState deviceState;
 
-	private VKGUIRenderer guiRenderer;
-	private VKWorldRenderer worldRenderer;
+	private VkGUIRenderer guiRenderer;
+	private VkWorldRenderer worldRenderer;
 
-	private VKTexAtlas texAtlas = new VKTexAtlas();//TEMP//
+	private VkTexAtlas texAtlas = new VkTexAtlas();//TEMP//
+
+	private AtomicBoolean needsRegen = new AtomicBoolean();
+
+	public void markAsRegenRequired() {
+		needsRegen.set(true);
+	}
 
 	public VkRenderer() {
 		vkLog.Info("Creating Vulkan Renderer");
@@ -54,15 +62,15 @@ public class VkRenderer implements GlobalRenderer {
 
 	@Override
 	public void loadPreRenderThread() {
-		deviceState = new VkDeviceState();
-		displayHandle = new VKDisplayHandle(deviceState);
-		guiRenderer = new VKGUIRenderer(deviceState);
-		worldRenderer = new VKWorldRenderer();
+		//NO OP//
 	}
 
 	@Override
 	public void loadPostRenderThread() {
-		//NO OP//
+		deviceState = new VkDeviceState();
+		displayHandle = new VkDisplayHandle(deviceState);
+		guiRenderer = new VkGUIRenderer(deviceState);
+		worldRenderer = new VkWorldRenderer();
 	}
 
 	@Override
@@ -70,9 +78,25 @@ public class VkRenderer implements GlobalRenderer {
 		return "spiv";
 	}
 
+
+
+	/**
+	 * Handle split between frames
+	 *
+	 * Swaps between work generation and then this function
+	 *
+	 * [Work Gen] -> Submit -> Present -> Acquire
+	 */
 	@Override
 	public void nextFrame() {
-
+		if(needsRegen.get()) {
+			needsRegen.set(false);
+			deviceState.recreateSwapChain();
+			//TODO: regen resource images & etc
+		}
+		deviceState.submitNewWork();
+		deviceState.presentOnCompletion();
+		deviceState.acquireNextImage();
 	}
 
 	@Override

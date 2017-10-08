@@ -12,11 +12,11 @@ import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
  *
  * Vulkan Display Handle
  */
-public class VKDisplayHandle implements DisplayHandle{
+public class VkDisplayHandle implements DisplayHandle{
 
 	private VkDeviceState state;
 
-	VKDisplayHandle(VkDeviceState deviceState) {
+	VkDisplayHandle(VkDeviceState deviceState) {
 		state = deviceState;
 	}
 

@@ -57,6 +57,7 @@ public class VkDeviceState extends VkRenderManager{
 		initInstance();
 		choosePhysicalDevice();
 		renderDevice.createDevice();
+		initSynchronisation();
 		initSurface();
 		initSwapChain();
 		initMemory();
@@ -67,13 +68,48 @@ public class VkDeviceState extends VkRenderManager{
 		initCommandBuffers();
 	}
 
+
+	public void acquireNextImage() {
+		try(MemoryStack stack = stackPush()) {
+			IntBuffer index = stack.callocInt(1);
+			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,Long.MAX_VALUE,semaphore_image_available,VK_NULL_HANDLE,index);
+			if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+				recreateSwapChain();
+			}else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+				throw new RuntimeException("Failed to get next image");
+			}
+			swapChainImageIndex =  index.get(0);
+		}
+	}
+
+	public void presentOnCompletion() {
+		try(MemoryStack stack = stackPush()) {
+			LongBuffer swapChains = stack.longs(window_swapchain);
+			LongBuffer semaphores = stack.longs(semaphore_render_finished);
+			IntBuffer imageIndices = stack.ints(swapChainImageIndex);
+			VkPresentInfoKHR presentInfo = VkPresentInfoKHR.mallocStack(stack);
+			presentInfo.sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);
+			presentInfo.pNext(VK_NULL_HANDLE);
+			presentInfo.swapchainCount(1);
+			presentInfo.pSwapchains(swapChains);
+			presentInfo.pWaitSemaphores(semaphores);
+			presentInfo.pImageIndices(imageIndices);
+			presentInfo.pResults(null);
+			vkQueuePresentKHR(renderDevice.renderQueue, presentInfo);
+		}
+	}
+
+	public void submitNewWork() {
+		//Vk Queue Submit: TODO//
+	}
+
 	private void create_window() {
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API);
 		glfw_window = glfwCreateWindow(ClientInput.currentWindowWidth.get(), ClientInput.currentWindowHeight.get(), "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
 	}
 
-	public void success(int result,String err) {
+	void success(int result,String err) {
 		if(result != VK_SUCCESS) {
 			vkLogger.Severe(err + " : " + result);
 			throw new RuntimeException(err);
@@ -339,6 +375,7 @@ public class VkDeviceState extends VkRenderManager{
 				success(vkCreateImageView(renderDevice.device, imageViewCreateInfo, null,imageViewResult),"Error Creating SwapChain Image View");
 				swapChainImageViews.put(i,imageViewResult.get(0));
 			}
+			swapChainImageIndex = 0;
 		}
 	}
 
@@ -360,8 +397,7 @@ public class VkDeviceState extends VkRenderManager{
 		}
 	}
 
-	//TODO: implement
-	private void recreateSwapchain() {
+	public void recreateSwapChain() {
 		vkDeviceWaitIdle(renderDevice.device);
 		destroySwapChain();
 		initSwapChain();
@@ -416,6 +452,7 @@ public class VkDeviceState extends VkRenderManager{
 		destroySwapChain();
 		destroyMemory();
 		destroyCommandPools();
+		destroySynchronisation();
 		renderDevice.freeDevice();
 		vkDestroySurfaceKHR(instance,window_surface,null);
 		if(debug_report_callback_ext != VK_NULL_HANDLE) {

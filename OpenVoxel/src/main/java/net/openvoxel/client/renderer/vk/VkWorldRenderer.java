@@ -10,7 +10,7 @@ import net.openvoxel.world.client.ClientWorld;
  *
  * Vulkan World Renderer
  */
-public class VKWorldRenderer implements WorldRenderer{
+public class VkWorldRenderer implements WorldRenderer{
 	@Override
 	public void renderWorld(EntityPlayerSP playerSP, ClientWorld worldSP) {
 

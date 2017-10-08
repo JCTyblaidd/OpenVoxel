@@ -1,12 +1,8 @@
 /**[VK::Vertex]**/
-#version 450
-#pragma shader_stage(vertex)
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
 layout(push_constant, binding = 0) uniform pushData {
     mat3 matrix;
-    float z_offset;
     bool enable_tex;
 } push_data;
 
@@ -21,35 +17,33 @@ void main() {
     UV = uv_coord;
     Col = colour;
     vec4 basePos = vec4(position,1) + vec4(0,0,push_data.z_offset,0);
-     gl_Position = vec4(push_data.matrix * basePos.xyz,1);
+    gl_Position = vec4(push_data.matrix * basePos.xyz,1);
 }
 
 /**[VK::Fragment]**/
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
-#pragma shader_stage(fragment)
+#extension GL_ARB_shading_language_420pack : enable
 
-layout(push_constant, binding = 0) uniform push_data {
+layout(push_constant, binding = 0) uniform pushData {
     mat3 matrix;
-    float z_offset;
     bool enable_tex;
-};
+} push_data;
+
+layout(binding = 1) uniform sampler2D imgSampler;
 
 layout(location = 0) in vec2 UV;
-layout(location  1) in vec4 Col;
+layout(location = 1) in vec4 Col;
 
 layout(location = 0) out vec4 colour;
 
 void main() {
     vec4 res;
-    if(Enable_Tex) {
-        res = texture2D(texture,UV).rgba;
+    if(push_data.enable_tex) {
+        res = texture(imgSampler,UV).rgba;
     }else {
         res = vec4(1,1,1,1);
     }
     res *= Col;
     colour = res;
 }
-
 
 /**[VK::End]**/
