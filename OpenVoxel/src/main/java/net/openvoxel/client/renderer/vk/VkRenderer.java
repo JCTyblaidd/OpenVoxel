@@ -32,10 +32,15 @@ public class VkRenderer implements GlobalRenderer {
 
 	private VkTexAtlas texAtlas = new VkTexAtlas();//TEMP//
 
-	private AtomicBoolean needsRegen = new AtomicBoolean();
+	private AtomicBoolean needsRegen = new AtomicBoolean(false);
+	private AtomicBoolean needsResize = new AtomicBoolean(false);
 
 	public void markAsRegenRequired() {
 		needsRegen.set(true);
+	}
+
+	public void markAsResizeRequired() {
+		needsResize.set(true);
 	}
 
 	public VkRenderer() {
@@ -73,6 +78,7 @@ public class VkRenderer implements GlobalRenderer {
 	public void loadPostRenderThread() {
 		guiRenderer = new VkGUIRenderer(deviceState);
 		worldRenderer = new VkWorldRenderer();
+		deviceState.acquireNextImage();
 	}
 
 	@Override
@@ -91,7 +97,7 @@ public class VkRenderer implements GlobalRenderer {
 	 */
 	@Override
 	public void nextFrame() {
-		if(needsRegen.get()) {
+		if(needsRegen.get() || needsResize.get()) {
 			needsRegen.set(false);
 			deviceState.recreateSwapChain();
 			//TODO: regen resource images & etc

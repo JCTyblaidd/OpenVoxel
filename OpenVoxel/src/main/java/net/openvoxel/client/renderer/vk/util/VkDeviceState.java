@@ -67,7 +67,6 @@ public class VkDeviceState extends VkRenderManager{
 		initGraphicsPipeline();
 		initFrameBuffers();
 		initCommandBuffers();
-		acquireNextImage();
 	}
 
 
@@ -78,33 +77,17 @@ public class VkDeviceState extends VkRenderManager{
 			if(result == VK_ERROR_OUT_OF_DATE_KHR) {
 				recreateSwapChain();
 			}else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+				System.out.println(Integer.toString(result));
 				throw new RuntimeException("Failed to get next image");
 			}
 			swapChainImageIndex =  index.get(0);
 		}
 	}
 
-	public void presentOnCompletion() {
-		try(MemoryStack stack = stackPush()) {
-			LongBuffer swapChains = stack.longs(window_swapchain);
-			LongBuffer semaphores = stack.longs(semaphore_render_finished);
-			IntBuffer imageIndices = stack.ints(swapChainImageIndex);
-			VkPresentInfoKHR presentInfo = VkPresentInfoKHR.mallocStack(stack);
-			presentInfo.sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);
-			presentInfo.pNext(VK_NULL_HANDLE);
-			presentInfo.swapchainCount(1);
-			presentInfo.pSwapchains(swapChains);
-			presentInfo.pWaitSemaphores(semaphores);
-			presentInfo.pImageIndices(imageIndices);
-			presentInfo.pResults(null);
-			vkQueuePresentKHR(renderDevice.renderQueue, presentInfo);
-		}
-	}
-
 	public void submitNewWork() {
 		try(MemoryStack stack = stackPush()) {
 			LongBuffer semaphores = stack.longs(semaphore_image_available);
-			LongBuffer signalSempahores = stack.longs(semaphore_render_finished);
+			LongBuffer signalSemaphores = stack.longs(semaphore_render_finished);
 			PointerBuffer cmdBuffers = stack.pointers(command_buffers_main.get(swapChainImageIndex));
 			IntBuffer waitStages = stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 			VkSubmitInfo submitInfo = VkSubmitInfo.callocStack(stack);
@@ -114,12 +97,33 @@ public class VkDeviceState extends VkRenderManager{
 			submitInfo.waitSemaphoreCount(1);
 			submitInfo.pWaitDstStageMask(waitStages);
 			submitInfo.pCommandBuffers(cmdBuffers);
-			submitInfo.pSignalSemaphores(signalSempahores);
+			submitInfo.pSignalSemaphores(signalSemaphores);
 			if(vkQueueSubmit(renderDevice.renderQueue,submitInfo,VK_NULL_HANDLE) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to submit queue info");
 			}
 		}
 	}
+
+	public void presentOnCompletion() {
+		try(MemoryStack stack = stackPush()) {
+			LongBuffer swapChains = stack.longs(window_swapchain);
+			LongBuffer semaphores = stack.longs(semaphore_render_finished);
+			IntBuffer imageIndices = stack.ints(swapChainImageIndex);
+			VkPresentInfoKHR presentInfo = VkPresentInfoKHR.callocStack(stack);
+			presentInfo.sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);
+			presentInfo.pNext(VK_NULL_HANDLE);
+			presentInfo.swapchainCount(1);
+			presentInfo.pSwapchains(swapChains);
+			presentInfo.pWaitSemaphores(semaphores);
+			presentInfo.pImageIndices(imageIndices);
+			presentInfo.pResults(null);
+			if(vkQueuePresentKHR(renderDevice.renderQueue,presentInfo) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to present queue");
+			}
+			vkQueueWaitIdle(renderDevice.renderQueue);
+		}
+	}
+
 
 	private void create_window() {
 		glfwDefaultWindowHints();
@@ -313,6 +317,30 @@ public class VkDeviceState extends VkRenderManager{
 			}
 			//Choose Present Mode//
 			chosenPresentMode = -1;
+			{
+				vkLogger.Info("Valid Present Modes:");
+				for (int i = 0; i < presentModes.capacity(); i++) {
+					String res;
+					switch (presentModes.get(i)) {
+						case VK_PRESENT_MODE_IMMEDIATE_KHR:
+							res = "Immediate";
+							break;
+						case VK_PRESENT_MODE_FIFO_KHR:
+							res = "FIFO";
+							break;
+						case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+							res = "FIFO Relaxed";
+							break;
+						case VK_PRESENT_MODE_MAILBOX_KHR:
+							res = "Mailbox";
+							break;
+						default:
+							res = "Unknown:{" + presentModes.get(i) + "}";
+							break;
+					}
+					vkLogger.Info(" - " + res);
+				}
+			}
 			for(int i = 0; i < presentModes.capacity(); i++) {
 				if(presentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR) {
 					vkLogger.Info("Present Mode: Mailbox");
@@ -423,7 +451,6 @@ public class VkDeviceState extends VkRenderManager{
 		initGraphicsPipeline();
 		initFrameBuffers();
 		initCommandBuffers();
-		acquireNextImage();//TODO: yes or no
 	}
 
 	private void choosePhysicalDevice() {
@@ -473,8 +500,8 @@ public class VkDeviceState extends VkRenderManager{
 		destroyMemory();
 		destroyCommandPools();
 		destroySynchronisation();
-		renderDevice.freeDevice();
 		vkDestroySurfaceKHR(instance,window_surface,null);
+		renderDevice.freeDevice();
 		if(debug_report_callback_ext != VK_NULL_HANDLE) {
 			vkLogger.Info("Disabling Debug Report");
 			vkDestroyDebugReportCallbackEXT(instance,debug_report_callback_ext,null);

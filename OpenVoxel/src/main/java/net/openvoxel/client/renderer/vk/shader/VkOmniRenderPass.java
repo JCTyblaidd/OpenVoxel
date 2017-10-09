@@ -45,7 +45,7 @@ public class VkOmniRenderPass {
 
 	public void init(VkDevice device, VkRenderConfig config,int swapChainImageFormat) {
 		try(MemoryStack stack = stackPush()) {
-			VkRenderPassCreateInfo createInfo = VkRenderPassCreateInfo.mallocStack(stack);
+			VkRenderPassCreateInfo createInfo = VkRenderPassCreateInfo.callocStack(stack);
 			VkSubpassDependency.Buffer dependencyList = VkSubpassDependency.callocStack(calc_dependency_count(config),stack);
 			VkSubpassDescription.Buffer subPassList = VkSubpassDescription.callocStack(calc_subpass_count(config),stack);
 			VkAttachmentDescription.Buffer attachmentList = VkAttachmentDescription.callocStack(calc_attachment_count(config),stack);
@@ -97,7 +97,7 @@ public class VkOmniRenderPass {
 	}
 
 	private void initDescription(MemoryStack stack,VkSubpassDescription.Buffer buffer,VkRenderConfig config) {
-		VkAttachmentReference.Buffer references = VkAttachmentReference.mallocStack(1,stack);
+		VkAttachmentReference.Buffer references = VkAttachmentReference.callocStack(1,stack);
 		references.position(0);
 		references.attachment(0);
 		references.layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);

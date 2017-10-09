@@ -58,7 +58,7 @@ public abstract class VkShaderPipelineBase {
 			createInfo.renderPass(render_pass);
 			createInfo.subpass(subpass);
 			createInfo.basePipelineHandle(VK_NULL_HANDLE);
-			createInfo.basePipelineIndex(-1);
+			createInfo.basePipelineIndex(0);
 			if(vkCreateGraphicsPipelines(device,pipeline_cache,createInfo,null,lb) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to create shader pipeline");
 			}
@@ -112,6 +112,7 @@ public abstract class VkShaderPipelineBase {
 			shaderStages.pName(stack.UTF8("main"));
 			shaderStages.pSpecializationInfo(getSpecializeInfo(stack));
 		}
+		shaderStages.position(0);
 		cache.release();
 		return shaderStages;
 	}
@@ -147,8 +148,10 @@ public abstract class VkShaderPipelineBase {
 		viewport.y(0.0f);
 		viewport.width(width);
 		viewport.height(height);
-		VkOffset2D offset = VkOffset2D.callocStack(stack);
-		VkExtent2D extent = VkExtent2D.callocStack(stack);
+		viewport.minDepth(0.0F);
+		viewport.maxDepth(1.0F);
+		VkOffset2D offset = VkOffset2D.mallocStack(stack);
+		VkExtent2D extent = VkExtent2D.mallocStack(stack);
 		offset.set(0,0);
 		extent.set(width,height);
 		scissor.offset(offset);
@@ -200,6 +203,7 @@ public abstract class VkShaderPipelineBase {
 		defaultAttach.blendEnable(false);
 		colorBlend.sType(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO);
 		colorBlend.pNext(VK_NULL_HANDLE);
+		colorBlend.flags(0);
 		colorBlend.logicOpEnable(false);
 		colorBlend.logicOp(VK_LOGIC_OP_COPY);
 		colorBlend.pAttachments(defaultAttach);
@@ -213,7 +217,7 @@ public abstract class VkShaderPipelineBase {
 	/**
 	 * Default: no dynamic state
 	 */
-	private VkPipelineDynamicStateCreateInfo genDynamicState(MemoryStack stack) {
+	VkPipelineDynamicStateCreateInfo genDynamicState(MemoryStack stack) {
 		return null;
 	}
 

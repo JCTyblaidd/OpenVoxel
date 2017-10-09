@@ -32,6 +32,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
+		/**
 		try(MemoryStack stack = stackPush()) {
 			VkBufferCreateInfo bufferCreateInfo = VkBufferCreateInfo.callocStack(stack);
 			bufferCreateInfo.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
@@ -58,12 +59,15 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			}
 			init_cmd_buffer(stack);
 		}
+		 **/
 	}
 
 	void cleanup() {
+		/**
 		vkDestroyBuffer(state.renderDevice.device,gui_render_buffer,null);
 		vkFreeMemory(state.renderDevice.device,gui_render_memory,null);
 		vkDestroyCommandPool(state.renderDevice.device,draw_gui_cmd_pool,null);
+		 **/
 	}
 
 	private void init_cmd_buffer(MemoryStack stack) {

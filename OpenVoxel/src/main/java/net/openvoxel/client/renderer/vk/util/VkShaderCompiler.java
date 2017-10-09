@@ -82,7 +82,7 @@ public class VkShaderCompiler {
 	}
 
 	public static byte[] compileSpiv(String source,List<String> defines) {
-		Logger.getLogger("Vk Spiv Compiler").Warning("Compiling using glslc CMD");
+		Logger.getLogger("Vulkan").getSubLogger("SPIR-V Compiler").Warning("Compiling using glslc CMD");
 		fallback_write_source(source);
 		fallback_call_cmd(defines);
 		fallback_clear_source();

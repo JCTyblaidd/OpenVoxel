@@ -158,6 +158,9 @@ public class VkRenderDevice{
 			}else{
 				queueIndexTransfer = 0;
 			}
+		}else{
+			queueIndexTransfer = 0;
+			queueFamilyIndexTransfer = 0;
 		}
 		//Create//
 		VkDeviceQueueCreateInfo.Buffer queueInfo = VkDeviceQueueCreateInfo.callocStack(dualQueue ? 1 : 2, stack);
@@ -168,7 +171,11 @@ public class VkRenderDevice{
 			queueInfo.flags(0);
 			queueInfo.queueFamilyIndex(queueFamilyIndexRender);
 			if(dualQueue) {
-				queueInfo.pQueuePriorities(stack.floats(1.0f,0.0f));
+				if(asyncTransfer) {
+					queueInfo.pQueuePriorities(stack.floats(1.0f, 0.0f));
+				}else{
+					queueInfo.pQueuePriorities(stack.floats(1.0f));
+				}
 			}else {
 				queueInfo.pQueuePriorities(stack.floats(1.0F));
 			}
@@ -204,6 +211,8 @@ public class VkRenderDevice{
 			if(asyncTransfer) {
 				vkGetDeviceQueue(device, queueFamilyIndexTransfer, queueIndexTransfer, pointer);
 				asyncTransferQueue = new VkQueue(pointer.get(0), device);
+			}else{
+				asyncTransferQueue = null;
 			}
 		}
 	}
@@ -242,7 +251,9 @@ public class VkRenderDevice{
 	String getDeviceInfo() {
 		if(properties == null) return null;
 		return properties.deviceNameString() + " : " + VK_VERSION_MAJOR(properties.apiVersion())
-				+ "." + VK_VERSION_MINOR(properties.apiVersion()) + "." + VK_VERSION_PATCH(properties.apiVersion());
+				+ "." + VK_VERSION_MINOR(properties.apiVersion()) + "." + VK_VERSION_PATCH(properties.apiVersion())
+				+ "(driver: " + VK_VERSION_MAJOR(properties.driverVersion()) + "." + VK_VERSION_MINOR(properties.driverVersion())
+				+ "." + VK_VERSION_PATCH(properties.driverVersion()) + ")";
 	}
 
 	void freeInitial() {

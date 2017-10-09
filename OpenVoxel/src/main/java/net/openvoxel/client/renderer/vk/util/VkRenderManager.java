@@ -161,11 +161,13 @@ class VkRenderManager {
 				VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.callocStack(stack);
 				beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
 				beginInfo.flags(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+				beginInfo.pNext(VK_NULL_HANDLE);
 				beginInfo.pInheritanceInfo(null);
 				vkBeginCommandBuffer(cmdBuffer,beginInfo);
 
 				VkRenderPassBeginInfo renderPassInfo = VkRenderPassBeginInfo.callocStack(stack);
 				renderPassInfo.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
+				renderPassInfo.pNext(VK_NULL_HANDLE);
 				renderPassInfo.renderPass(renderPass.render_pass);
 				renderPassInfo.framebuffer(targetFrameBuffers.get(i));
 				VkRect2D screenRect = VkRect2D.callocStack(stack);
@@ -176,8 +178,9 @@ class VkRenderManager {
 				VkClearColorValue clearColorValue = VkClearColorValue.callocStack(stack);
 				clearColorValue.float32(0,0.0f);
 				clearColorValue.float32(1,0.0f);
-				clearColorValue.float32(2,0.0f);
+				clearColorValue.float32(2,0.2f);
 				clearColorValue.float32(3,1.0f);
+				clearValues.color(clearColorValue);
 				renderPassInfo.pClearValues(clearValues);
 
 				vkCmdBeginRenderPass(cmdBuffer,renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -224,7 +227,7 @@ class VkRenderManager {
 	}
 
 	void initGraphicsPipeline() {
-		debugPipeline.init(renderDevice.device,renderPass.render_pass,0,0, List.of());
+		debugPipeline.init(renderDevice.device,renderPass.render_pass,0,0, List.of("DEBUG_VULKAN"));
 	}
 
 	void destroyPipelineAndLayout() {
