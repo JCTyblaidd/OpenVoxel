@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,10 +35,15 @@ public class VkShaderCompiler {
 		}
 	}
 
-	private static void fallback_call_cmd() {
-		ProcessBuilder _builder = new ProcessBuilder(
-				List.of("./glslc","--target-env=vulkan","temp_shaderc_compile.tmp",
+	private static void fallback_call_cmd(List<String> defines) {
+		List<String> cmd_list = new ArrayList<>();
+		cmd_list.addAll(List.of("./glslc","--target-env=vulkan"));
+		for(String define : defines) {
+			cmd_list.add("-D"+define);
+		}
+		cmd_list.addAll(List.of("temp_shaderc_compile.tmp",
 						"-o","temp_shaderc_result.tmp.spivasm"));
+		ProcessBuilder _builder = new ProcessBuilder(cmd_list);
 		_builder.directory(new File("temp.tmp").getAbsoluteFile().getParentFile());
 		_builder.redirectErrorStream(true);
 		try {
@@ -75,10 +81,10 @@ public class VkShaderCompiler {
 		return data;
 	}
 
-	public static byte[] compileSpiv(String source) {
+	public static byte[] compileSpiv(String source,List<String> defines) {
 		Logger.getLogger("Vk Spiv Compiler").Warning("Compiling using glslc CMD");
 		fallback_write_source(source);
-		fallback_call_cmd();
+		fallback_call_cmd(defines);
 		fallback_clear_source();
 		return fallback_read_source();
 	}

@@ -239,6 +239,16 @@ public class OpenVoxel implements EventListener{
 		eventBus = new EventBus();
 		eventBus.register(this);
 		openVoxelLogger = Logger.getLogger("Open Voxel");
+		//Quick Config Settup//
+		if(args.hasFlag("debugAll")) {
+			openVoxelLogger.Info("Enabling All Debug Code");
+			args.storeRuntimeFlag("debugChecks");
+			args.storeRuntimeFlag("vkDebug");
+			args.storeRuntimeFlag("vkDebugDetailed");
+			args.storeRuntimeFlag("glDebug");
+		}else if(args.hasFlag("perfAll")) {
+			args.storeRuntimeFlag("noChecks");
+		}
 		//Configure Debug Settings//
 		if(args.hasFlag("noChecks")) {
 			openVoxelLogger.Info("Enabled Minimal Checking Mode");
@@ -247,15 +257,13 @@ public class OpenVoxel implements EventListener{
 		}else if(args.hasFlag("debugChecks")) {
 			openVoxelLogger.Info("Enabled Maximum Debug Mode");
 			System.setProperty("org.lwjgl.util.Debug","true");
-			if(!args.hasFlag("noDebugAllocator")) {
-				args.storeRuntimeFlag("debugAllocator");
-			}
+			args.storeRuntimeFlag("debugAllocator");
 			openVoxelLogger.Info("Enabling Debugging Logging");
 			args.storeRuntimeFlag("bonusLogging");
 		}
 		if(args.hasFlag("debugAllocator")) {
 			openVoxelLogger.Info("Enabled LWJGL Debug Memory Allocator");
-			//System.setProperty("org.lwjgl.util.DebugAllocator","true");
+			System.setProperty("org.lwjgl.util.DebugAllocator","true");
 		}
 		openVoxelLogger.Info("Loaded Open Voxel "+currentVersion.getValString());
 		if(args.hasFlag("bonusLogging")) {
@@ -298,8 +306,10 @@ public class OpenVoxel implements EventListener{
 			currentServer.start(2500);
 		}else{
 			blockRegistry.generateMappingsFromRaw();
-			currentClientServer = new BackgroundClientServer();
-			currentClientServer.start();
+			if(!args.hasFlag("noBackgroundWorld")) {
+				currentClientServer = new BackgroundClientServer();
+				currentClientServer.start();
+			}
 			GUI.addScreen(new ScreenMainMenu());
 		}
 		//Convert Bootstrap Thread Into InputPollThread if clientSide ELSE end the thread//
@@ -334,6 +344,7 @@ public class OpenVoxel implements EventListener{
 					currentClientServer.disconnect();
 				}
 				RenderThread.awaitTermination();
+				GLFWLogWrapper.Unload();
 			}
 			try{
 				Thread.sleep(3000);//TODO: await more efficiently

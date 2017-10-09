@@ -29,6 +29,13 @@ public class GLFWLogWrapper extends GLFWErrorCallback{
 		glfwSetErrorCallback(get());
 	}
 
+	public static void Unload() {
+		if(INSTANCE != null) {
+			INSTANCE.free();
+			INSTANCE = null;
+		}
+	}
+
 	private static String getErr(int err) {
 		switch (err) {
 			case GLFW_NOT_INITIALIZED:

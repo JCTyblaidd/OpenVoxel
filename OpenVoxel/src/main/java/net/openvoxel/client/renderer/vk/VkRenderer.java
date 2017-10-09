@@ -1,6 +1,8 @@
 package net.openvoxel.client.renderer.vk;
 
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.client.gui_framework.GUI;
+import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
@@ -9,6 +11,7 @@ import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.textureatlas.IconAtlas;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -62,20 +65,19 @@ public class VkRenderer implements GlobalRenderer {
 
 	@Override
 	public void loadPreRenderThread() {
-		//NO OP//
+		deviceState = new VkDeviceState();
+		displayHandle = new VkDisplayHandle(deviceState);
 	}
 
 	@Override
 	public void loadPostRenderThread() {
-		deviceState = new VkDeviceState();
-		displayHandle = new VkDisplayHandle(deviceState);
 		guiRenderer = new VkGUIRenderer(deviceState);
 		worldRenderer = new VkWorldRenderer();
 	}
 
 	@Override
 	public String getShaderPostfix() {
-		return "spiv";
+		return "vksl";
 	}
 
 
@@ -109,5 +111,10 @@ public class VkRenderer implements GlobalRenderer {
 	@Override
 	public IconAtlas getBlockAtlas() {
 		return texAtlas;
+	}
+
+	@Override
+	public Screen getGUIConfigElements() {
+		return null;
 	}
 }

@@ -49,9 +49,9 @@ public class VkRenderDevice{
 		vkGetPhysicalDeviceFeatures(physicalDevice,deviceFeatures);
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice,memoryProperties);
 		vkGetPhysicalDeviceProperties(physicalDevice,properties);
-		IntBuffer buffer = MemoryUtil.memAllocInt(1);
+		int[] buffer = new int[1];
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,buffer,null);
-		queueFamilyProperties = VkQueueFamilyProperties.calloc(buffer.get(0));
+		queueFamilyProperties = VkQueueFamilyProperties.calloc(buffer[0]);
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,buffer,queueFamilyProperties);
 	}
 
@@ -64,17 +64,17 @@ public class VkRenderDevice{
 		List<ByteBuffer> enabledLayers = new ArrayList<>();
 		for(int i = 0; i < sizeRef.get(0); i++) {
 			layerPropertyList.position(i);
-			if(state.vulkanDebug) {
+			if(VkDeviceState.vulkanDebug) {
 				state.vkLogger.Debug("Device Layer: " + layerPropertyList.layerNameString());
 			}
-			if(state.vulkanDebug) {
+			if(VkDeviceState.vulkanDebug) {
 				if(layerPropertyList.layerNameString().equals("VK_LAYER_LUNARG_standard_validation")) {
 					enabledLayers.add(layerPropertyList.layerName());
 					state.vkLogger.Info("Enabled Device Standard Validation Layer");
 					continue;
 				}
 			}
-			if(state.vulkanRenderDoc) {
+			if(VkDeviceState.vulkanRenderDoc) {
 				if(layerPropertyList.layerNameString().equals("VK_LAYER_RENDERDOC_Capture")) {
 					enabledLayers.add(layerPropertyList.layerName());
 					state.vkLogger.Info("Enabled Device RenderDoc Layer");
@@ -103,10 +103,10 @@ public class VkRenderDevice{
 		enabledExtensions.add(stack.UTF8("VK_KHR_swapchain"));
 		for(int i = 0; i < sizeRef.get(0); i++) {
 			extensionPropertyList.position(i);
-			if(state.vulkanDebug) {
+			if(VkDeviceState.vulkanDebug) {
 				state.vkLogger.Debug("Device Extension: " + extensionPropertyList.extensionNameString());
 			}
-			if(state.vulkanDebug) {
+			if(VkDeviceState.vulkanDebug) {
 				if(extensionPropertyList.extensionNameString().equals("VK_EXT_debug_marker")) {
 					enabledExtensions.add(extensionPropertyList.extensionName());
 					state.vkLogger.Debug("Enabled Debug Marker");

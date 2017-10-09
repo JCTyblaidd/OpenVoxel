@@ -61,6 +61,7 @@ public class ArgumentParser {
 	}
 
 	public void storeRuntimeFlag(String flagID) {
+		flags.remove(flagID);
 		flags.add(flagID);
 	}
 	public void storeRuntimeMapping(String key,Object value) {

@@ -4,6 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.gui.ScreenDebugInfo;
+import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
@@ -251,5 +252,10 @@ public class OGL3Renderer implements GlobalRenderer{
 	@Override
 	public IconAtlas getBlockAtlas() {
 		return blockAtlas;
+	}
+
+	@Override
+	public Screen getGUIConfigElements() {
+		return null;
 	}
 }

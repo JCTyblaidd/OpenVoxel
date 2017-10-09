@@ -30,7 +30,6 @@ public class ScreenSettings extends Screen{
 	public ScreenSettings() {
 		background = new GUIColour(0xFF000000,0x00000000,false);
 		setting_foV = new GUISlider(10,160,110,(fov) -> "FOV: " + fov);
-		setting_foV.setUpdateFunc((slider,fov) -> {});
 		settings_audio = new GUIButton("Audio Settings");
 		settings_input = new GUIButton("Input Settings");
 		settings_renderer = new GUIButton("Graphics Settings");

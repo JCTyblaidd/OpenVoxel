@@ -1,0 +1,6 @@
+glslc
+config/
+crash_reports/
+logs/
+save/
+stats/

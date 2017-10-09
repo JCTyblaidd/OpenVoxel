@@ -46,13 +46,15 @@ public class VkDeviceState extends VkRenderManager{
 	static boolean vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
 
 	/*Surface and SwapChain Information*/
-	private VkSurfaceCapabilitiesKHR surfaceCapabilities = VkSurfaceCapabilitiesKHR.calloc();
+	private VkSurfaceCapabilitiesKHR surfaceCapabilities;
 	public VkSurfaceFormatKHR.Buffer surfaceFormats;
 	public IntBuffer presentModes;
 
 
 	public VkDeviceState() {
 		vkLogger = Logger.getLogger("Vulkan");
+		swapExtent = VkExtent2D.calloc();
+		surfaceCapabilities = VkSurfaceCapabilitiesKHR.calloc();
 		create_window();
 		initInstance();
 		choosePhysicalDevice();
@@ -62,10 +64,10 @@ public class VkDeviceState extends VkRenderManager{
 		initSwapChain();
 		initMemory();
 		initRenderPasses();
-		initRenderPasses();
 		initGraphicsPipeline();
 		initFrameBuffers();
 		initCommandBuffers();
+		acquireNextImage();
 	}
 
 
@@ -100,7 +102,23 @@ public class VkDeviceState extends VkRenderManager{
 	}
 
 	public void submitNewWork() {
-		//Vk Queue Submit: TODO//
+		try(MemoryStack stack = stackPush()) {
+			LongBuffer semaphores = stack.longs(semaphore_image_available);
+			LongBuffer signalSempahores = stack.longs(semaphore_render_finished);
+			PointerBuffer cmdBuffers = stack.pointers(command_buffers_main.get(swapChainImageIndex));
+			IntBuffer waitStages = stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+			VkSubmitInfo submitInfo = VkSubmitInfo.callocStack(stack);
+			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
+			submitInfo.pNext(VK_NULL_HANDLE);
+			submitInfo.pWaitSemaphores(semaphores);
+			submitInfo.waitSemaphoreCount(1);
+			submitInfo.pWaitDstStageMask(waitStages);
+			submitInfo.pCommandBuffers(cmdBuffers);
+			submitInfo.pSignalSemaphores(signalSempahores);
+			if(vkQueueSubmit(renderDevice.renderQueue,submitInfo,VK_NULL_HANDLE) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to submit queue info");
+			}
+		}
 	}
 
 	private void create_window() {
@@ -382,9 +400,9 @@ public class VkDeviceState extends VkRenderManager{
 	private void destroySwapChain() {
 		try(MemoryStack stack = stackPush()) {
 			destroyFrameBuffers();
-			destroyCommandBuffers(stack);
-			destroyPipelineAndLayout(stack);
-			destroyRenderPasses(stack);
+			destroyPipelineAndLayout();
+			destroyRenderPasses();
+			destroyCommandBuffers();
 			for(int i = 0; i < swapChainImageViews.capacity();i++) {
 				vkDestroyImageView(renderDevice.device,swapChainImageViews.get(i),null);
 			}
@@ -405,6 +423,7 @@ public class VkDeviceState extends VkRenderManager{
 		initGraphicsPipeline();
 		initFrameBuffers();
 		initCommandBuffers();
+		acquireNextImage();//TODO: yes or no
 	}
 
 	private void choosePhysicalDevice() {
@@ -449,6 +468,7 @@ public class VkDeviceState extends VkRenderManager{
 
 
 	public void terminateAndFree() {
+		vkDeviceWaitIdle(renderDevice.device);
 		destroySwapChain();
 		destroyMemory();
 		destroyCommandPools();
@@ -458,11 +478,15 @@ public class VkDeviceState extends VkRenderManager{
 		if(debug_report_callback_ext != VK_NULL_HANDLE) {
 			vkLogger.Info("Disabling Debug Report");
 			vkDestroyDebugReportCallbackEXT(instance,debug_report_callback_ext,null);
+			VkLogUtil.Cleanup();
 		}
 		vkLogger.Info("Destroying Instance");
 		vkDestroyInstance(instance,null);
 		glfwDestroyWindow(glfw_window);
 		glfwTerminate();
+		vkLogger.Info("Cleaning Up Memory");
+		surfaceCapabilities.free();
+		swapExtent.free();
 	}
 
 }

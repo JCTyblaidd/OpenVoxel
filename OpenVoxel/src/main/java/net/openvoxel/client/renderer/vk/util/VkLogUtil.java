@@ -22,9 +22,10 @@ import static org.lwjgl.vulkan.VK10.VK_SUCCESS;
 public class VkLogUtil extends VkDebugReportCallbackEXT{
 
 	private Logger vulkanLogger = Logger.getLogger("Vulkan").getSubLogger("Debug Report");
-	private static VkLogUtil instance = new VkLogUtil();
+	private static VkLogUtil instance;
 
 	public static long Init(VkInstance vkInstance,boolean enableDetail) {
+		instance = new VkLogUtil();
 		try(MemoryStack stack = stackPush()) {
 			VkDebugReportCallbackCreateInfoEXT createInfoEXT = VkDebugReportCallbackCreateInfoEXT.mallocStack(stack);
 			createInfoEXT.sType(VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT);
@@ -48,11 +49,17 @@ public class VkLogUtil extends VkDebugReportCallbackEXT{
 		}
 	}
 
+	public static void Cleanup() {
+		instance.free();
+	}
+
 	@Override
 	public int invoke(int flags, int objectType, long object, long location, int messageCode, long pLayerPrefix, long pMessage, long pUserData) {
 		String message = getString(pMessage);
 		if((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0) {
 			vulkanLogger.Severe(message);
+			vulkanLogger.Severe("Detected Vulkan Error : Terminating");
+			System.exit(0);
 		}else if((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0 || (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0) {
 			vulkanLogger.Warning(message);
 		}else if((flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) != 0) {
