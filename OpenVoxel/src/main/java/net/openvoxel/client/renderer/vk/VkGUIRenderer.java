@@ -16,6 +16,7 @@ import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.Random;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
@@ -38,6 +39,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private int screenHeight;
 	private int drawCount;
 	private ByteBuffer memMap;
+
 
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
@@ -154,12 +156,6 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	public void SetMatrix(Matrix4f mat) {
 		//TODO
 	}
-
-	@Override
-	public void EnableColour(boolean enabled) {
-		//TODO
-	}
-
 
 	@Override
 	public void Vertex(float x, float y) {

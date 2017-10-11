@@ -27,7 +27,6 @@ public interface GUIRenderer {
 		void SetTexture(ResourceHandle handle);
 		void EnableTexture(boolean enabled);//Reset On Begin() to true
 		void SetMatrix(Matrix4f mat);//Reset On Begin() to identity
-		void EnableColour(boolean enabled);//Reset On Begin() to false
 		//void SetZ(float zPos);
 		void Vertex(float x, float y);
 		//void Vertex(float x, float y, float z);

@@ -50,11 +50,12 @@ public class ResizedGUIHandleWrapper implements GUIRenderer.GUITessellator{
 	public void SetMatrix(Matrix4f mat) {
 		tessellator.SetMatrix(mat);
 	}
-
+/**
 	@Override
 	public void EnableColour(boolean enabled) {
 		tessellator.EnableColour(enabled);
 	}
+	**/
 /**
 	@Override
 	public void SetZ(float zPos) {

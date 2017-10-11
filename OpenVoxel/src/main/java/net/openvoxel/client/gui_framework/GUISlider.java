@@ -86,7 +86,6 @@ public class GUISlider extends GUIObjectSizable{
 		final float X2 = X1 + getScrollbarWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
 		drawHandle.Begin();
-		drawHandle.EnableColour(true);
 		drawHandle.EnableTexture(true);
 		drawHandle.SetTexture(texBar);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,col);

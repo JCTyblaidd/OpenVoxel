@@ -158,11 +158,12 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 		Enable_Texture = enabled;
 	}
 
-
+/**
 	@Override
 	public void EnableColour(boolean enabled) {
 		Enable_Colour = enabled;
 	}
+	**/
 /**
 	@Override
 	public void SetZ(float zPos) {

@@ -70,6 +70,30 @@ public class VkShaderPipelineGUI extends VkShaderPipelineBase {
 		return rasterizer;
 	}
 
+	VkPipelineColorBlendStateCreateInfo genColorBlendState(MemoryStack stack) {
+		VkPipelineColorBlendStateCreateInfo colorBlend =  VkPipelineColorBlendStateCreateInfo.mallocStack(stack);
+		VkPipelineColorBlendAttachmentState.Buffer defaultAttach = VkPipelineColorBlendAttachmentState.callocStack(1,stack);
+		defaultAttach.colorWriteMask(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+		defaultAttach.blendEnable(true);
+		defaultAttach.srcColorBlendFactor(VK_BLEND_FACTOR_SRC_ALPHA);
+		defaultAttach.dstColorBlendFactor(VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+		defaultAttach.colorBlendOp(VK_BLEND_OP_ADD);
+		defaultAttach.srcAlphaBlendFactor(VK_BLEND_FACTOR_ONE);
+		defaultAttach.dstAlphaBlendFactor(VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+		defaultAttach.alphaBlendOp(VK_BLEND_OP_ADD);
+		colorBlend.sType(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO);
+		colorBlend.pNext(VK_NULL_HANDLE);
+		colorBlend.flags(0);
+		colorBlend.logicOpEnable(false);
+		colorBlend.logicOp(VK_LOGIC_OP_COPY);
+		colorBlend.pAttachments(defaultAttach);
+		colorBlend.blendConstants(0, 0.0f);
+		colorBlend.blendConstants(1, 0.0f);
+		colorBlend.blendConstants(2, 0.0f);
+		colorBlend.blendConstants(3, 0.0f);
+		return colorBlend;
+	}
+
 	@Override
 	VkPipelineLayoutCreateInfo genPipelineLayout(MemoryStack stack) {
 		VkPipelineLayoutCreateInfo layoutCreateInfo = VkPipelineLayoutCreateInfo.mallocStack(stack);

@@ -44,7 +44,6 @@ public abstract class GUIObjectSizable extends GUIObject{
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
 		drawHandle.Begin();
-		drawHandle.EnableColour(true);
 		drawHandle.EnableTexture(Image != null);
 		if(Image != null) {
 			drawHandle.SetTexture(Image);

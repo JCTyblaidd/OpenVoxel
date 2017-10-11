@@ -35,14 +35,13 @@ public class GUIVScrollArea extends GUIObjectSizable {
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
 		drawHandle.Begin();
-		drawHandle.EnableColour(true);
 		drawHandle.EnableTexture(false);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,0xFFFFFFFF);
-		drawHandle.VertexWithColUV(X1,Y2,0,1,0xFFFFFFFF);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,0xFFFFFFFF);
-		drawHandle.VertexWithColUV(X2,Y1,1,0,0xFFFFFFFF);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,0xFFFFFFFF);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,0xFFFFFFFF);
+		drawHandle.VertexWithUV(X2,Y2,1,1);
+		drawHandle.VertexWithUV(X1,Y2,0,1);
+		drawHandle.VertexWithUV(X1,Y1,0,0);
+		drawHandle.VertexWithUV(X2,Y1,1,0);
+		drawHandle.VertexWithUV(X2,Y2,1,1);
+		drawHandle.VertexWithUV(X1,Y1,0,0);
 		drawHandle.Draw();
 	}
 

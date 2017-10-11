@@ -39,7 +39,6 @@ public class GUIColour extends GUIObjectSizable{
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
 		drawHandle.Begin();
-		drawHandle.EnableColour(true);
 		drawHandle.EnableTexture(false);
 
 		drawHandle.VertexWithColUV(X2,Y2,1,1,Col_mm);

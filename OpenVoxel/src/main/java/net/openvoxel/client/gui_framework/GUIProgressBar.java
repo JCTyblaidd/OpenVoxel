@@ -36,7 +36,6 @@ public class GUIProgressBar extends GUIObjectSizable{
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
 		drawHandle.Begin();
-		drawHandle.EnableColour(true);
 		drawHandle.EnableTexture(false);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,0xFFFFFFFF);
 		drawHandle.VertexWithColUV(X1,Y2,0,1,0xFFFFFFFF);
@@ -55,7 +54,6 @@ public class GUIProgressBar extends GUIObjectSizable{
 		final float YI1 = Y1 + dY;
 		final float YI2 = Y2 - dY;
 		drawHandle.Begin();
-		drawHandle.EnableColour(true);
 		drawHandle.EnableTexture(false);
 		drawHandle.VertexWithColUV(XI2,YI2,1,1,0xFFAAAAAA);
 		drawHandle.VertexWithColUV(XI1,YI2,0,1,0xFFAAAAAA);

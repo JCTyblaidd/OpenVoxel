@@ -196,7 +196,7 @@ public abstract class VkShaderPipelineBase {
 	/**
 	 * Default: Overwrite & one target
 	 */
-	private VkPipelineColorBlendStateCreateInfo genColorBlendState(MemoryStack stack) {
+	VkPipelineColorBlendStateCreateInfo genColorBlendState(MemoryStack stack) {
 		VkPipelineColorBlendStateCreateInfo colorBlend =  VkPipelineColorBlendStateCreateInfo.mallocStack(stack);
 		VkPipelineColorBlendAttachmentState.Buffer defaultAttach = VkPipelineColorBlendAttachmentState.callocStack(1,stack);
 		defaultAttach.colorWriteMask(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);

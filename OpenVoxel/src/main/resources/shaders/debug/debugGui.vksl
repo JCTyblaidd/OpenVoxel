@@ -12,6 +12,8 @@ layout(location = 0) out vec2 frag_UV;
 layout(location = 1) out vec4 frag_Col;
 
 void main() {
+    frag_UV = uv_coord;
+    frag_Col = col_input;
     gl_Position = vec4(position,0.0,1.0);
 }
 
@@ -23,7 +25,7 @@ layout(location = 1) in vec4 frag_Col;
 layout(location = 0) out vec4 colour;
 
 void main() {
-    colour = frag_Col * vec4(frag_UV,1.0,1.0);
+    colour = frag_Col;
 }
 
 /**[VK::End]**/
