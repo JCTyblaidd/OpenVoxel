@@ -90,6 +90,8 @@ public class VkMemoryManager {
 		createInfo.flags(0);
 		createInfo.sharingMode(VK_SHARING_MODE_EXCLUSIVE);
 		createInfo.pQueueFamilyIndices(null);
+		//createInfo.sharingMode(VK_SHARING_MODE_CONCURRENT);
+		//createInfo.pQueueFamilyIndices(stack.ints(state.renderDevice.queueFamilyIndexRender,state.renderDevice.queueFamilyIndexTransfer));
 		createInfo.usage(usage);
 		createInfo.size(size);
 		if(vkCreateBuffer(state.renderDevice.device,createInfo,null,returnValue) != VK_SUCCESS) {
@@ -129,7 +131,7 @@ public class VkMemoryManager {
 		if(vkMapMemory(state.renderDevice.device,memoryHandle,offset,size,0,pBuffer) != VK_SUCCESS) {
 			throw new RuntimeException("Failed to map memory");
 		}
-		return MemoryUtil.memByteBuffer(pBuffer.get(0),size);
+		return pBuffer.getByteBuffer(0,size);
 	}
 
 	public void unMapMemory(long memoryHandle) {

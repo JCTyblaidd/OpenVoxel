@@ -83,7 +83,7 @@ public class VkRenderer implements GlobalRenderer {
 	public void loadPostRenderThread() {
 		guiRenderer = new VkGUIRenderer(deviceState);
 		worldRenderer = new VkWorldRenderer();
-		deviceState.acquireNextImage();
+		deviceState.acquireNextImage(true);
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class VkRenderer implements GlobalRenderer {
 			deviceState.recreateSwapChain();
 			//TODO: regen resource images & etc
 		}
-		deviceState.acquireNextImage();
+		deviceState.acquireNextImage(false);
 	}
 
 	@Override

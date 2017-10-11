@@ -38,11 +38,8 @@ public class VkRenderDevice{
 	public boolean asyncTransfer;
 
 	/*State Information About Queues*/
-	public int queueIndexRender;
+	public int queueIndexRender, queueFamilyIndexRender;
 	public int queueFamilyIndexTransfer, queueIndexTransfer;
-
-
-	int queueFamilyIndexRender;//needed for surface check TODO: remove
 
 	VkRenderDevice(VkDeviceState state,long handle) {
 		this.state = state;
@@ -209,11 +206,14 @@ public class VkRenderDevice{
 			device = new VkDevice(pointer.get(0),physicalDevice,createInfo);
 			vkGetDeviceQueue(device,queueFamilyIndexRender,queueIndexRender,pointer);
 			renderQueue = new VkQueue(pointer.get(0),device);
+			state.vkLogger.Info("Acquired Rendering Queue");
 			if(asyncTransfer) {
 				vkGetDeviceQueue(device, queueFamilyIndexTransfer, queueIndexTransfer, pointer);
 				asyncTransferQueue = new VkQueue(pointer.get(0), device);
+				state.vkLogger.Info("Acquired Transfer Queue");
 			}else{
-				asyncTransferQueue = null;
+				state.vkLogger.Info("Doubling up render queue as async transfer queue");
+				asyncTransferQueue = renderQueue;
 			}
 		}
 	}

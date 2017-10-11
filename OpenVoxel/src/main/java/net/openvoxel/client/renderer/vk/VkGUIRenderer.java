@@ -1,21 +1,17 @@
 package net.openvoxel.client.renderer.vk;
 
-import com.jc.util.reflection.ReflectedUnsafe;
 import net.openvoxel.client.ClientInput;
-import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.renderer.vk.util.VkMemoryManager;
 import net.openvoxel.common.resources.ResourceHandle;
 import org.joml.Matrix4f;
-import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
 import java.util.Random;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
@@ -38,17 +34,16 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private int screenWidth;
 	private int screenHeight;
 	private int drawCount;
-	private ByteBuffer memMap;
+	private ByteBuffer writeTarget;
 
-	private Random debug = new Random();
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		this.mgr = state.memoryMgr;
-		memMap = MemoryUtil.memAlloc(GUI_BUFFER_SIZE);
+		writeTarget = MemoryUtil.memAlloc(GUI_BUFFER_SIZE);
 	}
 
 	void cleanup() {
-		MemoryUtil.memFree(memMap);
+		MemoryUtil.memFree(writeTarget);
 	}
 
 	@Override
@@ -67,6 +62,17 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	public void finishDraw() {
 		try(MemoryStack stack = stackPush()) {
 
+			VkBufferMemoryBarrier.Buffer memoryBarrier = VkBufferMemoryBarrier.mallocStack(1,stack);
+			memoryBarrier.sType(VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER);
+			memoryBarrier.pNext(VK_NULL_HANDLE);
+			memoryBarrier.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+			memoryBarrier.dstAccessMask(VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+			memoryBarrier.srcQueueFamilyIndex(state.renderDevice.queueFamilyIndexTransfer);
+			memoryBarrier.dstQueueFamilyIndex(state.renderDevice.queueFamilyIndexRender);
+			memoryBarrier.offset(0);
+			memoryBarrier.size(drawCount);
+			memoryBarrier.buffer(mgr.memGuiStaging.get(0));
+
 			VkCommandBuffer transferBuffer = new VkCommandBuffer(state.command_buffers_gui_transfer.get(state.swapChainImageIndex),state.renderDevice.device);
 			vkResetCommandBuffer(transferBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
@@ -78,8 +84,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 			if(drawCount != 0) {
 				ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE, stack);
+				writeTarget.position(0);
+				memMapping.put(writeTarget);
 				memMapping.position(0);
-				memMapping.put(this.memMap);
 				mgr.unMapMemory(mgr.memGuiStaging.get(1));
 
 				VkBufferCopy.Buffer copyInfo = VkBufferCopy.mallocStack(1, stack);
@@ -88,6 +95,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				copyInfo.size(drawCount);
 				vkCmdCopyBuffer(transferBuffer, mgr.memGuiStaging.get(0), mgr.memGuiDrawing.get(0), copyInfo);
 			}
+
 
 			if(vkEndCommandBuffer(transferBuffer) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to record transfer buffer");
@@ -107,6 +115,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			beginInfo.pInheritanceInfo(inheritance);
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
 			vkBeginCommandBuffer(cmdBuffer,beginInfo);
+
+			vkCmdPipelineBarrier(cmdBuffer,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,0
+				,null,memoryBarrier,null);
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state.guiPipeline.graphics_pipeline);
 
@@ -175,15 +186,11 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void VertexWithColUV(float x, float y, float u, float v, int RGB) {
-		float xTrans = debug.nextFloat() * 0.01F;
-		x = x + xTrans;
-		float yTrans = debug.nextFloat() * 0.01F;
-		y = y + yTrans;
-		memMap.putFloat(drawCount,x*2-1);
-		memMap.putFloat(drawCount+4,y*2-1);
-		memMap.putFloat(drawCount+8,u);
-		memMap.putFloat(drawCount+12,v);
-		memMap.putInt(drawCount+16,RGB);
+		writeTarget.putFloat(drawCount,x*2-1);
+		writeTarget.putFloat(drawCount+4,y*2-1);
+		writeTarget.putFloat(drawCount+8,u);
+		writeTarget.putFloat(drawCount+12,v);
+		writeTarget.putInt(drawCount+16,RGB);
 		drawCount += GUI_ELEMENT_SIZE;
 	}
 

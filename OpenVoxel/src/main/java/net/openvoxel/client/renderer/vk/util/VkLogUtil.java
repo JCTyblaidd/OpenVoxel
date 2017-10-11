@@ -10,9 +10,7 @@ import java.nio.LongBuffer;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.EXTDebugReport.*;
-import static org.lwjgl.vulkan.VK10.VK_FALSE;
-import static org.lwjgl.vulkan.VK10.VK_NULL_HANDLE;
-import static org.lwjgl.vulkan.VK10.VK_SUCCESS;
+import static org.lwjgl.vulkan.VK10.*;
 
 /**
  * Created by James on 16/04/2017.
@@ -52,11 +50,51 @@ public class VkLogUtil extends VkDebugReportCallbackEXT{
 		instance.free();
 	}
 
+	private String get_object_type(int type) {
+		switch (type) {
+			case VK_OBJECT_TYPE_BUFFER:                     return "Buffer";
+			case VK_OBJECT_TYPE_BUFFER_VIEW:                return "Buffer-View";
+			case VK_OBJECT_TYPE_COMMAND_BUFFER:             return "Command-Buffer";
+			case VK_OBJECT_TYPE_COMMAND_POOL:               return "Command-Pool";
+			case VK_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT:  return "Debug-Report-Callback";
+			case VK_OBJECT_TYPE_DESCRIPTOR_POOL:            return "Descriptor-Pool";
+			case VK_OBJECT_TYPE_DESCRIPTOR_SET:             return "Descriptor-Set";
+			case VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT:      return "Descriptor-Set-Layout";
+			case VK_OBJECT_TYPE_DEVICE:                     return "Device";
+			case VK_OBJECT_TYPE_DEVICE_MEMORY:              return "Device-Memory";
+			case VK_OBJECT_TYPE_EVENT:                      return "Event";
+			case VK_OBJECT_TYPE_FENCE:                      return "Fence";
+			case VK_OBJECT_TYPE_FRAMEBUFFER:                return "FrameBuffer";
+			case VK_OBJECT_TYPE_IMAGE:                      return "Image";
+			case VK_OBJECT_TYPE_IMAGE_VIEW:                 return "Image-View";
+			case VK_OBJECT_TYPE_INSTANCE:                   return "Instance";
+			case VK_OBJECT_TYPE_PHYSICAL_DEVICE:            return "Physical-Device";
+			case VK_OBJECT_TYPE_PIPELINE:                   return "Pipeline";
+			case VK_OBJECT_TYPE_PIPELINE_CACHE:             return "Pipeline-Cache";
+			case VK_OBJECT_TYPE_PIPELINE_LAYOUT:            return "Pipeline-Layout";
+			case VK_OBJECT_TYPE_QUERY_POOL:                 return "Query-Pool";
+			case VK_OBJECT_TYPE_QUEUE:                      return "Queue";
+			case VK_OBJECT_TYPE_RENDER_PASS:                return "Render-Pass";
+			case VK_OBJECT_TYPE_SAMPLER:                    return "Sampler";
+			case VK_OBJECT_TYPE_SEMAPHORE:                  return "Semaphore";
+			case VK_OBJECT_TYPE_SHADER_MODULE:              return "Shader-Module";
+			case VK_OBJECT_TYPE_UNKNOWN:                    return "Unknown";
+		}
+		return "Invalid-Type";
+	}
+
 	@Override
 	public int invoke(int flags, int objectType, long object, long location, int messageCode, long pLayerPrefix, long pMessage, long pUserData) {
 		String message = getString(pMessage);
 		if((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0) {
+			if(objectType == VK_OBJECT_TYPE_COMMAND_BUFFER && message.startsWith("vkCmdPipelineBarrier():")) {
+				return VK_FALSE;
+			}
+			if(objectType == VK_OBJECT_TYPE_RENDER_PASS && message.startsWith("vkCmdPipelineBarrier():")) {
+				return VK_FALSE;
+			}
 			vulkanLogger.Severe(message);
+			vulkanLogger.Severe(get_object_type(objectType));
 			vulkanLogger.Severe("Detected Vulkan Error : Terminating");
 			System.exit(0);
 		}else if((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0 || (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0) {

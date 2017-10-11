@@ -67,7 +67,7 @@ public class VkOmniRenderPass {
 	}
 
 	private int calc_dependency_count(VkRenderConfig config) {
-		return 1;
+		return 2;
 	}
 
 	private int calc_subpass_count(VkRenderConfig config) {
@@ -94,6 +94,15 @@ public class VkOmniRenderPass {
 		buffer.srcAccessMask(0);
 		buffer.dstStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 		buffer.dstAccessMask(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+		buffer.dependencyFlags(0);
+
+		buffer.position(1);
+		buffer.srcSubpass(VK_SUBPASS_EXTERNAL);
+		buffer.dstSubpass(0);
+		buffer.srcStageMask(VK_PIPELINE_STAGE_TRANSFER_BIT);
+		buffer.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+		buffer.dstStageMask(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+		buffer.dstAccessMask(VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
 	}
 
 	private void initDescription(MemoryStack stack,VkSubpassDescription.Buffer buffer,VkRenderConfig config) {

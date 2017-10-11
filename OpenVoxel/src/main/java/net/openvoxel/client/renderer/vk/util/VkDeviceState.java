@@ -4,6 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.renderer.vk.VkGUIRenderer;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -72,7 +73,7 @@ public class VkDeviceState extends VkRenderManager {
 	}
 
 
-	public void acquireNextImage() {
+	public void acquireNextImage(boolean rebootSync) {
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer index = stack.callocInt(1);
 			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,-1L,semaphore_image_available,VK_NULL_HANDLE,index);
@@ -83,6 +84,9 @@ public class VkDeviceState extends VkRenderManager {
 				throw new RuntimeException("Failed to get next image");
 			}
 			swapChainImageIndex =  index.get(0);
+			//if(rebootSync) {
+			//	vkQueueSubmi
+			//}
 		}
 	}
 
@@ -91,15 +95,14 @@ public class VkDeviceState extends VkRenderManager {
 			VkSubmitInfo submitInfo = VkSubmitInfo.mallocStack(stack);
 			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
 			submitInfo.pNext(VK_NULL_HANDLE);
-			submitInfo.pSignalSemaphores(null);
-			submitInfo.waitSemaphoreCount(0);
-			submitInfo.pWaitDstStageMask(null);
-			submitInfo.pSignalSemaphores(null);
+			submitInfo.pWaitSemaphores(stack.longs(semaphore_gui_data_used));
+			submitInfo.waitSemaphoreCount(0);//TODO: update & change if needed
+			submitInfo.pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_TRANSFER_BIT));
+			submitInfo.pSignalSemaphores(stack.longs(semaphore_gui_data_updated));
 			submitInfo.pCommandBuffers(stack.pointers(command_buffers_gui_transfer.get(swapChainImageIndex)));
 			if(vkQueueSubmit(renderDevice.asyncTransferQueue,submitInfo,0) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to execute transfer queue");
 			}
-			vkQueueWaitIdle(renderDevice.asyncTransferQueue);
 
 			VkCommandBuffer mainBuffer = new VkCommandBuffer(command_buffers_main.get(swapChainImageIndex),renderDevice.device);
 			vkResetCommandBuffer(mainBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -136,15 +139,15 @@ public class VkDeviceState extends VkRenderManager {
 				throw new RuntimeException("Failed to generate main command buffer");
 			}
 
-			LongBuffer semaphores = stack.longs(semaphore_image_available);
+			LongBuffer semaphores = stack.longs(semaphore_image_available,semaphore_gui_data_updated);
 			LongBuffer signalSemaphores = stack.longs(semaphore_render_finished);
 			PointerBuffer cmdBuffers = stack.pointers(command_buffers_main.get(swapChainImageIndex));
-			IntBuffer waitStages = stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+			IntBuffer waitStages = stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
 			//VkSubmitInfo submitInfo = VkSubmitInfo.callocStack(stack);
 			//submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
 			//submitInfo.pNext(VK_NULL_HANDLE);
 			submitInfo.pWaitSemaphores(semaphores);
-			submitInfo.waitSemaphoreCount(1);
+			submitInfo.waitSemaphoreCount(2);
 			submitInfo.pWaitDstStageMask(waitStages);
 			submitInfo.pCommandBuffers(cmdBuffers);
 			submitInfo.pSignalSemaphores(signalSemaphores);
