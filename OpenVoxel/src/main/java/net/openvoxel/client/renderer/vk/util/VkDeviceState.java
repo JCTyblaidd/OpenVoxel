@@ -88,13 +88,61 @@ public class VkDeviceState extends VkRenderManager {
 
 	public void submitNewWork() {
 		try(MemoryStack stack = stackPush()) {
+			VkSubmitInfo submitInfo = VkSubmitInfo.mallocStack(stack);
+			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
+			submitInfo.pNext(VK_NULL_HANDLE);
+			submitInfo.pSignalSemaphores(null);
+			submitInfo.waitSemaphoreCount(0);
+			submitInfo.pWaitDstStageMask(null);
+			submitInfo.pSignalSemaphores(null);
+			submitInfo.pCommandBuffers(stack.pointers(command_buffers_gui_transfer.get(swapChainImageIndex)));
+			if(vkQueueSubmit(renderDevice.asyncTransferQueue,submitInfo,0) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to execute transfer queue");
+			}
+			vkQueueWaitIdle(renderDevice.asyncTransferQueue);
+
+			VkCommandBuffer mainBuffer = new VkCommandBuffer(command_buffers_main.get(swapChainImageIndex),renderDevice.device);
+			vkResetCommandBuffer(mainBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
+			beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+			beginInfo.pNext(VK_NULL_HANDLE);
+			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+			beginInfo.pInheritanceInfo(null);
+			vkBeginCommandBuffer(mainBuffer,beginInfo);
+
+			VkRenderPassBeginInfo renderPassInfo = VkRenderPassBeginInfo.callocStack(stack);
+			renderPassInfo.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
+			renderPassInfo.pNext(VK_NULL_HANDLE);
+			renderPassInfo.renderPass(renderPass.render_pass);
+			renderPassInfo.framebuffer(targetFrameBuffers.get(swapChainImageIndex));
+			VkRect2D screenRect = VkRect2D.callocStack(stack);
+			screenRect.extent(swapExtent);
+			renderPassInfo.renderArea(screenRect);
+			VkClearValue.Buffer clearValues = VkClearValue.callocStack(1,stack);
+			VkClearColorValue clearColorValue = VkClearColorValue.callocStack(stack);
+			clearColorValue.float32(0,0.3f);
+			clearColorValue.float32(1,0.0f);
+			clearColorValue.float32(2,0.2f);
+			clearColorValue.float32(3,1.0f);
+			clearValues.color(clearColorValue);
+			renderPassInfo.pClearValues(clearValues);
+			vkCmdBeginRenderPass(mainBuffer,renderPassInfo,VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+			vkCmdExecuteCommands(mainBuffer,stack.pointers(command_buffers_gui.get(swapChainImageIndex)));
+
+			vkCmdEndRenderPass(mainBuffer);
+
+			if(vkEndCommandBuffer(mainBuffer) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to generate main command buffer");
+			}
+
 			LongBuffer semaphores = stack.longs(semaphore_image_available);
 			LongBuffer signalSemaphores = stack.longs(semaphore_render_finished);
 			PointerBuffer cmdBuffers = stack.pointers(command_buffers_main.get(swapChainImageIndex));
 			IntBuffer waitStages = stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-			VkSubmitInfo submitInfo = VkSubmitInfo.callocStack(stack);
-			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
-			submitInfo.pNext(VK_NULL_HANDLE);
+			//VkSubmitInfo submitInfo = VkSubmitInfo.callocStack(stack);
+			//submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
+			//submitInfo.pNext(VK_NULL_HANDLE);
 			submitInfo.pWaitSemaphores(semaphores);
 			submitInfo.waitSemaphoreCount(1);
 			submitInfo.pWaitDstStageMask(waitStages);

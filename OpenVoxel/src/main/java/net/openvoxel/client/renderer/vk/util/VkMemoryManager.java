@@ -87,6 +87,7 @@ public class VkMemoryManager {
 		VkBufferCreateInfo createInfo = VkBufferCreateInfo.mallocStack(stack);
 		createInfo.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
 		createInfo.pNext(VK_NULL_HANDLE);
+		createInfo.flags(0);
 		createInfo.sharingMode(VK_SHARING_MODE_EXCLUSIVE);
 		createInfo.pQueueFamilyIndices(null);
 		createInfo.usage(usage);

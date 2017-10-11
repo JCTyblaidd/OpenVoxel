@@ -316,6 +316,8 @@ public class VkRenderDevice{
 		}
 		state.vkLogger.Severe("Failed to find valid memory type");
 		//TODO: handle better
+		System.out.println(typeFilter);
+		System.out.println(memoryPropertyFlags);
 		throw new RuntimeException("Failure");
 	}
 }

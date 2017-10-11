@@ -40,7 +40,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private int drawCount;
 	private ByteBuffer memMap;
 
-
+	private Random debug = new Random();
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		this.mgr = state.memoryMgr;
@@ -65,37 +65,20 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void finishDraw() {
-		//Build the command buffer//
 		try(MemoryStack stack = stackPush()) {
 
-			VkCommandBuffer cmdBuffer = new VkCommandBuffer(state.command_buffers_main.get(state.swapChainImageIndex),state.renderDevice.device);
-			vkResetCommandBuffer(cmdBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+			VkCommandBuffer transferBuffer = new VkCommandBuffer(state.command_buffers_gui_transfer.get(state.swapChainImageIndex),state.renderDevice.device);
+			vkResetCommandBuffer(transferBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
 			beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
 			beginInfo.pNext(VK_NULL_HANDLE);
-			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 			beginInfo.pInheritanceInfo(null);
-			vkBeginCommandBuffer(cmdBuffer,beginInfo);
-
-			VkRenderPassBeginInfo renderPassInfo = VkRenderPassBeginInfo.callocStack(stack);
-			renderPassInfo.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
-			renderPassInfo.pNext(VK_NULL_HANDLE);
-			renderPassInfo.renderPass(state.renderPass.render_pass);
-			renderPassInfo.framebuffer(state.targetFrameBuffers.get(state.swapChainImageIndex));
-			VkRect2D screenRect = VkRect2D.callocStack(stack);
-			screenRect.extent(state.swapExtent);
-			renderPassInfo.renderArea(screenRect);
-			VkClearValue.Buffer clearValues = VkClearValue.callocStack(1,stack);
-			VkClearColorValue clearColorValue = VkClearColorValue.callocStack(stack);
-			clearColorValue.float32(0,0.3f);
-			clearColorValue.float32(1,0.0f);
-			clearColorValue.float32(2,0.2f);
-			clearColorValue.float32(3,1.0f);
-			clearValues.color(clearColorValue);
-			renderPassInfo.pClearValues(clearValues);
+			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
 			if(drawCount != 0) {
 				ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE, stack);
+				memMapping.position(0);
 				memMapping.put(this.memMap);
 				mgr.unMapMemory(mgr.memGuiStaging.get(1));
 
@@ -103,10 +86,27 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				copyInfo.srcOffset(0);
 				copyInfo.dstOffset(0);
 				copyInfo.size(drawCount);
-				vkCmdCopyBuffer(cmdBuffer, mgr.memGuiStaging.get(0), mgr.memGuiDrawing.get(0), copyInfo);
+				vkCmdCopyBuffer(transferBuffer, mgr.memGuiStaging.get(0), mgr.memGuiDrawing.get(0), copyInfo);
 			}
 
-			vkCmdBeginRenderPass(cmdBuffer,renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+			if(vkEndCommandBuffer(transferBuffer) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to record transfer buffer");
+			}
+
+			VkCommandBuffer cmdBuffer = new VkCommandBuffer(state.command_buffers_gui.get(state.swapChainImageIndex),state.renderDevice.device);
+			vkResetCommandBuffer(cmdBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+			VkCommandBufferInheritanceInfo inheritance = VkCommandBufferInheritanceInfo.mallocStack(stack);
+			inheritance.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO);
+			inheritance.pNext(VK_NULL_HANDLE);
+			inheritance.renderPass(state.renderPass.render_pass);
+			inheritance.subpass(0);
+			inheritance.framebuffer(state.targetFrameBuffers.get(state.swapChainImageIndex));
+			inheritance.occlusionQueryEnable(false);
+			inheritance.queryFlags(0);
+			inheritance.pipelineStatistics(0);
+			beginInfo.pInheritanceInfo(inheritance);
+			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+			vkBeginCommandBuffer(cmdBuffer,beginInfo);
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state.guiPipeline.graphics_pipeline);
 
@@ -124,7 +124,6 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 				vkCmdDraw(cmdBuffer, drawCount / GUI_ELEMENT_SIZE, 1, 0, 0);
 			}
-			vkCmdEndRenderPass(cmdBuffer);
 
 			if(vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to draw command buffer");
@@ -176,6 +175,10 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void VertexWithColUV(float x, float y, float u, float v, int RGB) {
+		float xTrans = debug.nextFloat() * 0.01F;
+		x = x + xTrans;
+		float yTrans = debug.nextFloat() * 0.01F;
+		y = y + yTrans;
 		memMap.putFloat(drawCount,x*2-1);
 		memMap.putFloat(drawCount+4,y*2-1);
 		memMap.putFloat(drawCount+8,u);
