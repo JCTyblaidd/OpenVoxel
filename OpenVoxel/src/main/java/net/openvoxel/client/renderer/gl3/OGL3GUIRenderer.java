@@ -41,7 +41,13 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		guiShader.use();//Save Switching//
 	}
-/**************************** TESSELLATOR CLASS ******************************************************/
+
+	@Override
+	public void finishDraw() {
+		//NO OP//
+	}
+
+	/**************************** TESSELLATOR CLASS ******************************************************/
 
 	private OGL3ReloadableShader<OGL3GUIShader> guiShader;
 
@@ -157,12 +163,12 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 	public void EnableColour(boolean enabled) {
 		Enable_Colour = enabled;
 	}
-
+/**
 	@Override
 	public void SetZ(float zPos) {
 		Z_Position = zPos;
 	}
-
+**/
 	@Override
 	public void SetMatrix(Matrix4f mat) {
 		this.mat = mat;
@@ -172,38 +178,38 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 	public void Vertex(float x, float y) {
 		VertexWithColUV(x,y,0,0,0,0xFFFFFFFF);
 	}
-
+/**
 	@Override
 	public void Vertex(float x, float y, float z) {
 		VertexWithColUV(x,y,z,0,0,0xFFFFFFFF);
 	}
-
+**/
 	@Override
 	public void VertexWithUV(float x, float y, float u, float v) {
 		VertexWithColUV(x,y,0,u,v,0xFFFFFFFF);
 	}
-
+/**
 	@Override
 	public void VertexWithUV(float x, float y, float z, float u, float v) {
 		VertexWithColUV(x,y,z,u,v,0xFFFFFFFF);
 	}
-
+**/
 	@Override
 	public void VertexWithCol(float x, float y, int RGB) {
 		VertexWithColUV(x,y,0,0,0,RGB);
 	}
-
+/**
 	@Override
 	public void VertexWithCol(float x, float y, float z, int RGB) {
 		VertexWithColUV(x,y,z,0,0,RGB);
 	}
-
+**/
 	@Override
 	public void VertexWithColUV(float x, float y, float u, float v, int RGB) {
 		VertexWithColUV(x,y,0,u,v,RGB);
 	}
 
-	@Override
+	//@Override
 	public void VertexWithColUV(float x, float y, float z, float u, float v, int RGB) {
 		final int i = DrawIndex * 3;
 		PositionArray[i] = x*2 - 1;

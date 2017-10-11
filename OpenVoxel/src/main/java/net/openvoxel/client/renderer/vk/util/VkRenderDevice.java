@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.vk.util;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.logger.Logger;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVulkan;
 import org.lwjgl.system.MemoryStack;
@@ -256,6 +257,43 @@ public class VkRenderDevice{
 				+ "." + VK_VERSION_PATCH(properties.driverVersion()) + ")";
 	}
 
+	void printDetailedDeviceInfo() {
+		Logger log = state.vkLogger;
+		log.Info("Device Features:");
+		//TODO:
+		//log.Info("Device Properties:");
+		//properties.
+		log.Info("Device Queue Family Info:");
+		//
+		log.Info("Device Memory:");
+		for(int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
+			int propFlags = memoryProperties.memoryTypes(i).propertyFlags();
+			int heapIndex = memoryProperties.memoryTypes(i).heapIndex();
+			int memFlags = memoryProperties.memoryHeaps(heapIndex).flags();
+			List<String> propArray = new ArrayList<>();
+			if((propFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) != 0) {
+				propArray.add("Device-Local");
+			}
+			if((propFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0) {
+				propArray.add("Host-Visible");
+			}
+			if((propFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0) {
+				propArray.add("Host-Coherent");
+			}
+			if((propFlags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) != 0) {
+				propArray.add("Host-Cached");
+			}
+			if((propFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) != 0) {
+				propArray.add("Lazy-Alloc");
+			}
+			if(memFlags == VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
+				log.Info("Device-Local || " + String.join(":",propArray));
+			}else {
+				log.Info("None || " + String.join(":", propArray));
+			}
+		}
+	}
+
 	void freeInitial() {
 		deviceFeatures.free();
 		properties.free();
@@ -268,32 +306,15 @@ public class VkRenderDevice{
 		vkDestroyDevice(device,null);
 	}
 
-	private int findMemoryType(int typeFilter,int flags) {
+	public int findMemoryType(int typeFilter,int memoryPropertyFlags) {
 		for (int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
-			if ((typeFilter & (1 << i)) != 0 && (memoryProperties.memoryTypes(i).propertyFlags() & flags) == flags) {
+			if ((typeFilter & (1 << i)) != 0 &&
+				    (memoryProperties.memoryTypes(i).propertyFlags() & memoryPropertyFlags) == memoryPropertyFlags) {
 				return i;
 			}
 		}
 		state.vkLogger.Severe("Failed to find valid memory type");
 		//TODO: handle better
 		throw new RuntimeException("Failure");
-	}
-
-	/**
-	 * The callee owns any non-null memory that is returned, and it is not automatically cleaned up
-	 */
-	public long allocMemory(MemoryStack stack,VkMemoryRequirements requirements,int propertyFlags) {
-		VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.mallocStack(stack);
-		allocateInfo.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
-		allocateInfo.pNext(VK_NULL_HANDLE);
-		allocateInfo.allocationSize(requirements.size());
-		allocateInfo.memoryTypeIndex(findMemoryType(requirements.memoryTypeBits(),propertyFlags));
-		LongBuffer lb = stack.mallocLong(1);
-		int res = vkAllocateMemory(device,allocateInfo,null,lb);
-		if(res < 0) {
-			state.vkLogger.Severe("Failed to allocate memory");
-			return VK_NULL_HANDLE;
-		}
-		return lb.get(0);
 	}
 }

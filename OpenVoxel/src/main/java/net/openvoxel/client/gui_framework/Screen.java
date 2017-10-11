@@ -18,14 +18,10 @@ public class Screen {
 		guiObjects = new ArrayList<>();
 	}
 
-	private final float ZDiff = 0.001F;
 
 	public void DrawScreen(GUIRenderer.GUITessellator tess) {
-		float Z = ZDiff;
 		for(GUIObject object : guiObjects) {
-			tess.SetZ(Z);
 			object.Draw(tess);
-			Z += ZDiff;
 		}
 	}
 

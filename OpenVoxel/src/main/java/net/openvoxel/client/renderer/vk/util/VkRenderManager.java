@@ -32,7 +32,9 @@ class VkRenderManager {
 	//Shader Pipeline Shadow Mapping
 	//Shader Pipeline Draw Entity
 	//Shader Pipeline
-	public VkRenderConfig renderConfig = new VkRenderConfig();
+	public VkRenderConfig renderConfig;
+
+	public VkMemoryManager memoryMgr;
 
 	//Swap Chain Image Info
 	LongBuffer swapChainImages;
@@ -53,15 +55,22 @@ class VkRenderManager {
 	//Command Buffers//
 	PointerBuffer command_buffers_main;
 
-	//Memory Management//
-	private LongBuffer staging_buffers;
-
 	//Frame Buffers//
 	private LongBuffer targetFrameBuffers;
+	//TODO: render target FrameBuffers
+
+	//Descriptor Pools//
+	private LongBuffer descriptorPools;
 
 	//Synchronisation//
 	long semaphore_image_available;
 	long semaphore_render_finished;
+
+	VkRenderManager() {
+		renderConfig = new VkRenderConfig();
+		renderConfig.load();
+		renderConfig.save();
+	}
 
 	void initSynchronisation() {
 		try(MemoryStack stack = stackPush()) {
@@ -176,7 +185,7 @@ class VkRenderManager {
 
 				VkClearValue.Buffer clearValues = VkClearValue.callocStack(1,stack);
 				VkClearColorValue clearColorValue = VkClearColorValue.callocStack(stack);
-				clearColorValue.float32(0,0.0f);
+				clearColorValue.float32(0,0.3f*i);
 				clearColorValue.float32(1,0.0f);
 				clearColorValue.float32(2,0.2f);
 				clearColorValue.float32(3,1.0f);
@@ -209,13 +218,15 @@ class VkRenderManager {
 	}
 
 	void initMemory() {
-		//Create Staging Buffer//
-		staging_buffers = MemoryUtil.memAllocLong(3);
+		memoryMgr.initStandardMemory();
+	}
+
+	void recreateMemory() {
+		memoryMgr.recreateStandardMemory();
 	}
 
 	void destroyMemory() {
-		//Destroy Staging Buffer//
-		MemoryUtil.memFree(staging_buffers);
+		memoryMgr.clearStandardMemory();
 	}
 
 	void initRenderPasses() {

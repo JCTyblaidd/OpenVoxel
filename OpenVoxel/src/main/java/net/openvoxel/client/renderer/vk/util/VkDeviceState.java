@@ -30,7 +30,7 @@ import static org.lwjgl.vulkan.VK10.*;
  *
  * Vulkan Global State Information : Stores all required information for drawing
  */
-public class VkDeviceState extends VkRenderManager{
+public class VkDeviceState extends VkRenderManager {
 
 	public VkInstance instance;
 	public long glfw_window;
@@ -44,6 +44,7 @@ public class VkDeviceState extends VkRenderManager{
 	static boolean vulkanDetailLog = OpenVoxel.getLaunchParameters().hasFlag("vkDebugDetailed");
 	static boolean vulkanDebug = OpenVoxel.getLaunchParameters().hasFlag("vkDebug") || vulkanDetailLog;
 	static boolean vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
+	private static boolean vulkanDetailedDeviceInfo = OpenVoxel.getLaunchParameters().hasFlag("vkDeviceInfo");
 
 	/*Surface and SwapChain Information*/
 	private VkSurfaceCapabilitiesKHR surfaceCapabilities;
@@ -59,21 +60,22 @@ public class VkDeviceState extends VkRenderManager{
 		initInstance();
 		choosePhysicalDevice();
 		renderDevice.createDevice();
+		memoryMgr = new VkMemoryManager(this);
 		initSynchronisation();
 		initSurface();
 		initSwapChain();
-		initMemory();
 		initRenderPasses();
 		initGraphicsPipeline();
 		initFrameBuffers();
 		initCommandBuffers();
+		initMemory();
 	}
 
 
 	public void acquireNextImage() {
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer index = stack.callocInt(1);
-			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,Long.MAX_VALUE,semaphore_image_available,VK_NULL_HANDLE,index);
+			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,-1L,semaphore_image_available,VK_NULL_HANDLE,index);
 			if(result == VK_ERROR_OUT_OF_DATE_KHR) {
 				recreateSwapChain();
 			}else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -117,8 +119,13 @@ public class VkDeviceState extends VkRenderManager{
 			presentInfo.pWaitSemaphores(semaphores);
 			presentInfo.pImageIndices(imageIndices);
 			presentInfo.pResults(null);
-			if(vkQueuePresentKHR(renderDevice.renderQueue,presentInfo) != VK_SUCCESS) {
-				throw new RuntimeException("Failed to present queue");
+			int res = vkQueuePresentKHR(renderDevice.renderQueue,presentInfo);
+			if(res != VK_SUCCESS) {
+				if(res != VK_ERROR_OUT_OF_DATE_KHR && res != VK_SUBOPTIMAL_KHR) {
+					throw new RuntimeException("Failed to present queue");
+				}else{
+					recreateSwapChain();
+				}
 			}
 			vkQueueWaitIdle(renderDevice.renderQueue);
 		}
@@ -343,13 +350,13 @@ public class VkDeviceState extends VkRenderManager{
 			}
 			for(int i = 0; i < presentModes.capacity(); i++) {
 				if(presentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR) {
-					vkLogger.Info("Present Mode: Mailbox");
+					vkLogger.Info("Chosen Present Mode: Mailbox");
 					chosenPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 				}
 			}
 			if(chosenPresentMode == -1) {
 				chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-				vkLogger.Info("Present Mode: FIFO");
+				vkLogger.Info("Chosen Present Mode: FIFO");
 			}
 			//Choose Swap Extent//
 			if(surfaceCapabilities.currentExtent().width() != 0xFFFFFFFF) {
@@ -362,10 +369,12 @@ public class VkDeviceState extends VkRenderManager{
 				swapExtent.set(width,height);
 			}
 			//Choose Image Count//
-			chosenImageCount = surfaceCapabilities.minImageCount() + 1;
+			chosenImageCount = surfaceCapabilities.minImageCount() + (chosenPresentMode == VK_PRESENT_MODE_MAILBOX_KHR ? 1 : 0);
 			if (surfaceCapabilities.maxImageCount() > 0 && chosenImageCount > surfaceCapabilities.maxImageCount()) {
 				chosenImageCount = surfaceCapabilities.maxImageCount();
 			}
+			vkLogger.Info("SwapChain Image Range " + surfaceCapabilities.minImageCount() + "<x<" + surfaceCapabilities.maxImageCount());
+			vkLogger.Info("Chosen SwapChain Image Count : " + chosenImageCount);
 			//Create The SwapChain//
 			LongBuffer swapChainBuf = stack.callocLong(1);
 			VkSwapchainCreateInfoKHR createInfoKHR = VkSwapchainCreateInfoKHR.callocStack(stack);
@@ -426,31 +435,31 @@ public class VkDeviceState extends VkRenderManager{
 	}
 
 	private void destroySwapChain() {
-		try(MemoryStack stack = stackPush()) {
-			destroyFrameBuffers();
-			destroyPipelineAndLayout();
-			destroyRenderPasses();
-			destroyCommandBuffers();
-			for(int i = 0; i < swapChainImageViews.capacity();i++) {
-				vkDestroyImageView(renderDevice.device,swapChainImageViews.get(i),null);
-			}
-			MemoryUtil.memFree(swapChainImages);
-			MemoryUtil.memFree(swapChainImageViews);
-			MemoryUtil.memFree(presentModes);
-			surfaceFormats.free();
-			vkDestroySwapchainKHR(renderDevice.device,window_swapchain,null);
-			window_swapchain = VK_NULL_HANDLE;
+		destroyFrameBuffers();
+		destroyPipelineAndLayout();
+		destroyRenderPasses();
+		destroyCommandBuffers();
+		for(int i = 0; i < swapChainImageViews.capacity();i++) {
+			vkDestroyImageView(renderDevice.device,swapChainImageViews.get(i),null);
 		}
+		MemoryUtil.memFree(swapChainImages);
+		MemoryUtil.memFree(swapChainImageViews);
+		MemoryUtil.memFree(presentModes);
+		surfaceFormats.free();
+		vkDestroySwapchainKHR(renderDevice.device,window_swapchain,null);
+		window_swapchain = VK_NULL_HANDLE;
 	}
 
 	public void recreateSwapChain() {
 		vkDeviceWaitIdle(renderDevice.device);
 		destroySwapChain();
+		destroyCommandPools();
 		initSwapChain();
 		initRenderPasses();
 		initGraphicsPipeline();
 		initFrameBuffers();
 		initCommandBuffers();
+		recreateMemory();
 	}
 
 	private void choosePhysicalDevice() {
@@ -489,6 +498,9 @@ public class VkDeviceState extends VkRenderManager{
 			deviceList.remove(bestDevice);
 			deviceList.forEach(VkRenderDevice::freeInitial);
 			vkLogger.Info("Chosen Device = " + bestDevice.getDeviceInfo());
+			if(vulkanDetailedDeviceInfo) {
+				bestDevice.printDetailedDeviceInfo();
+			}
 			this.renderDevice = bestDevice;
 		}
 	}
@@ -497,10 +509,11 @@ public class VkDeviceState extends VkRenderManager{
 	public void terminateAndFree() {
 		vkDeviceWaitIdle(renderDevice.device);
 		destroySwapChain();
-		destroyMemory();
 		destroyCommandPools();
 		destroySynchronisation();
+		destroyMemory();
 		vkDestroySurfaceKHR(instance,window_surface,null);
+		memoryMgr.cleanup();
 		renderDevice.freeDevice();
 		if(debug_report_callback_ext != VK_NULL_HANDLE) {
 			vkLogger.Info("Disabling Debug Report");

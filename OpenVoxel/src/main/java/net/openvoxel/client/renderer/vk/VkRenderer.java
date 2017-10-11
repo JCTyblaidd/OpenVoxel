@@ -10,9 +10,14 @@ import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.textureatlas.IconAtlas;
+import org.lwjgl.vulkan.VK10;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.lwjgl.vulkan.VK10.vkDeviceWaitIdle;
+import static org.lwjgl.vulkan.VK10.vkQueueWaitIdle;
+import static org.lwjgl.vulkan.VK10.vkWaitForFences;
 
 /**
  * Created by James on 28/08/2016.
@@ -71,7 +76,7 @@ public class VkRenderer implements GlobalRenderer {
 	@Override
 	public void loadPreRenderThread() {
 		deviceState = new VkDeviceState();
-		displayHandle = new VkDisplayHandle(deviceState);
+		displayHandle = new VkDisplayHandle(this,deviceState);
 	}
 
 	@Override
@@ -97,13 +102,14 @@ public class VkRenderer implements GlobalRenderer {
 	 */
 	@Override
 	public void nextFrame() {
+		deviceState.submitNewWork();
+		deviceState.presentOnCompletion();
 		if(needsRegen.get() || needsResize.get()) {
 			needsRegen.set(false);
+			needsResize.set(false);
 			deviceState.recreateSwapChain();
 			//TODO: regen resource images & etc
 		}
-		deviceState.submitNewWork();
-		deviceState.presentOnCompletion();
 		deviceState.acquireNextImage();
 	}
 

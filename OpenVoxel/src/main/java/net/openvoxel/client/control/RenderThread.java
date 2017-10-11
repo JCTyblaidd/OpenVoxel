@@ -82,6 +82,7 @@ public class RenderThread implements Runnable{
 				}
 				//Debug Screen Renderer//
 				guiRenderer.DisplayScreen(ScreenDebugInfo.instance);
+				guiRenderer.finishDraw();
 			}catch (Exception e) {
 				e.printStackTrace();
 				CrashReport crashReport = new CrashReport("Exception Drawing GUI").caughtException(e);

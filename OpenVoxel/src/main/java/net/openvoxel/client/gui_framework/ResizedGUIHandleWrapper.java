@@ -55,52 +55,52 @@ public class ResizedGUIHandleWrapper implements GUIRenderer.GUITessellator{
 	public void EnableColour(boolean enabled) {
 		tessellator.EnableColour(enabled);
 	}
-
+/**
 	@Override
 	public void SetZ(float zPos) {
 		tessellator.SetZ(zPos);
 	}
-
+**/
 	@Override
 	public void Vertex(float x, float y) {
 		tessellator.Vertex(x * x_scale + x_offset,y * y_scale + y_offset);
 	}
-
+/**
 	@Override
 	public void Vertex(float x, float y, float z) {
 		tessellator.Vertex(x * x_scale + y_offset,y * y_scale + y_offset,z);
 	}
-
+**/
 	@Override
 	public void VertexWithUV(float x, float y, float u, float v) {
 		tessellator.VertexWithUV(x * x_scale + x_offset,y * y_scale + y_offset,u,v);
 	}
-
+/**
 	@Override
 	public void VertexWithUV(float x, float y, float z, float u, float v) {
 		tessellator.VertexWithUV(x * x_scale + x_offset,y * y_scale + y_offset,z,u,v);
 	}
-
+**/
 	@Override
 	public void VertexWithCol(float x, float y, int RGB) {
 		tessellator.VertexWithCol(x * x_scale + x_offset,y * y_scale + y_offset,RGB);
 	}
-
+/**
 	@Override
 	public void VertexWithCol(float x, float y, float z, int RGB) {
 		tessellator.VertexWithCol(x * x_scale + x_offset,y * y_scale + y_offset,z,RGB);
 	}
-
+**/
 	@Override
 	public void VertexWithColUV(float x, float y, float u, float v, int RGB) {
 		tessellator.VertexWithColUV(x * x_scale + x_offset,y * y_scale + y_offset,u,v,RGB);
 	}
-
+/**
 	@Override
 	public void VertexWithColUV(float x, float y, float z, float u, float v, int RGB) {
 		tessellator.VertexWithColUV(x * x_scale + x_offset,y * y_scale + y_offset,z,u,v,RGB);
 	}
-
+**/
 
 	@Override
 	public void DrawText(float x, float y, float height, String text, int col, int colOutline) {
