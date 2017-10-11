@@ -1,9 +1,6 @@
 package net.openvoxel.client.renderer.vk.util;
 
-import net.openvoxel.client.renderer.vk.shader.VkOmniRenderPass;
-import net.openvoxel.client.renderer.vk.shader.VkRenderConfig;
-import net.openvoxel.client.renderer.vk.shader.VkShaderModuleCache;
-import net.openvoxel.client.renderer.vk.shader.VkShaderPipelineDebug;
+import net.openvoxel.client.renderer.vk.shader.*;
 import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.common.resources.ResourceType;
 import org.lwjgl.PointerBuffer;
@@ -28,6 +25,7 @@ class VkRenderManager {
 	//Rendering State//
 	public VkOmniRenderPass renderPass = new VkOmniRenderPass();
 	public VkShaderPipelineDebug debugPipeline = new VkShaderPipelineDebug(VkShaderModuleCache.debugShader);
+	public VkShaderPipelineGUI guiPipeline = new VkShaderPipelineGUI(VkShaderModuleCache.debugGuiShader);
 	//Shader Pipeline GBuffer Make
 	//Shader Pipeline Shadow Mapping
 	//Shader Pipeline Draw Entity
@@ -39,7 +37,7 @@ class VkRenderManager {
 	//Swap Chain Image Info
 	LongBuffer swapChainImages;
 	LongBuffer swapChainImageViews;
-	int swapChainImageIndex = 0;
+	public int swapChainImageIndex = 0;
 
 	/*Chosen SwapChain Info*/
 	public int chosenPresentMode;
@@ -53,10 +51,10 @@ class VkRenderManager {
 	private long command_pool_transfer;
 
 	//Command Buffers//
-	PointerBuffer command_buffers_main;
+	public PointerBuffer command_buffers_main;
 
 	//Frame Buffers//
-	private LongBuffer targetFrameBuffers;
+	public LongBuffer targetFrameBuffers;
 	//TODO: render target FrameBuffers
 
 	//Descriptor Pools//
@@ -165,7 +163,9 @@ class VkRenderManager {
 				throw new RuntimeException("Failed to allocate main command buffer");
 			}
 			//Record With Debug Info//
+/*
 			for(int i = 0; i < mainCommandBufferCount; i++) {
+
 				VkCommandBuffer cmdBuffer = new VkCommandBuffer(command_buffers_main.get(i),renderDevice.device);
 				VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.callocStack(stack);
 				beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
@@ -204,6 +204,7 @@ class VkRenderManager {
 					throw new RuntimeException("Failed to record command buffer(main)");
 				}
 			}
+*/
 		}
 	}
 
@@ -238,11 +239,14 @@ class VkRenderManager {
 	}
 
 	void initGraphicsPipeline() {
-		debugPipeline.init(renderDevice.device,renderPass.render_pass,0,0, List.of("DEBUG_VULKAN"));
+		List<String> defines = List.of("DEBUG_VULKAN");
+		debugPipeline.init(renderDevice.device,renderPass.render_pass,0,0, defines);
+		guiPipeline.init(renderDevice.device,renderPass.render_pass,0,0, defines);
 	}
 
 	void destroyPipelineAndLayout() {
 		debugPipeline.destroy(renderDevice.device);
+		guiPipeline.destroy(renderDevice.device);
 	}
 
 

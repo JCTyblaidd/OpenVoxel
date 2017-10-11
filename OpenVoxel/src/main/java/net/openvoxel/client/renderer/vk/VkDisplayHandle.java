@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
+import net.openvoxel.client.renderer.glfw.GLFWEventHandler;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.common.event.SubscribeEvents;
@@ -24,6 +25,11 @@ public class VkDisplayHandle implements DisplayHandle, EventListener {
 
 	VkDisplayHandle(VkRenderer renderer,VkDeviceState deviceState) {
 		state = deviceState;
+		GLFWEventHandler.Load(state.glfw_window);
+	}
+
+	void cleanup() {
+		GLFWEventHandler.Unload();
 	}
 
 	@SubscribeEvents

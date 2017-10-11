@@ -307,6 +307,7 @@ public class VkRenderDevice{
 	}
 
 	public int findMemoryType(int typeFilter,int memoryPropertyFlags) {
+		//TODO: improve//
 		for (int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
 			if ((typeFilter & (1 << i)) != 0 &&
 				    (memoryProperties.memoryTypes(i).propertyFlags() & memoryPropertyFlags) == memoryPropertyFlags) {

@@ -116,6 +116,7 @@ public class VkRenderer implements GlobalRenderer {
 	@Override
 	public void kill() {
 		//worldRenderer.cleanup();
+		displayHandle.cleanup();
 		guiRenderer.cleanup();
 		deviceState.terminateAndFree();
 	}

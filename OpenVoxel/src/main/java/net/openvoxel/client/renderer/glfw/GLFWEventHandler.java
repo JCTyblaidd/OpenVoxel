@@ -4,6 +4,10 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.common.event.input.*;
 import org.lwjgl.glfw.*;
+import org.lwjgl.system.Callback;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -20,12 +24,23 @@ public class GLFWEventHandler {
 		INSTANCE = new GLFWEventHandler(window);
 	}
 
+	private List<Callback> callbacks = new ArrayList<>();
+
+	private <T extends Callback> T _register(T t) {
+		callbacks.add(t);
+		return t;
+	}
+
+	public static void Unload() {
+		INSTANCE.callbacks.forEach(Callback::free);
+	}
+
 	private GLFWEventHandler(long window) {
-		glfwSetCursorPosCallback(window,new CursorPosCallback());
-		glfwSetKeyCallback(window,new KeyCallback());
-		glfwSetCharCallback(window,new CharacterCallback());
-		glfwSetMouseButtonCallback(window,new CursorButtonCallback());
-		glfwSetWindowSizeCallback(window, new WindowSizeCallback());
+		glfwSetCursorPosCallback(window,_register(new CursorPosCallback()));
+		glfwSetKeyCallback(window,_register(new KeyCallback()));
+		glfwSetCharCallback(window,_register(new CharacterCallback()));
+		glfwSetMouseButtonCallback(window,_register(new CursorButtonCallback()));
+		glfwSetWindowSizeCallback(window,_register(new WindowSizeCallback()));
 	}
 
 	private static class CursorPosCallback extends GLFWCursorPosCallback {
