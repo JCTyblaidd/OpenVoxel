@@ -24,6 +24,9 @@ layout(location = 1) in vec4 frag_Col;
 
 layout(location = 0) out vec4 colour;
 
+//TODO: location(set = 0,layout = 0) unform sampler2D tex_sampler;
+//TODO: location(set = 0,layout = 1) uniform sampler2D img_samplers[32];
+
 void main() {
     colour = frag_Col;
 }

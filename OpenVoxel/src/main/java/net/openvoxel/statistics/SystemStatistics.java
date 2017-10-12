@@ -1,7 +1,5 @@
 package net.openvoxel.statistics;
 
-import oshi.SystemInfo;
-
 import java.lang.management.ManagementFactory;
 
 /**
@@ -14,7 +12,6 @@ import java.lang.management.ManagementFactory;
  */
 public class SystemStatistics {
 
-	private static SystemInfo systemInfo;
 	private static long processMemUsage = 0;
 	private static long jvmMemUsage = 0;
 	private static final int processorCount = Runtime.getRuntime().availableProcessors();
@@ -27,7 +24,6 @@ public class SystemStatistics {
 	private static long cpuUsageTime;
 	private static long cpuMeasurement;
 	static {
-		systemInfo = new SystemInfo();
 		currentProcess = ProcessHandle.current();
 		currentProcess.info().totalCpuDuration().ifPresent(duration -> cpuUsageTime = duration.toNanos());
 		cpuMeasurement = System.nanoTime();

@@ -14,6 +14,7 @@
 		<joml.version>LATEST</joml.version>
 		<trove.version>LATEST</trove.version>
 		<disruptor.version>LATEST</disruptor.version>
+		<jetbrains.version>15.0</jetbrains.version>
 	</properties>
 	<!--Build Configuration-->
     <build>
@@ -59,19 +60,7 @@
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
 			<version>${lwjgl.version}</version>
-			<classifier>natives-windows</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
-			<classifier>natives-macos</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
-			<classifier>natives-linux</classifier>
+			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
@@ -82,19 +71,7 @@
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-opengl</artifactId>
 		    <version>${lwjgl.version}</version>
-		    <classifier>natives-windows</classifier>
-	    </dependency>
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-opengl</artifactId>
-		    <version>${lwjgl.version}</version>
-		    <classifier>natives-macos</classifier>
-	    </dependency>
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-opengl</artifactId>
-		    <version>${lwjgl.version}</version>
-		    <classifier>natives-linux</classifier>
+		    <classifier>${lwjgl.natives}</classifier>
 	    </dependency>
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
@@ -110,19 +87,7 @@
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-glfw</artifactId>
 		    <version>${lwjgl.version}</version>
-		    <classifier>natives-windows</classifier>
-	    </dependency>
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-glfw</artifactId>
-		    <version>${lwjgl.version}</version>
-		    <classifier>natives-macos</classifier>
-	    </dependency>
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-glfw</artifactId>
-		    <version>${lwjgl.version}</version>
-		    <classifier>natives-linux</classifier>
+		    <classifier>${lwjgl.natives}</classifier>
 	    </dependency>
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
@@ -133,19 +98,7 @@
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-stb</artifactId>
 		    <version>${lwjgl.version}</version>
-		    <classifier>natives-windows</classifier>
-	    </dependency>
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-stb</artifactId>
-		    <version>${lwjgl.version}</version>
-		    <classifier>natives-macos</classifier>
-	    </dependency>
-	    <dependency>
-		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-stb</artifactId>
-		    <version>${lwjgl.version}</version>
-		    <classifier>natives-linux</classifier>
+		    <classifier>${lwjgl.natives}</classifier>
 	    </dependency>
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
@@ -156,19 +109,18 @@
 		    <groupId>org.lwjgl</groupId>
 		    <artifactId>lwjgl-jemalloc</artifactId>
 		    <version>${lwjgl.version}</version>
-		    <classifier>natives-windows</classifier>
+		    <classifier>${lwjgl.natives}</classifier>
 	    </dependency>
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <artifactId>lwjgl-rpmalloc</artifactId>
 		    <version>${lwjgl.version}</version>
-		    <classifier>natives-macos</classifier>
 	    </dependency>
 	    <dependency>
 		    <groupId>org.lwjgl</groupId>
-		    <artifactId>lwjgl-jemalloc</artifactId>
+		    <artifactId>lwjgl-rpmalloc</artifactId>
 		    <version>${lwjgl.version}</version>
-		    <classifier>natives-linux</classifier>
+		    <classifier>${lwjgl.natives}</classifier>
 	    </dependency>
 
 		<!-- Other Utility Libraries -->
@@ -193,35 +145,59 @@
             <version>${owasm.version}</version>
         </dependency>
 
-	    <dependency><!-- Java Math Library -->
+	    <dependency>
 		    <groupId>org.joml</groupId>
 		    <artifactId>joml</artifactId>
 		    <version>${joml.version}</version>
 	    </dependency>
 
-        <dependency><!--Trove Library-->
+        <dependency>
             <groupId>net.sf.trove4j</groupId>
             <artifactId>trove4j</artifactId>
 	        <version>${trove.version}</version>
         </dependency>
 
-        <dependency><!--Disruptor Library-->
+        <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
             <version>${disruptor.version}</version>
         </dependency>
 
 	    <dependency>
-		    <groupId>com.github.oshi</groupId>
-		    <artifactId>oshi-core</artifactId>
-		    <version>3.4.2</version>
-	    </dependency>
-
-	    <dependency>
 		    <groupId>org.jetbrains</groupId>
 		    <artifactId>annotations-java5</artifactId>
-		    <version>15.0</version>
+		    <version>${jetbrains.version}</version>
 	    </dependency>
 
     </dependencies>
+
+	<profiles>
+		<profile>
+			<id>lwjgl-natives-linux</id>
+			<activation>
+				<os><family>unix</family></os>
+			</activation>
+			<properties>
+				<lwjgl.natives>natives-linux</lwjgl.natives>
+			</properties>
+		</profile>
+		<profile>
+			<id>lwjgl-natives-macos</id>
+			<activation>
+				<os><family>mac</family></os>
+			</activation>
+			<properties>
+				<lwjgl.natives>natives-macos</lwjgl.natives>
+			</properties>
+		</profile>
+		<profile>
+			<id>lwjgl-natives-windows</id>
+			<activation>
+				<os><family>windows</family></os>
+			</activation>
+			<properties>
+				<lwjgl.natives>natives-windows</lwjgl.natives>
+			</properties>
+		</profile>
+	</profiles>
 </project>

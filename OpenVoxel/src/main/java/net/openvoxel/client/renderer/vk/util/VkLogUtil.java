@@ -90,9 +90,9 @@ public class VkLogUtil extends VkDebugReportCallbackEXT{
 			if(objectType == VK_OBJECT_TYPE_COMMAND_BUFFER && message.startsWith("vkCmdPipelineBarrier():")) {
 				return VK_FALSE;
 			}
-			if(objectType == VK_OBJECT_TYPE_RENDER_PASS && message.startsWith("vkCmdPipelineBarrier():")) {
-				return VK_FALSE;
-			}
+			//if(objectType == VK_OBJECT_TYPE_RENDER_PASS && message.startsWith("vkCmdPipelineBarrier():")) {
+			//	return VK_FALSE;
+			//}
 			vulkanLogger.Severe(message);
 			vulkanLogger.Severe(get_object_type(objectType));
 			vulkanLogger.Severe("Detected Vulkan Error : Terminating");

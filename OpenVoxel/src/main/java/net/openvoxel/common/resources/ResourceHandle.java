@@ -66,4 +66,14 @@ public class ResourceHandle {
 	public String getResourceID() {
 		return ID;
 	}
+
+	@Override
+	public int hashCode() {
+		return ID.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj != null && obj instanceof ResourceHandle && ID.equals(((ResourceHandle) obj).ID);
+	}
 }

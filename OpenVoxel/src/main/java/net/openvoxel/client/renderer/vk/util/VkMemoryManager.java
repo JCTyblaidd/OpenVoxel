@@ -52,6 +52,7 @@ public class VkMemoryManager {
 					,memGuiStaging,stack);
 			AllocateExclusive(VkGUIRenderer.GUI_BUFFER_SIZE, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 					,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, memGuiDrawing,stack);
+			memImageStaging = MemoryUtil.memAllocLong(2);
 		}
 	}
 
@@ -61,6 +62,7 @@ public class VkMemoryManager {
 		FreeExclusive(memGuiDrawing);
 		MemoryUtil.memFree(memGuiStaging);
 		MemoryUtil.memFree(memGuiDrawing);
+		MemoryUtil.memFree(memImageStaging);
 	}
 
 	void recreateStandardMemory() {
@@ -72,6 +74,9 @@ public class VkMemoryManager {
 	/////////////////////////
 
 	public void AllocateImage(int usage,int memoryProperties,LongBuffer returnValue,MemoryStack stack) {
+		//VkImageCreateInfo createInfo = VkImageCreateInfo.mallocStack(stack);
+		//createInfo.sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO);
+		//createInfo.pNext(VK_NULL_HANDLE);
 	}
 
 	/**
