@@ -3,11 +3,13 @@ package net.openvoxel.client.renderer.vk;
 import gnu.trove.list.TByteList;
 import gnu.trove.list.array.TByteArrayList;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.renderer.vk.util.VkMemoryManager;
 import net.openvoxel.common.resources.ResourceHandle;
+import net.openvoxel.common.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
@@ -17,7 +19,9 @@ import org.lwjgl.vulkan.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
@@ -34,36 +38,95 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private static final int GUI_TRIANGLE_COUNT = 4096;
 	private static final int GUI_STATE_CHANGE_LIMIT = 512;
 	public static final int GUI_BUFFER_SIZE = GUI_ELEMENT_SIZE * GUI_TRIANGLE_COUNT;
+	public static final int GUI_IMAGE_BLOCK_SIZE = 128 * 64;
+	public static final int GUI_IMAGE_BLOCK_COUNT = 512;
+	public static final int GUI_IMAGE_CACHE_SIZE = GUI_IMAGE_BLOCK_SIZE * GUI_IMAGE_BLOCK_COUNT;
 
 	private VkDeviceState state;
 	private VkMemoryManager mgr;
 	private int screenWidth;
 	private int screenHeight;
 	private int drawCount;
-	private ByteBuffer writeTarget;
+	private ByteBuffer writeTarget, imgStagingTarget;
+
+
 	private Set<ResourceHandle> requestedImages;
 	private Matrix4f matrixStackHead = new Matrix4f();
 	private List<ResourceHandle> requestedImageStack;
 	private FloatBuffer matrixArrayStack;
 	private int stateChangeCount, lastStateChange;
 	private IntBuffer offsetTransitionStack;
-	private ResourceHandle currentHandle;
 	private TByteList imageEnableStateStack;
+
+	//Bound Image Info//
+	private static class BoundResourceHandle {
+		public long image;
+		long image_view;
+		long image_sampler;
+		int image_index;
+		int offset;
+		int count;
+		int usageCount;
+	}
+	private Map<ResourceHandle,BoundResourceHandle> imageBindings;
+	private long descriptorPool;
+	private long imageDescriptorSet;
+	private int imageCleanupCountdown = 100;//TODO: implement
 
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		this.mgr = state.memoryMgr;
 		writeTarget = MemoryUtil.memAlloc(GUI_BUFFER_SIZE);
+		imgStagingTarget = MemoryUtil.memAlloc(GUI_IMAGE_CACHE_SIZE);
+
 		requestedImages = new HashSet<>();
 		requestedImageStack = new ArrayList<>();
 		matrixArrayStack = MemoryUtil.memAllocFloat(16 * GUI_STATE_CHANGE_LIMIT);
 		offsetTransitionStack = MemoryUtil.memAllocInt(GUI_STATE_CHANGE_LIMIT);
-		currentHandle = null;
 		imageEnableStateStack = new TByteArrayList(GUI_STATE_CHANGE_LIMIT);
+		imageBindings = new HashMap<>();
+
+		try(MemoryStack stack = stackPush()) {
+			LongBuffer res = stack.mallocLong(1);
+
+			VkDescriptorPoolSize.Buffer poolSizes = VkDescriptorPoolSize.mallocStack(1,stack);
+			poolSizes.type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+			poolSizes.descriptorCount(32);
+
+			VkDescriptorPoolCreateInfo poolCreateInfo = VkDescriptorPoolCreateInfo.mallocStack(stack);
+			poolCreateInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO);
+			poolCreateInfo.pNext(VK_NULL_HANDLE);
+			poolCreateInfo.flags(0);
+			poolCreateInfo.maxSets(1);
+			poolCreateInfo.pPoolSizes(poolSizes);
+
+			if(vkCreateDescriptorPool(state.renderDevice.device,poolCreateInfo,null,res) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to create Descriptor Pool");
+			}
+			descriptorPool = res.get(0);
+
+			VkDescriptorSetAllocateInfo setAllocateInfo = VkDescriptorSetAllocateInfo.mallocStack(stack);
+			setAllocateInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO);
+			setAllocateInfo.pNext(VK_NULL_HANDLE);
+			setAllocateInfo.descriptorPool(descriptorPool);
+			setAllocateInfo.pSetLayouts(stack.longs(state.guiPipeline.DescriptorSetLayout));
+
+			if(vkAllocateDescriptorSets(state.renderDevice.device,setAllocateInfo,res) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to allocate descriptor set");
+			}
+			imageDescriptorSet = res.get(0);
+		}
 	}
 
 	void cleanup() {
+		for(BoundResourceHandle handle : imageBindings.values()) {
+			vkDestroySampler(state.renderDevice.device,handle.image_sampler,null);
+			vkDestroyImageView(state.renderDevice.device,handle.image_view,null);
+			vkDestroyImage(state.renderDevice.device,handle.image,null);
+		}
+		vkDestroyDescriptorPool(state.renderDevice.device,descriptorPool, null);
 		MemoryUtil.memFree(writeTarget);
+		MemoryUtil.memFree(imgStagingTarget);
 		MemoryUtil.memFree(matrixArrayStack);
 		MemoryUtil.memFree(offsetTransitionStack);
 	}
@@ -89,30 +152,230 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		requestedImageStack.add(null);
 		matrixStackHead.set(identity_matrix);
 		offsetTransitionStack.put(0);
-		currentHandle = null;
 
 		stateChangeCount = 0;
 		lastStateChange = 0;
 	}
 
-	private void startSync(MemoryStack stack) {
-
+	/**
+	 * Destroy Image is ok since it hasn't been requested in last 100 frames & has yet to be requested for use...
+	 */
+	private boolean tickImageCleanupCountdown() {
+		imageCleanupCountdown--;
+		if(imageCleanupCountdown == 0) {
+			imageCleanupCountdown = 100;
+			List<ResourceHandle> to_clean = new ArrayList<>();
+			for(Map.Entry<ResourceHandle,BoundResourceHandle> handle : imageBindings.entrySet()) {
+				if(handle.getValue().usageCount == 0) {
+					vkDestroySampler(state.renderDevice.device,handle.getValue().image_sampler,null);
+					vkDestroyImageView(state.renderDevice.device,handle.getValue().image_view,null);
+					vkDestroyImage(state.renderDevice.device,handle.getValue().image,null);
+					to_clean.add(handle.getKey());
+				}else{
+					handle.getValue().usageCount = 0;
+				}
+			}
+			to_clean.forEach(imageBindings::remove);
+			return to_clean.size() != 0;
+		}
+		return false;
 	}
+
+	private void cmdTransitionImageLayout(MemoryStack stack,VkCommandBuffer buffer,long image,int oldLayout, int newLayout) {
+		VkImageSubresourceRange subresourceRange = VkImageSubresourceRange.mallocStack(stack);
+		subresourceRange.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
+		subresourceRange.baseMipLevel(0);
+		subresourceRange.levelCount(1);
+		subresourceRange.baseArrayLayer(0);
+		subresourceRange.layerCount(1);
+
+		VkImageMemoryBarrier.Buffer barrier = VkImageMemoryBarrier.mallocStack(1,stack);
+		barrier.sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER);
+		barrier.pNext(VK_NULL_HANDLE);
+		barrier.oldLayout(oldLayout);
+		barrier.newLayout(newLayout);
+		barrier.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+		barrier.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+		barrier.image(image);
+		barrier.subresourceRange(subresourceRange);
+
+		int srcStage = 0;
+		int dstStage = 0;
+
+		if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+			barrier.srcAccessMask(0);
+			barrier.dstAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+			srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		}else if(oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+			barrier.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+			barrier.dstAccessMask(VK_ACCESS_SHADER_READ_BIT);
+			srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		}else{
+			throw new RuntimeException("Non-Implemented Transition");
+		}
+
+		vkCmdPipelineBarrier(buffer,srcStage,dstStage,0,
+				null,null,barrier);
+	}
+
 
 	@Override
 	public void finishDraw() {
+		offsetTransitionStack.put(drawCount / GUI_ELEMENT_SIZE);
 		try(MemoryStack stack = stackPush()) {
-			startSync(stack);
-			//VkBufferMemoryBarrier.Buffer memoryBarrier = VkBufferMemoryBarrier.mallocStack(1,stack);
-			//memoryBarrier.sType(VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER);
-			//memoryBarrier.pNext(VK_NULL_HANDLE);
-			//memoryBarrier.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
-			//memoryBarrier.dstAccessMask(VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
-			//memoryBarrier.srcQueueFamilyIndex(state.renderDevice.queueFamilyIndexTransfer);
-			//memoryBarrier.dstQueueFamilyIndex(state.renderDevice.queueFamilyIndexRender);
-			//memoryBarrier.offset(0);
-			//memoryBarrier.size(drawCount);
-			//memoryBarrier.buffer(mgr.memGuiStaging.get(0));
+			boolean rewrite_descriptor_set = tickImageCleanupCountdown();
+			VkBufferImageCopy.Buffer copyImg = VkBufferImageCopy.callocStack(requestedImages.size(),stack);
+			LongBuffer dstImages = stack.callocLong(requestedImages.size());
+			copyImg.limit(0);
+			copyImg.position(0);
+			imgStagingTarget.position(0);
+			for(ResourceHandle handle : requestedImages) {
+				BoundResourceHandle boundHandle = imageBindings.get(handle);
+				boolean dirty = handle.checkIfChanged();
+				STBITexture texture = null;
+				if (boundHandle == null) {
+					rewrite_descriptor_set = true;
+					handle.reloadData();
+					texture = new STBITexture(handle.getByteData());
+					LongBuffer retValue = stack.longs(0,0,0);
+					mgr.AllocateGuiImage(VK_FORMAT_R8G8B8A8_UNORM,
+							texture.width,texture.height,
+							VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+							retValue,stack,true);
+					boundHandle = new BoundResourceHandle();
+					boundHandle.image = retValue.get(0);
+					boundHandle.offset = (int)retValue.get(1);
+					boundHandle.count = (int)retValue.get(2);
+					boundHandle.usageCount = 1;
+					imageBindings.put(handle,boundHandle);
+					dirty = true;
+					VkComponentMapping componentMapping = VkComponentMapping.mallocStack(stack);
+					componentMapping.set(VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY);
+					VkImageSubresourceRange subResourceRange = VkImageSubresourceRange.mallocStack(stack);
+					subResourceRange.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
+					subResourceRange.baseMipLevel(0);
+					subResourceRange.levelCount(1);
+					subResourceRange.baseArrayLayer(0);
+					subResourceRange.layerCount(1);
+					VkImageViewCreateInfo imageViewCreate = VkImageViewCreateInfo.mallocStack(stack);
+					imageViewCreate.sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO);
+					imageViewCreate.pNext(VK_NULL_HANDLE);
+					imageViewCreate.flags(0);
+					imageViewCreate.image(boundHandle.image);
+					imageViewCreate.viewType(VK_IMAGE_VIEW_TYPE_2D);
+					imageViewCreate.format(VK_FORMAT_R8G8B8A8_UNORM);
+					imageViewCreate.components(componentMapping);
+					imageViewCreate.subresourceRange(subResourceRange);
+					if(vkCreateImageView(state.renderDevice.device,imageViewCreate,null,retValue) != VK_SUCCESS) {
+						throw new RuntimeException("Failed to create image view[gui]");
+					}
+					boundHandle.image_view = retValue.get(0);
+					VkSamplerCreateInfo samplerCreateInfo = VkSamplerCreateInfo.mallocStack(stack);
+					samplerCreateInfo.sType(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO);
+					samplerCreateInfo.pNext(VK_NULL_HANDLE);
+					samplerCreateInfo.flags(0);
+					samplerCreateInfo.magFilter(VK_FILTER_LINEAR);
+					samplerCreateInfo.minFilter(VK_FILTER_LINEAR);
+					samplerCreateInfo.addressModeU(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+					samplerCreateInfo.addressModeV(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+					samplerCreateInfo.addressModeW(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+					samplerCreateInfo.anisotropyEnable(true);
+					samplerCreateInfo.maxAnisotropy(8);
+					samplerCreateInfo.borderColor(VK_BORDER_COLOR_INT_OPAQUE_BLACK);
+					samplerCreateInfo.unnormalizedCoordinates(false);
+					samplerCreateInfo.compareEnable(false);
+					samplerCreateInfo.compareOp(VK_COMPARE_OP_ALWAYS);
+					samplerCreateInfo.mipmapMode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
+					samplerCreateInfo.mipLodBias(0.0f);
+					samplerCreateInfo.minLod(0.0f);
+					samplerCreateInfo.maxLod(0.0f);
+
+					if(vkCreateSampler(state.renderDevice.device,samplerCreateInfo,null,retValue) != VK_SUCCESS) {
+						throw new RuntimeException("Failed to create sampler");
+					}
+					boundHandle.image_sampler = retValue.get(0);
+				}else if(dirty) {
+					handle.reloadData();
+					texture = new STBITexture(handle.getByteData());
+				}else{
+					boundHandle.usageCount++;
+				}
+				if(dirty) {
+					//Append to staging buffer//
+					VkImageSubresourceLayers sub_resource = VkImageSubresourceLayers.mallocStack(stack);
+					sub_resource.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
+					sub_resource.baseArrayLayer(0);
+					sub_resource.mipLevel(0);
+					sub_resource.layerCount(1);
+
+					VkExtent3D extent = VkExtent3D.mallocStack(stack);
+					extent.width(texture.width);
+					extent.height(texture.height);
+					extent.depth(1);
+					VkOffset3D i_offset = VkOffset3D.mallocStack(stack);
+					i_offset.x(0);
+					i_offset.y(0);
+					i_offset.z(0);
+
+					int offset = imgStagingTarget.position();
+					imgStagingTarget.put(texture.pixels);
+					int lim = copyImg.limit() + 1;
+					copyImg.limit(lim);
+					copyImg.bufferOffset(GUI_BUFFER_SIZE+offset);
+					copyImg.bufferImageHeight(0);
+					copyImg.bufferRowLength(0);
+					copyImg.imageExtent(extent);
+					copyImg.imageOffset(i_offset);
+					copyImg.imageSubresource(sub_resource);
+					copyImg.position(lim);
+					dstImages.put(boundHandle.image);
+				}
+				if(texture != null) {
+					//TODO: find out how this causes crashes??
+					//texture.Free();
+				}
+			}
+			if(rewrite_descriptor_set) {
+				List<BoundResourceHandle> imageTargets = requestedImages.stream().map(imageBindings::get).collect(Collectors.toList());
+				if(requestedImages.size() > 32) {
+					state.vkLogger.Severe("Larger than maximum images requested");
+					return;
+				}
+				VkDescriptorImageInfo.Buffer imageInfo = VkDescriptorImageInfo.mallocStack(32,stack);
+				for(int i = 0; i < requestedImages.size(); i++) {
+					BoundResourceHandle boundHandle = imageTargets.get(i);
+					imageInfo.position(i);
+					imageInfo.sampler(boundHandle.image_sampler);
+					imageInfo.imageLayout(VK_IMAGE_LAYOUT_GENERAL);
+					imageInfo.imageView(boundHandle.image_view);
+					boundHandle.image_index = i;
+				}
+				BoundResourceHandle ignoreBinding = imageTargets.get(0);
+				for(int i = requestedImages.size(); i < 32; i++) {
+					imageInfo.position(i);
+					imageInfo.sampler(ignoreBinding.image_sampler);
+					imageInfo.imageLayout(VK_IMAGE_LAYOUT_GENERAL);
+					imageInfo.imageView(ignoreBinding.image_view);
+				}
+				imageInfo.position(0);
+				VkWriteDescriptorSet.Buffer descWrites = VkWriteDescriptorSet.mallocStack(1,stack);
+				descWrites.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
+				descWrites.pNext(VK_NULL_HANDLE);
+				descWrites.dstSet(imageDescriptorSet);
+				descWrites.dstBinding(0);
+				descWrites.dstArrayElement(0);
+				descWrites.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+				descWrites.pImageInfo(imageInfo);
+				vkUpdateDescriptorSets(state.renderDevice.device,descWrites,null);
+			}
+			copyImg.position(0);
+			dstImages.position(0);
 
 			VkCommandBuffer transferBuffer = new VkCommandBuffer(state.command_buffers_gui_transfer.get(state.swapChainImageIndex),state.renderDevice.device);
 			vkResetCommandBuffer(transferBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -124,17 +387,33 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
 			if(drawCount != 0) {
-				ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE, stack);
+				ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE+GUI_IMAGE_CACHE_SIZE, stack);
 				writeTarget.position(0);
 				memMapping.put(writeTarget);
+				imgStagingTarget.position(0);
+				memMapping.position(GUI_BUFFER_SIZE);
+				memMapping.put(imgStagingTarget);
 				memMapping.position(0);
 				mgr.unMapMemory(mgr.memGuiStaging.get(1));
 
-				VkBufferCopy.Buffer copyInfo = VkBufferCopy.mallocStack(1, stack);
+				VkBufferCopy.Buffer copyInfo = VkBufferCopy.mallocStack(1,stack);
+				copyInfo.position(0);
 				copyInfo.srcOffset(0);
 				copyInfo.dstOffset(0);
 				copyInfo.size(drawCount);
 				vkCmdCopyBuffer(transferBuffer, mgr.memGuiStaging.get(0), mgr.memGuiDrawing.get(0), copyInfo);
+
+				if(copyImg.remaining() != 0) {
+					int lim = copyImg.limit();
+					for(int i = 0; i < lim; i++) {
+						copyImg.position(i);
+						copyImg.limit(i+1);
+						long dstImage = dstImages.get(i);
+						cmdTransitionImageLayout(stack,transferBuffer,dstImage,VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+						vkCmdCopyBufferToImage(transferBuffer,mgr.memGuiStaging.get(0), dstImage,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,copyImg);
+						cmdTransitionImageLayout(stack,transferBuffer,dstImage,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					}
+				}
 			}
 
 
@@ -157,10 +436,13 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
 			vkBeginCommandBuffer(cmdBuffer,beginInfo);
 
-			//vkCmdPipelineBarrier(cmdBuffer,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,0
-			//		,null,memoryBarrier,null);
-
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state.guiPipeline.graphics_pipeline);
+
+			if(drawCount != 0) {
+				LongBuffer descriptorSets = stack.longs(imageDescriptorSet);
+				vkCmdBindDescriptorSets(cmdBuffer, 0, state.guiPipeline.graphics_pipeline_layout,
+						0, descriptorSets, null);
+			}
 
 			VkRect2D.Buffer scissor = VkRect2D.mallocStack(1,stack);
 			VkOffset2D offset = VkOffset2D.callocStack(stack);
@@ -173,8 +455,23 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 			if(drawCount != 0) {
 				vkCmdBindVertexBuffers(cmdBuffer, 0, stack.longs(mgr.memGuiDrawing.get(0)), stack.longs(0));
-
-				vkCmdDraw(cmdBuffer, drawCount / GUI_ELEMENT_SIZE, 1, 0, 0);
+				IntBuffer pushConstantsBuffer = stack.callocInt(2);
+				for(int i = 0; i <= stateChangeCount; i++) {
+					int offsetStart = offsetTransitionStack.get(i);
+					int offsetEnd = offsetTransitionStack.get(i+1);
+					int drawLen = offsetEnd - offsetStart;
+					if(drawLen != 0) {
+						boolean enable_draw = imageEnableStateStack.get(i) != 0;
+						ResourceHandle resHandle = requestedImageStack.get(i);
+						int selected_image_index = resHandle == null ? 0 : imageBindings.get(resHandle).image_index;
+						pushConstantsBuffer.put(0, selected_image_index);
+						pushConstantsBuffer.put(1, enable_draw ? 1 : 0);
+						vkCmdPushConstants(cmdBuffer, state.guiPipeline.graphics_pipeline_layout,
+								VK_SHADER_STAGE_FRAGMENT_BIT, 0, pushConstantsBuffer);
+						vkCmdSetScissor(cmdBuffer, 0, scissor);//TODO: change values when applicable
+						vkCmdDraw(cmdBuffer, drawLen, 1, offsetStart, 0);
+					}
+				}
 			}
 
 			if(vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS) {
@@ -203,12 +500,12 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private void state_change() {
 		offsetTransitionStack.put(drawCount / GUI_ELEMENT_SIZE);
 		lastStateChange = drawCount;
+		stateChangeCount++;
 	}
 
 	@Override
 	public void SetTexture(ResourceHandle handle) {
-		System.out.println("SET:TEX -- " + handle);
-		if(!requestedImages.contains(handle)) {
+		if(!requestedImages.contains(handle) && handle != null) {
 			requestedImages.add(handle);
 		}
 		ResourceHandle latest = requestedImageStack.get(stateChangeCount);
@@ -229,7 +526,6 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void EnableTexture(boolean enabled) {
-		System.out.println("Enable:TEX -- " + enabled);
 		byte change = enabled ? (byte)1 : (byte)0;
 		if(imageEnableStateStack.get(stateChangeCount) != change) {
 			if(has_drawn_since_state_change()) {
@@ -248,7 +544,6 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void SetMatrix(@NotNull Matrix4f mat) {
-		System.out.println("Set:Matrix -- identity="+mat.equals(identity_matrix));
 		if(!matrixStackHead.equals(mat)) {
 			if(has_drawn_since_state_change()) {
 				requestedImageStack.add(requestedImageStack.get(stateChangeCount));
@@ -296,22 +591,12 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void DrawText(float x, float y, float height, String text) {
-		//TODO:
-	}
-
-	@Override
-	public void DrawText(float x, float y, float height, String text, int col, int colOutline) {
-		//TODO:
+		DrawText(x,y,height,text,0xFFFFFFFF,0xFFFFFFFF);
 	}
 
 	@Override
 	public void DrawItem(float x, float y, float width, float height) {
 		//TODO:
-	}
-
-	@Override
-	public float GetTextWidthRatio(String text) {
-		return 0;
 	}
 
 	@Override
@@ -332,5 +617,80 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	@Override
 	public void scissor(int x, int y, int w, int h) {
 		//TODO:
+	}
+
+
+	private static final ResourceHandle FONT_IMAGE = ResourceManager.getImage("font/font");
+	private static final float[] FONT_CHAR_SIZES = new float[]{0,13,13,13,13,13,13,13,13,13,13,13,13,0,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,
+			6,8,10,12,13,18,17,6,8,8,12,12,6,8,6,10,13,13,13,13,13,13,13,13,13,13,7,7,12,12,12,12,22,14,14,13,15,12,11,16,16,6,8,13,11,21,
+			16,17,13,17,14,11,12,16,14,22,13,12,12,8,10,8,12,12,7,12,13,11,13,12,8,12,13,6,6,11,6,20,13,13,13,13,9,10,8,13,11,18,11,11,10,
+			8,12,8,12,13,13,13,6,8,10,17,12,12,10,26,11,8,22,13,12,13,13,6,6,10,10,12,12,23,11,18,10,8,21,13,10,12,6,8,12,13,12,13,12,12,
+			10,21,10,13,12,8,13,10,8,12,8,8,7,14,15,6,8,6,11,13,16,17,17,12,14,14,14,14,14,14,19,13,12,12,12,12,6,6,6,6,16,16,17,17,17,17,
+			17,12,17,16,16,16,16,12,13,13,12,12,12,12,12,12,19,11,12,12,12,12,6,6,6,6,13,13,13,13,13,13,13,12,13,13,13,13,13,11,13,11};
+
+	private static final int FONT_SHEET_WIDTH = 16;
+	private static final int FONT_SHEET_HEIGHT = 16;
+	private static final float FONT_CELL_WIDTH = 1.0F / (FONT_SHEET_WIDTH);
+	private static final float FONT_CELL_HEIGHT = 1.0F / (FONT_SHEET_HEIGHT);
+	private static final float FONT_WIDTH_SCALE = 32;
+
+
+	private float DrawChar(float X, float Y, float Height,char c,float aspectRatio,int col) {
+		int charID = ((int)c)-32;
+
+		int YCell = charID / FONT_SHEET_HEIGHT;
+		int XCell = charID - (YCell * FONT_SHEET_HEIGHT);
+
+		float minU = XCell * FONT_CELL_WIDTH;
+		float Width = (FONT_CHAR_SIZES[charID+32] / FONT_WIDTH_SCALE);
+		float maxU = minU + (Width * FONT_CELL_WIDTH);
+		float maxV = YCell * FONT_CELL_HEIGHT;
+		float minV = maxV + FONT_CELL_HEIGHT;
+
+		float realWidth = Height * Width * aspectRatio;
+		float maxY = Y - Height;
+		float maxX = X + realWidth;
+
+		VertexWithColUV(X,Y,minU,minV,col);
+		VertexWithColUV(X,maxY,minU,maxV,col);
+		VertexWithColUV(maxX,maxY,maxU,maxV,col);
+
+		VertexWithColUV(X,Y,minU,minV,col);
+		VertexWithColUV(maxX,maxY,maxU,maxV,col);
+		VertexWithColUV(maxX,Y,maxU,minV,col);
+
+		return realWidth;
+	}
+
+	@Override
+	public void DrawText(float x, float y, float height, String text, int col, int colOutline) {
+		//IMPORTANT NOTE: colOutline --> IGNORED
+		ResourceHandle oldRes = requestedImageStack.get(stateChangeCount);
+		boolean oldEnabled = imageEnableStateStack.get(stateChangeCount) != 0;
+		SetTexture(FONT_IMAGE);
+		EnableTexture(true);
+		//Draw//
+		final int SIZE = text.length();
+		float runningOffset = 0;
+		final float aspect = (float)screenHeight / screenWidth;
+		for(int i = 0; i < SIZE; i++){
+			char c = text.charAt(i);
+			runningOffset += DrawChar(x+runningOffset,y,height,c,aspect,col);
+		}
+		//Cleanup//
+		SetTexture(oldRes);
+		EnableTexture(oldEnabled);
+	}
+
+	@Override
+	public float GetTextWidthRatio(String text) {
+		final int SIZE = text.length();
+		final float aspect = (float)screenHeight / screenWidth;
+		float runningOffset = 0;
+		for(int i = 0; i < SIZE; i++){
+			char c = text.charAt(i);
+			runningOffset += (FONT_CHAR_SIZES[(int)c] / FONT_WIDTH_SCALE) * aspect;
+		}
+		return runningOffset;
 	}
 }

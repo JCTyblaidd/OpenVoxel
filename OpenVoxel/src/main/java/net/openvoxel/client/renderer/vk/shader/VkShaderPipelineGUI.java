@@ -3,14 +3,23 @@ package net.openvoxel.client.renderer.vk.shader;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
+import java.nio.LongBuffer;
+
 import static org.lwjgl.vulkan.VK10.*;
 import static org.lwjgl.vulkan.VK10.VK_FRONT_FACE_CLOCKWISE;
 
 public class VkShaderPipelineGUI extends VkShaderPipelineBase {
 
+	public long DescriptorSetLayout;
 
 	public VkShaderPipelineGUI(VkShaderModuleCache cache) {
 		super(cache);
+	}
+
+	@Override
+	public void destroy(VkDevice device) {
+		super.destroy(device);
+		vkDestroyDescriptorSetLayout(device,DescriptorSetLayout,null);
 	}
 
 	@Override
@@ -95,14 +104,40 @@ public class VkShaderPipelineGUI extends VkShaderPipelineBase {
 	}
 
 	@Override
-	VkPipelineLayoutCreateInfo genPipelineLayout(MemoryStack stack) {
-		VkPipelineLayoutCreateInfo layoutCreateInfo = VkPipelineLayoutCreateInfo.mallocStack(stack);
-		layoutCreateInfo.sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
+	VkPipelineLayoutCreateInfo genPipelineLayout(VkDevice device,MemoryStack stack) {
+		VkPushConstantRange.Buffer pushConstants = VkPushConstantRange.mallocStack(1,stack);
+		pushConstants.stageFlags(VK_SHADER_STAGE_FRAGMENT_BIT);
+		pushConstants.offset(0);
+		pushConstants.size(2 * Integer.SIZE / Byte.SIZE);
+
+		VkDescriptorSetLayoutBinding.Buffer layoutBindings = VkDescriptorSetLayoutBinding.mallocStack(1,stack);
+		layoutBindings.binding(0);
+		layoutBindings.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		layoutBindings.descriptorCount(32);
+		layoutBindings.stageFlags(VK_SHADER_STAGE_FRAGMENT_BIT);
+		layoutBindings.pImmutableSamplers(null);
+
+		VkDescriptorSetLayoutCreateInfo layoutCreateInfo = VkDescriptorSetLayoutCreateInfo.mallocStack(stack);
+		layoutCreateInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO);
 		layoutCreateInfo.pNext(VK_NULL_HANDLE);
 		layoutCreateInfo.flags(0);
-		layoutCreateInfo.pSetLayouts(null);
-		layoutCreateInfo.pPushConstantRanges(null);
-		return layoutCreateInfo;
+		layoutCreateInfo.pBindings(layoutBindings);
+
+		LongBuffer setLayouts = stack.callocLong(1);
+
+		if(vkCreateDescriptorSetLayout(device,layoutCreateInfo,null,setLayouts) != VK_SUCCESS) {
+			throw new RuntimeException("Failed to create descriptor set layout");
+		}
+
+		DescriptorSetLayout = setLayouts.get(0);
+
+		VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo.mallocStack(stack);
+		PipelineLayoutCreateInfo.sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
+		PipelineLayoutCreateInfo.pNext(VK_NULL_HANDLE);
+		PipelineLayoutCreateInfo.flags(0);
+		PipelineLayoutCreateInfo.pSetLayouts(setLayouts);
+		PipelineLayoutCreateInfo.pPushConstantRanges(pushConstants);
+		return PipelineLayoutCreateInfo;
 	}
 
 	@Override

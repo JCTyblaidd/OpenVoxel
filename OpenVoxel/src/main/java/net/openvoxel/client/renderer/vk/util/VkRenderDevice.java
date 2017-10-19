@@ -110,6 +110,20 @@ public class VkRenderDevice{
 					state.vkLogger.Debug("Enabled Debug Marker");
 				}
 			}
+			//Enable Standard Useful Extensions
+			String extName = extensionPropertyList.extensionNameString();
+			if(extName.equals("VK_KHR_maintenance1") || extName.equals("VK_KHR_maintenance2")) {
+				enabledExtensions.add(extensionPropertyList.extensionName());
+				state.vkLogger.Debug("Enabled KHR Maintenance Extension: " + extName);
+			}
+			if(extName.equals("VK_NV_geometry_shader_passthrough")) {
+				enabledExtensions.add(extensionPropertyList.extensionName());
+				state.vkLogger.Debug("Enabled NV Geometry Shader Passthrough");
+			}
+			if(extName.equals("VK_EXT_blend_operation_advanced")) {
+				enabledExtensions.add(extensionPropertyList.extensionName());
+				state.vkLogger.Debug("Enabled EXT Advanced Blend Operations");
+			}
 		}
 		PointerBuffer pointerBuffer = stack.callocPointer(enabledExtensions.size());
 		for(ByteBuffer buffer : enabledExtensions) {
@@ -306,18 +320,21 @@ public class VkRenderDevice{
 		vkDestroyDevice(device,null);
 	}
 
-	public int findMemoryType(int typeFilter,int memoryPropertyFlags) {
-		//TODO: improve//
+	int findMemoryType(int memoryTypeBits,int memoryPropertyFlags) {
 		for (int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
-			if ((typeFilter & (1 << i)) != 0 &&
-				    (memoryProperties.memoryTypes(i).propertyFlags() & memoryPropertyFlags) == memoryPropertyFlags) {
+			boolean filter = (memoryTypeBits & (1 << i)) != 0;
+			int mem_props = memoryProperties.memoryTypes(i).propertyFlags();
+			boolean valid_props = (mem_props & memoryPropertyFlags) == memoryPropertyFlags;
+			if (filter && valid_props) {
 				return i;
 			}
 		}
+		if((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) == VK_MEMORY_PROPERTY_HOST_CACHED_BIT) {
+			//Fallback - No Caching//
+			int new_props = memoryPropertyFlags & ~VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+			return findMemoryType(memoryTypeBits,new_props);
+		}
 		state.vkLogger.Severe("Failed to find valid memory type");
-		//TODO: handle better
-		System.out.println(typeFilter);
-		System.out.println(memoryPropertyFlags);
 		throw new RuntimeException("Failure");
 	}
 }

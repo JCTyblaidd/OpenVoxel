@@ -65,8 +65,10 @@ public class STBITexture {
 	}
 
 	public void Free() {
-		stbi_image_free(pixels);
-		pixels = null;//Cleanup//
+		if(pixels != null) {
+			stbi_image_free(pixels);
+			pixels = null;//Cleanup//
+		}
 	}
 
 	public boolean hasData() {

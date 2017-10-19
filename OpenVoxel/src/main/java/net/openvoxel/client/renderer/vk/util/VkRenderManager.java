@@ -66,7 +66,6 @@ class VkRenderManager {
 	long semaphore_image_available;
 	long semaphore_render_finished;
 	public long semaphore_gui_data_updated;
-	public long semaphore_gui_data_used;
 
 	VkRenderManager() {
 		renderConfig = new VkRenderConfig();
@@ -92,11 +91,8 @@ class VkRenderManager {
 			if(vkCreateSemaphore(renderDevice.device,createSemaphore,null,lb) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to create semaphore");
 			}
-			semaphore_gui_data_used = lb.get(0);
-			if(vkCreateSemaphore(renderDevice.device,createSemaphore,null,lb) != VK_SUCCESS) {
-				throw new RuntimeException("Failed to create semaphore");
-			}
 			semaphore_gui_data_updated = lb.get(0);
+
 		}
 	}
 
@@ -104,7 +100,6 @@ class VkRenderManager {
 		vkDestroySemaphore(renderDevice.device,semaphore_image_available,null);
 		vkDestroySemaphore(renderDevice.device,semaphore_render_finished, null);
 		vkDestroySemaphore(renderDevice.device,semaphore_gui_data_updated,null);
-		vkDestroySemaphore(renderDevice.device,semaphore_gui_data_used,null);
 	}
 
 	void initFrameBuffers() {

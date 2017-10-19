@@ -29,7 +29,7 @@ public abstract class VkShaderPipelineBase {
 
 	public void init(VkDevice device, long render_pass, int subpass, long pipeline_cache,List<String> shaderDefines) {
 		try(MemoryStack stack = stackPush()) {
-			VkPipelineLayoutCreateInfo layoutCreateInfo = genPipelineLayout(stack);
+			VkPipelineLayoutCreateInfo layoutCreateInfo = genPipelineLayout(device,stack);
 			LongBuffer lb = stack.callocLong(1);
 			if(vkCreatePipelineLayout(device,layoutCreateInfo,null,lb) != VK_SUCCESS) {
 				throw new RuntimeException("Error Creating Pipeline Layout");
@@ -241,6 +241,6 @@ public abstract class VkShaderPipelineBase {
 	/**
 	 * Default: Abstract
 	 */
-	abstract VkPipelineLayoutCreateInfo genPipelineLayout(MemoryStack stack);
+	abstract VkPipelineLayoutCreateInfo genPipelineLayout(VkDevice device,MemoryStack stack);
 
 }

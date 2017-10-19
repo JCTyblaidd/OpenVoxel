@@ -32,7 +32,7 @@ public class ScreenMainMenu extends Screen{
 
 		background = new GUIColour(0xFF000000,0x00000000,false);
 
-		mainText.setupAbsSizeTargeted(0.25F,0.4F,0,140);
+		mainText.setupAbsSizeTargeted(0.25F,0.4F,0,70);//140
 		buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
 		buttonMultiPlayer.setupOffsetTo(mainText,-125,10,150,30);
 		buttonSettings.setupOffsetTo(mainText,-125,50,150,30);

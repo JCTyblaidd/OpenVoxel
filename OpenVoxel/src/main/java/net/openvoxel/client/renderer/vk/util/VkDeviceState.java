@@ -84,9 +84,6 @@ public class VkDeviceState extends VkRenderManager {
 				throw new RuntimeException("Failed to get next image");
 			}
 			swapChainImageIndex =  index.get(0);
-			//if(rebootSync) {
-			//	vkQueueSubmi
-			//}
 		}
 	}
 
@@ -95,8 +92,8 @@ public class VkDeviceState extends VkRenderManager {
 			VkSubmitInfo submitInfo = VkSubmitInfo.mallocStack(stack);
 			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
 			submitInfo.pNext(VK_NULL_HANDLE);
-			submitInfo.pWaitSemaphores(stack.longs(semaphore_gui_data_used));
-			submitInfo.waitSemaphoreCount(0);//TODO: update & change if needed
+			submitInfo.pWaitSemaphores(null);
+			submitInfo.waitSemaphoreCount(0);
 			submitInfo.pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_TRANSFER_BIT));
 			submitInfo.pSignalSemaphores(stack.longs(semaphore_gui_data_updated));
 			submitInfo.pCommandBuffers(stack.pointers(command_buffers_gui_transfer.get(swapChainImageIndex)));
@@ -143,9 +140,6 @@ public class VkDeviceState extends VkRenderManager {
 			LongBuffer signalSemaphores = stack.longs(semaphore_render_finished);
 			PointerBuffer cmdBuffers = stack.pointers(command_buffers_main.get(swapChainImageIndex));
 			IntBuffer waitStages = stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
-			//VkSubmitInfo submitInfo = VkSubmitInfo.callocStack(stack);
-			//submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
-			//submitInfo.pNext(VK_NULL_HANDLE);
 			submitInfo.pWaitSemaphores(semaphores);
 			submitInfo.waitSemaphoreCount(2);
 			submitInfo.pWaitDstStageMask(waitStages);
@@ -399,15 +393,25 @@ public class VkDeviceState extends VkRenderManager {
 					vkLogger.Info(" - " + res);
 				}
 			}
+			boolean fallback_immediate = false;
 			for(int i = 0; i < presentModes.capacity(); i++) {
 				if(presentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR) {
 					vkLogger.Info("Chosen Present Mode: Mailbox");
 					chosenPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 				}
+				if(presentModes.get(i) == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+					fallback_immediate = true;
+				}
 			}
 			if(chosenPresentMode == -1) {
-				chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-				vkLogger.Info("Chosen Present Mode: FIFO");
+				String os_type = System.getProperty("os.name").toLowerCase();
+				if(!os_type.contains("win")  && !os_type.contains("mac") && fallback_immediate) {
+					chosenPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+					vkLogger.Info("Chosen Present Mode: Immediate(Linux Fix)");
+				}else {
+					chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+					vkLogger.Info("Chosen Present Mode: FIFO");
+				}
 			}
 			//Choose Swap Extent//
 			if(surfaceCapabilities.currentExtent().width() != 0xFFFFFFFF) {

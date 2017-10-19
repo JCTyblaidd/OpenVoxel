@@ -41,15 +41,13 @@ public class GUIButton extends GUIObjectSizable {
 		if(str != null) {
 			float X = getPosX(drawHandle.getScreenWidth());
 			float Y = getPosY(drawHandle.getScreenHeight());
-			float H = getHeight(drawHandle.getScreenHeight()) * 2;
+			float H = getHeight(drawHandle.getScreenHeight());
 			float W = getWidth(drawHandle.getScreenWidth());
 			float TXT_W = drawHandle.GetTextWidthRatio(str) * H;
-			float W_OFF = W - (TXT_W/2);
-			X = X * 2 - 1 + W_OFF;
-			Y = -Y * 2 + 1 - H;
+			X += (W / 2) - (TXT_W/2);
+			Y += H;
 			drawHandle.DrawText(X,Y,H,str);
 		}
-		//drawHandle.DrawText(0.1F,0.1F,0.1F,"Open Voxel Version 300000!!!! #Awesome");
 	}
 
 

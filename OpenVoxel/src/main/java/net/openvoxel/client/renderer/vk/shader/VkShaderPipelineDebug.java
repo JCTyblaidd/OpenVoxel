@@ -1,10 +1,7 @@
 package net.openvoxel.client.renderer.vk.shader;
 
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VkPipelineDynamicStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
-import org.lwjgl.vulkan.VkPipelineRasterizationStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo;
+import org.lwjgl.vulkan.*;
 
 import static org.lwjgl.vulkan.VK10.*;
 
@@ -45,7 +42,7 @@ public class VkShaderPipelineDebug extends VkShaderPipelineBase{
 	}
 
 	@Override
-	VkPipelineLayoutCreateInfo genPipelineLayout(MemoryStack stack) {
+	VkPipelineLayoutCreateInfo genPipelineLayout(VkDevice device, MemoryStack stack) {
 		VkPipelineLayoutCreateInfo layoutCreateInfo = VkPipelineLayoutCreateInfo.mallocStack(stack);
 		layoutCreateInfo.sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
 		layoutCreateInfo.pNext(VK_NULL_HANDLE);

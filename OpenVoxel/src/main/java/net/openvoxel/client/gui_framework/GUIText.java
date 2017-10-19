@@ -25,8 +25,8 @@ public class GUIText extends GUIObjectSizable{
 		float Y = getPosY(drawHandle.getScreenHeight());
 		float H = getHeight(drawHandle.getScreenHeight());
 		float diff = drawHandle.GetTextWidthRatio(text);
-		X = X * 2 - 1 - (H * diff / 2);
-		Y = -Y * 2 + 1 + (H / 2);
+		Y -= (H / 2);
+		X -= (H * diff / 2);
 		drawHandle.DrawText(X,Y,H,text);
 	}
 
