@@ -3,12 +3,10 @@ package net.openvoxel.client.renderer.vk.shader;
 import gnu.trove.list.TIntList;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
-import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
 
-import javax.swing.*;
 import java.nio.LongBuffer;
 import java.util.List;
 

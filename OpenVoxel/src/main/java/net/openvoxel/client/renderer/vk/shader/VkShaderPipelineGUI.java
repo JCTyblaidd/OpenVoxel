@@ -6,7 +6,6 @@ import org.lwjgl.vulkan.*;
 import java.nio.LongBuffer;
 
 import static org.lwjgl.vulkan.VK10.*;
-import static org.lwjgl.vulkan.VK10.VK_FRONT_FACE_CLOCKWISE;
 
 public class VkShaderPipelineGUI extends VkShaderPipelineBase {
 

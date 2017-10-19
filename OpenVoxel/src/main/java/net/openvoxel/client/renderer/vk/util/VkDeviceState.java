@@ -4,7 +4,6 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
-import net.openvoxel.client.renderer.vk.VkGUIRenderer;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -181,6 +180,13 @@ public class VkDeviceState extends VkRenderManager {
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API);
 		glfw_window = glfwCreateWindow(ClientInput.currentWindowWidth.get(), ClientInput.currentWindowHeight.get(), "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
+		try(MemoryStack stack = stackPush()) {
+			IntBuffer width = stack.mallocInt(1);
+			IntBuffer height = stack.mallocInt(1);
+			glfwGetWindowSize(glfw_window,width,height);
+			ClientInput.currentWindowHeight.set(height.get(0));
+			ClientInput.currentWindowWidth.set(width.get(0));
+		}
 	}
 
 	void success(int result,String err) {

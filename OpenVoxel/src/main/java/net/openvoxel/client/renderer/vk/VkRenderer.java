@@ -1,7 +1,6 @@
 package net.openvoxel.client.renderer.vk;
 
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
@@ -10,14 +9,8 @@ import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.textureatlas.IconAtlas;
-import org.lwjgl.vulkan.VK10;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.lwjgl.vulkan.VK10.vkDeviceWaitIdle;
-import static org.lwjgl.vulkan.VK10.vkQueueWaitIdle;
-import static org.lwjgl.vulkan.VK10.vkWaitForFences;
 
 /**
  * Created by James on 28/08/2016.

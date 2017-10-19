@@ -5,7 +5,6 @@ import net.openvoxel.client.renderer.vk.VkGUIRenderer;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.system.Pointer;
 import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;

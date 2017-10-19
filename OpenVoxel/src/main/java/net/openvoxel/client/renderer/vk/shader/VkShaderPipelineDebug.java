@@ -1,7 +1,10 @@
 package net.openvoxel.client.renderer.vk.shader;
 
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.*;
+import org.lwjgl.vulkan.VkDevice;
+import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
+import org.lwjgl.vulkan.VkPipelineRasterizationStateCreateInfo;
+import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo;
 
 import static org.lwjgl.vulkan.VK10.*;
 

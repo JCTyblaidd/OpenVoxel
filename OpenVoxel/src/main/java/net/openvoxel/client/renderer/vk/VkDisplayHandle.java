@@ -10,8 +10,6 @@ import net.openvoxel.common.event.input.KeyStateChangeEvent;
 import net.openvoxel.common.event.input.WindowResizeEvent;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F12;
-import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 
 /**
  * Created by James on 01/09/2016.
