@@ -100,6 +100,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	}
 
 	public void create_descriptor_sets() {
+		dirtyDrawUpdateCountdown = state.swapChainImageViews.capacity() + 1;
+		rewriteDescriptorSetCountdown = state.swapChainImageViews.capacity() + 1;
 		imageDescriptorSets = MemoryUtil.memAllocLong(state.swapChainImageViews.capacity());
 		try(MemoryStack stack = stackPush()) {
 			LongBuffer res = stack.mallocLong(1);
@@ -135,6 +137,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	}
 
 	public void destroy_descriptors() {
+		vkResetDescriptorPool(state.renderDevice.device,descriptorPool,0);
 		vkDestroyDescriptorPool(state.renderDevice.device,descriptorPool, null);
 		MemoryUtil.memFree(imageDescriptorSets);
 	}
@@ -187,6 +190,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private boolean tickImageCleanupCountdown() {
 		imageCleanupCountdown--;
 		if(imageCleanupCountdown == 0) {
+			//TODO: IMPLEMENT THIS BETTER//
+			/*
 			imageCleanupCountdown = 100;
 			List<ResourceHandle> to_clean = new ArrayList<>();
 			for(Map.Entry<ResourceHandle,BoundResourceHandle> handle : imageBindings.entrySet()) {
@@ -201,6 +206,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			}
 			to_clean.forEach(imageBindings::remove);
 			return to_clean.size() != 0;
+			*/
 		}
 		return false;
 	}
@@ -269,7 +275,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			}
 			return;//NO DRAW NEEDED//
 		}else{
-			dirtyDrawUpdateCountdown = imageDescriptorSets.capacity();
+			dirtyDrawUpdateCountdown = imageDescriptorSets.capacity() + 1;
 		}
 		offsetTransitionStack.put(drawCount / GUI_ELEMENT_SIZE);
 		try(MemoryStack stack = stackPush()) {

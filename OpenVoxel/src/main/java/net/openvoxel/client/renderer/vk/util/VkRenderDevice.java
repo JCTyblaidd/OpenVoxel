@@ -28,7 +28,7 @@ public class VkRenderDevice{
 	private VkPhysicalDeviceFeatures deviceFeatures = VkPhysicalDeviceFeatures.calloc();
 	private VkPhysicalDeviceMemoryProperties memoryProperties = VkPhysicalDeviceMemoryProperties.calloc();
 	private VkPhysicalDeviceProperties properties = VkPhysicalDeviceProperties.calloc();
-	private VkQueueFamilyProperties.Buffer queueFamilyProperties;
+	VkQueueFamilyProperties.Buffer queueFamilyProperties;
 
 	/*Created Device State Information*/
 	public VkDevice device;

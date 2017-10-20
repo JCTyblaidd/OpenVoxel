@@ -7,6 +7,7 @@ import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.vk.VkGUIRenderer;
 import net.openvoxel.client.renderer.vk.VkRenderer;
 import net.openvoxel.client.renderer.vk.VkWorldRenderer;
+import net.openvoxel.statistics.SystemStatistics;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -41,6 +42,9 @@ public class VkDeviceState extends VkRenderManager {
 	private long window_swapchain;
 
 	private long debug_report_callback_ext;
+	private long vulkan_timestamp_query_pool;
+	private long timestamp_cap;
+	private long last_terminate_timestamp = 0;
 
 	public Logger vkLogger;
 
@@ -73,11 +77,36 @@ public class VkDeviceState extends VkRenderManager {
 		initFrameBuffers();
 		initCommandBuffers();
 		initMemory();
+		createQueryPool();
+	}
+
+	private void createQueryPool() {
+		try(MemoryStack stack = stackPush()) {
+			VkQueryPoolCreateInfo createInfo = VkQueryPoolCreateInfo.mallocStack(stack);
+			createInfo.sType(VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO);
+			createInfo.pNext(VK_NULL_HANDLE);
+			createInfo.flags(0);
+			createInfo.queryType(VK_QUERY_TYPE_TIMESTAMP);
+			createInfo.queryCount(swapChainImageViews.capacity()*2);//start/fin * index [draw only]
+			createInfo.pipelineStatistics(0);
+			LongBuffer retVal = stack.mallocLong(1);
+			if(vkCreateQueryPool(renderDevice.device,createInfo,null,retVal) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to create Query Pool");
+			}
+			vulkan_timestamp_query_pool = retVal.get(0);
+			int bits = renderDevice.queueFamilyProperties.get(renderDevice.queueFamilyIndexRender).timestampValidBits();
+			vkLogger.Info("Draw Queue Valid Bits: ",bits);
+			timestamp_cap = bits;
+		}
+	}
+
+	private void destroyQueryPool() {
+		vkDestroyQueryPool(renderDevice.device,vulkan_timestamp_query_pool,null);
 	}
 
 
 	private void waitForFence(long fence) {
-		if(vkWaitForFences(renderDevice.device,fence,true,100) != VK_SUCCESS) {
+		if(vkWaitForFences(renderDevice.device,fence,true,-1) != VK_SUCCESS) {
 			throw new RuntimeException("Failed to wait for fence");
 		}
 		vkResetFences(renderDevice.device,fence);
@@ -87,7 +116,7 @@ public class VkDeviceState extends VkRenderManager {
 	public void acquireNextImage(boolean rebootSync) {
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer index = stack.callocInt(1);
-			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,-1L,semaphore_image_available,VK_NULL_HANDLE,index);
+			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,-1,semaphore_image_available,VK_NULL_HANDLE,index);
 			if(result == VK_ERROR_OUT_OF_DATE_KHR) {
 				recreateSwapChain(VkRenderer.Vkrenderer.getGUIRenderer());
 			}else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -95,14 +124,38 @@ public class VkDeviceState extends VkRenderManager {
 				throw new RuntimeException("Failed to get next image");
 			}
 			swapChainImageIndex = index.get(0);
-			//waitForFence(submit_wait_fences_draw.get(swapChainImageIndex));
-			//waitForFence(submit_wait_fences_transfer.get(swapChainImageIndex));
+			int fenceSwapChainIndex = swapChainImageIndex;
+			if(!rebootSync) {
+				waitForFence(submit_wait_fences_transfer.get(fenceSwapChainIndex));
+				waitForFence(submit_wait_fences_draw.get(fenceSwapChainIndex));
+				LongBuffer res = stack.mallocLong(2);
+				if(timestamp_cap == 64) {
+					vkGetQueryPoolResults(renderDevice.device,vulkan_timestamp_query_pool,
+							swapChainImageIndex*2,2,res,0,
+							VK_QUERY_RESULT_64_BIT);
+				}else{
+					IntBuffer res_i = stack.mallocInt(2);
+					vkGetQueryPoolResults(renderDevice.device,vulkan_timestamp_query_pool,
+							swapChainImageIndex*2,2,res_i,0, 0);
+					res.put(0,res_i.get(0));
+					res.put(1,res_i.get(1));
+				}
+				long time_usage = res.get(1) - res.get(0);
+				long time_total = res.get(1) - last_terminate_timestamp;
+				last_terminate_timestamp = res.get(1);
+				double perc_usage = (double)time_usage / time_total;
+				double last_graphics = SystemStatistics.graphics_history[SystemStatistics.write_index];
+				SystemStatistics.graphics_history[SystemStatistics.write_index] = (perc_usage+last_graphics)/2;
+			}else{
+				vkResetFences(renderDevice.device,submit_wait_fences_transfer.get(fenceSwapChainIndex));
+				vkResetFences(renderDevice.device,submit_wait_fences_draw.get(fenceSwapChainIndex));
+			}
 		}
 	}
 
 	public void submitNewWork(VkWorldRenderer worldRenderer) {
-		long submitFenceTransfer        = 0;//submit_wait_fences_transfer.get(swapChainImageIndex);
-		long submitFenceDraw            = 0;//submit_wait_fences_draw.get(swapChainImageIndex);
+		long submitFenceTransfer        = submit_wait_fences_transfer.get(swapChainImageIndex);
+		long submitFenceDraw            = submit_wait_fences_draw.get(swapChainImageIndex);
 		long mainCommandBuffer          = command_buffers_main.get(swapChainImageIndex);
 		long guiTransferCommandBuffer   = command_buffers_gui_transfer.get(swapChainImageIndex);
 		long guiDrawCommandBuffer       = command_buffers_gui.get(swapChainImageIndex);
@@ -131,6 +184,9 @@ public class VkDeviceState extends VkRenderManager {
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(mainBuffer,beginInfo);
 
+			vkCmdWriteTimestamp(mainBuffer,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+					vulkan_timestamp_query_pool,swapChainImageIndex*2);
+
 			VkRenderPassBeginInfo renderPassInfo = VkRenderPassBeginInfo.callocStack(stack);
 			renderPassInfo.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
 			renderPassInfo.pNext(VK_NULL_HANDLE);
@@ -152,6 +208,9 @@ public class VkDeviceState extends VkRenderManager {
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiDrawCommandBuffer));
 
 			vkCmdEndRenderPass(mainBuffer);
+
+			vkCmdWriteTimestamp(mainBuffer,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+					vulkan_timestamp_query_pool,swapChainImageIndex*2+1);
 
 			if(vkEndCommandBuffer(mainBuffer) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to generate main command buffer");
@@ -190,9 +249,10 @@ public class VkDeviceState extends VkRenderManager {
 				if(res != VK_ERROR_OUT_OF_DATE_KHR && res != VK_SUBOPTIMAL_KHR) {
 					throw new RuntimeException("Failed to present queue");
 				}else{
-					recreateSwapChain(VkRenderer.Vkrenderer.getGUIRenderer());
+					VkRenderer.Vkrenderer.markAsResizeRequired();
 				}
 			}
+			//TODO: remove after validation layer issue fixed//
 			vkQueueWaitIdle(renderDevice.renderQueue);
 		}
 	}
@@ -535,10 +595,11 @@ public class VkDeviceState extends VkRenderManager {
 
 	public void recreateSwapChain(VkGUIRenderer guiRenderer) {
 		vkDeviceWaitIdle(renderDevice.device);
+		destroyQueryPool();
 		guiRenderer.destroy_descriptors();
-		destroySwapChainSynchronisation();
-		destroySwapChain();
 		destroyCommandPools();
+		destroySwapChain();
+		destroySwapChainSynchronisation();
 		initSwapChain();
 		initSwapChainSynchronisation();
 		initRenderPasses();
@@ -547,6 +608,7 @@ public class VkDeviceState extends VkRenderManager {
 		initCommandBuffers();
 		recreateMemory();
 		guiRenderer.create_descriptor_sets();
+		createQueryPool();
 	}
 
 	private void choosePhysicalDevice() {
@@ -595,6 +657,7 @@ public class VkDeviceState extends VkRenderManager {
 
 	public void terminateAndFree() {
 		vkDeviceWaitIdle(renderDevice.device);
+		destroyQueryPool();
 		destroySwapChainSynchronisation();
 		destroySwapChain();
 		destroyCommandPools();

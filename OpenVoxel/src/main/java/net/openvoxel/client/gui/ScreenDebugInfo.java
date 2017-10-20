@@ -128,15 +128,15 @@ public class ScreenDebugInfo extends Screen{
 		tess.VertexWithCol(x2,y2,COL);
 		tess.VertexWithCol(x1,y1,COL);
 		//Draw Histogram//
-		float diff = w / 32;
-		for(int i = 0; i < 32; i++) {
+		float diff = w / 31;
+		for(int i = 1; i < 32; i++) {
 			int j1 = (i + SystemStatistics.write_index) % 32;
 			int j2 = (i + 1 + SystemStatistics.write_index) % 32;
 			float y_val1 = (float)(SystemStatistics.processor_history[j1] * h);
 			float y_val2 = (float)(SystemStatistics.processor_history[j2] * h);
 			float y_pos1 = y2 - y_val1;
 			float y_pos2 = y2 - y_val2;
-			float x_pos1 = x2 - (diff * i);
+			float x_pos1 = x2 - (diff * i) + diff;
 			float x_pos2 = x_pos1 - diff;
 			tess.VertexWithCol(x_pos2,y2,CPU_COL);
 			tess.VertexWithCol(x_pos1,y_pos1,CPU_COL);
@@ -145,6 +145,23 @@ public class ScreenDebugInfo extends Screen{
 			tess.VertexWithCol(x_pos2,y2,CPU_COL);
 			tess.VertexWithCol(x_pos2,y_pos2,CPU_COL);
 			tess.VertexWithCol(x_pos1,y_pos1,CPU_COL);
+		}
+		for(int i = 1; i < 32; i++) {
+			int j1 = (i + SystemStatistics.write_index) % 32;
+			int j2 = (i + 1 + SystemStatistics.write_index) % 32;
+			float y_val1 = (float)(SystemStatistics.graphics_history[j1] * h);
+			float y_val2 = (float)(SystemStatistics.graphics_history[j2] * h);
+			float y_pos1 = y2 - y_val1;
+			float y_pos2 = y2 - y_val2;
+			float x_pos1 = x2 - (diff * i) + diff;
+			float x_pos2 = x_pos1 - diff;
+			tess.VertexWithCol(x_pos2,y2,GPU_COL);
+			tess.VertexWithCol(x_pos1,y_pos1,GPU_COL);
+			tess.VertexWithCol(x_pos1,y2,GPU_COL);
+
+			tess.VertexWithCol(x_pos2,y2,GPU_COL);
+			tess.VertexWithCol(x_pos2,y_pos2,GPU_COL);
+			tess.VertexWithCol(x_pos1,y_pos1,GPU_COL);
 		}
 		tess.Draw();
 	}

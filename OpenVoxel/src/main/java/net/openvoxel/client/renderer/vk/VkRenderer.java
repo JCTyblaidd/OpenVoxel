@@ -106,8 +106,10 @@ public class VkRenderer implements GlobalRenderer {
 				//TODO: regen resource images & etc
 			}
 			needsRegen.set(false);
+			deviceState.acquireNextImage(true);
+		}else {
+			deviceState.acquireNextImage(false);
 		}
-		deviceState.acquireNextImage(false);
 	}
 
 	@Override

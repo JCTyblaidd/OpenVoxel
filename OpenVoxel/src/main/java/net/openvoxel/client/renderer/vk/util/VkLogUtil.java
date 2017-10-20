@@ -96,7 +96,7 @@ public class VkLogUtil extends VkDebugReportCallbackEXT{
 			vulkanLogger.Severe(message);
 			vulkanLogger.Severe(get_object_type(objectType));
 			vulkanLogger.Severe("Detected Vulkan Error : Terminating");
-			System.exit(0);
+			//System.exit(0);
 		}else if((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0 || (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0) {
 			vulkanLogger.Warning(message);
 		}else if((flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) != 0) {
