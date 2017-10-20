@@ -62,7 +62,7 @@ public class ScreenDebugInfo extends Screen{
 		DecimalFormat decimalFormat = new DecimalFormat();
 		decimalFormat.setMaximumFractionDigits(2);
 		decimalFormat.setMinimumFractionDigits(2);
-		return decimalFormat.format(percent) + '%';
+		return decimalFormat.format(percent*100) + '%';
 	}
 
 	@Override
@@ -70,6 +70,7 @@ public class ScreenDebugInfo extends Screen{
 		SystemStatistics.requestUpdate();
 		int debug = debugLevel.get().getVal();
 		float screenHeight = tess.getScreenHeight();
+		float screenWidth = tess.getScreenWidth();
 		float height = 25.0F / screenHeight;
 		final float x_pos = 0.0f;
 		float y_pos = height;
@@ -106,7 +107,46 @@ public class ScreenDebugInfo extends Screen{
 			tess.DrawText(x_pos,y_pos,height,"Processor Usage: " + _percent(SystemStatistics.getProcessingUsage()));
 			y_pos += height;
 			tess.DrawText(x_pos,y_pos,height,"Thread Count: " + SystemStatistics.getThreadCount());
+			final float histogram_w = 250.0F;
+			final float histogram_h = 150.0F;
+			draw_processor_histogram(tess,1.0F-((histogram_w+5)/screenWidth),y_pos2 + (height/4),
+					histogram_w/screenWidth,histogram_h/screenHeight);
 		}
+	}
+
+	private void draw_processor_histogram(GUIRenderer.GUITessellator tess,float x1, float y1, float w, float h) {
+		float x2 = x1 + w;
+		float y2 = y1 + h;
+		final int COL = 0x5B000000;
+		final int CPU_COL = 0xCFD39539;
+		final int GPU_COL = 0xCF168206;
+		tess.Begin();
+		tess.VertexWithCol(x2,y2,COL);
+		tess.VertexWithCol(x1,y2,COL);
+		tess.VertexWithCol(x1,y1,COL);
+		tess.VertexWithCol(x2,y1,COL);
+		tess.VertexWithCol(x2,y2,COL);
+		tess.VertexWithCol(x1,y1,COL);
+		//Draw Histogram//
+		float diff = w / 32;
+		for(int i = 0; i < 32; i++) {
+			int j1 = (i + SystemStatistics.write_index) % 32;
+			int j2 = (i + 1 + SystemStatistics.write_index) % 32;
+			float y_val1 = (float)(SystemStatistics.processor_history[j1] * h);
+			float y_val2 = (float)(SystemStatistics.processor_history[j2] * h);
+			float y_pos1 = y2 - y_val1;
+			float y_pos2 = y2 - y_val2;
+			float x_pos1 = x2 - (diff * i);
+			float x_pos2 = x_pos1 - diff;
+			tess.VertexWithCol(x_pos2,y2,CPU_COL);
+			tess.VertexWithCol(x_pos1,y_pos1,CPU_COL);
+			tess.VertexWithCol(x_pos1,y2,CPU_COL);
+
+			tess.VertexWithCol(x_pos2,y2,CPU_COL);
+			tess.VertexWithCol(x_pos2,y_pos2,CPU_COL);
+			tess.VertexWithCol(x_pos1,y_pos1,CPU_COL);
+		}
+		tess.Draw();
 	}
 
 	public enum GUIDebugLevel {

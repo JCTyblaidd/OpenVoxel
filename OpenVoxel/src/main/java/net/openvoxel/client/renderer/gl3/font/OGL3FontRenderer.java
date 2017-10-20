@@ -154,6 +154,9 @@ public class OGL3FontRenderer {
 	}
 
 	public float DrawText(float X, float Y, float Z, float Height,String text,boolean Reversed,int col, int outlineCol, float shadowPower ) {
+		X = X * 2 - 1;
+		Y = -Y * 2 + 1;
+		Height = Height * 2;
 		final int SIZE = text.length();
 		triCount = 0;
 		float runningOffset = 0;
