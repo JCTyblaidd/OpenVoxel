@@ -15,10 +15,13 @@ public class VkChunkSectionMeta implements IRenderDataCache {
 		this.refLighting = refLighting;
 	}
 
-	public ClientChunk refChunk;
-	public IntBuffer refBlocks;
-	public ShortBuffer refLighting;
+	ClientChunk refChunk;
+	IntBuffer refBlocks;
+	ShortBuffer refLighting;
 
-	public ByteBuffer drawDataOpaque;
-	public ByteBuffer drawDataTransparent;
+	ByteBuffer drawDataOpaque;
+	ByteBuffer drawDataTransparent;
+
+	int boundDeviceLocalMemoryID;
+	int boundDeviceAllocationSize;
 }

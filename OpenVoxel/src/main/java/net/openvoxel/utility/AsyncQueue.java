@@ -33,6 +33,15 @@ public class AsyncQueue<T> {
 	}
 
 	/**
+	 * @return the current size on request [no sync-guarantees]
+	 */
+	public long snapshotSize() {
+		long writeHead = buffer.getCursor();
+		long readHead = sequence.get();
+		return writeHead - readHead;
+	}
+
+	/**
 	 * Check if the queue is currently empty
 	 */
 	public boolean isEmpty() {
@@ -48,7 +57,7 @@ public class AsyncQueue<T> {
 		long nextSequence, writeSequence;
 		nextSequence = sequence.get() + 1L;
 		writeSequence = buffer.getCursor();
-		if(nextSequence == writeSequence) return null;
+		if(nextSequence > writeSequence) return null;
 		sequence.set(nextSequence);
 		return buffer.get(nextSequence).obj;
 	}
@@ -57,16 +66,19 @@ public class AsyncQueue<T> {
 	 * Wait For An Object From The Queue
 	 */
 	public T awaitNext() {
-		long nextSequence, writeSequence;
+		long nextSequence;
 		nextSequence = sequence.get() + 1L;
-		writeSequence = buffer.getCursor();
-		if(nextSequence == writeSequence) return null;
 		sequence.set(nextSequence);
-		try {
-			barrier.waitFor(nextSequence);
-		}catch (Exception ignored) {
-			//NO OP//
+		while(true) {
+			try {
+				barrier.waitFor(nextSequence);
+			} catch (AlertException ignored) {
+				return buffer.get(nextSequence).obj;
+			} catch (TimeoutException ignored) {
+				return null;
+			} catch (InterruptedException ignored) {
+				//NO OP//
+			}
 		}
-		return buffer.get(nextSequence).obj;
 	}
 }

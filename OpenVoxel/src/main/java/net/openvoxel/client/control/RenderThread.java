@@ -27,6 +27,11 @@ public class RenderThread implements Runnable{
 	private Thread thread;
 	private PerSecondTimer FPS_TIMER;
 	private AtomicBoolean shutdownFlag = new AtomicBoolean(false);
+	private AtomicBoolean rThreadRunningFlag = new AtomicBoolean(true);
+
+	public static void Stop() {
+		INSTANCE.rThreadRunningFlag.set(false);
+	}
 
 	public static void Start() {
 		if(INSTANCE == null) {
@@ -55,12 +60,11 @@ public class RenderThread implements Runnable{
 
 	@Override
 	public void run() {
-		OpenVoxel inst = OpenVoxel.getInstance();
 		GlobalRenderer renderer = Renderer.renderer;
 		renderer.loadPostRenderThread();
 		WorldRenderer worldRenderer = renderer.getWorldRenderer();
 		GUIRenderer guiRenderer = renderer.getGUIRenderer();
-		while(inst.isRunning.get()) {
+		while(rThreadRunningFlag.get()) {
 			//Render World//
 			try {
 				ClientServer clientServer = OpenVoxel.getClientServer();

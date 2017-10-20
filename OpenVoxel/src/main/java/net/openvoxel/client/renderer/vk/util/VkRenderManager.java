@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.vk.util;
 
+import net.openvoxel.client.renderer.vk.VkWorldRenderer;
 import net.openvoxel.client.renderer.vk.shader.*;
 import net.openvoxel.client.renderer.vk.world.VkWorldRenderManager;
 import org.lwjgl.PointerBuffer;
@@ -45,6 +46,8 @@ public class VkRenderManager {
 	public PointerBuffer command_buffers_main;
 	public PointerBuffer command_buffers_gui;
 	public PointerBuffer command_buffers_gui_transfer;
+	public PointerBuffer command_buffers_world_drawing;
+	public PointerBuffer command_buffers_world_transfer;
 
 	//Frame Buffers//
 	public LongBuffer targetFrameBuffers;
@@ -192,6 +195,7 @@ public class VkRenderManager {
 			if(vkAllocateCommandBuffers(renderDevice.device,allocateInfo,command_buffers_main) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to allocate main command buffer");
 			}
+
 			command_buffers_gui_transfer = MemoryUtil.memAllocPointer(mainCommandBufferCount);
 			allocateInfo.commandPool(command_pool_transfer);
 			if(vkAllocateCommandBuffers(renderDevice.device,allocateInfo,command_buffers_gui_transfer) != VK_SUCCESS) {
@@ -201,13 +205,20 @@ public class VkRenderManager {
 			allocateInfo.commandPool(command_pool_graphics);
 			allocateInfo.level(VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 			if(vkAllocateCommandBuffers(renderDevice.device,allocateInfo,command_buffers_gui) != VK_SUCCESS) {
-				throw new RuntimeException("Failed to allocated Secondary GUI Draw Command Buffer Bit");
+				throw new RuntimeException("Failed to allocated Secondary GUI Draw Command Buffers");
+			}
+
+			command_buffers_world_drawing = MemoryUtil.memAllocPointer(mainCommandBufferCount * VkWorldRenderer.NUM_DRAW_COMMANDS);
+			if(vkAllocateCommandBuffers(renderDevice.device,allocateInfo,command_buffers_world_drawing) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to allocate World Drawing Command Buffers");
+			}
+			allocateInfo.commandPool(command_pool_transfer);
+			allocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+			command_buffers_world_transfer = MemoryUtil.memAllocPointer(mainCommandBufferCount);
+			if (vkAllocateCommandBuffers(renderDevice.device, allocateInfo, command_buffers_world_transfer) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to allocate World Data Transfer Command Buffers");
 			}
 		}
-	}
-
-	void destroyCommandBuffers() {
-
 	}
 
 	void destroyCommandPools() {

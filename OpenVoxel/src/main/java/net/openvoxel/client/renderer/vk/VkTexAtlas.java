@@ -88,14 +88,20 @@ public class VkTexAtlas implements IconAtlas {
 	}
 
 
-	private static class VkTexIcon implements Icon {
+	public static class VkTexIcon implements Icon {
 		private ResourceHandle diffuse;
 		private ResourceHandle normal;
 		private ResourceHandle pbr;
 		private STBITexture tex_diffuse;
 		private STBITexture tex_normal;
 		private STBITexture tex_pbr;
-		private float u_min, u_max, v_min, v_max;
+		public float u_min, u_max, v_min, v_max;
+		public VkTexIcon() {
+			u_min = 0;
+			u_max = 1;
+			v_min = 0;
+			v_max = 1;
+		}
 		private VkTexIcon(ResourceHandle diffuse,ResourceHandle normal,ResourceHandle pbr) {
 			this.diffuse = diffuse;
 			this.normal = normal;

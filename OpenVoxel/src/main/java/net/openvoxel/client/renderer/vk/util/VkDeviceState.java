@@ -161,7 +161,7 @@ public class VkDeviceState extends VkRenderManager {
 		long guiDrawCommandBuffer       = command_buffers_gui.get(swapChainImageIndex);
 		long targetFramebuffer          = targetFrameBuffers.get(swapChainImageIndex);
 		try(MemoryStack stack = stackPush()) {
-			//TODO: worldRenderer
+			worldRenderer.prepareSubmission();
 
 			VkSubmitInfo submitInfo = VkSubmitInfo.mallocStack(stack);
 			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
@@ -581,7 +581,6 @@ public class VkDeviceState extends VkRenderManager {
 		destroyFrameBuffers();
 		destroyPipelineAndLayout();
 		destroyRenderPasses();
-		destroyCommandBuffers();
 		for(int i = 0; i < swapChainImageViews.capacity();i++) {
 			vkDestroyImageView(renderDevice.device,swapChainImageViews.get(i),null);
 		}

@@ -257,6 +257,11 @@ public class OGL3RenderCacheManager {
 		}
 
 		@Override
+		public void addVertexWithColFlags(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, float xTangent, float yTangent, float zTangent, int Colour, int flags) {
+			//NO OP// :: TODO IMPLEMENT
+		}
+
+		@Override
 		public void setCurrentIcon(Icon icon) {
 			currentIcon = (OGL3Icon)icon;
 		}

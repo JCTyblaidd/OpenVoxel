@@ -6,7 +6,6 @@ import java.util.Iterator;
  * Created by James on 05/08/2016.
  */
 public class ArrayUtils {
-
 	public static Iterable<Boolean> Iterate(boolean[] arr) {
 		return new Iterable<>() {
 			private int loc = -1;
@@ -216,6 +215,5 @@ public class ArrayUtils {
 			}
 		};
 	}
-
 
 }

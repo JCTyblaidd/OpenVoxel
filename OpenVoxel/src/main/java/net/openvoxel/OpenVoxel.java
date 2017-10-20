@@ -214,6 +214,8 @@ public class OpenVoxel implements EventListener{
 		instance.AttemptShutdownSequence(true);
 	}
 
+	private AtomicBoolean shutdownIsCrash = new AtomicBoolean(false);
+
 
 	private AtomicBoolean flagReload = new AtomicBoolean(false);
 	/**
@@ -261,7 +263,7 @@ public class OpenVoxel implements EventListener{
 			openVoxelLogger.Info("Enabling Debugging Logging");
 			args.storeRuntimeFlag("bonusLogging");
 		}
-		if(args.hasFlag("debugAllocator")) {
+		if(args.hasFlag("debugAllocator") && !args.hasFlag("noDebugAllocator")) {
 			openVoxelLogger.Info("Enabled LWJGL Debug Memory Allocator");
 			System.setProperty("org.lwjgl.util.DebugAllocator","true");
 		}
@@ -319,8 +321,11 @@ public class OpenVoxel implements EventListener{
 			while(isRunning.get()) {
 				handle.pollEvents();
 			}
+			RenderThread.Stop();
+		}else {
+			//TODO: change server side thread to command input thread???
 		}
-		//TODO: change server side thread to command input thread???
+		AttemptShutdownSequenceInternal(shutdownIsCrash.get());
 		if(instance.flagReload.get() && isClient) {
 			//Send Runtime Exception Across the Class Loader Barrier
 			throw new RuntimeException("built_in_exception::mod_reload");
@@ -332,6 +337,10 @@ public class OpenVoxel implements EventListener{
 	* @param isCrash is the shutdown unexpected, so forcefully exit
 	**/
 	public void AttemptShutdownSequence(boolean isCrash) {
+		shutdownIsCrash.set(isCrash);
+		isRunning.set(false);
+	}
+	private void AttemptShutdownSequenceInternal(boolean isCrash) {
 		WindowCloseRequestedEvent e1 = new WindowCloseRequestedEvent(isCrash);
 		eventBus.push(e1);
 		if(e1.isCancelled() && isCrash) {
