@@ -16,7 +16,9 @@ public interface GUIRenderer {
 
 	void beginDraw();
 
-	void finishDraw();
+	void finishDraw(boolean guiDirty);
+
+	boolean supportDirty();
 
 	/**
 	 * Abstract GUI Tessellator For Drawing A GUI

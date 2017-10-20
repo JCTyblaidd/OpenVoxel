@@ -43,7 +43,12 @@ public class OGL3GUIRenderer implements GUIRenderer, GUITessellator{
 	}
 
 	@Override
-	public void finishDraw() {
+	public boolean supportDirty() {
+		return false;
+	}
+
+	@Override
+	public void finishDraw(boolean dirtyFlag) {
 		//NO OP//
 	}
 

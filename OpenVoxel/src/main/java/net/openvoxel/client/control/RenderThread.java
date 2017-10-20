@@ -5,6 +5,7 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.GUI;
+import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
@@ -77,12 +78,21 @@ public class RenderThread implements Runnable{
 			//Render GUI//
 			try {
 				guiRenderer.beginDraw();
+				boolean guiDirty = ScreenDebugInfo.debugLevel.get() != ScreenDebugInfo.GUIDebugLevel.NONE;
 				synchronized (GUI.class) {
-					GUI.getStack().descendingIterator().forEachRemaining(guiRenderer::DisplayScreen);
+					if(!guiDirty) {
+						for (Screen screen : GUI.getStack()) {
+							guiDirty |= screen.isDrawDirty();
+						}
+					}
+					if(guiDirty || !guiRenderer.supportDirty()) {
+						guiDirty = true;
+						GUI.getStack().descendingIterator().forEachRemaining(guiRenderer::DisplayScreen);
+					}
 				}
 				//Debug Screen Renderer//
 				guiRenderer.DisplayScreen(ScreenDebugInfo.instance);
-				guiRenderer.finishDraw();
+				guiRenderer.finishDraw(guiDirty);
 			}catch (Exception e) {
 				e.printStackTrace();
 				CrashReport crashReport = new CrashReport("Exception Drawing GUI").caughtException(e);

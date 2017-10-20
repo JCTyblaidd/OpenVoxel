@@ -74,6 +74,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private int imageCleanupCountdown = 100;
 
 	private int rewriteDescriptorSetCountdown = 0;
+	private int dirtyDrawUpdateCountdown = 0;
 
 	/**
 	 * Construct from the main vulkan state
@@ -92,6 +93,12 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		imageBindings = new HashMap<>();
 		create_descriptor_sets();
 	}
+
+	@Override
+	public boolean supportDirty() {
+		return dirtyDrawUpdateCountdown == 0;
+	}
+
 	public void create_descriptor_sets() {
 		imageDescriptorSets = MemoryUtil.memAllocLong(state.swapChainImageViews.capacity());
 		try(MemoryStack stack = stackPush()) {
@@ -247,7 +254,23 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	 * with some batching to minimise the number of draw calls
 	 */
 	@Override
-	public void finishDraw() {
+	public void finishDraw(boolean dirtyDraw) {
+		if(!dirtyDraw) {
+			try(MemoryStack stack = stackPush()) {
+				VkCommandBuffer transferBuffer = new VkCommandBuffer(state.command_buffers_gui_transfer.get(state.swapChainImageIndex), state.renderDevice.device);
+				vkResetCommandBuffer(transferBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+				VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
+				beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+				beginInfo.pNext(VK_NULL_HANDLE);
+				beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+				beginInfo.pInheritanceInfo(null);
+				vkBeginCommandBuffer(transferBuffer, beginInfo);
+				vkEndCommandBuffer(transferBuffer);
+			}
+			return;//NO DRAW NEEDED//
+		}else{
+			dirtyDrawUpdateCountdown = imageDescriptorSets.capacity();
+		}
 		offsetTransitionStack.put(drawCount / GUI_ELEMENT_SIZE);
 		try(MemoryStack stack = stackPush()) {
 			boolean rewrite_descriptor_set = tickImageCleanupCountdown();
@@ -379,9 +402,13 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			}
 			if(rewrite_descriptor_set) {
 				rewriteDescriptorSetCountdown = imageDescriptorSets.capacity();
+				dirtyDrawUpdateCountdown = rewriteDescriptorSetCountdown;
 			}else{
 				if(rewriteDescriptorSetCountdown > 0) {
 					rewriteDescriptorSetCountdown--;
+				}
+				if(dirtyDrawUpdateCountdown > 0) {
+					dirtyDrawUpdateCountdown--;
 				}
 			}
 			if(rewriteDescriptorSetCountdown > 0) {
@@ -476,7 +503,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			inheritance.queryFlags(0);
 			inheritance.pipelineStatistics(0);
 			beginInfo.pInheritanceInfo(inheritance);
-			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+			//beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
 			vkBeginCommandBuffer(cmdBuffer,beginInfo);
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state.guiPipeline.graphics_pipeline);
