@@ -68,10 +68,8 @@ public class VkShaderCompiler {
 
 	private static byte[] fallback_read_source() {
 		File file = new File("temp_shaderc_result.tmp.spivasm");
-		FileInputStream fileInputStream = null;
 		byte[] data = null;
-		try{
-			fileInputStream = new FileInputStream(file);
+		try(FileInputStream fileInputStream = new FileInputStream(file)){
 			data = fileInputStream.readAllBytes();
 			fileInputStream.close();
 		}catch(Exception ex) {ex.printStackTrace();}

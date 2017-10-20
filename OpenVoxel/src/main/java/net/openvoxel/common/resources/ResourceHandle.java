@@ -52,6 +52,10 @@ public class ResourceHandle {
 		reload = false;
 	}
 
+	public void unloadData() {
+		Data = null;
+	}
+
 	public byte[] getByteData() {
 		if(Data == null) {
 			reloadData();

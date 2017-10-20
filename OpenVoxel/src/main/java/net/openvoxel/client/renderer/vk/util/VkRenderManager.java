@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.vk.util;
 
 import net.openvoxel.client.renderer.vk.shader.*;
+import net.openvoxel.client.renderer.vk.world.VkWorldRenderManager;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -12,25 +13,21 @@ import java.util.List;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
-class VkRenderManager {
+public class VkRenderManager {
 
 	public VkRenderDevice renderDevice;
 
 	//Rendering State//
 	public VkOmniRenderPass renderPass = new VkOmniRenderPass();
-	public VkShaderPipelineDebug debugPipeline = new VkShaderPipelineDebug(VkShaderModuleCache.debugShader);
-	public VkShaderPipelineGUI guiPipeline = new VkShaderPipelineGUI(VkShaderModuleCache.debugGuiShader);
-	//Shader Pipeline GBuffer Make
-	//Shader Pipeline Shadow Mapping
-	//Shader Pipeline Draw Entity
-	//Shader Pipeline
+	public VkShaderPipelineGUI guiPipeline = new VkShaderPipelineGUI(VkShaderModuleCache.guiShader);
+	public VkWorldRenderManager worldRenderManager;
 	public VkRenderConfig renderConfig;
 
 	public VkMemoryManager memoryMgr;
 
 	//Swap Chain Image Info
 	LongBuffer swapChainImages;
-	LongBuffer swapChainImageViews;
+	public LongBuffer swapChainImageViews;
 	public int swapChainImageIndex = 0;
 
 	/*Chosen SwapChain Info*/
@@ -59,12 +56,15 @@ class VkRenderManager {
 	//Synchronisation//
 	long semaphore_image_available;
 	long semaphore_render_finished;
-	public long semaphore_gui_data_updated;
+	long semaphore_gui_data_updated;
+	LongBuffer submit_wait_fences_draw;
+	LongBuffer submit_wait_fences_transfer;
 
 	VkRenderManager() {
 		renderConfig = new VkRenderConfig();
 		renderConfig.load();
 		renderConfig.save();
+		worldRenderManager = new VkWorldRenderManager(this);
 	}
 
 	void initSynchronisation() {
@@ -86,8 +86,39 @@ class VkRenderManager {
 				throw new RuntimeException("Failed to create semaphore");
 			}
 			semaphore_gui_data_updated = lb.get(0);
-
 		}
+	}
+
+	void initSwapChainSynchronisation() {
+		submit_wait_fences_draw = MemoryUtil.memAllocLong(swapChainImageViews.capacity());
+		submit_wait_fences_transfer = MemoryUtil.memAllocLong(swapChainImageViews.capacity());
+		try(MemoryStack stack = stackPush()) {
+			VkFenceCreateInfo createFence = VkFenceCreateInfo.mallocStack(stack);
+			createFence.sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO);
+			createFence.pNext(VK_NULL_HANDLE);
+			createFence.flags(VK_FENCE_CREATE_SIGNALED_BIT);
+			for(int i = 0; i < swapChainImageViews.capacity(); i++) {
+				submit_wait_fences_draw.position(i);
+				submit_wait_fences_transfer.position(i);
+				if(vkCreateFence(renderDevice.device,createFence,null,submit_wait_fences_draw) != VK_SUCCESS) {
+					throw new RuntimeException("Failed to create fence");
+				}
+				if(vkCreateFence(renderDevice.device,createFence,null,submit_wait_fences_transfer) != VK_SUCCESS) {
+					throw new RuntimeException("Failed to create fence");
+				}
+			}
+			submit_wait_fences_draw.position(0);
+			submit_wait_fences_transfer.position(0);
+		}
+	}
+
+	void destroySwapChainSynchronisation() {
+		for(int i = 0; i < swapChainImageViews.capacity(); i++) {
+			vkDestroyFence(renderDevice.device,submit_wait_fences_draw.get(i),null);
+			vkDestroyFence(renderDevice.device,submit_wait_fences_transfer.get(i),null);
+		}
+		MemoryUtil.memFree(submit_wait_fences_draw);
+		MemoryUtil.memFree(submit_wait_fences_transfer);
 	}
 
 	void destroySynchronisation() {
@@ -97,6 +128,7 @@ class VkRenderManager {
 	}
 
 	void initFrameBuffers() {
+		worldRenderManager.initFrameBuffers();
 		targetFrameBuffers = MemoryUtil.memAllocLong(swapChainImageViews.capacity());
 		try(MemoryStack stack = stackPush()) {
 			LongBuffer singleBuffer = stack.mallocLong(1);
@@ -118,9 +150,12 @@ class VkRenderManager {
 			}
 		}
 		targetFrameBuffers.position(0);
+		worldRenderManager.initRenderTargets();
 	}
 
 	void destroyFrameBuffers() {
+		worldRenderManager.destroyRenderTargets();
+		worldRenderManager.destroyFrameBuffers();
 		for(int i = 0; i < targetFrameBuffers.capacity(); i++) {
 			vkDestroyFramebuffer(renderDevice.device, targetFrameBuffers.get(i),null);
 		}
@@ -205,13 +240,13 @@ class VkRenderManager {
 
 	void initGraphicsPipeline() {
 		List<String> defines = List.of("DEBUG_VULKAN");
-		debugPipeline.init(renderDevice.device,renderPass.render_pass,0,0, defines);
 		guiPipeline.init(renderDevice.device,renderPass.render_pass,0,0, defines);
+		worldRenderManager.initPipelines(defines);
 	}
 
 	void destroyPipelineAndLayout() {
-		debugPipeline.destroy(renderDevice.device);
 		guiPipeline.destroy(renderDevice.device);
+		worldRenderManager.destroyPipelines();
 	}
 
 

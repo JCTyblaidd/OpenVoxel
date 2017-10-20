@@ -17,8 +17,10 @@ import net.openvoxel.common.util.BlockFace;
  */
 public class DefaultBlockRenderer implements IBlockRenderHandler {
 	@Override
-	public void storeBlockData(WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess) {
+	public void storeBlockData(WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,boolean opaqueDraw) {
 		Block block = stateAccess.getBlock();
+		//Skip Draw if not applicable//
+		if(block.isCompleteOpaque() != opaqueDraw) return;
 		AABB bounds = block.getBlockBounds();
 		if(block.isOpaque(BlockFace.UP) && !stateAccess.getOffsetBlockData(BlockFace.UP).getBlock().isOpaque(BlockFace.DOWN)) {
 			renderUp(block,renderer,stateAccess,bounds);

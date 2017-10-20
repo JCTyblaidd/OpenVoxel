@@ -14,4 +14,8 @@ public abstract class GUIObject {
 	public void OnMousePress(double x, double y) {}
 	public void OnMouseRelease(double x, double y) {}
 	public void OnMouseMove(float newX, float newY, float oldX, float oldY) {}
+
+	public boolean isDrawDirty() {
+		return false;
+	}
 }

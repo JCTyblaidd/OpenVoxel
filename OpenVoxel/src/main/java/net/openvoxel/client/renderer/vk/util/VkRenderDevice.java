@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk.util;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.client.gui.ScreenDebugInfo;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVulkan;
 import org.lwjgl.system.MemoryStack;
@@ -23,7 +24,7 @@ import static org.lwjgl.vulkan.VK10.*;
 public class VkRenderDevice{
 
 	private VkDeviceState state;
-	VkPhysicalDevice physicalDevice;
+	public VkPhysicalDevice physicalDevice;
 	private VkPhysicalDeviceFeatures deviceFeatures = VkPhysicalDeviceFeatures.calloc();
 	private VkPhysicalDeviceMemoryProperties memoryProperties = VkPhysicalDeviceMemoryProperties.calloc();
 	private VkPhysicalDeviceProperties properties = VkPhysicalDeviceProperties.calloc();
@@ -39,6 +40,33 @@ public class VkRenderDevice{
 	public int queueIndexRender, queueFamilyIndexRender;
 	public int queueFamilyIndexTransfer, queueIndexTransfer;
 
+
+	private String get_version(int ver,boolean custom_flag) {
+		if(custom_flag) {
+			//NVIDIA CUSTOM
+			int major = VK_VERSION_MAJOR(ver);
+			int minor = (ver >> 14) & 0x0ff;
+			int secondaryBranch = (ver >> 6) & 0x0ff;
+			int tertiaryBranch = (ver) & 0x003f;
+			return major + "." + minor + "." + secondaryBranch + "." + tertiaryBranch;
+		}else {
+			return VK_VERSION_MAJOR(ver) + "." + VK_VERSION_MINOR(ver) + "." + VK_VERSION_PATCH(ver);
+		}
+	}
+
+	private String get_vendor(int vendorID) {
+		switch(vendorID) {
+			case 0x1002: return "AMD";
+			case 0x1010: return "ImgTec";
+			case 0x10DE: return "NVIDIA";
+			case 0x13B5: return "ARM";
+			case 0x5143: return "Qualcomm";
+			case 0x8086: return "INTEL";
+			default:
+				return "Vendor-"+Integer.toHexString(vendorID);
+		}
+	}
+
 	VkRenderDevice(VkDeviceState state,long handle) {
 		this.state = state;
 		physicalDevice = new VkPhysicalDevice(handle, state.instance);
@@ -49,6 +77,11 @@ public class VkRenderDevice{
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,buffer,null);
 		queueFamilyProperties = VkQueueFamilyProperties.calloc(buffer[0]);
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,buffer,queueFamilyProperties);
+		//Update Debug Screen With Information//
+		ScreenDebugInfo.RendererType = "Vulkan "+get_version(properties.apiVersion(),false) + " ";
+		ScreenDebugInfo.RendererVendor = get_vendor(properties.vendorID()) + " ";
+		ScreenDebugInfo.RendererDriver = properties.deviceNameString() + " "
+             + get_version(properties.driverVersion(),properties.vendorID() == 0x10DE) + " ";
 	}
 
 

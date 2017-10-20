@@ -7,6 +7,8 @@ import net.openvoxel.client.utility.IRenderDataCache;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.world.chunk.ChunkSection;
 
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -34,7 +36,15 @@ public class ClientChunkSection extends ChunkSection {
 		return metaVal;
 	}
 
-	/**
+	public final IntBuffer getBlocks() {
+		return blockInformation;
+	}
+
+	public final ShortBuffer getLights() {
+		return this.blockLightInfo;
+	}
+
+	/*
 	@Override
 	protected void freeMemory() {
 		super.freeMemory();
@@ -42,7 +52,7 @@ public class ClientChunkSection extends ChunkSection {
 			renderCache.get().onChunkSectionFree();
 		}
 	}
-	**/
+	*/
 
 	public boolean isDirty() {
 		return false;

@@ -67,7 +67,7 @@ public class OGL3RenderCacheManager {
 					Block block = section.blockAt(x,y,z);
 					byte meta = section.getPrevMeta();//TODO: add state access
 					drawStateAccess.update(block,0,meta,x,y,z);
-					block.getRenderHandler().storeBlockData(blockRenderer,drawStateAccess);
+					block.getRenderHandler().storeBlockData(blockRenderer,drawStateAccess,true);
 				}
 			}
 		}

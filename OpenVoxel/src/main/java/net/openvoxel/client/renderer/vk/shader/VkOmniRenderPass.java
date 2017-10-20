@@ -96,19 +96,6 @@ public class VkOmniRenderPass {
 		buffer.dstStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 		buffer.dstAccessMask(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
 		buffer.dependencyFlags(0);
-/**
-		//DO NOT REALLY KNOW//
-		buffer.position(1);
-		buffer.srcSubpass(0);
-		buffer.dstSubpass(0);
-		buffer.srcStageMask(VK_PIPELINE_STAGE_TRANSFER_BIT);
-		buffer.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
-		buffer.dstStageMask(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
-		buffer.dstAccessMask(VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
-		buffer.dependencyFlags(0);//??
-
-		buffer.position(0);
- **/
 	}
 
 	private void initDescription(MemoryStack stack,VkSubpassDescription.Buffer buffer,VkRenderConfig config) {

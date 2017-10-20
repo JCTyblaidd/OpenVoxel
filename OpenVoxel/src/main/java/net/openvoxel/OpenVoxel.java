@@ -125,7 +125,7 @@ public class OpenVoxel implements EventListener{
 	 * Local Server => Host + Connect
 	 * Remote Server => Host
 	 * Client Server => Connect
-	 * @param server
+	 * @param server the server instance
 	 */
 	public void SetCurrentServer(Server server) {
 		if(currentServer != null) {
@@ -305,6 +305,7 @@ public class OpenVoxel implements EventListener{
 			SetCurrentServer(new DedicatedServer(new GameSave(new File("dedicated_save"))));
 			currentServer.start(2500);
 		}else{
+			//TODO: signal texture atlas stitch??
 			blockRegistry.generateMappingsFromRaw();
 			if(!args.hasFlag("noBackgroundWorld")) {
 				currentClientServer = new BackgroundClientServer();
@@ -319,6 +320,7 @@ public class OpenVoxel implements EventListener{
 				handle.pollEvents();
 			}
 		}
+		//TODO: change server side thread to command input thread???
 		if(instance.flagReload.get() && isClient) {
 			//Send Runtime Exception Across the Class Loader Barrier
 			throw new RuntimeException("built_in_exception::mod_reload");

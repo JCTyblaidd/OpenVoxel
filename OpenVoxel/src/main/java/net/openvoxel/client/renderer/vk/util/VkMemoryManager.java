@@ -17,7 +17,7 @@ import static org.lwjgl.vulkan.VK10.*;
 public class VkMemoryManager {
 
 	public VkDeviceState state;
-	private int MAX_ALLOCATIONS = 512;
+	private static final int MAX_ALLOCATIONS = 512;
 	private LongBuffer allocationInfo;
 	private static final boolean trackMemory = OpenVoxel.getLaunchParameters().hasFlag("vkTrackMemory");
 

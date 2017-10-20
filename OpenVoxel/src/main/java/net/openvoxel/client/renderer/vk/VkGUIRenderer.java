@@ -70,9 +70,14 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	}
 	private Map<ResourceHandle,BoundResourceHandle> imageBindings;
 	private long descriptorPool;
-	private long imageDescriptorSet;
-	private int imageCleanupCountdown = 100;//TODO: implement
+	private LongBuffer imageDescriptorSets;
+	private int imageCleanupCountdown = 100;
 
+	private int rewriteDescriptorSetCountdown = 0;
+
+	/**
+	 * Construct from the main vulkan state
+	 */
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		this.mgr = state.memoryMgr;
@@ -85,7 +90,10 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		offsetTransitionStack = MemoryUtil.memAllocInt(GUI_STATE_CHANGE_LIMIT);
 		imageEnableStateStack = new TByteArrayList(GUI_STATE_CHANGE_LIMIT);
 		imageBindings = new HashMap<>();
-
+		create_descriptor_sets();
+	}
+	public void create_descriptor_sets() {
+		imageDescriptorSets = MemoryUtil.memAllocLong(state.swapChainImageViews.capacity());
 		try(MemoryStack stack = stackPush()) {
 			LongBuffer res = stack.mallocLong(1);
 
@@ -97,7 +105,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			poolCreateInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO);
 			poolCreateInfo.pNext(VK_NULL_HANDLE);
 			poolCreateInfo.flags(0);
-			poolCreateInfo.maxSets(1);
+			poolCreateInfo.maxSets(state.swapChainImageViews.capacity());
 			poolCreateInfo.pPoolSizes(poolSizes);
 
 			if(vkCreateDescriptorPool(state.renderDevice.device,poolCreateInfo,null,res) != VK_SUCCESS) {
@@ -110,21 +118,30 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			setAllocateInfo.pNext(VK_NULL_HANDLE);
 			setAllocateInfo.descriptorPool(descriptorPool);
 			setAllocateInfo.pSetLayouts(stack.longs(state.guiPipeline.DescriptorSetLayout));
-
-			if(vkAllocateDescriptorSets(state.renderDevice.device,setAllocateInfo,res) != VK_SUCCESS) {
-				throw new RuntimeException("Failed to allocate descriptor set");
+			for(int i = 0; i < state.swapChainImageViews.capacity(); i++) {
+				if (vkAllocateDescriptorSets(state.renderDevice.device, setAllocateInfo, res) != VK_SUCCESS) {
+					throw new RuntimeException("Failed to allocate descriptor set");
+				}
+				imageDescriptorSets.put(i,res.get(0));
 			}
-			imageDescriptorSet = res.get(0);
 		}
 	}
 
+	public void destroy_descriptors() {
+		vkDestroyDescriptorPool(state.renderDevice.device,descriptorPool, null);
+		MemoryUtil.memFree(imageDescriptorSets);
+	}
+
+	/**
+	 * Destroy all required images
+	 */
 	void cleanup() {
 		for(BoundResourceHandle handle : imageBindings.values()) {
 			vkDestroySampler(state.renderDevice.device,handle.image_sampler,null);
 			vkDestroyImageView(state.renderDevice.device,handle.image_view,null);
 			vkDestroyImage(state.renderDevice.device,handle.image,null);
 		}
-		vkDestroyDescriptorPool(state.renderDevice.device,descriptorPool, null);
+		destroy_descriptors();
 		MemoryUtil.memFree(writeTarget);
 		MemoryUtil.memFree(imgStagingTarget);
 		MemoryUtil.memFree(matrixArrayStack);
@@ -181,6 +198,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		return false;
 	}
 
+	/**
+	 * Write an image layout transition to the command buffer
+	 */
 	private void cmdTransitionImageLayout(MemoryStack stack,VkCommandBuffer buffer,long image,int oldLayout, int newLayout) {
 		VkImageSubresourceRange subresourceRange = VkImageSubresourceRange.mallocStack(stack);
 		subresourceRange.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
@@ -199,8 +219,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		barrier.image(image);
 		barrier.subresourceRange(subresourceRange);
 
-		int srcStage = 0;
-		int dstStage = 0;
+		int srcStage;
+		int dstStage;
 
 		if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
 			barrier.srcAccessMask(0);
@@ -221,6 +241,11 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	}
 
 
+	/**
+	 * Build the entirety of the draw command
+	 * and append it to the required command buffers
+	 * with some batching to minimise the number of draw calls
+	 */
 	@Override
 	public void finishDraw() {
 		offsetTransitionStack.put(drawCount / GUI_ELEMENT_SIZE);
@@ -323,6 +348,17 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 					i_offset.y(0);
 					i_offset.z(0);
 
+					if(handle.getResourceID().equals("font/font")) {
+						//TODO: disable and actually change the texture//
+						for(int i = 0; i < texture.pixels.capacity(); i+= 4) {
+							byte alpha = texture.pixels.get(i);
+							texture.pixels.put(i,(byte)0xFF);
+							texture.pixels.put(i+1,(byte)0xFF);
+							texture.pixels.put(i+2,(byte)0xFF);
+							texture.pixels.put(i+3,alpha);
+						}
+					}
+
 					int offset = imgStagingTarget.position();
 					imgStagingTarget.put(texture.pixels);
 					int lim = copyImg.limit() + 1;
@@ -342,6 +378,13 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				}
 			}
 			if(rewrite_descriptor_set) {
+				rewriteDescriptorSetCountdown = imageDescriptorSets.capacity();
+			}else{
+				if(rewriteDescriptorSetCountdown > 0) {
+					rewriteDescriptorSetCountdown--;
+				}
+			}
+			if(rewriteDescriptorSetCountdown > 0) {
 				List<BoundResourceHandle> imageTargets = requestedImages.stream().map(imageBindings::get).collect(Collectors.toList());
 				if(requestedImages.size() > 32) {
 					state.vkLogger.Severe("Larger than maximum images requested");
@@ -367,7 +410,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				VkWriteDescriptorSet.Buffer descWrites = VkWriteDescriptorSet.mallocStack(1,stack);
 				descWrites.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
 				descWrites.pNext(VK_NULL_HANDLE);
-				descWrites.dstSet(imageDescriptorSet);
+				descWrites.dstSet(imageDescriptorSets.get(state.swapChainImageIndex));
 				descWrites.dstBinding(0);
 				descWrites.dstArrayElement(0);
 				descWrites.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
@@ -439,7 +482,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state.guiPipeline.graphics_pipeline);
 
 			if(drawCount != 0) {
-				LongBuffer descriptorSets = stack.longs(imageDescriptorSet);
+				LongBuffer descriptorSets = stack.longs(imageDescriptorSets.get(state.swapChainImageIndex));
 				vkCmdBindDescriptorSets(cmdBuffer, 0, state.guiPipeline.graphics_pipeline_layout,
 						0, descriptorSets, null);
 			}

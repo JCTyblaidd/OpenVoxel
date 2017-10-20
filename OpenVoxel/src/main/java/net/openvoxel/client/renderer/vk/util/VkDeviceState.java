@@ -4,6 +4,9 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.renderer.vk.VkGUIRenderer;
+import net.openvoxel.client.renderer.vk.VkRenderer;
+import net.openvoxel.client.renderer.vk.VkWorldRenderer;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -51,7 +54,6 @@ public class VkDeviceState extends VkRenderManager {
 	public VkSurfaceFormatKHR.Buffer surfaceFormats;
 	public IntBuffer presentModes;
 
-
 	public VkDeviceState() {
 		vkLogger = Logger.getLogger("Vulkan");
 		swapExtent = VkExtent2D.calloc();
@@ -61,9 +63,11 @@ public class VkDeviceState extends VkRenderManager {
 		choosePhysicalDevice();
 		renderDevice.createDevice();
 		memoryMgr = new VkMemoryManager(this);
+		worldRenderManager.initDeviceMetaInfo();
 		initSynchronisation();
 		initSurface();
 		initSwapChain();
+		initSwapChainSynchronisation();
 		initRenderPasses();
 		initGraphicsPipeline();
 		initFrameBuffers();
@@ -72,22 +76,40 @@ public class VkDeviceState extends VkRenderManager {
 	}
 
 
+	private void waitForFence(long fence) {
+		if(vkWaitForFences(renderDevice.device,fence,true,100) != VK_SUCCESS) {
+			throw new RuntimeException("Failed to wait for fence");
+		}
+		vkResetFences(renderDevice.device,fence);
+	}
+
+
 	public void acquireNextImage(boolean rebootSync) {
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer index = stack.callocInt(1);
 			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,-1L,semaphore_image_available,VK_NULL_HANDLE,index);
 			if(result == VK_ERROR_OUT_OF_DATE_KHR) {
-				recreateSwapChain();
+				recreateSwapChain(VkRenderer.Vkrenderer.getGUIRenderer());
 			}else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 				System.out.println(Integer.toString(result));
 				throw new RuntimeException("Failed to get next image");
 			}
-			swapChainImageIndex =  index.get(0);
+			swapChainImageIndex = index.get(0);
+			//waitForFence(submit_wait_fences_draw.get(swapChainImageIndex));
+			//waitForFence(submit_wait_fences_transfer.get(swapChainImageIndex));
 		}
 	}
 
-	public void submitNewWork() {
+	public void submitNewWork(VkWorldRenderer worldRenderer) {
+		long submitFenceTransfer        = 0;//submit_wait_fences_transfer.get(swapChainImageIndex);
+		long submitFenceDraw            = 0;//submit_wait_fences_draw.get(swapChainImageIndex);
+		long mainCommandBuffer          = command_buffers_main.get(swapChainImageIndex);
+		long guiTransferCommandBuffer   = command_buffers_gui_transfer.get(swapChainImageIndex);
+		long guiDrawCommandBuffer       = command_buffers_gui.get(swapChainImageIndex);
+		long targetFramebuffer          = targetFrameBuffers.get(swapChainImageIndex);
 		try(MemoryStack stack = stackPush()) {
+			//TODO: worldRenderer
+
 			VkSubmitInfo submitInfo = VkSubmitInfo.mallocStack(stack);
 			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
 			submitInfo.pNext(VK_NULL_HANDLE);
@@ -95,12 +117,12 @@ public class VkDeviceState extends VkRenderManager {
 			submitInfo.waitSemaphoreCount(0);
 			submitInfo.pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_TRANSFER_BIT));
 			submitInfo.pSignalSemaphores(stack.longs(semaphore_gui_data_updated));
-			submitInfo.pCommandBuffers(stack.pointers(command_buffers_gui_transfer.get(swapChainImageIndex)));
-			if(vkQueueSubmit(renderDevice.asyncTransferQueue,submitInfo,0) != VK_SUCCESS) {
+			submitInfo.pCommandBuffers(stack.pointers(guiTransferCommandBuffer));
+			if(vkQueueSubmit(renderDevice.asyncTransferQueue,submitInfo,submitFenceTransfer) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to execute transfer queue");
 			}
 
-			VkCommandBuffer mainBuffer = new VkCommandBuffer(command_buffers_main.get(swapChainImageIndex),renderDevice.device);
+			VkCommandBuffer mainBuffer = new VkCommandBuffer(mainCommandBuffer,renderDevice.device);
 			vkResetCommandBuffer(mainBuffer,VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
 			beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
@@ -113,7 +135,7 @@ public class VkDeviceState extends VkRenderManager {
 			renderPassInfo.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
 			renderPassInfo.pNext(VK_NULL_HANDLE);
 			renderPassInfo.renderPass(renderPass.render_pass);
-			renderPassInfo.framebuffer(targetFrameBuffers.get(swapChainImageIndex));
+			renderPassInfo.framebuffer(targetFramebuffer);
 			VkRect2D screenRect = VkRect2D.callocStack(stack);
 			screenRect.extent(swapExtent);
 			renderPassInfo.renderArea(screenRect);
@@ -127,7 +149,7 @@ public class VkDeviceState extends VkRenderManager {
 			renderPassInfo.pClearValues(clearValues);
 			vkCmdBeginRenderPass(mainBuffer,renderPassInfo,VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-			vkCmdExecuteCommands(mainBuffer,stack.pointers(command_buffers_gui.get(swapChainImageIndex)));
+			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiDrawCommandBuffer));
 
 			vkCmdEndRenderPass(mainBuffer);
 
@@ -137,14 +159,14 @@ public class VkDeviceState extends VkRenderManager {
 
 			LongBuffer semaphores = stack.longs(semaphore_image_available,semaphore_gui_data_updated);
 			LongBuffer signalSemaphores = stack.longs(semaphore_render_finished);
-			PointerBuffer cmdBuffers = stack.pointers(command_buffers_main.get(swapChainImageIndex));
+			PointerBuffer cmdBuffers = stack.pointers(mainCommandBuffer);
 			IntBuffer waitStages = stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
 			submitInfo.pWaitSemaphores(semaphores);
 			submitInfo.waitSemaphoreCount(2);
 			submitInfo.pWaitDstStageMask(waitStages);
 			submitInfo.pCommandBuffers(cmdBuffers);
 			submitInfo.pSignalSemaphores(signalSemaphores);
-			if(vkQueueSubmit(renderDevice.renderQueue,submitInfo,VK_NULL_HANDLE) != VK_SUCCESS) {
+			if(vkQueueSubmit(renderDevice.renderQueue,submitInfo,submitFenceDraw) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to submit queue info");
 			}
 		}
@@ -168,7 +190,7 @@ public class VkDeviceState extends VkRenderManager {
 				if(res != VK_ERROR_OUT_OF_DATE_KHR && res != VK_SUBOPTIMAL_KHR) {
 					throw new RuntimeException("Failed to present queue");
 				}else{
-					recreateSwapChain();
+					recreateSwapChain(VkRenderer.Vkrenderer.getGUIRenderer());
 				}
 			}
 			vkQueueWaitIdle(renderDevice.renderQueue);
@@ -430,7 +452,7 @@ public class VkDeviceState extends VkRenderManager {
 				swapExtent.set(width,height);
 			}
 			//Choose Image Count//
-			chosenImageCount = surfaceCapabilities.minImageCount() + (chosenPresentMode == VK_PRESENT_MODE_MAILBOX_KHR ? 1 : 0);
+			chosenImageCount = surfaceCapabilities.minImageCount() + 1;
 			if (surfaceCapabilities.maxImageCount() > 0 && chosenImageCount > surfaceCapabilities.maxImageCount()) {
 				chosenImageCount = surfaceCapabilities.maxImageCount();
 			}
@@ -511,16 +533,20 @@ public class VkDeviceState extends VkRenderManager {
 		window_swapchain = VK_NULL_HANDLE;
 	}
 
-	public void recreateSwapChain() {
+	public void recreateSwapChain(VkGUIRenderer guiRenderer) {
 		vkDeviceWaitIdle(renderDevice.device);
+		guiRenderer.destroy_descriptors();
+		destroySwapChainSynchronisation();
 		destroySwapChain();
 		destroyCommandPools();
 		initSwapChain();
+		initSwapChainSynchronisation();
 		initRenderPasses();
 		initGraphicsPipeline();
 		initFrameBuffers();
 		initCommandBuffers();
 		recreateMemory();
+		guiRenderer.create_descriptor_sets();
 	}
 
 	private void choosePhysicalDevice() {
@@ -569,6 +595,7 @@ public class VkDeviceState extends VkRenderManager {
 
 	public void terminateAndFree() {
 		vkDeviceWaitIdle(renderDevice.device);
+		destroySwapChainSynchronisation();
 		destroySwapChain();
 		destroyCommandPools();
 		destroySynchronisation();

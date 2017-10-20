@@ -4,6 +4,7 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -16,6 +17,7 @@ public class GUIButton extends GUIObjectSizable {
 	protected String str;
 	private static ResourceHandle texButton = ResourceManager.getImage("gui/button0");
 	private boolean inButton = false;
+	private AtomicBoolean drawDirtyFlag = new AtomicBoolean(false);
 
 	private Consumer<GUIButton> onButtonPressFunc = null;
 
@@ -61,10 +63,17 @@ public class GUIButton extends GUIObjectSizable {
 	@Override
 	public void onMouseEnter() {
 		inButton = true;
+		drawDirtyFlag.set(true);
 	}
 
 	@Override
 	public void onMouseLeave() {
 		inButton = false;
+		drawDirtyFlag.set(true);
+	}
+
+	@Override
+	public boolean isDrawDirty() {
+		return drawDirtyFlag.getAndSet(false);
 	}
 }

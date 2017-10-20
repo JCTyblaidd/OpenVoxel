@@ -4,7 +4,7 @@ import net.openvoxel.utility.config.AutoConfig;
 import net.openvoxel.utility.config.ConfigProperty;
 import org.joml.Vector2f;
 
-public class VkRenderConfig extends AutoConfig{
+public class VkRenderConfig extends AutoConfig {
 
 	public enum CullMethod {
 		CULL_NONE,
@@ -32,6 +32,12 @@ public class VkRenderConfig extends AutoConfig{
 
 	@ConfigProperty("graphics_cascade_shadows")
 	public boolean enableCascadeShadowMaps = true;
+
+	@ConfigProperty("graphics_enable_height_mapping")
+	public boolean enableHeightMapping = true;
+
+	@ConfigProperty("graphics_use_displacement_mapping")
+	public boolean useDisplacementMapping = true;
 
 	@ConfigProperty("graphics_resolution")
 	public Vector2f chosenResolution;

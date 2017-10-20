@@ -18,7 +18,7 @@ public abstract class Block {
 	public static AABB EMPTY_BLOCK_AABB = new AABB(0,0,0,0,0,0);
 
 	public static IBlockRenderHandler defaultRenderHandler = new DefaultBlockRenderer();
-	public static IBlockRenderHandler emptyRenderHandler = (renderer, stateAccess) -> {};//Draw Nothing//
+	public static IBlockRenderHandler emptyRenderHandler = (renderer, stateAccess,isOpaque) -> {};//Draw Nothing//
 
 	protected float explosion_resistance = 1.0F;
 	protected int light_emission = 0;
@@ -67,6 +67,7 @@ public abstract class Block {
 		return true;
 	}
 
+	//Is Drawn in opaque draw or transparent draw
 	public boolean isCompleteOpaque() {
 		return true;
 	}

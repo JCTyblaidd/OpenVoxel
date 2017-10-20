@@ -5,6 +5,7 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -23,6 +24,7 @@ public class GUISlider extends GUIObjectSizable{
 	private static ResourceHandle texBackground = ResourceManager.getImage("gui/scrollbg0");
 	private static ResourceHandle texBar = ResourceManager.getImage("gui/scrollbar0");
 	private float scrollbarSizePerc = 10.0F;
+	private AtomicBoolean drawDirtyFlag = new AtomicBoolean(false);
 
 	private BiConsumer<GUISlider,Integer> updateSliderFunc;
 
@@ -56,12 +58,11 @@ public class GUISlider extends GUIObjectSizable{
 			String val = txtFunc.apply(currentVal);
 			float X = getPosX(drawHandle.getScreenWidth());
 			float Y = getPosY(drawHandle.getScreenHeight());
-			float H = getHeight(drawHandle.getScreenHeight()) * 2;
+			float H = getHeight(drawHandle.getScreenHeight());
 			float W = getWidth(drawHandle.getScreenWidth());
 			float TXT_W = drawHandle.GetTextWidthRatio(val) * H;
-			float W_OFF = W - (TXT_W/2);
-			X = X * 2 - 1 + W_OFF;
-			Y = -Y * 2 + 1 - H;
+			X += (W / 2) - (TXT_W/2);
+			Y += H;
 			drawHandle.DrawText(X,Y,H,val);
 		}
 	}
@@ -111,11 +112,11 @@ public class GUISlider extends GUIObjectSizable{
 			}else if(perc < 0.0F) {
 				perc = 0.0F;
 			}
-			int newID = minVal + (int)(perc * (maxVal - minVal));
-			currentVal = newID;
+			currentVal = minVal + (int)(perc * (maxVal - minVal));
 			if(updateSliderFunc != null) {
 				updateSliderFunc.accept(this,currentVal);
 			}
+			drawDirtyFlag.set(true);
 		}
 	}
 
@@ -138,10 +139,17 @@ public class GUISlider extends GUIObjectSizable{
 	@Override
 	public void onMouseClicked() {
 		sliderSelected = true;
+		drawDirtyFlag.set(true);
 	}
 
 	@Override
 	public void onMouseReleased() {
 		sliderSelected = false;
+		drawDirtyFlag.set(true);
+	}
+
+	@Override
+	public boolean isDrawDirty() {
+		return drawDirtyFlag.getAndSet(false);
 	}
 }

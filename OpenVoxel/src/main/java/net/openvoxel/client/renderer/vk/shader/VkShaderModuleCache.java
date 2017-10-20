@@ -17,13 +17,10 @@ import static org.lwjgl.vulkan.VK10.*;
 public class VkShaderModuleCache {
 
 	public static VkShaderModuleCache guiShader;
-	public static VkShaderModuleCache debugShader;
-	public static VkShaderModuleCache debugGuiShader;
 
 	static {
 		guiShader = new VkShaderModuleCache("gui/guiShader");
-		debugShader = new VkShaderModuleCache("debug/debugTriangle");
-		debugGuiShader = new VkShaderModuleCache("debug/debugGui");
+
 	}
 
 	///Local Code//

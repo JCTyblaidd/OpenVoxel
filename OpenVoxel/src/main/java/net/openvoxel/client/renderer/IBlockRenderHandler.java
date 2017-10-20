@@ -15,6 +15,6 @@ public interface IBlockRenderHandler {
 	 * @param renderer World Renderer Reference
 	 * @param stateAccess Block Information Accessor
 	 */
-	void storeBlockData(WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess);
+	void storeBlockData(WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,boolean opaqueDraw);
 
 }

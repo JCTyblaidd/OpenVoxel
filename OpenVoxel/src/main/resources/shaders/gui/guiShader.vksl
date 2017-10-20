@@ -1,49 +1,42 @@
 /**[VK::Vertex]**/
-#extension GL_ARB_shading_language_420pack : enable
 
-layout(push_constant, binding = 0) uniform pushData {
-    mat3 matrix;
-    bool enable_tex;
-} push_data;
-
-layout(location = 0) in vec3 position;
+layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 uv_coord;
-layout(location = 2) in vec4 colour;
+layout(location = 2) in vec4 col_input;
 
-layout(location = 0) out vec2 UV;
-layout(location = 1) out vec4 Col;
+out gl_PerVertex {
+    vec4 gl_Position;
+};
+
+layout(location = 0) out vec2 frag_UV;
+layout(location = 1) out vec4 frag_Col;
 
 void main() {
-    UV = uv_coord;
-    Col = colour;
-    vec4 basePos = vec4(position,1) + vec4(0,0,push_data.z_offset,0);
-    gl_Position = vec4(push_data.matrix * basePos.xyz,1);
+    frag_UV = uv_coord;
+    frag_Col = col_input;
+    gl_Position = vec4(position,0.0,1.0);
 }
 
 /**[VK::Fragment]**/
-#extension GL_ARB_shading_language_420pack : enable
 
-layout(push_constant, binding = 0) uniform pushData {
-    mat3 matrix;
-    bool enable_tex;
-} push_data;
-
-layout(binding = 1) uniform sampler2D imgSampler;
-
-layout(location = 0) in vec2 UV;
-layout(location = 1) in vec4 Col;
+layout(location = 0) in vec2 frag_UV;
+layout(location = 1) in vec4 frag_Col;
 
 layout(location = 0) out vec4 colour;
 
+layout(set = 0, binding = 0) uniform sampler2D texture_array[32];
+
+layout(push_constant) uniform PushConsts {
+    int image_offset;
+    bool use_texture;
+} pushConsts;
+
 void main() {
-    vec4 res;
-    if(push_data.enable_tex) {
-        res = texture(imgSampler,UV).rgba;
-    }else {
-        res = vec4(1,1,1,1);
+    vec4 tmp_col = vec4(1,1,1,1);
+    if(pushConsts.use_texture) {
+        tmp_col = texture(texture_array[pushConsts.image_offset],frag_UV);
     }
-    res *= Col;
-    colour = res;
+    colour = tmp_col * frag_Col;
 }
 
 /**[VK::End]**/

@@ -28,7 +28,7 @@ public class VkRenderer implements GlobalRenderer {
 	private VkGUIRenderer guiRenderer;
 	private VkWorldRenderer worldRenderer;
 
-	private VkTexAtlas texAtlas = new VkTexAtlas();//TEMP//
+	private VkTexAtlas texAtlas;
 
 	private AtomicBoolean needsRegen = new AtomicBoolean(false);
 	private AtomicBoolean needsResize = new AtomicBoolean(false);
@@ -48,21 +48,21 @@ public class VkRenderer implements GlobalRenderer {
 
 	@Override
 	public void requestSettingsChange(RenderConfig newConfig) {
-
+		//TODO:
 	}
 
 	@Override
-	public WorldRenderer getWorldRenderer() {
+	public VkWorldRenderer getWorldRenderer() {
 		return worldRenderer;
 	}
 
 	@Override
-	public DisplayHandle getDisplayHandle() {
+	public VkDisplayHandle getDisplayHandle() {
 		return displayHandle;
 	}
 
 	@Override
-	public GUIRenderer getGUIRenderer() {
+	public VkGUIRenderer getGUIRenderer() {
 		return guiRenderer;
 	}
 
@@ -70,12 +70,13 @@ public class VkRenderer implements GlobalRenderer {
 	public void loadPreRenderThread() {
 		deviceState = new VkDeviceState();
 		displayHandle = new VkDisplayHandle(this,deviceState);
+		texAtlas = new VkTexAtlas();
+		worldRenderer = new VkWorldRenderer(deviceState);
 	}
 
 	@Override
 	public void loadPostRenderThread() {
 		guiRenderer = new VkGUIRenderer(deviceState);
-		worldRenderer = new VkWorldRenderer();
 		deviceState.acquireNextImage(true);
 	}
 
@@ -95,20 +96,24 @@ public class VkRenderer implements GlobalRenderer {
 	 */
 	@Override
 	public void nextFrame() {
-		deviceState.submitNewWork();
+		deviceState.submitNewWork(worldRenderer);
 		deviceState.presentOnCompletion();
 		if(needsRegen.get() || needsResize.get()) {
-			needsRegen.set(false);
 			needsResize.set(false);
-			deviceState.recreateSwapChain();
-			//TODO: regen resource images & etc
+			deviceState.recreateSwapChain(guiRenderer);
+			if(needsRegen.get()) {
+				System.out.println("##Resource Regen Not Implemented##");
+				//TODO: regen resource images & etc
+			}
+			needsRegen.set(false);
 		}
 		deviceState.acquireNextImage(false);
 	}
 
 	@Override
 	public void kill() {
-		//worldRenderer.cleanup();
+		texAtlas.cleanup();
+		worldRenderer.cleanup();
 		displayHandle.cleanup();
 		guiRenderer.cleanup();
 		deviceState.terminateAndFree();
