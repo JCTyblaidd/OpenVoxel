@@ -71,7 +71,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private Map<ResourceHandle,BoundResourceHandle> imageBindings;
 	private long descriptorPool;
 	private LongBuffer imageDescriptorSets;
-	private int imageCleanupCountdown = 100;
+	private int imageCleanupCountdown = MAX_IMAGE_CLEANUP_COUNTDOWN;
+	private static final int MAX_IMAGE_CLEANUP_COUNTDOWN = 200;
 
 	private int rewriteDescriptorSetCountdown = 0;
 	private int dirtyDrawUpdateCountdown = 0;
@@ -190,9 +191,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private boolean tickImageCleanupCountdown() {
 		imageCleanupCountdown--;
 		if(imageCleanupCountdown == 0) {
-			//TODO: IMPLEMENT THIS BETTER//
-			/*
-			imageCleanupCountdown = 100;
+			imageCleanupCountdown = MAX_IMAGE_CLEANUP_COUNTDOWN;
 			List<ResourceHandle> to_clean = new ArrayList<>();
 			for(Map.Entry<ResourceHandle,BoundResourceHandle> handle : imageBindings.entrySet()) {
 				if(handle.getValue().usageCount == 0) {
@@ -206,7 +205,6 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			}
 			to_clean.forEach(imageBindings::remove);
 			return to_clean.size() != 0;
-			*/
 		}
 		return false;
 	}

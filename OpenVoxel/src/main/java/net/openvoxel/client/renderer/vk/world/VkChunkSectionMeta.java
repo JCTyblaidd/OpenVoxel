@@ -13,6 +13,7 @@ import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 
 import static org.lwjgl.vulkan.VK10.vkCmdBindVertexBuffers;
+import static org.lwjgl.vulkan.VK10.vkCmdCopyBuffer;
 import static org.lwjgl.vulkan.VK10.vkCmdDraw;
 
 public class VkChunkSectionMeta implements IRenderDataCache {
@@ -23,18 +24,78 @@ public class VkChunkSectionMeta implements IRenderDataCache {
 		this.refLighting = refLighting;
 	}
 
+	/*
+	 * Pointer to relevant chunk
+	 */
 	ClientChunk refChunk;
+
+	/*
+	 * Cache of the latest block information [cleaned on draw]
+	 */
 	IntBuffer refBlocks;
+
+	/*
+	 * Cache of the latest lighting information [cleaned on draw]
+	 */
 	ShortBuffer refLighting;
 
+	/*
+	 * Cache of the latest draw information
+	 */
 	ByteBuffer drawDataAll;
 
+	/*
+	 * The number of triangles in an opaque draw operation
+	 */
 	int drawCountOpaque;
+
+	/*
+	 * The number of triangles in a transparent draw operation
+	 */
 	int drawCountTransparent;
 
+	/*
+	 * Old Device-local storage index (-1 if not stored)
+	 */
+	int oldDeviceLocalMemoryID = -1;
+
+	/*
+	 * Old device-local storage
+	 */
+	int oldDeviceAllocationSize = 0;
+
+	/*
+	 * Device-local storage index (-1 if not stored)
+	 */
 	int boundDeviceLocalMemoryID;
+
+	/*
+	 * Device-local current allocation size (meaningless if boundDeviceLocalMem
+	 */
 	int boundDeviceAllocationSize;
+
+	/*
+	 * Is the latest version stored in device-local memory
+	 */
 	boolean latestInMemory;
+
+	boolean isOldInMemory() {
+		return oldDeviceLocalMemoryID != -1;
+	}
+
+	void markOldAsRemoved() {
+		oldDeviceLocalMemoryID = -1;
+		oldDeviceAllocationSize = 0;
+	}
+
+	void markDataAsOld() {
+		MemoryUtil.memFree(drawDataAll);
+		drawDataAll = null;
+		oldDeviceAllocationSize = boundDeviceAllocationSize;
+		oldDeviceLocalMemoryID = boundDeviceLocalMemoryID;
+		boundDeviceLocalMemoryID = -1;
+		boundDeviceAllocationSize = 0;
+	}
 
 	void genFromData(ByteBuffer drawDataTransparent) {
 		MemoryUtil.memFree(refBlocks);
@@ -63,25 +124,23 @@ public class VkChunkSectionMeta implements IRenderDataCache {
 				drawCountTransparent = 0;
 			}
 		}
-		if(drawDataAll != null) {
-			boundDeviceAllocationSize = drawDataAll.capacity();
-		}else{
-			boundDeviceAllocationSize = 0;
-		}
-		//Update Flag//
-		latestInMemory = drawDataAll != null;
+		//Update Flag - if empty --> latest is in memory//
+		latestInMemory = drawDataAll == null;
+		boundDeviceLocalMemoryID = -1;
+		boundDeviceAllocationSize = 0;
 	}
 
-	void cmdBindVertexBuffersOpaque(VkCommandBuffer cmd, long buffer, MemoryStack stack) {
+
+	void cmdBindVertexBuffersOpaque(VkCommandBuffer cmd, long buffer, int off,MemoryStack stack) {
 		final int num = drawCountOpaque;
 		vkCmdBindVertexBuffers(cmd,0,
 				stack.longs(buffer,buffer,buffer,buffer,buffer,buffer,buffer),
-				stack.longs(0,num*12,num*16,num*19,num*22,num*26,num*30));
+				stack.longs(off,off+num*12,off+num*16,off+num*19,off+num*22,off+num*26,off+num*30));
 	}
 
-	void cmdBindVertexBuffersTransparent(VkCommandBuffer cmd, long buffer, MemoryStack stack) {
+	void cmdBindVertexBuffersTransparent(VkCommandBuffer cmd, long buffer, int offset, MemoryStack stack) {
 		final int num = drawCountTransparent;
-		final int off = drawCountOpaque;
+		final int off = drawCountOpaque + offset;
 		vkCmdBindVertexBuffers(cmd,0,
 				stack.longs(buffer,buffer,buffer,buffer,buffer,buffer,buffer),
 				stack.longs(off,off+num*12,off+num*16,off+num*19,off+num*22,off+num*26,off+num*30));

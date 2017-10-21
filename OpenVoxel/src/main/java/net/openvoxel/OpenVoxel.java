@@ -339,6 +339,17 @@ public class OpenVoxel implements EventListener{
 	**/
 	public void AttemptShutdownSequence(boolean isCrash) {
 		shutdownIsCrash.set(isCrash);
+		if(Side.isClient) {
+			try {
+				//TODO: ensure correct disconnect cache clearing procedure
+				if (currentClientServer != null) {
+					currentClientServer.disconnect();
+				}
+				Thread.sleep(100);
+			}catch(Exception ignored) {
+				ignored.printStackTrace();
+			}
+		}
 		isRunning.set(false);
 	}
 	private void AttemptShutdownSequenceInternal(boolean isCrash) {
@@ -352,9 +363,6 @@ public class OpenVoxel implements EventListener{
 			openVoxelLogger.Info("Starting Shutdown Sequence");
 			isRunning.set(false);
 			if(Side.isClient) {
-				if(currentClientServer != null) {
-					currentClientServer.disconnect();
-				}
 				RenderThread.awaitTermination();
 				GLFWLogWrapper.Unload();
 			}

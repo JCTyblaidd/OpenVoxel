@@ -6,19 +6,17 @@ import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.renderer.vk.world.VkChunkSectionMeta;
 import net.openvoxel.client.renderer.vk.world.VkWorldMemoryManager;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.AsyncQueue;
-import net.openvoxel.utility.AsyncTriQueue;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
 import org.lwjgl.system.MemoryUtil;
 
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by James on 17/04/2017.
@@ -44,6 +42,21 @@ public class VkWorldRenderer implements WorldRenderer {
 
 	void cleanup() {
 		memoryManager.cleanup();
+	}
+
+	/**
+	 * Must be called in vulkan exclusive context [after wait idle]
+	 */
+	public void shrinkMemory(int targetAmount) {
+		int limit = memoryManager.reclaim_memory(targetAmount);
+		//TODO: mark those that no-longer have state//
+	}
+
+	/**
+	 * Must be called in vulkan exclusive context [after wait idle]
+	 */
+	public void growMemory() {
+		memoryManager.grow_memory();
 	}
 
 	@Override
@@ -78,13 +91,16 @@ public class VkWorldRenderer implements WorldRenderer {
 	 */
 	@Override
 	public void renderWorld(EntityPlayerSP playerSP, ClientWorld worldSP) {
+		drawBarrier.reset(3);
+		resourceBarrier.reset(3);
+		submissionBarrier.reset(1);
 		Renderer.renderCacheManager.addWork(this::async_view);
 		Renderer.renderCacheManager.addWork(this::async_shadows);
 		Renderer.renderCacheManager.addWork(this::async_cube_map);
-		Renderer.renderCacheManager.addWork(this::async_transfer_generation);
 		Renderer.renderCacheManager.addWork(this::async_chunk_loading);
 		Renderer.renderCacheManager.addWork(this::async_chunk_unloading);
 		Renderer.renderCacheManager.addWork(this::async_chunk_updating);
+		Renderer.renderCacheManager.addWork(this::async_transfer_generation);
 		Thread.yield();
 	}
 
@@ -93,27 +109,22 @@ public class VkWorldRenderer implements WorldRenderer {
 	 * Run commands that need to be called from the main renderer thread
 	 */
 	public void prepareSubmission() {
-		semaphore_view.acquireUninterruptibly();
-		semaphore_shadow.acquireUninterruptibly();
-		semaphore_cube.acquireUninterruptibly();
-		//WOOOO//
-		semaphore_view.release();
-		semaphore_shadow.release();
-		semaphore_cube.release();
+		drawBarrier.awaitCompletion();
+		//Draw commands are ready//
+
+		submissionBarrier.awaitCompletion();
+		//Resource Transfer command is ready//
 	}
 
 
 	/////////////////////////////////
 	/// Synchronisation Variables ///
 	/////////////////////////////////
-	private Semaphore
-			semaphore_view = new Semaphore(1),
-			semaphore_shadow = new Semaphore(1),
-			semaphore_cube = new Semaphore(1),
-			semaphore_transfer = new Semaphore(1);
+	private AsyncBarrier drawBarrier = new AsyncBarrier();
+	private AsyncBarrier resourceBarrier = new AsyncBarrier();
+	private AsyncBarrier submissionBarrier = new AsyncBarrier();
 
 	private void async_view() {
-		semaphore_view.acquireUninterruptibly();
 		//Perform Cull//
 
 		//Perform Draw of Resources in GPU//
@@ -122,11 +133,10 @@ public class VkWorldRenderer implements WorldRenderer {
 
 		//Build Command Buffer//
 
-		semaphore_view.release();
+		drawBarrier.completeTask();
 	}
 
 	private void async_shadows() {
-		semaphore_shadow.acquireUninterruptibly();
 		//Perform Cull//
 
 		//Perform Draw of Resources in GPU//
@@ -135,11 +145,10 @@ public class VkWorldRenderer implements WorldRenderer {
 
 		//Build Command Buffer//
 
-		semaphore_shadow.release();
+		drawBarrier.completeTask();
 	}
 
 	private void async_cube_map() {
-		semaphore_cube.acquireUninterruptibly();
 		//Perform Cull//
 
 		//Perform Draw of Resources in GPU//
@@ -148,11 +157,11 @@ public class VkWorldRenderer implements WorldRenderer {
 
 		//Build Command Buffer//
 
-		semaphore_cube.release();
+		drawBarrier.completeTask();
 	}
 
 	private void async_transfer_generation() {
-		semaphore_transfer.acquireUninterruptibly();
+		resourceBarrier.awaitCompletion();
 		//Sort by priority//
 
 		//List Targets to Free//
@@ -161,7 +170,7 @@ public class VkWorldRenderer implements WorldRenderer {
 
 		//Build Command Buffer//
 
-		semaphore_transfer.release();
+		submissionBarrier.completeTask();
 	}
 
 	private void async_chunk_loading() {
@@ -171,6 +180,7 @@ public class VkWorldRenderer implements WorldRenderer {
 			ClientChunkSection to_load = chunk_load_queue.attemptNext();
 			memoryManager.load_section_async(to_load);
 		}
+		resourceBarrier.completeTask();
 	}
 
 	private void async_chunk_unloading() {
@@ -180,6 +190,7 @@ public class VkWorldRenderer implements WorldRenderer {
 			ClientChunkSection to_unload = chunk_unload_queue.attemptNext();
 			memoryManager.unload_section_async(to_unload);
 		}
+		resourceBarrier.completeTask();
 	}
 
 	private void async_chunk_updating() {
@@ -189,5 +200,6 @@ public class VkWorldRenderer implements WorldRenderer {
 			ClientChunkSection to_update = chunk_update_queue.attemptNext();
 			memoryManager.update_section_async(to_update);
 		}
+		resourceBarrier.completeTask();
 	}
 }

@@ -74,6 +74,10 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 		Renderer.renderer.getWorldRenderer().onChunkDirty(clientChunk);
 	}
 
+	public void requestUnloadAll() {
+
+	}
+
 	public EntityPlayerSP getThePlayer() {
 		return thePlayer;
 	}
@@ -90,6 +94,7 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 	public void disconnect() {
 		shutdown();
 		serverConnection.shutdown();
+		loadManager.unloadAll();
 	}
 
 	@Override

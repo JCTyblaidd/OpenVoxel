@@ -120,4 +120,12 @@ public class ClientChunkLoadManager {
 		});
 	}
 
+	public void unloadAll() {
+		EntityPlayerSP player = clientServer.getThePlayer();
+		ClientWorld world = (ClientWorld)player.currentWorld;
+		loadedChunks.forEachChunk(chunk -> {
+			clientServer.requestChunkUnload(world,chunk.chunkX,chunk.chunkZ);
+			return true;
+		});
+	}
 }
