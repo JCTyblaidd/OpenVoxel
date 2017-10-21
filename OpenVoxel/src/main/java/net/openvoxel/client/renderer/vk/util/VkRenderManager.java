@@ -227,6 +227,8 @@ public class VkRenderManager {
 		MemoryUtil.memFree(command_buffers_main);
 		MemoryUtil.memFree(command_buffers_gui);
 		MemoryUtil.memFree(command_buffers_gui_transfer);
+		MemoryUtil.memFree(command_buffers_world_drawing);
+		MemoryUtil.memFree(command_buffers_world_transfer);
 	}
 
 	void initMemory() {

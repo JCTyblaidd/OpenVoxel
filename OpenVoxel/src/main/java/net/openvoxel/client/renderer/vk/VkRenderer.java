@@ -102,8 +102,8 @@ public class VkRenderer implements GlobalRenderer {
 			needsResize.set(false);
 			deviceState.recreateSwapChain(guiRenderer);
 			if(needsRegen.get()) {
-				System.out.println("##Resource Regen Not Implemented##");
-				//TODO: regen resource images & etc
+				texAtlas.cleanup();
+				texAtlas.performStitchInternal();
 			}
 			needsRegen.set(false);
 			deviceState.acquireNextImage(true);

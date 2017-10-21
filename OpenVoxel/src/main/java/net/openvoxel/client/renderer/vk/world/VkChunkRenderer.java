@@ -197,6 +197,8 @@ class VkChunkRenderer implements WorldRenderer.WorldBlockRenderer, IBlockAccess 
 			toRet.put(bufferCol);
 			toRet.put(bufferLight);
 			toRet.put(bufferFlags);
+			//Set Additional Return Value//
+			toRet.position(vertexCount);
 		}
 		MemoryUtil.memFree(bufferPos);
 		MemoryUtil.memFree(bufferUV);

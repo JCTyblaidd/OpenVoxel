@@ -35,6 +35,7 @@ import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.system.Configuration;
 
 import java.io.File;
@@ -307,7 +308,7 @@ public class OpenVoxel implements EventListener{
 			SetCurrentServer(new DedicatedServer(new GameSave(new File("dedicated_save"))));
 			currentServer.start(2500);
 		}else{
-			//TODO: signal texture atlas stitch??
+			Renderer.getBlockTextureAtlas().performStitch();
 			blockRegistry.generateMappingsFromRaw();
 			if(!args.hasFlag("noBackgroundWorld")) {
 				currentClientServer = new BackgroundClientServer();

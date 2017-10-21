@@ -50,6 +50,11 @@ public class FolderUtils {
 		return f;
 	}
 
+	public static void saveTextureStitch(int w, int h,ByteBuffer data,String name) {
+		File f = new File(ResourceDir,name+".png");
+		STBImageWrite.stbi_write_png(f.getAbsolutePath(),w,h,4,data,0);
+	}
+
 	public static void saveScreenshot(int w, int h,int[] pixels) {
 		saveScreenshot(w,h,pixels,false);
 	}
