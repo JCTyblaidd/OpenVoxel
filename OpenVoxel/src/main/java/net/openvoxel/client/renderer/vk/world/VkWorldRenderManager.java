@@ -3,8 +3,11 @@ package net.openvoxel.client.renderer.vk.world;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.vk.util.VkRenderManager;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VkExtent3D;
 import org.lwjgl.vulkan.VkFormatProperties;
+import org.lwjgl.vulkan.VkImageCreateInfo;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
@@ -23,9 +26,7 @@ public class VkWorldRenderManager {
 
 
 	//Texture Atlas Binding//
-	private int ImageAtlasDiffuse;
-	private int ImageAtlasNormal;
-	private int ImageAtlasPBR;
+	private int ImageAtlas;
 	private int ImageViewDiffuse;
 	private int ImageViewNormal;
 	private int ImageViewPBR;
@@ -41,8 +42,38 @@ public class VkWorldRenderManager {
 	private LongBuffer ImageShadowMap;
 
 
-	private void create_image_target() {
+	private void create_texture_atlas(ByteBuffer diffuse,ByteBuffer normal, ByteBuffer pbr,int width, int height) {
+		try(MemoryStack stack = stackPush()) {
+			VkExtent3D extent = VkExtent3D.mallocStack(stack);
+			extent.set(width,height,0);
+			VkImageCreateInfo createInfo = VkImageCreateInfo.mallocStack(stack);
+			createInfo.sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO);
+			createInfo.pNext(VK_NULL_HANDLE);
+			createInfo.flags(0);
+			createInfo.imageType(VK_IMAGE_TYPE_2D);
+			createInfo.format(VK_FORMAT_R8G8B8A8_UNORM);
+			createInfo.extent(extent);
+			createInfo.mipLevels(1);//TODO:
+			createInfo.arrayLayers(3);//TODO: array layers, good or bad?
+			createInfo.samples(VK_SAMPLE_COUNT_1_BIT);
+			createInfo.tiling(VK_IMAGE_TILING_OPTIMAL);
+			createInfo.usage(VK_IMAGE_USAGE_SAMPLED_BIT);
+			createInfo.sharingMode(VK_SHARING_MODE_EXCLUSIVE);
+			createInfo.pQueueFamilyIndices(null);
+			createInfo.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED);
+			LongBuffer res = stack.mallocLong(1);
+			if(vkCreateImage(renderManager.renderDevice.device,createInfo,null,res) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to create texture atlas");
+			}
+			//UPDATE ONCE//
+		}
+	}
 
+	private void destroy_texture_atlas() {
+		vkDestroyImageView(renderManager.renderDevice.device,ImageViewDiffuse,null);
+		vkDestroyImageView(renderManager.renderDevice.device,ImageViewNormal, null);
+		vkDestroyImageView(renderManager.renderDevice.device,ImageViewPBR, null);
+		vkDestroyImage(renderManager.renderDevice.device,ImageAtlas,null);
 	}
 
 	public VkWorldRenderManager(VkRenderManager manager) {

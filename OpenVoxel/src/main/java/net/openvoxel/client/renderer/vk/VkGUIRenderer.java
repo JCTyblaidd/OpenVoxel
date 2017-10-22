@@ -42,6 +42,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	public static final int GUI_IMAGE_BLOCK_COUNT = 512;
 	public static final int GUI_IMAGE_CACHE_SIZE = GUI_IMAGE_BLOCK_SIZE * GUI_IMAGE_BLOCK_COUNT;
 
+	//Implementation Flags//
+	public static final boolean GUI_USE_COHERENT_MEMORY = false;
+
 	private VkDeviceState state;
 	private VkMemoryManager mgr;
 	private int screenWidth;
@@ -71,6 +74,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private Map<ResourceHandle,BoundResourceHandle> imageBindings;
 	private long descriptorPool;
 	private LongBuffer imageDescriptorSets;
+	private ByteBuffer mappedGUIStaging;
 	private int imageCleanupCountdown = MAX_IMAGE_CLEANUP_COUNTDOWN;
 	private static final int MAX_IMAGE_CLEANUP_COUNTDOWN = 200;
 
@@ -92,6 +96,11 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		offsetTransitionStack = MemoryUtil.memAllocInt(GUI_STATE_CHANGE_LIMIT);
 		imageEnableStateStack = new TByteArrayList(GUI_STATE_CHANGE_LIMIT);
 		imageBindings = new HashMap<>();
+		if(!GUI_USE_COHERENT_MEMORY) {
+			try (MemoryStack stack = stackPush()) {
+				mappedGUIStaging = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE + GUI_IMAGE_CACHE_SIZE, stack);
+			}
+		}
 		create_descriptor_sets();
 	}
 
@@ -147,6 +156,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	 * Destroy all required images
 	 */
 	void cleanup() {
+		if(!GUI_USE_COHERENT_MEMORY) {
+			mgr.unMapMemory(mgr.memGuiStaging.get(1));
+		}
 		for(BoundResourceHandle handle : imageBindings.values()) {
 			vkDestroySampler(state.renderDevice.device,handle.image_sampler,null);
 			vkDestroyImageView(state.renderDevice.device,handle.image_view,null);
@@ -400,6 +412,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 					dstImages.put(boundHandle.image);
 				}
 				if(texture != null) {
+					state.vkLogger.Warning("TODO: FIX MEMORY LEAKING");
 					//TODO: find out how this causes crashes??
 					//texture.Free();
 				}
@@ -461,14 +474,42 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
 			if(drawCount != 0) {
-				ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE+GUI_IMAGE_CACHE_SIZE, stack);
-				writeTarget.position(0);
-				memMapping.put(writeTarget);
-				imgStagingTarget.position(0);
-				memMapping.position(GUI_BUFFER_SIZE);
-				memMapping.put(imgStagingTarget);
-				memMapping.position(0);
-				mgr.unMapMemory(mgr.memGuiStaging.get(1));
+				boolean has_image_transfer = copyImg.remaining() != 0;
+				if(GUI_USE_COHERENT_MEMORY) {
+					ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE + GUI_IMAGE_CACHE_SIZE, stack);
+					writeTarget.position(0);
+					memMapping.put(writeTarget);
+					imgStagingTarget.position(0);
+					memMapping.position(GUI_BUFFER_SIZE);
+					memMapping.put(imgStagingTarget);
+					memMapping.position(0);
+					mgr.unMapMemory(mgr.memGuiStaging.get(1));
+				}else {
+					int img_lim = imgStagingTarget.position();
+					writeTarget.position(0);
+					mappedGUIStaging.position(0);
+					mappedGUIStaging.put(writeTarget);
+					imgStagingTarget.position(0);
+					mappedGUIStaging.position(GUI_BUFFER_SIZE);
+					mappedGUIStaging.put(imgStagingTarget);
+
+					VkMappedMemoryRange.Buffer memoryRanges = VkMappedMemoryRange.mallocStack(has_image_transfer ? 2 : 1, stack);
+					memoryRanges.position(0);
+					memoryRanges.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE);
+					memoryRanges.pNext(VK_NULL_HANDLE);
+					memoryRanges.memory(mgr.memGuiStaging.get(1));
+					memoryRanges.offset(0);
+					memoryRanges.size(drawCount);
+					if (has_image_transfer) {
+						memoryRanges.position(1);
+						memoryRanges.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE);
+						memoryRanges.pNext(VK_NULL_HANDLE);
+						memoryRanges.memory(mgr.memGuiStaging.get(1));
+						memoryRanges.offset(GUI_BUFFER_SIZE);
+						memoryRanges.size(img_lim);
+					}
+					vkFlushMappedMemoryRanges(state.renderDevice.device, memoryRanges);
+				}
 
 				VkBufferCopy.Buffer copyInfo = VkBufferCopy.mallocStack(1,stack);
 				copyInfo.position(0);
@@ -477,7 +518,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				copyInfo.size(drawCount);
 				vkCmdCopyBuffer(transferBuffer, mgr.memGuiStaging.get(0), mgr.memGuiDrawing.get(0), copyInfo);
 
-				if(copyImg.remaining() != 0) {
+				if(has_image_transfer) {
 					int lim = copyImg.limit();
 					for(int i = 0; i < lim; i++) {
 						copyImg.position(i);

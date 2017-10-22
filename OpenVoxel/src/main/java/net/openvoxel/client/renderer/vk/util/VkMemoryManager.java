@@ -49,10 +49,10 @@ public class VkMemoryManager {
 			memGuiStaging = MemoryUtil.memAllocLong(2);
 			memGuiDrawing = MemoryUtil.memAllocLong(2);
 			blockState = MemoryUtil.memCalloc(VkGUIRenderer.GUI_IMAGE_BLOCK_COUNT);
-
+			int gui_usage_mask = VkGUIRenderer.GUI_USE_COHERENT_MEMORY ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0;
 			AllocateExclusive(VkGUIRenderer.GUI_BUFFER_SIZE + VkGUIRenderer.GUI_IMAGE_CACHE_SIZE,
 					VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT | gui_usage_mask,
 					memGuiStaging,stack);
 			AllocateExclusive(VkGUIRenderer.GUI_BUFFER_SIZE,
 					VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
