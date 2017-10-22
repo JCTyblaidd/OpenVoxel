@@ -351,7 +351,7 @@ public class VkRenderDevice{
 		vkDestroyDevice(device,null);
 	}
 
-	int findMemoryType(int memoryTypeBits,int memoryPropertyFlags) {
+	public int findMemoryType(int memoryTypeBits,int memoryPropertyFlags) {
 		for (int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
 			boolean filter = (memoryTypeBits & (1 << i)) != 0;
 			int mem_props = memoryProperties.memoryTypes(i).propertyFlags();

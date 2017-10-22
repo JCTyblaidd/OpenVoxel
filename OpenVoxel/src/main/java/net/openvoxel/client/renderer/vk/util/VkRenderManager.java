@@ -263,4 +263,41 @@ public class VkRenderManager {
 	}
 
 
+	public VkCommandBuffer beginSingleUseCommand(MemoryStack stack) {
+		VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.mallocStack(stack);
+		allocateInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
+		allocateInfo.pNext(VK_NULL_HANDLE);
+		allocateInfo.commandPool(command_pool_graphics);
+		allocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+		allocateInfo.commandBufferCount(1);
+		PointerBuffer buffers = stack.mallocPointer(1);
+		if(vkAllocateCommandBuffers(renderDevice.device,allocateInfo,buffers) != VK_SUCCESS) {
+			throw new RuntimeException("Failed to begin single use command");
+		}
+		VkCommandBuffer cmd = new VkCommandBuffer(buffers.get(0),renderDevice.device);
+		VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
+		beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+		beginInfo.pNext(VK_NULL_HANDLE);
+		beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		beginInfo.pInheritanceInfo(null);
+		vkBeginCommandBuffer(cmd,beginInfo);
+		return cmd;
+	}
+
+	public void endSingleUseCommand(MemoryStack stack,VkCommandBuffer cmd) {
+		if(vkEndCommandBuffer(cmd) != VK_SUCCESS) {
+			throw new RuntimeException("Failed to end command buffer");
+		}
+		VkSubmitInfo submitInfo = VkSubmitInfo.mallocStack(stack);
+		submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
+		submitInfo.pNext(VK_NULL_HANDLE);
+		submitInfo.waitSemaphoreCount(0);
+		submitInfo.pWaitSemaphores(null);
+		submitInfo.pWaitDstStageMask(null);
+		submitInfo.pCommandBuffers(stack.pointers(cmd.address()));
+		submitInfo.pWaitSemaphores(null);
+		vkQueueSubmit(renderDevice.renderQueue,submitInfo,0);
+		vkQueueWaitIdle(renderDevice.renderQueue);
+		vkFreeCommandBuffers(renderDevice.device,command_pool_graphics,cmd);
+	}
 }

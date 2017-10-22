@@ -1,11 +1,10 @@
 package net.openvoxel.client.renderer.vk.world;
 
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.client.renderer.vk.VkTexAtlas;
 import net.openvoxel.client.renderer.vk.util.VkRenderManager;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VkExtent3D;
-import org.lwjgl.vulkan.VkFormatProperties;
-import org.lwjgl.vulkan.VkImageCreateInfo;
+import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -26,10 +25,11 @@ public class VkWorldRenderManager {
 
 
 	//Texture Atlas Binding//
-	private int ImageAtlas;
-	private int ImageViewDiffuse;
-	private int ImageViewNormal;
-	private int ImageViewPBR;
+	private long ImageAtlas;
+	private long ImageAtlasMemory;
+	private long ImageViewDiffuse;
+	private long ImageViewNormal;
+	private long ImageViewPBR;
 
 	//Image Formats//
 	private int imageDepthFormat;
@@ -42,10 +42,10 @@ public class VkWorldRenderManager {
 	private LongBuffer ImageShadowMap;
 
 
-	private void create_texture_atlas(ByteBuffer diffuse,ByteBuffer normal, ByteBuffer pbr,int width, int height) {
+	private void create_texture_atlas(VkTexAtlas atlas) {
 		try(MemoryStack stack = stackPush()) {
 			VkExtent3D extent = VkExtent3D.mallocStack(stack);
-			extent.set(width,height,0);
+			extent.set(atlas.pack_width,atlas.pack_height,1);
 			VkImageCreateInfo createInfo = VkImageCreateInfo.mallocStack(stack);
 			createInfo.sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO);
 			createInfo.pNext(VK_NULL_HANDLE);
@@ -53,8 +53,8 @@ public class VkWorldRenderManager {
 			createInfo.imageType(VK_IMAGE_TYPE_2D);
 			createInfo.format(VK_FORMAT_R8G8B8A8_UNORM);
 			createInfo.extent(extent);
-			createInfo.mipLevels(1);//TODO:
-			createInfo.arrayLayers(3);//TODO: array layers, good or bad?
+			createInfo.mipLevels(atlas.pack_mip_count);
+			createInfo.arrayLayers(3);
 			createInfo.samples(VK_SAMPLE_COUNT_1_BIT);
 			createInfo.tiling(VK_IMAGE_TILING_OPTIMAL);
 			createInfo.usage(VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -65,7 +65,66 @@ public class VkWorldRenderManager {
 			if(vkCreateImage(renderManager.renderDevice.device,createInfo,null,res) != VK_SUCCESS) {
 				throw new RuntimeException("Failed to create texture atlas");
 			}
-			//UPDATE ONCE//
+			ImageAtlas = res.get(0);
+
+			VkComponentMapping componentMapping = VkComponentMapping.mallocStack(stack);
+			componentMapping.r(VK_COMPONENT_SWIZZLE_IDENTITY);
+			componentMapping.g(VK_COMPONENT_SWIZZLE_IDENTITY);
+			componentMapping.b(VK_COMPONENT_SWIZZLE_IDENTITY);
+			componentMapping.a(VK_COMPONENT_SWIZZLE_IDENTITY);
+
+			VkImageSubresourceRange range = VkImageSubresourceRange.mallocStack(stack);
+			range.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
+			range.baseMipLevel(0);
+			range.levelCount(atlas.pack_mip_count);
+			range.baseArrayLayer(0);
+			range.layerCount(1);
+
+			VkImageViewCreateInfo viewCreateInfo = VkImageViewCreateInfo.mallocStack(stack);
+			viewCreateInfo.sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO);
+			viewCreateInfo.pNext(VK_NULL_HANDLE);
+			viewCreateInfo.flags(0);
+			viewCreateInfo.image(ImageAtlas);
+			viewCreateInfo.viewType(VK_IMAGE_VIEW_TYPE_2D);
+			viewCreateInfo.format(VK_FORMAT_R8G8B8A8_UNORM);
+			viewCreateInfo.components(componentMapping);
+			viewCreateInfo.subresourceRange(range);
+
+			if(vkCreateImageView(renderManager.renderDevice.device,viewCreateInfo,null,res) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to create image view");
+			}
+			ImageViewDiffuse = res.get(0);
+
+			range.baseArrayLayer(1);
+			viewCreateInfo.subresourceRange(range);
+			if(vkCreateImageView(renderManager.renderDevice.device,viewCreateInfo,null,res) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to create image view");
+			}
+			ImageViewNormal = res.get(0);
+
+			range.baseArrayLayer(2);
+			viewCreateInfo.subresourceRange(range);
+			if(vkCreateImageView(renderManager.renderDevice.device,viewCreateInfo,null,res) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to create image view");
+			}
+			ImageViewPBR = res.get(0);
+
+			VkMemoryRequirements memoryReqs = VkMemoryRequirements.mallocStack(stack);
+			vkGetImageMemoryRequirements(renderManager.renderDevice.device,ImageAtlas,memoryReqs);
+			int memoryIndex = renderManager.renderDevice.findMemoryType(memoryReqs.memoryTypeBits(),
+					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.callocStack(stack);
+			allocateInfo.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
+			allocateInfo.pNext(VK_NULL_HANDLE);
+			allocateInfo.allocationSize(memoryReqs.size());
+			allocateInfo.memoryTypeIndex(memoryIndex);
+			if(vkAllocateMemory(renderManager.renderDevice.device,allocateInfo,null,res) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to allocate device memory");
+			}
+			ImageAtlasMemory = res.get(0);
+			if(vkBindImageMemory(renderManager.renderDevice.device,ImageAtlas,ImageAtlasMemory,0) != VK_SUCCESS) {
+				throw new RuntimeException("Failed to bind image memory");
+			}
 		}
 	}
 
@@ -74,6 +133,29 @@ public class VkWorldRenderManager {
 		vkDestroyImageView(renderManager.renderDevice.device,ImageViewNormal, null);
 		vkDestroyImageView(renderManager.renderDevice.device,ImageViewPBR, null);
 		vkDestroyImage(renderManager.renderDevice.device,ImageAtlas,null);
+		vkFreeMemory(renderManager.renderDevice.device,ImageAtlasMemory,null);
+	}
+
+	private void update_texture_atlas_memory() {
+		try(MemoryStack stack = stackPush()) {
+			VkCommandBuffer cmd = renderManager.beginSingleUseCommand(stack);
+			LongBuffer staging_buffer = renderManager.memoryMgr.memGuiStaging;
+			VkBufferImageCopy.Buffer regions = VkBufferImageCopy.mallocStack(1,stack);
+			regions.bufferOffset(0);
+			regions.bufferRowLength(0);
+			regions.bufferImageHeight(0);
+			regions.imageSubresource();
+			regions.imageOffset();
+			regions.imageExtent();
+
+
+
+			//vkCmdPipelineBarrier(cmd,)
+			//vkCmdCopyBufferToImage(cmd,staging_buffer,ImageAtlas,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,regions);
+			//vkCmdPipelineBarrier(cmd,);
+
+			renderManager.endSingleUseCommand(stack,cmd);
+		}
 	}
 
 	public VkWorldRenderManager(VkRenderManager manager) {

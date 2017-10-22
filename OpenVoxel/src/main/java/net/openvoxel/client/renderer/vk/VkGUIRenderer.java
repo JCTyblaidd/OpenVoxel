@@ -43,7 +43,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	public static final int GUI_IMAGE_CACHE_SIZE = GUI_IMAGE_BLOCK_SIZE * GUI_IMAGE_BLOCK_COUNT;
 
 	//Implementation Flags//
-	public static final boolean GUI_USE_COHERENT_MEMORY = false;
+	public static final boolean GUI_USE_COHERENT_MEMORY = VkImplFlags.gui_use_coherent_memory();
+	private static final boolean GUI_DIRECT_TO_NON_COHERENT_MEMORY = VkImplFlags.gui_direct_to_non_coherent_memory();
+	private static final boolean GUI_ALLOW_DRAW_CACHING = VkImplFlags.gui_allow_draw_caching();
 
 	private VkDeviceState state;
 	private VkMemoryManager mgr;
@@ -87,7 +89,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		this.mgr = state.memoryMgr;
-		writeTarget = MemoryUtil.memAlloc(GUI_BUFFER_SIZE);
+		if(GUI_USE_COHERENT_MEMORY && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+			writeTarget = MemoryUtil.memAlloc(GUI_BUFFER_SIZE);
+		}
 		imgStagingTarget = MemoryUtil.memAlloc(GUI_IMAGE_CACHE_SIZE);
 
 		requestedImages = new HashSet<>();
@@ -100,13 +104,16 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			try (MemoryStack stack = stackPush()) {
 				mappedGUIStaging = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE + GUI_IMAGE_CACHE_SIZE, stack);
 			}
+			if(GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+				writeTarget = mappedGUIStaging;
+			}
 		}
 		create_descriptor_sets();
 	}
 
 	@Override
 	public boolean supportDirty() {
-		return dirtyDrawUpdateCountdown == 0;
+		return GUI_ALLOW_DRAW_CACHING && dirtyDrawUpdateCountdown == 0;
 	}
 
 	public void create_descriptor_sets() {
@@ -165,7 +172,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			vkDestroyImage(state.renderDevice.device,handle.image,null);
 		}
 		destroy_descriptors();
-		MemoryUtil.memFree(writeTarget);
+		if(GUI_USE_COHERENT_MEMORY && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+			MemoryUtil.memFree(writeTarget);
+		}
 		MemoryUtil.memFree(imgStagingTarget);
 		MemoryUtil.memFree(matrixArrayStack);
 		MemoryUtil.memFree(offsetTransitionStack);
@@ -486,12 +495,23 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 					mgr.unMapMemory(mgr.memGuiStaging.get(1));
 				}else {
 					int img_lim = imgStagingTarget.position();
-					writeTarget.position(0);
-					mappedGUIStaging.position(0);
-					mappedGUIStaging.put(writeTarget);
-					imgStagingTarget.position(0);
-					mappedGUIStaging.position(GUI_BUFFER_SIZE);
-					mappedGUIStaging.put(imgStagingTarget);
+					if(GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+						if(img_lim != 0) {
+							imgStagingTarget.position(0);
+							mappedGUIStaging.position(GUI_BUFFER_SIZE);
+							imgStagingTarget.limit(img_lim);
+							mappedGUIStaging.put(imgStagingTarget);
+							imgStagingTarget.limit(imgStagingTarget.capacity());
+						}
+						mappedGUIStaging.position(0);
+					}else {
+						writeTarget.position(0);
+						mappedGUIStaging.position(0);
+						mappedGUIStaging.put(writeTarget);
+						imgStagingTarget.position(0);
+						mappedGUIStaging.position(GUI_BUFFER_SIZE);
+						mappedGUIStaging.put(imgStagingTarget);
+					}
 
 					VkMappedMemoryRange.Buffer memoryRanges = VkMappedMemoryRange.mallocStack(has_image_transfer ? 2 : 1, stack);
 					memoryRanges.position(0);
@@ -548,8 +568,11 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			inheritance.queryFlags(0);
 			inheritance.pipelineStatistics(0);
 			beginInfo.pInheritanceInfo(inheritance);
-			//beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
-			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+			if(GUI_ALLOW_DRAW_CACHING) {
+				beginInfo.flags(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+			}else {
+				beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT);
+			}
 			vkBeginCommandBuffer(cmdBuffer,beginInfo);
 
 			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, state.guiPipeline.graphics_pipeline);

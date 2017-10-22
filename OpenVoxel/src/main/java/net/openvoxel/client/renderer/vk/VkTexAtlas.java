@@ -27,10 +27,10 @@ public class VkTexAtlas implements IconAtlas {
 	private ByteBuffer pack_diffuse;
 	private ByteBuffer pack_normal;
 	private ByteBuffer pack_pbr;
-	private int pack_width;
-	private int expanded_pack_width;
-	private int pack_height;
-	private int pack_mip_count;
+	public int pack_width;
+	int expanded_pack_width;
+	public int pack_height;
+	public int pack_mip_count;
 
 	void cleanup() {
 		if(pack_diffuse != null) {
@@ -79,7 +79,6 @@ public class VkTexAtlas implements IconAtlas {
 		ByteBuffer outStorage2 = MemoryUtil.memAlloc(maxElemSize * 4);
 		ByteBuffer outStorage3 = MemoryUtil.memAlloc(maxElemSize * 4);
 
-		System.out.println(maxElemSize);
 		for(int i = 0; i < texIcons.size(); i++) {
 			rectangles.position(i);
 			VkTexIcon icon = texIcons.get(i);
