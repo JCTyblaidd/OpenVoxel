@@ -1,16 +1,27 @@
 package net.openvoxel.client.renderer.vk;
 
+import net.openvoxel.OpenVoxel;
+
 /**
  * Constants that determine how parts of the vulkan renderer is implemented
  */
-class VkImplFlags {
+public class VkImplFlags {
+
+	/**
+	 * Wait on fences when needed, instead of using queueWaitIdle after every draw call
+	 * Recommended: True {Can cause issues with validation layers due to bug?}
+	 */
+	public static boolean renderer_use_delayed_fence_waiting() {
+		//TODO: enable after validation layer is fixed
+		return false;
+	}
 
 	/**
 	 * Use coherent memory (mapped and unmapped every draw)
 	 * Recommended: False
 	 */
 	static boolean gui_use_coherent_memory() {
-		return false;
+		return OpenVoxel.getLaunchParameters().hasFlag("vkGuiUseCoherentMemory");
 	}
 
 	/**
@@ -19,7 +30,7 @@ class VkImplFlags {
 	 * Recommended: True
 	 */
 	static boolean gui_direct_to_non_coherent_memory() {
-		return true;
+		return !OpenVoxel.getLaunchParameters().hasFlag("vkGuiUseIndirectMemoryWrite");
 	}
 
 	/**
@@ -27,6 +38,6 @@ class VkImplFlags {
 	 * Recommended: True
 	 */
 	static boolean gui_allow_draw_caching() {
-		return true;
+		return !OpenVoxel.getLaunchParameters().hasFlag("vkGuiDisableDrawCaching");
 	}
 }

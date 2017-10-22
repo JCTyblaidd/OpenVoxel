@@ -5,6 +5,7 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.vk.VkGUIRenderer;
+import net.openvoxel.client.renderer.vk.VkImplFlags;
 import net.openvoxel.client.renderer.vk.VkRenderer;
 import net.openvoxel.client.renderer.vk.VkWorldRenderer;
 import net.openvoxel.statistics.SystemStatistics;
@@ -48,10 +49,14 @@ public class VkDeviceState extends VkRenderManager {
 
 	public Logger vkLogger;
 
+	//Debugging Flags//
 	static boolean vulkanDetailLog = OpenVoxel.getLaunchParameters().hasFlag("vkDebugDetailed");
 	static boolean vulkanDebug = OpenVoxel.getLaunchParameters().hasFlag("vkDebug") || vulkanDetailLog;
 	static boolean vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
 	private static boolean vulkanDetailedDeviceInfo = OpenVoxel.getLaunchParameters().hasFlag("vkDeviceInfo");
+
+	//Implementation Flags//
+	private static final boolean RENDERER_USE_FENCE_WAITING = VkImplFlags.renderer_use_delayed_fence_waiting();
 
 	/*Surface and SwapChain Information*/
 	private VkSurfaceCapabilitiesKHR surfaceCapabilities;
@@ -252,8 +257,9 @@ public class VkDeviceState extends VkRenderManager {
 					VkRenderer.Vkrenderer.markAsResizeRequired();
 				}
 			}
-			//TODO: remove after validation layer issue fixed//
-			vkQueueWaitIdle(renderDevice.renderQueue);
+			if(!RENDERER_USE_FENCE_WAITING) {
+				vkQueueWaitIdle(renderDevice.renderQueue);
+			}
 		}
 	}
 
@@ -481,25 +487,25 @@ public class VkDeviceState extends VkRenderManager {
 					vkLogger.Info(" - " + res);
 				}
 			}
-			boolean fallback_immediate = false;
+			//boolean fallback_immediate = false;
 			for(int i = 0; i < presentModes.capacity(); i++) {
 				if(presentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR) {
 					vkLogger.Info("Chosen Present Mode: Mailbox");
 					chosenPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 				}
-				if(presentModes.get(i) == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-					fallback_immediate = true;
-				}
+				//if(presentModes.get(i) == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+				//	//fallback_immediate = true;
+				//}
 			}
 			if(chosenPresentMode == -1) {
-				String os_type = System.getProperty("os.name").toLowerCase();
-				if(!os_type.contains("win")  && !os_type.contains("mac") && fallback_immediate) {
-					chosenPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-					vkLogger.Info("Chosen Present Mode: Immediate(Linux Fix)");
-				}else {
-					chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-					vkLogger.Info("Chosen Present Mode: FIFO");
-				}
+				//String os_type = System.getProperty("os.name").toLowerCase();
+				//if(!os_type.contains("win")  && !os_type.contains("mac") && fallback_immediate) {
+				//	chosenPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+				//	vkLogger.Info("Chosen Present Mode: Immediate(Linux Fix)");
+				//}else {
+				chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+				vkLogger.Info("Chosen Present Mode: FIFO");
+				//}
 			}
 			//Choose Swap Extent//
 			if(surfaceCapabilities.currentExtent().width() != 0xFFFFFFFF) {
