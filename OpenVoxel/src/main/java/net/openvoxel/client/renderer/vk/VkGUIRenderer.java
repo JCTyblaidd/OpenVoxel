@@ -6,6 +6,7 @@ import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.vk.shader.VkOmniRenderPass;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.client.renderer.vk.util.VkMemoryManager;
 import net.openvoxel.common.resources.ResourceHandle;
@@ -44,6 +45,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	//Implementation Flags//
 	public static final boolean GUI_USE_COHERENT_MEMORY = VkImplFlags.gui_use_coherent_memory();
+	private static final boolean GUI_USE_PERMANENT_MAPPING = VkImplFlags.gui_use_coherent_memory();
 	private static final boolean GUI_DIRECT_TO_NON_COHERENT_MEMORY = VkImplFlags.gui_direct_to_non_coherent_memory();
 	private static final boolean GUI_ALLOW_DRAW_CACHING = VkImplFlags.gui_allow_draw_caching();
 
@@ -89,7 +91,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		this.mgr = state.memoryMgr;
-		if(GUI_USE_COHERENT_MEMORY && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+		if(GUI_USE_PERMANENT_MAPPING && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
 			writeTarget = MemoryUtil.memAlloc(GUI_BUFFER_SIZE);
 		}
 		imgStagingTarget = MemoryUtil.memAlloc(GUI_IMAGE_CACHE_SIZE);
@@ -100,7 +102,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		offsetTransitionStack = MemoryUtil.memAllocInt(GUI_STATE_CHANGE_LIMIT);
 		imageEnableStateStack = new TByteArrayList(GUI_STATE_CHANGE_LIMIT);
 		imageBindings = new HashMap<>();
-		if(!GUI_USE_COHERENT_MEMORY) {
+		if(!GUI_USE_PERMANENT_MAPPING) {
 			try (MemoryStack stack = stackPush()) {
 				mappedGUIStaging = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE + GUI_IMAGE_CACHE_SIZE, stack);
 			}
@@ -163,7 +165,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	 * Destroy all required images
 	 */
 	void cleanup() {
-		if(!GUI_USE_COHERENT_MEMORY) {
+		if(!GUI_USE_PERMANENT_MAPPING) {
 			mgr.unMapMemory(mgr.memGuiStaging.get(1));
 		}
 		for(BoundResourceHandle handle : imageBindings.values()) {
@@ -172,7 +174,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			vkDestroyImage(state.renderDevice.device,handle.image,null);
 		}
 		destroy_descriptors();
-		if(GUI_USE_COHERENT_MEMORY && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+		if(GUI_USE_PERMANENT_MAPPING && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
 			MemoryUtil.memFree(writeTarget);
 		}
 		MemoryUtil.memFree(imgStagingTarget);
@@ -484,7 +486,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 			if(drawCount != 0) {
 				boolean has_image_transfer = copyImg.remaining() != 0;
-				if(GUI_USE_COHERENT_MEMORY) {
+				if(GUI_USE_PERMANENT_MAPPING) {
 					ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE + GUI_IMAGE_CACHE_SIZE, stack);
 					writeTarget.position(0);
 					memMapping.put(writeTarget);
@@ -562,7 +564,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			inheritance.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO);
 			inheritance.pNext(VK_NULL_HANDLE);
 			inheritance.renderPass(state.renderPass.render_pass);
-			inheritance.subpass(0);
+			inheritance.subpass(VkOmniRenderPass.GUI_DRAW_SUB_PASS_INDEX);
 			inheritance.framebuffer(state.targetFrameBuffers.get(state.swapChainImageIndex));
 			inheritance.occlusionQueryEnable(false);
 			inheritance.queryFlags(0);

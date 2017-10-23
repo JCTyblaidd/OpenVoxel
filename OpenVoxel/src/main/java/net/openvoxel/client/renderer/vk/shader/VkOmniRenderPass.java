@@ -41,6 +41,19 @@ import static org.lwjgl.vulkan.VK10.*;
  */
 public class VkOmniRenderPass {
 
+	public static final int WORLD_OPAQUE_SUB_PASS_INDEX = 0;
+	public static final int WORLD_SHADOWS_SUB_PASS_INDEX = 1;
+	public static final int WORLD_CUBE_MAP_SUB_PASS_INDEX = 2;
+	public static final int WORLD_OPAQUE_PROCESSING_SUB_PASS_INDEX = 3;
+	public static final int WORLD_TRANSPARENT_SUB_PASS_INDEX = 4;
+	public static final int WORLD_MERGE_OPAQUE_SUB_PASS_INDEX = 5;
+	public static final int WORLD_MERGE_TRANSPARENT_SUB_PASS_INDEX = 6;
+	public static final int WORLD_POST_PROCESS_SUB_PASS_INDEX = 7;
+	public static final int GUI_DRAW_SUB_PASS_INDEX = 0;
+	public static final int GUI_POS_PROCESS_SUB_PASS_INDEX = 9;
+
+	public static final int WORLD_DRAW_ENTITY_SUB_PASS_INDEX = -1;
+
 	public long render_pass;
 
 	public void init(VkDevice device, VkRenderConfig config,int swapChainImageFormat) {

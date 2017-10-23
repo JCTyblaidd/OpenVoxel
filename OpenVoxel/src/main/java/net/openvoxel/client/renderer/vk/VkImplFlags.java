@@ -7,6 +7,7 @@ import net.openvoxel.OpenVoxel;
  */
 public class VkImplFlags {
 
+
 	/**
 	 * Wait on fences when needed, instead of using queueWaitIdle after every draw call
 	 * Recommended: True {Can cause issues with validation layers due to bug?}

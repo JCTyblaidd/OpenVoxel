@@ -1,5 +1,7 @@
 package net.openvoxel.client.renderer.vk.util;
 
+import net.openvoxel.client.renderer.vk.VkRenderer;
+import net.openvoxel.client.renderer.vk.VkTexAtlas;
 import net.openvoxel.client.renderer.vk.VkWorldRenderer;
 import net.openvoxel.client.renderer.vk.shader.*;
 import net.openvoxel.client.renderer.vk.world.VkWorldRenderManager;
@@ -43,7 +45,7 @@ public class VkRenderManager {
 	private long command_pool_transfer;
 
 	//Command Buffers//
-	public PointerBuffer command_buffers_main;
+	PointerBuffer command_buffers_main;
 	public PointerBuffer command_buffers_gui;
 	public PointerBuffer command_buffers_gui_transfer;
 	public PointerBuffer command_buffers_world_drawing;
@@ -51,10 +53,6 @@ public class VkRenderManager {
 
 	//Frame Buffers//
 	public LongBuffer targetFrameBuffers;
-	//TODO: render target FrameBuffers
-
-	//Descriptor Pools//
-	private LongBuffer descriptorPools;
 
 	//Synchronisation//
 	long semaphore_image_available;
@@ -68,6 +66,21 @@ public class VkRenderManager {
 		renderConfig.load();
 		renderConfig.save();
 		worldRenderManager = new VkWorldRenderManager(this);
+	}
+
+	void initTexResources() {
+		if(VkRenderer.Vkrenderer.getBlockAtlas() != null) {
+			worldRenderManager.initTextures();
+		}
+	}
+
+	void destroyTexResources() {
+		worldRenderManager.destroyTextures();
+	}
+
+	public void reloadTexResources() {
+		worldRenderManager.destroyTextures();
+		worldRenderManager.initTextures();
 	}
 
 	void initSynchronisation() {

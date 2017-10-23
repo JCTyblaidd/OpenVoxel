@@ -134,7 +134,6 @@ public class OGL3Renderer implements GlobalRenderer{
 		glfwSetWindowMonitor(window, stateRequestedFullscreen ? currentMonitor : 0,0,0,newWidth,newHeight,requestedRefreshRate);
 	}
 
-
 	@Override
 	public void loadPreRenderThread() {
 		boolean glDebug = OpenVoxel.getLaunchParameters().hasFlag("glDebug");

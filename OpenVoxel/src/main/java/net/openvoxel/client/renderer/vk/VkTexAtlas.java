@@ -24,11 +24,11 @@ public class VkTexAtlas implements IconAtlas {
 
 	private List<VkTexIcon> texIcons = new ArrayList<>();
 	//Mip levels are stored inside of the packed data
-	private ByteBuffer pack_diffuse;
-	private ByteBuffer pack_normal;
-	private ByteBuffer pack_pbr;
+	public ByteBuffer pack_diffuse;
+	public ByteBuffer pack_normal;
+	public ByteBuffer pack_pbr;
 	public int pack_width;
-	int expanded_pack_width;
+	public int expanded_pack_width;
 	public int pack_height;
 	public int pack_mip_count;
 

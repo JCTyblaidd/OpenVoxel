@@ -104,6 +104,7 @@ public class VkRenderer implements GlobalRenderer {
 			if(needsRegen.get()) {
 				texAtlas.cleanup();
 				texAtlas.performStitchInternal();
+				deviceState.reloadTexResources();
 			}
 			needsRegen.set(false);
 			deviceState.acquireNextImage(true);
@@ -122,7 +123,7 @@ public class VkRenderer implements GlobalRenderer {
 	}
 
 	@Override
-	public IconAtlas getBlockAtlas() {
+	public VkTexAtlas getBlockAtlas() {
 		return texAtlas;
 	}
 

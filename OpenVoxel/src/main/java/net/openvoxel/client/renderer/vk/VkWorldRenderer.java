@@ -25,7 +25,7 @@ import java.util.concurrent.Semaphore;
  */
 public class VkWorldRenderer implements WorldRenderer {
 
-	public VkWorldMemoryManager memoryManager;
+	private VkWorldMemoryManager memoryManager;
 
 	public static final int NUM_DRAW_COMMANDS = 1;
 
@@ -91,6 +91,8 @@ public class VkWorldRenderer implements WorldRenderer {
 	 */
 	@Override
 	public void renderWorld(EntityPlayerSP playerSP, ClientWorld worldSP) {
+		currentPlayer = playerSP;
+		currentWorld = worldSP;
 		drawBarrier.reset(3);
 		resourceBarrier.reset(3);
 		submissionBarrier.reset(1);
@@ -126,7 +128,9 @@ public class VkWorldRenderer implements WorldRenderer {
 
 	private void async_view() {
 		//Perform Cull//
-
+		try{
+			Thread.sleep(15);
+		}catch(Exception ignored) {}
 		//Perform Draw of Resources in GPU//
 
 		//Perform Resource Acquire/Release Requests//

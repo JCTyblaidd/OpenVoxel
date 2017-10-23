@@ -40,7 +40,9 @@ public class VkDeviceState extends VkRenderManager {
 	public VkInstance instance;
 	public long glfw_window;
 	private long window_surface;
-	private long window_swapchain;
+	private long exclusive_display;
+	private boolean using_display;
+	private long window_swap_chain;
 
 	private long debug_report_callback_ext;
 	private long vulkan_timestamp_query_pool;
@@ -50,7 +52,7 @@ public class VkDeviceState extends VkRenderManager {
 	public Logger vkLogger;
 
 	//Debugging Flags//
-	static boolean vulkanDetailLog = OpenVoxel.getLaunchParameters().hasFlag("vkDebugDetailed");
+	private static boolean vulkanDetailLog = OpenVoxel.getLaunchParameters().hasFlag("vkDebugDetailed");
 	static boolean vulkanDebug = OpenVoxel.getLaunchParameters().hasFlag("vkDebug") || vulkanDetailLog;
 	static boolean vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
 	private static boolean vulkanDetailedDeviceInfo = OpenVoxel.getLaunchParameters().hasFlag("vkDeviceInfo");
@@ -79,10 +81,12 @@ public class VkDeviceState extends VkRenderManager {
 		initSwapChainSynchronisation();
 		initRenderPasses();
 		initGraphicsPipeline();
+		worldRenderManager.createDescriptorSets();
 		initFrameBuffers();
 		initCommandBuffers();
 		initMemory();
 		createQueryPool();
+		initTexResources();
 	}
 
 	private void createQueryPool() {
@@ -121,7 +125,7 @@ public class VkDeviceState extends VkRenderManager {
 	public void acquireNextImage(boolean rebootSync) {
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer index = stack.callocInt(1);
-			int result = vkAcquireNextImageKHR(renderDevice.device,window_swapchain,-1,semaphore_image_available,VK_NULL_HANDLE,index);
+			int result = vkAcquireNextImageKHR(renderDevice.device, window_swap_chain,-1,semaphore_image_available,VK_NULL_HANDLE,index);
 			if(result == VK_ERROR_OUT_OF_DATE_KHR) {
 				recreateSwapChain(VkRenderer.Vkrenderer.getGUIRenderer());
 			}else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -238,7 +242,7 @@ public class VkDeviceState extends VkRenderManager {
 
 	public void presentOnCompletion() {
 		try(MemoryStack stack = stackPush()) {
-			LongBuffer swapChains = stack.longs(window_swapchain);
+			LongBuffer swapChains = stack.longs(window_swap_chain);
 			LongBuffer semaphores = stack.longs(semaphore_render_finished);
 			IntBuffer imageIndices = stack.ints(swapChainImageIndex);
 			VkPresentInfoKHR presentInfo = VkPresentInfoKHR.callocStack(stack);
@@ -372,6 +376,14 @@ public class VkDeviceState extends VkRenderManager {
 						vkLogger.Info("Enabled Debug Report");
 						enabled_debug_report_extension = true;
 					}
+				}
+				if(extensionPropertyList.extensionNameString().equals("VK_KHR_display")) {
+					enabledExtensions.add(extensionPropertyList.extensionName());
+					vkLogger.Info("Enabled KHR Display");
+				}
+				if(extensionPropertyList.extensionNameString().equals("VK_KHR_display_swapchain")) {
+					enabledExtensions.add(extensionPropertyList.extensionName());
+					vkLogger.Info("Enabled KHR Display SwapChain");
 				}
 			}
 			PointerBuffer enabledExtensionBuffer = stack.callocPointer(enabledExtensions.size());
@@ -550,12 +562,12 @@ public class VkDeviceState extends VkRenderManager {
 			}else if(create == VK_SUBOPTIMAL_KHR) {
 				vkLogger.Warning("SwapChain Created SubOptimally");
 			}
-			window_swapchain = swapChainBuf.get(0);
+			window_swap_chain = swapChainBuf.get(0);
 			//Retrieve Images//
-			success(vkGetSwapchainImagesKHR(renderDevice.device,window_swapchain,sizeRef,null),"Error Loading SwapChain Images");
+			success(vkGetSwapchainImagesKHR(renderDevice.device, window_swap_chain,sizeRef,null),"Error Loading SwapChain Images");
 			swapChainImages = MemoryUtil.memAllocLong(sizeRef.get(0));
 			swapChainImageViews = MemoryUtil.memAllocLong(sizeRef.get(0));
-			success(vkGetSwapchainImagesKHR(renderDevice.device,window_swapchain,sizeRef,swapChainImages),"Error Loading SwapChain Images");
+			success(vkGetSwapchainImagesKHR(renderDevice.device, window_swap_chain,sizeRef,swapChainImages),"Error Loading SwapChain Images");
 			//Create Image Views//
 			VkImageViewCreateInfo imageViewCreateInfo = VkImageViewCreateInfo.callocStack(stack);
 			VkComponentMapping componentMapping = VkComponentMapping.callocStack(stack);
@@ -594,14 +606,15 @@ public class VkDeviceState extends VkRenderManager {
 		MemoryUtil.memFree(swapChainImageViews);
 		MemoryUtil.memFree(presentModes);
 		surfaceFormats.free();
-		vkDestroySwapchainKHR(renderDevice.device,window_swapchain,null);
-		window_swapchain = VK_NULL_HANDLE;
+		vkDestroySwapchainKHR(renderDevice.device, window_swap_chain,null);
+		window_swap_chain = VK_NULL_HANDLE;
 	}
 
 	public void recreateSwapChain(VkGUIRenderer guiRenderer) {
 		vkDeviceWaitIdle(renderDevice.device);
 		destroyQueryPool();
 		guiRenderer.destroy_descriptors();
+		worldRenderManager.destroyDescriptorSets();
 		destroyCommandPools();
 		destroySwapChain();
 		destroySwapChainSynchronisation();
@@ -612,6 +625,7 @@ public class VkDeviceState extends VkRenderManager {
 		initFrameBuffers();
 		initCommandBuffers();
 		recreateMemory();
+		worldRenderManager.createDescriptorSets();
 		guiRenderer.create_descriptor_sets();
 		createQueryPool();
 	}
@@ -662,10 +676,12 @@ public class VkDeviceState extends VkRenderManager {
 
 	public void terminateAndFree() {
 		vkDeviceWaitIdle(renderDevice.device);
+		destroyTexResources();
 		destroyQueryPool();
 		destroySwapChainSynchronisation();
 		destroySwapChain();
 		destroyCommandPools();
+		worldRenderManager.destroyDescriptorSets();
 		destroySynchronisation();
 		destroyMemory();
 		vkDestroySurfaceKHR(instance,window_surface,null);
