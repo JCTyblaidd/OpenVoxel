@@ -129,7 +129,7 @@ public class VkWorldRenderer implements WorldRenderer {
 	private void async_view() {
 		//Perform Cull//
 		try{
-			Thread.sleep(15);
+			Thread.sleep(4);
 		}catch(Exception ignored) {}
 		//Perform Draw of Resources in GPU//
 

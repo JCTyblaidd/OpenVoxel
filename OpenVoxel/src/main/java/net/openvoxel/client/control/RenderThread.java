@@ -98,7 +98,6 @@ public class RenderThread implements Runnable{
 				guiRenderer.DisplayScreen(ScreenDebugInfo.instance);
 				guiRenderer.finishDraw(guiDirty);
 			}catch (Exception e) {
-				e.printStackTrace();
 				CrashReport crashReport = new CrashReport("Exception Drawing GUI").caughtException(e);
 				OpenVoxel.reportCrash(crashReport);
 			}

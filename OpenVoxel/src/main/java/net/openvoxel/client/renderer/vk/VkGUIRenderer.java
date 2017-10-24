@@ -40,7 +40,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private static final int GUI_STATE_CHANGE_LIMIT = 512;
 	public static final int GUI_BUFFER_SIZE = GUI_ELEMENT_SIZE * GUI_TRIANGLE_COUNT;
 	public static final int GUI_IMAGE_BLOCK_SIZE = 128 * 64;
-	public static final int GUI_IMAGE_BLOCK_COUNT = 512;
+	public static final int GUI_IMAGE_BLOCK_COUNT = 1024;
 	public static final int GUI_IMAGE_CACHE_SIZE = GUI_IMAGE_BLOCK_SIZE * GUI_IMAGE_BLOCK_COUNT;
 
 	//Implementation Flags//
@@ -217,13 +217,14 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			imageCleanupCountdown = MAX_IMAGE_CLEANUP_COUNTDOWN;
 			List<ResourceHandle> to_clean = new ArrayList<>();
 			for(Map.Entry<ResourceHandle,BoundResourceHandle> handle : imageBindings.entrySet()) {
+				BoundResourceHandle value = handle.getValue();
 				if(handle.getValue().usageCount == 0) {
-					vkDestroySampler(state.renderDevice.device,handle.getValue().image_sampler,null);
-					vkDestroyImageView(state.renderDevice.device,handle.getValue().image_view,null);
-					vkDestroyImage(state.renderDevice.device,handle.getValue().image,null);
+					vkDestroySampler(state.renderDevice.device,value.image_sampler,null);
+					vkDestroyImageView(state.renderDevice.device,value.image_view,null);
+					state.memoryMgr.FreeGuiImage(value.image,value.offset,value.count);
 					to_clean.add(handle.getKey());
 				}else{
-					handle.getValue().usageCount = 0;
+					value.usageCount = 0;
 				}
 			}
 			to_clean.forEach(imageBindings::remove);
@@ -737,7 +738,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void DrawItem(float x, float y, float width, float height) {
-		//TODO:
+		//TODO: IMPLEMENT//
+		//NO OP//
 	}
 
 	@Override

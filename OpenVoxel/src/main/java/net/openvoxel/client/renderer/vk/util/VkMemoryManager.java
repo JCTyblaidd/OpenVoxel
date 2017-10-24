@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk.util;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.renderer.vk.VkGUIRenderer;
+import net.openvoxel.client.renderer.vk.VkRenderer;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -81,7 +82,7 @@ public class VkMemoryManager {
 	/// Utility Functions ///
 	/////////////////////////
 
-	public void FreeGuiImage(int image, int offset, int count) {
+	public void FreeGuiImage(long image, int offset, int count) {
 		for(int i = 0; i < count; i++) {
 			blockState.put(offset+i,(byte)0);
 		}
@@ -132,8 +133,12 @@ public class VkMemoryManager {
 			allocateInfo.memoryTypeIndex(memoryIndex);
 			LongBuffer returnBuf = stack.longs(0);
 			if(vkAllocateMemory(state.renderDevice.device,allocateInfo,null,returnBuf) != VK_SUCCESS) {
-				vkDestroyImage(state.renderDevice.device,ReturnImage,null);
-				throw new RuntimeException("Failed to allocate Image");
+				VkRenderer.Vkrenderer.getWorldRenderer().shrinkMemory(VkGUIRenderer.GUI_IMAGE_CACHE_SIZE);
+				if(vkAllocateMemory(state.renderDevice.device,allocateInfo,null,returnBuf) != VK_SUCCESS) {
+					vkDestroyImage(state.renderDevice.device, ReturnImage, null);
+					throw new RuntimeException("Failed to allocate Image");
+				}
+				VkRenderer.Vkrenderer.getWorldRenderer().growMemory();
 			}
 			guiImageMemory = returnBuf.get(0);
 		}
@@ -154,7 +159,7 @@ public class VkMemoryManager {
 				blockOffset = block+1;
 			}
 		}
-		if(blockOffset == VkGUIRenderer.GUI_IMAGE_BLOCK_COUNT) {
+		if(blockOffset == VkGUIRenderer.GUI_IMAGE_BLOCK_COUNT || validCount != blockCount) {
 			throw new RuntimeException("Failed to find image binding location");
 		}
 

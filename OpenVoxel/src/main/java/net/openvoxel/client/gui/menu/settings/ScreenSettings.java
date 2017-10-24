@@ -1,5 +1,6 @@
 package net.openvoxel.client.gui.menu.settings;
 
+import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.*;
 
@@ -58,22 +59,41 @@ public class ScreenSettings extends Screen{
 		guiObjects.add(backButton);
 		guiObjects.add(setting_debugmode);
 
-		backButton.setAction(this::onBack);
 		setting_foV.setUpdateFunc(this::onFOVChange);
-		setting_debugmode.setToggleAction(this::onDebugChange);
+		settings_audio.setAction(this::gotoAudioSettings);
 		settings_input.setAction(this::gotoInputSettings);
+		settings_renderer.setAction(this::gotoRendererSettings);
+		settings_texture.setAction(this::gotoTextureSettings);
+		setting_debugmode.setToggleAction(this::onDebugChange);
+		backButton.setAction(this::onBack);
 	}
 
 	private void gotoInputSettings() {
 		GUI.addScreen(new ScreenInputSettings());
 	}
 
-	private void onFOVChange(GUISlider slider, int value) {
+	private void onFOVChange(GUISlider ignored, int value) {
 		//OpenVoxel.getClientServer().getThePlayer().setFoV(value):
+	}
+
+	private void gotoAudioSettings() {
+
 	}
 
 	private void onBack() {
 		GUI.removeScreen(this);
+	}
+
+
+	private void gotoRendererSettings() {
+		Screen screen = Renderer.renderer.getGUIConfigElements();
+		if(screen != null) {
+			GUI.addScreen(screen);
+		}
+	}
+
+	private void gotoTextureSettings() {
+		//TODO:
 	}
 
 	private String getDebugMode() {

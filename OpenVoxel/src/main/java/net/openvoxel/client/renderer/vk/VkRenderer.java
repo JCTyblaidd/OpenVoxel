@@ -32,6 +32,7 @@ public class VkRenderer implements GlobalRenderer {
 
 	private AtomicBoolean needsRegen = new AtomicBoolean(false);
 	private AtomicBoolean needsResize = new AtomicBoolean(false);
+	private AtomicBoolean needsScreenshot = new AtomicBoolean(false);
 
 	public void markAsRegenRequired() {
 		needsRegen.set(true);
@@ -98,6 +99,10 @@ public class VkRenderer implements GlobalRenderer {
 	public void nextFrame() {
 		deviceState.submitNewWork(worldRenderer);
 		deviceState.presentOnCompletion();
+		if(needsScreenshot.get()) {
+			needsScreenshot.set(false);
+			//TODO: get screenshot//
+		}
 		if(needsRegen.get() || needsResize.get()) {
 			needsResize.set(false);
 			deviceState.recreateSwapChain(guiRenderer);
