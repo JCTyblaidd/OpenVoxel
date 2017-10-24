@@ -1,5 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
+import net.openvoxel.api.PublicAPI;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import org.joml.Matrix4f;
@@ -16,9 +17,11 @@ public class ResizedGUIHandleWrapper implements GUIRenderer.GUITessellator{
 	private float x_scale = 1;
 	private float y_scale = 1;
 
+	@PublicAPI
 	public ResizedGUIHandleWrapper(GUIRenderer.GUITessellator wrap) {
 		tessellator = wrap;
 	}
+
 	public void set(float xOff, float yOff, float xScale, float yScale) {
 		x_offset = xOff;
 		y_offset = yOff;
@@ -50,58 +53,26 @@ public class ResizedGUIHandleWrapper implements GUIRenderer.GUITessellator{
 	public void SetMatrix(Matrix4f mat) {
 		tessellator.SetMatrix(mat);
 	}
-/**
-	@Override
-	public void EnableColour(boolean enabled) {
-		tessellator.EnableColour(enabled);
-	}
-	**/
-/**
-	@Override
-	public void SetZ(float zPos) {
-		tessellator.SetZ(zPos);
-	}
-**/
+
 	@Override
 	public void Vertex(float x, float y) {
 		tessellator.Vertex(x * x_scale + x_offset,y * y_scale + y_offset);
 	}
-/**
-	@Override
-	public void Vertex(float x, float y, float z) {
-		tessellator.Vertex(x * x_scale + y_offset,y * y_scale + y_offset,z);
-	}
-**/
+
 	@Override
 	public void VertexWithUV(float x, float y, float u, float v) {
 		tessellator.VertexWithUV(x * x_scale + x_offset,y * y_scale + y_offset,u,v);
 	}
-/**
-	@Override
-	public void VertexWithUV(float x, float y, float z, float u, float v) {
-		tessellator.VertexWithUV(x * x_scale + x_offset,y * y_scale + y_offset,z,u,v);
-	}
-**/
+
 	@Override
 	public void VertexWithCol(float x, float y, int RGB) {
 		tessellator.VertexWithCol(x * x_scale + x_offset,y * y_scale + y_offset,RGB);
 	}
-/**
-	@Override
-	public void VertexWithCol(float x, float y, float z, int RGB) {
-		tessellator.VertexWithCol(x * x_scale + x_offset,y * y_scale + y_offset,z,RGB);
-	}
-**/
+
 	@Override
 	public void VertexWithColUV(float x, float y, float u, float v, int RGB) {
 		tessellator.VertexWithColUV(x * x_scale + x_offset,y * y_scale + y_offset,u,v,RGB);
 	}
-/**
-	@Override
-	public void VertexWithColUV(float x, float y, float z, float u, float v, int RGB) {
-		tessellator.VertexWithColUV(x * x_scale + x_offset,y * y_scale + y_offset,z,u,v,RGB);
-	}
-**/
 
 	@Override
 	public void DrawText(float x, float y, float height, String text, int col, int colOutline) {
@@ -120,7 +91,7 @@ public class ResizedGUIHandleWrapper implements GUIRenderer.GUITessellator{
 
 	@Override
 	public float GetTextWidthRatio(String text) {
-		return tessellator.GetTextWidthRatio(text);
+		return tessellator.GetTextWidthRatio(text) * y_scale / x_scale;
 	}
 
 	@Override

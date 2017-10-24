@@ -1,6 +1,5 @@
 package net.openvoxel.client.renderer.vk;
 
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
@@ -19,8 +18,6 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**

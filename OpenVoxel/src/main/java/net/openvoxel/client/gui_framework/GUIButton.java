@@ -16,6 +16,7 @@ public class GUIButton extends GUIObjectSizable {
 
 	protected String str;
 	private static ResourceHandle texButton = ResourceManager.getImage("gui/button0");
+	private static final float TXT_WIDTH_LIM = 0.90F;
 	private boolean inButton = false;
 	private AtomicBoolean drawDirtyFlag = new AtomicBoolean(false);
 
@@ -45,10 +46,18 @@ public class GUIButton extends GUIObjectSizable {
 			float Y = getPosY(drawHandle.getScreenHeight());
 			float H = getHeight(drawHandle.getScreenHeight());
 			float W = getWidth(drawHandle.getScreenWidth());
-			float TXT_W = drawHandle.GetTextWidthRatio(str) * H;
-			X += (W / 2) - (TXT_W/2);
-			Y += H;
-			drawHandle.DrawText(X,Y,H,str);
+			float TXT_RATIO = drawHandle.GetTextWidthRatio(str);
+			float TXT_W = TXT_RATIO * H;
+			if(TXT_W < W * TXT_WIDTH_LIM) {
+				X += (W / 2) - (TXT_W / 2);
+				Y += H;
+				drawHandle.DrawText(X, Y, H, str);
+			}else{
+				X += W * (1-TXT_WIDTH_LIM)/2;
+				float TXT_H = W / TXT_RATIO * TXT_WIDTH_LIM;
+				Y += TXT_H + (H - TXT_H)/2;
+				drawHandle.DrawText(X,Y,TXT_H,str);
+			}
 		}
 	}
 

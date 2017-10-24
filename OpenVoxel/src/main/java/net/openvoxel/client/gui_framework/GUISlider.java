@@ -1,6 +1,5 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
@@ -67,7 +66,7 @@ public class GUISlider extends GUIObjectSizable{
 		}
 	}
 
-	public float getScrollbarX(float width) {
+	private float getScrollbarX(float width) {
 		float Perc = (float)(currentVal - minVal) / (float)(maxVal - minVal);
 		float x = getPosX(width);
 		float w = getWidth(width);
@@ -75,11 +74,11 @@ public class GUISlider extends GUIObjectSizable{
 		float offset = Perc * (w - scrollbarWidth);
 		return x + offset;
 	}
-	public float getScrollbarWidth(float width) {
+	private float getScrollbarWidth(float width) {
 		return getWidth(width) / scrollbarSizePerc;
 	}
 
-	public void DrawBar(GUIRenderer.GUITessellator drawHandle,int col) {
+	private void DrawBar(GUIRenderer.GUITessellator drawHandle,int col) {
 		final float screenWidth = drawHandle.getScreenWidth();
 		final float screenHeight = drawHandle.getScreenHeight();
 		final float X1 = getScrollbarX(screenWidth);

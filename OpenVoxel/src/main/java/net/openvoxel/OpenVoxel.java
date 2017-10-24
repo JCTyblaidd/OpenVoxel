@@ -35,7 +35,6 @@ import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.Server;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.CrashReport;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.system.Configuration;
 
 import java.io.File;

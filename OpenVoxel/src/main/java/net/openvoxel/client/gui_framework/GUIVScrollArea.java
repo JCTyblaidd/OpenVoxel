@@ -1,6 +1,5 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 
 import java.util.ArrayList;
@@ -36,14 +35,15 @@ public class GUIVScrollArea extends GUIObjectSizable {
 		final float Y1 = getPosY(screenHeight);
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
+		final int col = 0xFF446643;
 		drawHandle.Begin();
 		drawHandle.EnableTexture(false);
-		drawHandle.VertexWithUV(X2,Y2,1,1);
-		drawHandle.VertexWithUV(X1,Y2,0,1);
-		drawHandle.VertexWithUV(X1,Y1,0,0);
-		drawHandle.VertexWithUV(X2,Y1,1,0);
-		drawHandle.VertexWithUV(X2,Y2,1,1);
-		drawHandle.VertexWithUV(X1,Y1,0,0);
+		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
+		drawHandle.VertexWithColUV(X1,Y2,0,1,col);
+		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
+		drawHandle.VertexWithColUV(X2,Y1,1,0,col);
+		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
+		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
 		drawHandle.Draw();
 		ResizedGUIHandleWrapper resizedTess = new ResizedGUIHandleWrapper(drawHandle);
 		resizedTess.set(X1,Y1,X2-X1,Y2-Y1);

@@ -1,9 +1,11 @@
 package net.openvoxel.client.renderer.vk.util;
 
 import net.openvoxel.client.renderer.vk.VkRenderer;
-import net.openvoxel.client.renderer.vk.VkTexAtlas;
 import net.openvoxel.client.renderer.vk.VkWorldRenderer;
-import net.openvoxel.client.renderer.vk.shader.*;
+import net.openvoxel.client.renderer.vk.shader.VkOmniRenderPass;
+import net.openvoxel.client.renderer.vk.shader.VkRenderConfig;
+import net.openvoxel.client.renderer.vk.shader.VkShaderModuleCache;
+import net.openvoxel.client.renderer.vk.shader.VkShaderPipelineGUI;
 import net.openvoxel.client.renderer.vk.world.VkWorldRenderManager;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;

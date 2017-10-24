@@ -1,6 +1,5 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 

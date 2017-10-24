@@ -2,7 +2,6 @@ package net.openvoxel.client.renderer.vk.world;
 
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
 import net.openvoxel.world.client.ClientChunkSection;
-import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkMappedMemoryRange;

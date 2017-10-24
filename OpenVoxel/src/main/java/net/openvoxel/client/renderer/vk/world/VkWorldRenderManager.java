@@ -1,7 +1,6 @@
 package net.openvoxel.client.renderer.vk.world;
 
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.client.renderer.vk.VkGUIRenderer;
 import net.openvoxel.client.renderer.vk.VkRenderer;
 import net.openvoxel.client.renderer.vk.VkTexAtlas;
 import net.openvoxel.client.renderer.vk.util.VkRenderManager;
