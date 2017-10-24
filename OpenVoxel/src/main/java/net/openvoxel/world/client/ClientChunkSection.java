@@ -25,6 +25,11 @@ public class ClientChunkSection extends ChunkSection {
 	public AtomicReference<IRenderDataCache> renderCache = new AtomicReference<>(null);
 
 	private byte metaVal;
+
+	public ClientChunkSection(int idx) {
+		super(idx);
+	}
+
 	public Block blockAt(int x, int y, int z) {
 		int reqIndex = x * 256 + y * 16 + z;
 		int val = blockInformation.get(reqIndex);

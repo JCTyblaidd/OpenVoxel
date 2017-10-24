@@ -27,7 +27,7 @@ public class VkChunkSectionMeta implements IRenderDataCache {
 	/*
 	 * Pointer to relevant chunk
 	 */
-	ClientChunk refChunk;
+	public ClientChunk refChunk;
 
 	/*
 	 * Cache of the latest block information [cleaned on draw]

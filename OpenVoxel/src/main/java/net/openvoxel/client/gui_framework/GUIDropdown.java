@@ -34,10 +34,6 @@ public class GUIDropdown extends GUIObjectSizable{
 		}
 	}
 
-	@Override
-	public void OnMouseMove(float newX, float newY, float oldX, float oldY) {
-		super.OnMouseMove(newX, newY, oldX, oldY);
-	}
 
 	private void OnMouseEnter(int Selection) {
 		state_hover[Selection] = true;

@@ -49,19 +49,19 @@ public abstract class GUI {
 		usesInput = false;
 	}
 
-	static synchronized void handleMouseMoveEvent(float oldX, float oldY, float newX, float newY) {
+	static synchronized void handleMouseMoveEvent(float oldX, float oldY, float newX, float newY,float screenWidth,float screenHeight) {
 		if(!guiStack.isEmpty()) {
-			guiStack.getFirst().handleMouseMove(oldX, oldY, newX, newY);
+			guiStack.getFirst().handleMouseMove(oldX, oldY, newX, newY,screenWidth,screenHeight);
 		}
 	}
-	static synchronized void handleMousePress(float X, float Y) {
+	static synchronized void handleMousePress(float X, float Y,float screenWidth, float screenHeight) {
 		if(!guiStack.isEmpty()) {
-			guiStack.getFirst().handleMousePress(X, Y);
+			guiStack.getFirst().handleMousePress(X, Y,screenWidth,screenHeight);
 		}
 	}
-	static synchronized void handleMouseRelease(float X, float Y) {
+	static synchronized void handleMouseRelease(float X, float Y, float screenWidth, float screenHeight) {
 		if(!guiStack.isEmpty()) {
-			guiStack.getFirst().handleMouseRelease(X, Y);
+			guiStack.getFirst().handleMouseRelease(X, Y,screenWidth,screenHeight);
 		}
 	}
 

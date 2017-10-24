@@ -20,7 +20,15 @@ public class AsyncQueue<T> {
 	 * Initialize The Queue
 	 */
 	public AsyncQueue(int size) {
-		buffer = RingBuffer.createSingleProducer(ObjectRef::new,size,new BlockingWaitStrategy());
+		this(size,false);
+	}
+
+	public AsyncQueue(int size,boolean multiProducer) {
+		if(multiProducer) {
+			buffer = RingBuffer.createMultiProducer(ObjectRef::new,size,new BlockingWaitStrategy());
+		}else{
+			buffer = RingBuffer.createSingleProducer(ObjectRef::new,size,new BlockingWaitStrategy());
+		}
 		barrier = buffer.newBarrier();
 		sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
 	}

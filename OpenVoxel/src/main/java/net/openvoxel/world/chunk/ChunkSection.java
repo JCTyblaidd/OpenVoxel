@@ -29,8 +29,11 @@ public class ChunkSection {
 
 	private static final long DIFF = (4*16*16*16) + (2*16*16*16)+6;
 
-	public ChunkSection() {
+	public final int yIndex;
+
+	public ChunkSection(int idx) {
 		MemoryStatistics.trackChunk(DIFF);
+		yIndex = idx;
 	}
 
 	/**

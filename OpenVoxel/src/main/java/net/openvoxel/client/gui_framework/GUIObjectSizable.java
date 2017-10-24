@@ -93,11 +93,11 @@ public abstract class GUIObjectSizable extends GUIObject{
 
 	protected boolean previousIn = false;
 	@Override
-	public void OnMouseMove(float newX, float newY, float oldX, float oldY) {
-		final float X1 = getPosX(ClientInput.currentWindowWidth.get());
-		final float Y1 = getPosY(ClientInput.currentWindowHeight.get());
-		final float X2 = X1 + getWidth(ClientInput.currentWindowWidth.get());
-		final float Y2 = Y1 + getHeight(ClientInput.currentWindowHeight.get());
+	public void OnMouseMove(float newX, float newY, float oldX, float oldY,float screenWidth, float screenHeight) {
+		final float X1 = getPosX(screenWidth);
+		final float Y1 = getPosY(screenHeight);
+		final float X2 = X1 + getWidth(screenWidth);
+		final float Y2 = Y1 + getHeight(screenHeight);
 		if(newX >= X1 && newX <= X2 && newY >= Y1 && newY <= Y2) {
 			if(!previousIn) {
 				previousIn = true;
@@ -112,37 +112,37 @@ public abstract class GUIObjectSizable extends GUIObject{
 	}
 
 	@Override
-	public void OnMousePress(double x, double y) {
-		final float X1 = getPosX(ClientInput.currentWindowWidth.get());
-		final float Y1 = getPosY(ClientInput.currentWindowHeight.get());
-		final float X2 = X1 + getWidth(ClientInput.currentWindowWidth.get());
-		final float Y2 = Y1 + getHeight(ClientInput.currentWindowHeight.get());
+	public void OnMousePress(float x, float y, float screenWidth, float screenHeight) {
+		final float X1 = getPosX(screenWidth);
+		final float Y1 = getPosY(screenHeight);
+		final float X2 = X1 + getWidth(screenWidth);
+		final float Y2 = Y1 + getHeight(screenHeight);
 		if(x >= X1 && x <= X2 && y >= Y1 && y <= Y2) {
 			onMouseClicked();
 		}
 	}
 
 	@Override
-	public void OnMouseRelease(double x, double y) {
-		final float X1 = getPosX(ClientInput.currentWindowWidth.get());
-		final float Y1 = getPosY(ClientInput.currentWindowHeight.get());
-		final float X2 = X1 + getWidth(ClientInput.currentWindowWidth.get());
-		final float Y2 = Y1 + getHeight(ClientInput.currentWindowHeight.get());
+	public void OnMouseRelease(float x, float y, float screenWidth, float screenHeight) {
+		final float X1 = getPosX(screenWidth);
+		final float Y1 = getPosY(screenHeight);
+		final float X2 = X1 + getWidth(screenWidth);
+		final float Y2 = Y1 + getHeight(screenHeight);
 		if(x >= X1 && x <= X2 && y >= Y1 && y <= Y2) {
 			onMouseReleased();
 		}
 	}
 
 	public void onMouseEnter() {
-
+		//NO OP//
 	}
 	public void onMouseLeave() {
-
+		//NO OP//
 	}
 	public void onMouseClicked() {
-
+		//NO OP//
 	}
 	public void onMouseReleased() {
-
+		//NO OP//
 	}
 }

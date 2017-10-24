@@ -171,7 +171,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		for(BoundResourceHandle handle : imageBindings.values()) {
 			vkDestroySampler(state.renderDevice.device,handle.image_sampler,null);
 			vkDestroyImageView(state.renderDevice.device,handle.image_view,null);
-			vkDestroyImage(state.renderDevice.device,handle.image,null);
+			state.memoryMgr.FreeGuiImage(handle.image,handle.offset,handle.count);
 		}
 		destroy_descriptors();
 		if(GUI_USE_PERMANENT_MAPPING && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {

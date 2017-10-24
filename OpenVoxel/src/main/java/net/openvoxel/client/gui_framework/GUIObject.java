@@ -11,9 +11,9 @@ public abstract class GUIObject {
 
 	public abstract void Draw(GUIRenderer.GUITessellator drawHandle);
 
-	public void OnMousePress(double x, double y) {}
-	public void OnMouseRelease(double x, double y) {}
-	public void OnMouseMove(float newX, float newY, float oldX, float oldY) {}
+	public void OnMousePress(float x, float y, float screenWidth, float screenHeight) {}
+	public void OnMouseRelease(float x, float y, float screenWidth, float screenHeight) {}
+	public void OnMouseMove(float newX, float newY, float oldX, float oldY, float screenWidth, float screenHeight) {}
 
 	public boolean isDrawDirty() {
 		return false;

@@ -14,7 +14,7 @@ public class ClientChunk extends Chunk {
 	public ClientChunk(int x, int z) {
 		super(x, z,true);
 		for(int i = 0; i < 16; i++) {
-			chunkSections[i] = new ClientChunkSection();
+			chunkSections[i] = new ClientChunkSection(i);
 		}
 	}
 

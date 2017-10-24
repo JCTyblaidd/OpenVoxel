@@ -516,6 +516,8 @@ public class VkDeviceState extends VkRenderManager {
 				//	vkLogger.Info("Chosen Present Mode: Immediate(Linux Fix)");
 				//}else {
 				chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+				//TODO: change back
+				chosenPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 				vkLogger.Info("Chosen Present Mode: FIFO");
 				//}
 			}

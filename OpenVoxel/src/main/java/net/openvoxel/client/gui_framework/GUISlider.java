@@ -99,13 +99,13 @@ public class GUISlider extends GUIObjectSizable{
 	}
 
 	@Override
-	public void OnMouseMove(float newX, float newY, float oldX, float oldY) {
-		final float X1 = getScrollbarX(ClientInput.currentWindowWidth.get());
-		final float X2 = X1 + getScrollbarWidth(ClientInput.currentWindowWidth.get());
+	public void OnMouseMove(float newX, float newY, float oldX, float oldY,float screenWidth, float screenHeight) {
+		final float X1 = getScrollbarX(screenWidth);
+		final float X2 = X1 + getScrollbarWidth(screenWidth);
 		if(sliderSelected) {
 			float hW = (X2 - X1) / 2.0F;
-			float minX = getPosX(ClientInput.currentWindowWidth.get()) + hW;
-			float maxX = getPosX(ClientInput.currentWindowWidth.get())+getWidth(ClientInput.currentWindowWidth.get()) - hW;
+			float minX = getPosX(screenWidth) + hW;
+			float maxX = getPosX(screenWidth)+getWidth(screenWidth) - hW;
 			float perc = (newX - minX) / (maxX - minX);
 			if(perc > 1.0F) {
 				perc = 1.0F;
@@ -121,18 +121,18 @@ public class GUISlider extends GUIObjectSizable{
 	}
 
 	@Override
-	public void OnMousePress(double x, double y) {
-		final float X1 = getScrollbarX(ClientInput.currentWindowWidth.get());
-		final float Y1 = getPosY(ClientInput.currentWindowHeight.get());
-		final float X2 = X1 + getScrollbarWidth(ClientInput.currentWindowWidth.get());
-		final float Y2 = Y1 + getHeight(ClientInput.currentWindowHeight.get());
+	public void OnMousePress(float x, float y, float screenWidth, float screenHeight) {
+		final float X1 = getScrollbarX(screenWidth);
+		final float Y1 = getPosY(screenHeight);
+		final float X2 = X1 + getScrollbarWidth(screenWidth);
+		final float Y2 = Y1 + getHeight(screenHeight);
 		if(x >= X1 && x <= X2 && y >= Y1 && y <= Y2) {
 			onMouseClicked();
 		}
 	}
 
 	@Override
-	public void OnMouseRelease(double x, double y) {
+	public void OnMouseRelease(float x, float y,float screenWidth, float screenHeight) {
 		onMouseReleased();
 	}
 

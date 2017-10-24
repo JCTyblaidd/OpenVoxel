@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.vk;
 
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.client.gui.menu.settings.ScreenGraphicsSettings;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.DisplayHandle;
 import net.openvoxel.client.renderer.generic.GUIRenderer;
@@ -134,6 +135,6 @@ public class VkRenderer implements GlobalRenderer {
 
 	@Override
 	public Screen getGUIConfigElements() {
-		return null;
+		return new ScreenGraphicsSettings();
 	}
 }

@@ -187,7 +187,7 @@ public abstract class VkShaderPipelineBase {
 	/**
 	 * Default: no depth stencil state
 	 */
-	private VkPipelineDepthStencilStateCreateInfo genDepthStencilState(MemoryStack stack) {
+	VkPipelineDepthStencilStateCreateInfo genDepthStencilState(MemoryStack stack) {
 		return null;
 	}
 

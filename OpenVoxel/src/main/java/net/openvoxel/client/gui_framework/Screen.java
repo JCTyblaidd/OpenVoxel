@@ -30,17 +30,17 @@ public class Screen {
 	}
 
 	@PublicAPI
-	protected void handleMouseMove(float oldX, float oldY, float newX, float newY) {
-		guiObjects.forEach(o -> o.OnMouseMove(newX,newY,oldX,oldY));
+	protected void handleMouseMove(float oldX, float oldY, float newX, float newY,float screenWidth, float screenHeight) {
+		guiObjects.forEach(o -> o.OnMouseMove(newX,newY,oldX,oldY,screenWidth,screenHeight));
 	}
 	@PublicAPI
-	protected void handleMousePress(float X, float Y) {
-		guiObjects.forEach(o -> o.OnMousePress(X,Y));
+	protected void handleMousePress(float X, float Y,float screenWidth, float screenHeight) {
+		guiObjects.forEach(o -> o.OnMousePress(X,Y,screenWidth,screenHeight));
 	}
 
 	@PublicAPI
-	protected void handleMouseRelease(float X, float Y) {
-		guiObjects.forEach(o -> o.OnMouseRelease(X,Y));
+	protected void handleMouseRelease(float X, float Y,float screenWidth,float screenHeight) {
+		guiObjects.forEach(o -> o.OnMouseRelease(X,Y,screenWidth,screenHeight));
 	}
 
 	public boolean takesOverInput() {
