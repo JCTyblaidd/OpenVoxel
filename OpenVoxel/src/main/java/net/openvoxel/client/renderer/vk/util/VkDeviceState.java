@@ -4,10 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
-import net.openvoxel.client.renderer.vk.VkGUIRenderer;
-import net.openvoxel.client.renderer.vk.VkImplFlags;
-import net.openvoxel.client.renderer.vk.VkRenderer;
-import net.openvoxel.client.renderer.vk.VkWorldRenderer;
+import net.openvoxel.client.renderer.vk.*;
 import net.openvoxel.statistics.SystemStatistics;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
@@ -47,7 +44,6 @@ public class VkDeviceState extends VkRenderManager {
 	private long debug_report_callback_ext;
 	private long vulkan_timestamp_query_pool;
 	private long timestamp_cap;
-	private long last_terminate_timestamp = 0;
 
 	public Logger vkLogger;
 
@@ -149,12 +145,7 @@ public class VkDeviceState extends VkRenderManager {
 					res.put(0,res_i.get(0));
 					res.put(1,res_i.get(1));
 				}
-				long time_usage = res.get(1) - res.get(0);
-				long time_total = res.get(1) - last_terminate_timestamp;
-				last_terminate_timestamp = res.get(1);
-				double perc_usage = (double)time_usage / time_total;
-				double last_graphics = SystemStatistics.graphics_history[SystemStatistics.write_index];
-				SystemStatistics.graphics_history[SystemStatistics.write_index] = (perc_usage+last_graphics)/2;
+				VkStats.PushGraphicsTimestamp(res.get(0),res.get(1));
 			}else{
 				vkResetFences(renderDevice.device,submit_wait_fences_transfer.get(fenceSwapChainIndex));
 				vkResetFences(renderDevice.device,submit_wait_fences_draw.get(fenceSwapChainIndex));

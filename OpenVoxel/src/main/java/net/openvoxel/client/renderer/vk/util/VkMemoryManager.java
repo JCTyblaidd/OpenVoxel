@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer.vk.util;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.renderer.vk.VkGUIRenderer;
 import net.openvoxel.client.renderer.vk.VkRenderer;
+import net.openvoxel.client.renderer.vk.VkStats;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -70,7 +71,7 @@ public class VkMemoryManager {
 		MemoryUtil.memFree(memGuiDrawing);
 		MemoryUtil.memFree(blockState);
 		if(guiImageMemory != VK_NULL_HANDLE) {
-			vkFreeMemory(state.renderDevice.device,guiImageMemory,null);
+			VkStats.FreeMemory(state.renderDevice.device, guiImageMemory, null);
 		}
 	}
 
@@ -132,9 +133,9 @@ public class VkMemoryManager {
 			allocateInfo.allocationSize(VkGUIRenderer.GUI_IMAGE_CACHE_SIZE);
 			allocateInfo.memoryTypeIndex(memoryIndex);
 			LongBuffer returnBuf = stack.longs(0);
-			if(vkAllocateMemory(state.renderDevice.device,allocateInfo,null,returnBuf) != VK_SUCCESS) {
+			if(VkStats.AllocMemory(state.renderDevice.device,allocateInfo,null,returnBuf) != VK_SUCCESS) {
 				VkRenderer.Vkrenderer.getWorldRenderer().shrinkMemory(VkGUIRenderer.GUI_IMAGE_CACHE_SIZE);
-				if(vkAllocateMemory(state.renderDevice.device,allocateInfo,null,returnBuf) != VK_SUCCESS) {
+				if(VkStats.AllocMemory(state.renderDevice.device, allocateInfo, null, returnBuf) != VK_SUCCESS) {
 					vkDestroyImage(state.renderDevice.device, ReturnImage, null);
 					throw new RuntimeException("Failed to allocate Image");
 				}
@@ -208,13 +209,17 @@ public class VkMemoryManager {
 		allocateInfo.pNext(VK_NULL_HANDLE);
 		allocateInfo.allocationSize(requirements.size());
 		allocateInfo.memoryTypeIndex(memoryIndex);
-		if(vkAllocateMemory(state.renderDevice.device,allocateInfo,null,returnValue) != VK_SUCCESS) {
-			vkDestroyBuffer(state.renderDevice.device,returnValue.get(oldPosition),null);
-			throw new RuntimeException("Failed to create buffer backing memory");
+		if(VkStats.AllocMemory(state.renderDevice.device,allocateInfo,null,returnValue) != VK_SUCCESS) {
+			VkRenderer.Vkrenderer.getWorldRenderer().shrinkMemory(requirements.size());
+			if(VkStats.AllocMemory(state.renderDevice.device, allocateInfo, null, returnValue) != VK_SUCCESS) {
+				vkDestroyBuffer(state.renderDevice.device,returnValue.get(oldPosition),null);
+				throw new RuntimeException("Failed to create buffer backing memory");
+			}
+			VkRenderer.Vkrenderer.getWorldRenderer().growMemory();
 		}
 		if(vkBindBufferMemory(state.renderDevice.device,returnValue.get(oldPosition),returnValue.get(newPosition),0) != VK_SUCCESS) {
 			vkDestroyBuffer(state.renderDevice.device,returnValue.get(oldPosition),null);
-			vkFreeMemory(state.renderDevice.device,returnValue.get(newPosition),null);
+			VkStats.FreeMemory(state.renderDevice.device, returnValue.get(newPosition), null);
 			throw new RuntimeException("Failed to bind buffer memory");
 		}
 		returnValue.position(oldPosition);
@@ -222,7 +227,7 @@ public class VkMemoryManager {
 
 	public void FreeExclusive(LongBuffer value) {
 		vkDestroyBuffer(state.renderDevice.device,value.get(0),null);
-		vkFreeMemory(state.renderDevice.device,value.get(1),null);
+		VkStats.FreeMemory(state.renderDevice.device,value.get(1),null);
 	}
 
 	public ByteBuffer mapMemory(long memoryHandle,int offset, int size,MemoryStack stack) {

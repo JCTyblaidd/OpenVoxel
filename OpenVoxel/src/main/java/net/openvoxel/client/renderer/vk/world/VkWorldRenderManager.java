@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk.world;
 
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.vk.VkRenderer;
+import net.openvoxel.client.renderer.vk.VkStats;
 import net.openvoxel.client.renderer.vk.VkTexAtlas;
 import net.openvoxel.client.renderer.vk.util.VkRenderManager;
 import org.lwjgl.system.MemoryStack;
@@ -29,7 +30,6 @@ public class VkWorldRenderManager {
 	private long descriptor_pool;
 	private LongBuffer descriptor_sets;
 
-
 	//Texture Atlas Binding//
 	private long ImageAtlas = 0;
 	private long ImageAtlasMemory;
@@ -42,11 +42,24 @@ public class VkWorldRenderManager {
 	private int HDRColorFormat;
 	private int HDRColorAlphaFormat;
 
-	//GBuffer Binding: 0=image,1=memory,2=imageview//
-	private LongBuffer ImageEnvCubeMap;
-	private LongBuffer ImageGBuffer;
-	private LongBuffer ImageShadowMap;
-
+	/////////////////
+	//Target Images//
+	/////////////////
+	/*
+		CubeMap 6x Images of the environment
+	 */
+	private long ImageEnvCubeMap;
+	/*
+		GBuffer Target:
+		0 - Depth           [depth]
+		1 - Diffuse         [rgb]
+		2 - Normal          [rgb]
+		3 - PBR             [rgb]
+		4 - Lighting/Merge  [rgb]
+		5 - Lighting Post   [rgb]
+	 */
+	private long ImageGBuffer;
+	private long ImageShadowMap;
 
 	private void create_texture_atlas(VkTexAtlas atlas) {
 		try(MemoryStack stack = stackPush()) {
@@ -82,9 +95,9 @@ public class VkWorldRenderManager {
 			allocateInfo.pNext(VK_NULL_HANDLE);
 			allocateInfo.allocationSize(memoryReqs.size());
 			allocateInfo.memoryTypeIndex(memoryIndex);
-			if(vkAllocateMemory(renderManager.renderDevice.device,allocateInfo,null,res) != VK_SUCCESS) {
+			if(VkStats.AllocMemory(renderManager.renderDevice.device,allocateInfo,null,res) != VK_SUCCESS) {
 				VkRenderer.Vkrenderer.getWorldRenderer().shrinkMemory((int)memoryReqs.size());
-				if(vkAllocateMemory(renderManager.renderDevice.device,allocateInfo,null,res) != VK_SUCCESS) {
+				if(VkStats.AllocMemory(renderManager.renderDevice.device,allocateInfo,null,res) != VK_SUCCESS) {
 					throw new RuntimeException("Failed to allocate device memory");
 				}
 				VkRenderer.Vkrenderer.getWorldRenderer().growMemory();
@@ -145,7 +158,7 @@ public class VkWorldRenderManager {
 			vkDestroyImageView(renderManager.renderDevice.device, ImageViewNormal, null);
 			vkDestroyImageView(renderManager.renderDevice.device, ImageViewPBR, null);
 			vkDestroyImage(renderManager.renderDevice.device, ImageAtlas, null);
-			vkFreeMemory(renderManager.renderDevice.device, ImageAtlasMemory, null);
+			VkStats.FreeMemory(renderManager.renderDevice.device, ImageAtlasMemory, null);
 			ImageAtlas = 0;
 		}
 	}

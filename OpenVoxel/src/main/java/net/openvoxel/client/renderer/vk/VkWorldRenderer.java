@@ -61,7 +61,7 @@ public class VkWorldRenderer implements WorldRenderer {
 	/**
 	 * Must be called in vulkan exclusive context [after wait idle]
 	 */
-	public void shrinkMemory(int targetAmount) {
+	public void shrinkMemory(long targetAmount) {
 		int limit = memoryManager.reclaim_memory(targetAmount);
 		//TODO: mark those that no-longer have state//
 	}

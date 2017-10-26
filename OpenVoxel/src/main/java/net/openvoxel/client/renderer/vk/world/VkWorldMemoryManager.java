@@ -44,7 +44,7 @@ public class VkWorldMemoryManager {
 			}
 		}
 		//TODO: improve heuristic to choose allocation count - with grow & shrink support
-		long reduced_heap_size = heap_size / 2;
+		long reduced_heap_size = heap_size / 16;
 		int heap_allocation_count = (int)(reduced_heap_size / MEM_ALLOCATION_SIZE);
 		state.vkLogger.Info("World Data Map: ",heap_allocation_count," Allocations");
 		//ALLOCATE THEM BUFFERS//
@@ -73,8 +73,8 @@ public class VkWorldMemoryManager {
 	/**
 	 * De-allocates the latest allocation and frees the memory
 	 */
-	public int reclaim_memory(int targetAmount) {
-		int chunks_to_remove = (targetAmount + MEM_ALLOCATION_SIZE - 1) / MEM_ALLOCATION_SIZE;
+	public int reclaim_memory(long targetAmount) {
+		int chunks_to_remove = (int)((targetAmount + MEM_ALLOCATION_SIZE - 1) / MEM_ALLOCATION_SIZE);
 		int lim = chunkUsageInfo.capacity() - MEM_CHUNK_COUNT*chunks_to_remove;
 		int rem_id = bufferList.capacity()-chunks_to_remove;
 		try(MemoryStack stack = stackPush()) {
