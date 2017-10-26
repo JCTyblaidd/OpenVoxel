@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * Special Hook: for Debug Data
  */
-public class ScreenDebugInfo extends Screen{
+public class ScreenDebugInfo extends Screen {
 
 	public static final ScreenDebugInfo instance = new ScreenDebugInfo();
 	public static AtomicReference<GUIDebugLevel> debugLevel = new AtomicReference<>(GUIDebugLevel.EXTREME_DETAIL);
@@ -107,6 +107,10 @@ public class ScreenDebugInfo extends Screen{
 			tess.DrawText(x_pos,y_pos,height,"Processor Usage: " + _percent(SystemStatistics.getProcessingUsage()));
 			y_pos += height;
 			tess.DrawText(x_pos,y_pos,height,"Thread Count: " + SystemStatistics.getThreadCount());
+			y_pos += height;
+			tess.DrawText(x_pos,y_pos,height,"GPU Memory Usage: " + _memory(SystemStatistics.getGraphicsGpuMemoryUsage()));
+			y_pos += height;
+			tess.DrawText(x_pos,y_pos,height,"GPU-Shared Memory Usage: " + _memory(SystemStatistics.getGraphicsLocalMemoryUsage()));
 			final float histogram_w = 250.0F;
 			final float histogram_h = 150.0F;
 			draw_processor_histogram(tess,1.0F-((histogram_w+5)/screenWidth),y_pos2 + (height/4),
@@ -164,6 +168,13 @@ public class ScreenDebugInfo extends Screen{
 			tess.VertexWithCol(x_pos1,y_pos1,GPU_COL);
 		}
 		tess.Draw();
+	}
+
+	private void draw_memory_piechart(GUIRenderer.GUITessellator tess,float x1, float y1, float w, float h) {
+		final float JVM = SystemStatistics.getJVMMemoryUsage();
+		final float ALLOC = SystemStatistics.getProcessMemoryUsage();
+		final float GPU = SystemStatistics.getGraphicsLocalMemoryUsage();
+
 	}
 
 	public enum GUIDebugLevel {

@@ -49,10 +49,6 @@ public class VkRenderer implements GlobalRenderer {
 		//TODO:
 	}
 
-	public VkDeviceState getDeviceState() {
-		return deviceState;
-	}
-
 	@Override
 	public VkWorldRenderer getWorldRenderer() {
 		return worldRenderer;

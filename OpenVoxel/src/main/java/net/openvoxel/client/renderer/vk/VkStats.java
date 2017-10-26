@@ -17,6 +17,12 @@ import static org.lwjgl.vulkan.VK10.*;
 
 public class VkStats {
 
+	private static VkPhysicalDeviceMemoryProperties memoryProperties;
+
+	public static void SetMemoryProperties(VkPhysicalDeviceMemoryProperties memoryProperties) {
+		VkStats.memoryProperties = memoryProperties;
+	}
+
 	//Enabled Flag//
 	private static final boolean VULKAN_TRACK_MEMORY = true;
 
@@ -30,8 +36,7 @@ public class VkStats {
 	private static TLongByteMap memDeviceMap = new TLongByteHashMap();
 
 	private static boolean isDeviceType(int memIndex) {
-		VkPhysicalDeviceMemoryProperties props = VkRenderer.Vkrenderer.getDeviceState().renderDevice.memoryProperties;
-		return (props.memoryTypes(memIndex).propertyFlags() & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) != 0;
+		return (memoryProperties.memoryTypes(memIndex).propertyFlags() & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) != 0;
 	}
 
 	private static void addMemory(VkMemoryAllocateInfo pAllocateInfo,long memory) {
@@ -79,5 +84,6 @@ public class VkStats {
 		double last_graphics = SystemStatistics.graphics_history[SystemStatistics.write_index];
 		SystemStatistics.graphics_history[SystemStatistics.write_index] = (perc_usage+last_graphics)/2;
 	}
+
 
 }

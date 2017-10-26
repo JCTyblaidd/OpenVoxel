@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer.vk.util;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.gui.ScreenDebugInfo;
+import net.openvoxel.client.renderer.vk.VkStats;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVulkan;
 import org.lwjgl.system.MemoryStack;
@@ -237,6 +238,9 @@ public class VkRenderDevice{
 
 
 	void createDevice() {
+		//Push Stats Data//
+		VkStats.SetMemoryProperties(memoryProperties);
+		//Creation//
 		try(MemoryStack stack = stackPush()) {
 			PointerBuffer pointer = stack.callocPointer(1);
 			VkDeviceCreateInfo createInfo = VkDeviceCreateInfo.callocStack(stack);

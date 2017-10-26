@@ -24,7 +24,6 @@ public class SystemStatistics {
 
 	private static final int processorCount = Runtime.getRuntime().availableProcessors();
 	private static int threadCount = 0;
-	private static long deamonThreadCount = 0;
 	private static double processorUsage = 0.0F;
 
 	private static int updateCountdown = 0;
