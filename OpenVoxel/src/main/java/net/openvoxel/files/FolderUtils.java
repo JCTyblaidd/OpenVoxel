@@ -17,6 +17,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
+
 /**
  * Created by James on 10/09/2016.
  *
@@ -52,11 +54,19 @@ public class FolderUtils {
 
 	public static void saveTextureStitch(int w, int h,ByteBuffer data,String name) {
 		File f = new File(ResourceDir,name+".png");
-		STBImageWrite.stbi_write_png(f.getAbsolutePath(),w,h,4,data,0);
+		stbi_write_png(f.getAbsolutePath(),w,h,4,data,0);
 	}
 
 	public static void saveScreenshot(int w, int h,int[] pixels) {
 		saveScreenshot(w,h,pixels,false);
+	}
+
+	public static void saveScreenshot(int w, int h,ByteBuffer pixels) {
+		Date d = new Date();
+		Random rand = new Random();
+		DateFormat format = DateFormat.getDateTimeInstance();
+		File f = new File(ScreenshotsDir, "screenshot " + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png");
+		stbi_write_png(f.getAbsolutePath(),w,h,4,pixels,0);
 	}
 
 	/**
@@ -74,7 +84,7 @@ public class FolderUtils {
 			ByteBuffer DATA = MemoryUtil.memAlloc(4 * w * h);
 			DATA.asIntBuffer().put(pixels);
 			DATA.position(0);
-			STBImageWrite.stbi_write_png(f.getAbsolutePath(),w,h,4,DATA,0);
+			stbi_write_png(f.getAbsolutePath(),w,h,4,DATA,0);
 		}else {
 			BufferedImage IMG = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);//Use BufferedImage for ImageIO
 			for (int x = 0; x < w; x++) {//Set with Y-Invert

@@ -23,7 +23,9 @@ public class VkDisplayHandle implements DisplayHandle, EventListener {
 
 	VkDisplayHandle(VkRenderer renderer,VkDeviceState deviceState) {
 		state = deviceState;
+		this.renderer = renderer;
 		GLFWEventHandler.Load(state.glfw_window);
+		OpenVoxel.registerEvents(this);
 	}
 
 	void cleanup() {
@@ -38,10 +40,10 @@ public class VkDisplayHandle implements DisplayHandle, EventListener {
 	@SubscribeEvents
 	public void buttonPressed(KeyStateChangeEvent e) {
 		if (e.GLFW_KEY == GLFW_KEY_F11 && e.GLFW_KEY_STATE == GLFW_PRESS) {
-			//state.toggleFullScreenRequest();
+			renderer.toggleFullscreen();
 		}
 		if (e.GLFW_KEY == GLFW_KEY_F12 && e.GLFW_KEY_STATE == GLFW_PRESS) {
-			//state.getScreenshotRequest();
+			renderer.requestScreenshot();
 		}
 	}
 

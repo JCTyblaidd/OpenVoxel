@@ -279,10 +279,14 @@ public class VkRenderManager {
 
 
 	public VkCommandBuffer beginSingleUseCommand(MemoryStack stack) {
+		return beginSingleUseCommand(stack,false);
+	}
+
+	VkCommandBuffer beginSingleUseCommand(MemoryStack stack,boolean useTransfer) {
 		VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.mallocStack(stack);
 		allocateInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
 		allocateInfo.pNext(VK_NULL_HANDLE);
-		allocateInfo.commandPool(command_pool_graphics);
+		allocateInfo.commandPool(useTransfer ? command_pool_transfer : command_pool_graphics);
 		allocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 		allocateInfo.commandBufferCount(1);
 		PointerBuffer buffers = stack.mallocPointer(1);
@@ -300,6 +304,10 @@ public class VkRenderManager {
 	}
 
 	public void endSingleUseCommand(MemoryStack stack,VkCommandBuffer cmd) {
+		endSingleUseCommand(stack,cmd,false);
+	}
+
+	void endSingleUseCommand(MemoryStack stack,VkCommandBuffer cmd,boolean useTransfer) {
 		if(vkEndCommandBuffer(cmd) != VK_SUCCESS) {
 			throw new RuntimeException("Failed to end command buffer");
 		}
@@ -311,8 +319,10 @@ public class VkRenderManager {
 		submitInfo.pWaitDstStageMask(null);
 		submitInfo.pCommandBuffers(stack.pointers(cmd.address()));
 		submitInfo.pWaitSemaphores(null);
-		vkQueueSubmit(renderDevice.renderQueue,submitInfo,0);
-		vkQueueWaitIdle(renderDevice.renderQueue);
-		vkFreeCommandBuffers(renderDevice.device,command_pool_graphics,cmd);
+		VkQueue targetQueue = useTransfer ? renderDevice.asyncTransferQueue : renderDevice.renderQueue;
+		vkQueueWaitIdle(targetQueue);
+		vkQueueSubmit(targetQueue,submitInfo,0);
+		vkQueueWaitIdle(targetQueue);
+		vkFreeCommandBuffers(renderDevice.device,useTransfer ? command_pool_transfer : command_pool_graphics,cmd);
 	}
 }

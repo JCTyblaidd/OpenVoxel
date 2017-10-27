@@ -5,9 +5,12 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.vk.*;
+import net.openvoxel.files.FolderUtils;
+import net.openvoxel.files.util.AsyncFileIO;
 import net.openvoxel.statistics.SystemStatistics;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
@@ -35,11 +38,13 @@ import static org.lwjgl.vulkan.VK10.*;
 public class VkDeviceState extends VkRenderManager {
 
 	public VkInstance instance;
-	public long glfw_window;
 	private long window_surface;
-	private long exclusive_display;
-	private boolean using_display;
 	private long window_swap_chain;
+	//private boolean using_display;
+	//private long exclusive_display;
+
+	public long glfw_window;
+	private boolean window_fullscreen;
 
 	private long debug_report_callback_ext;
 	private long vulkan_timestamp_query_pool;
@@ -83,6 +88,95 @@ public class VkDeviceState extends VkRenderManager {
 		initMemory();
 		createQueryPool();
 		initTexResources();
+	}
+
+	public void setFullscreen(boolean isFullscreen) {
+		if(isFullscreen != window_fullscreen) {
+			long primary = glfwGetPrimaryMonitor();
+			GLFWVidMode vidMode = glfwGetVideoMode(primary);
+			vkLogger.Info("Toggle Fullscreen: " + (isFullscreen ? "Enabled" : "Disabled"));
+			if(isFullscreen) {
+				glfwSetWindowMonitor(glfw_window,primary,0,0,vidMode.width(),vidMode.height(),vidMode.refreshRate());
+			}else{
+				glfwSetWindowMonitor(glfw_window,0,0,0,vidMode.width(),vidMode.height(),0);
+			}
+			window_fullscreen = isFullscreen;
+		}
+	}
+
+	/**
+	 * Note: Currently assumes the image is in format r8g8b8a8...
+	 */
+	public void takeScreenshot() {
+		final boolean use_transfer = false;
+		if(chosenImageFormat != VK_FORMAT_B8G8R8A8_UNORM) return;
+		try(MemoryStack stack = stackPush()) {
+			long target_image = swapChainImages.get(swapChainImageIndex);
+			int img_size = swapExtent.width() * swapExtent.height() * 4;
+			waitForFence(submit_wait_fences_draw.get(swapChainImageIndex));
+
+			LongBuffer retValue = stack.mallocLong(2);
+			memoryMgr.AllocateExclusive(img_size,
+					VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					retValue,stack);
+
+			VkCommandBuffer cmd = beginSingleUseCommand(stack,use_transfer);
+
+			VkImageSubresourceRange sub_range = VkImageSubresourceRange.mallocStack(stack);
+			sub_range.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
+			sub_range.baseMipLevel(0);
+			sub_range.levelCount(1);
+			sub_range.baseArrayLayer(0);
+			sub_range.layerCount(1);
+
+			VkImageMemoryBarrier.Buffer imgBarrier = VkImageMemoryBarrier.mallocStack(1,stack);
+			imgBarrier.sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER);
+			imgBarrier.pNext(VK_NULL_HANDLE);
+			imgBarrier.srcAccessMask(VK_ACCESS_MEMORY_READ_BIT);
+			imgBarrier.dstAccessMask(VK_ACCESS_TRANSFER_READ_BIT);
+			imgBarrier.oldLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+			imgBarrier.newLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+			imgBarrier.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+			imgBarrier.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+			imgBarrier.image(target_image);
+			imgBarrier.subresourceRange(sub_range);
+			vkCmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,0,
+					null,null,imgBarrier);
+
+
+			VkImageSubresourceLayers copy_img_range = VkImageSubresourceLayers.mallocStack(stack);
+			copy_img_range.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
+			copy_img_range.mipLevel(0);
+			copy_img_range.baseArrayLayer(0);
+			copy_img_range.layerCount(1);
+			VkOffset3D offset3D = VkOffset3D.callocStack(stack);
+			VkExtent3D extent3D = VkExtent3D.mallocStack(stack);
+			extent3D.set(swapExtent.width(),swapExtent.height(),1);
+			VkBufferImageCopy.Buffer region = VkBufferImageCopy.mallocStack(1,stack);
+			region.bufferOffset(0);
+			region.bufferRowLength(0);
+			region.bufferImageHeight(0);
+			region.imageSubresource(copy_img_range);
+			region.imageOffset(offset3D);
+			region.imageExtent(extent3D);
+
+			vkCmdCopyImageToBuffer(cmd,target_image,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,retValue.get(0),region);
+
+			imgBarrier.srcAccessMask(VK_ACCESS_TRANSFER_READ_BIT);
+			imgBarrier.dstAccessMask(VK_ACCESS_MEMORY_READ_BIT);
+			imgBarrier.oldLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+			imgBarrier.newLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+			vkCmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,0,
+					null,null,imgBarrier);
+			endSingleUseCommand(stack,cmd,use_transfer);
+
+
+			ByteBuffer buffer = memoryMgr.mapMemory(retValue.get(1),0,img_size,stack);
+			FolderUtils.saveScreenshot(swapExtent.width(),swapExtent.height(),buffer);
+			memoryMgr.unMapMemory(retValue.get(1));
+			memoryMgr.FreeExclusive(retValue);
+		}
 	}
 
 	private void createQueryPool() {
@@ -541,7 +635,7 @@ public class VkDeviceState extends VkRenderManager {
 			createInfoKHR.imageColorSpace(chosenColourSpace);
 			createInfoKHR.imageExtent(swapExtent);
 			createInfoKHR.imageArrayLayers(1);
-			createInfoKHR.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+			createInfoKHR.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 			createInfoKHR.imageSharingMode(VK_SHARING_MODE_EXCLUSIVE);
 			createInfoKHR.pQueueFamilyIndices(null);
 			createInfoKHR.preTransform(surfaceCapabilities.currentTransform());

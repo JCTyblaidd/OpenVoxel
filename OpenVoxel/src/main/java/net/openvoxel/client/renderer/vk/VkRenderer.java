@@ -6,6 +6,7 @@ import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.generic.config.RenderConfig;
 import net.openvoxel.client.renderer.vk.util.VkDeviceState;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class VkRenderer implements GlobalRenderer {
 
-	public static Logger vkLog = Logger.getLogger("Vulkan");
+	private static Logger vkLog = Logger.getLogger("Vulkan").getSubLogger("Renderer");
 	public static VkRenderer Vkrenderer;
 
 	private VkDisplayHandle displayHandle;
@@ -30,6 +31,21 @@ public class VkRenderer implements GlobalRenderer {
 	private AtomicBoolean needsRegen = new AtomicBoolean(false);
 	private AtomicBoolean needsResize = new AtomicBoolean(false);
 	private AtomicBoolean needsScreenshot = new AtomicBoolean(false);
+	private AtomicBoolean isFullscreen = new AtomicBoolean(false);
+
+	void requestScreenshot() {
+		vkLog.Info("Screenshot Requested");
+		needsScreenshot.set(true);
+	}
+
+	void toggleFullscreen() {
+		vkLog.Info("Toggle Fullscreen Requested");
+		boolean value = isFullscreen.get();
+		while(!isFullscreen.compareAndSet(value,!value)) {
+			value = isFullscreen.get();
+		}
+		needsResize.set(true);
+	}
 
 	public void markAsRegenRequired() {
 		needsRegen.set(true);
@@ -46,6 +62,7 @@ public class VkRenderer implements GlobalRenderer {
 
 	@Override
 	public void requestSettingsChange(RenderConfig newConfig) {
+		vkLog.Info("Update Settings Requested");
 		//TODO:
 	}
 
@@ -98,10 +115,11 @@ public class VkRenderer implements GlobalRenderer {
 		deviceState.presentOnCompletion();
 		if(needsScreenshot.get()) {
 			needsScreenshot.set(false);
-			//TODO: get screenshot//
+			deviceState.takeScreenshot();
 		}
 		if(needsRegen.get() || needsResize.get()) {
 			needsResize.set(false);
+			deviceState.setFullscreen(isFullscreen.get());
 			deviceState.recreateSwapChain(guiRenderer);
 			if(needsRegen.get()) {
 				texAtlas.cleanup();
@@ -133,4 +151,5 @@ public class VkRenderer implements GlobalRenderer {
 	public Screen getGUIConfigElements() {
 		return new ScreenGraphicsSettings();
 	}
+
 }
