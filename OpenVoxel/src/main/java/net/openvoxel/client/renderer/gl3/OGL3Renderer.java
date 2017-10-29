@@ -92,6 +92,51 @@ public class OGL3Renderer implements GlobalRenderer{
 	}
 
 	@Override
+	public void setTargetFPS(int target) {
+		//NO OP//
+	}
+
+	@Override
+	public int getTargetFPS() {
+		return 60;
+	}
+
+	@Override
+	public void requestScreenshot() {
+
+	}
+
+	@Override
+	public void setVSyncState(VSyncType state) {
+		//NO OP//
+	}
+
+	@Override
+	public boolean isVSyncSupported(VSyncType type) {
+		return type == VSyncType.V_SYNC_ENABLED;
+	}
+
+	@Override
+	public VSyncType getVSyncState() {
+		return VSyncType.V_SYNC_ENABLED;
+	}
+
+	@Override
+	public void setFullscreenState(ScreenType state) {
+
+	}
+
+	@Override
+	public boolean isFullscreenSupported(ScreenType type) {
+		return type == ScreenType.SCREEN_TYPE_WINDOWED;
+	}
+
+	@Override
+	public ScreenType getFullscreenState() {
+		return ScreenType.SCREEN_TYPE_WINDOWED;
+	}
+
+	@Override
 	public void requestSettingsChange(RenderConfig newConfig) {
 		settingChangeRequested = newConfig;
 	}

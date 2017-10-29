@@ -9,28 +9,19 @@ import net.openvoxel.client.gui_framework.*;
  *
  * Main Menu
  */
-public class ScreenMainMenu extends Screen{
-
-	private GUIButton buttonSinglePlayer;
-	private GUIButton buttonMultiPlayer;
-	private GUIButton buttonSettings;
-	private GUIButton buttonListMods;
-	private GUIButton buttonReloadMods;
-	private GUIButton buttonQuit;
-	private GUIText mainText;
-	private GUIColour background;
+public class ScreenMainMenu extends Screen {
 
 	public ScreenMainMenu() {
 
-		buttonSinglePlayer = new GUIButton("Single Player");
-		buttonMultiPlayer = new GUIButton("Multi Player");
-		buttonSettings = new GUIButton("Settings");
-		buttonListMods = new GUIButton("Mods");
-		buttonReloadMods = new GUIButton("Reload");
-		buttonQuit = new GUIButton("Quit");
-		mainText = new GUIText("OpenVoxel");
+		GUIButton buttonSinglePlayer = new GUIButton("Single Player");
+		GUIButton buttonMultiPlayer = new GUIButton("Multi Player");
+		GUIButton buttonSettings = new GUIButton("Settings");
+		GUIButton buttonListMods = new GUIButton("Mods");
+		GUIButton buttonReloadMods = new GUIButton("Reload");
+		GUIButton buttonQuit = new GUIButton("Quit");
+		GUIText mainText = new GUIText("OpenVoxel");
 
-		background = new GUIColour(0xFF000000,0x00000000,false);
+		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
 
 		mainText.setupAbsSizeTargeted(0.25F,0.4F,0,70);//140
 		buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
@@ -59,21 +50,21 @@ public class ScreenMainMenu extends Screen{
 		buttonQuit.setAction(this::onPressQuit);
 	}
 
-	private void onPressSinglePlayer(GUIButton button) {
+	private void onPressSinglePlayer() {
 		GUI.removeScreen(this);
 		GUI.addScreen(new ScreenSinglePlayer(this));
 	}
-	private void onPressMultiPlayer(GUIButton button) {
+	private void onPressMultiPlayer() {
 		GUI.addScreen(new ScreenMultiPlayer());
 	}
-	private void onPressSettings(GUIButton button) {
+	private void onPressSettings() {
 		GUI.addScreen(new ScreenSettings());
 	}
-	private void onPressQuit(GUIButton button) {
+	private void onPressQuit() {
 		OpenVoxel.getInstance().AttemptShutdownSequence(false);
 	}
 
-	private void onPressReload(GUIButton button) {
+	private void onPressReload() {
 		OpenVoxel.reloadMods();
 	}
 

@@ -14,30 +14,18 @@ import java.util.List;
  */
 public class ScreenSettings extends Screen{
 
-	private GUIButton settings_renderer;
-	private GUIButton settings_input;
-	private GUIButton settings_texture;
-	private GUIButton settings_audio;
-	private GUISlider setting_foV;
-	private GUIToggleButton setting_debugmode;
-
-	private GUIColour background;
-	private GUIColour colourHint;
-
-	private GUIButton backButton;
-
 	private static final List<String> settings_list = Arrays.asList("No Debug","FPS Only","FPS+","Extreme Debug");
 
 	public ScreenSettings() {
-		background = new GUIColour(0xFF000000,0x00000000,false);
-		setting_foV = new GUISlider(10,160,110,(fov) -> "FOV: " + fov);
-		settings_audio = new GUIButton("Audio Settings");
-		settings_input = new GUIButton("Input Settings");
-		settings_renderer = new GUIButton("Graphics Settings");
-		settings_texture = new GUIButton("Resource Packs");
-		setting_debugmode = new GUIToggleButton(settings_list,getDebugMode());
-		colourHint = new GUIColour(0x66000000);
-		backButton = new GUIButton("Go Back");
+		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
+		GUISlider setting_foV = new GUISlider(10, 160, 110, (fov) -> "FOV: " + fov);
+		GUIButton settings_audio = new GUIButton("Audio Settings");
+		GUIButton settings_input = new GUIButton("Input Settings");
+		GUIButton settings_renderer = new GUIButton("Graphics Settings");
+		GUIButton settings_texture = new GUIButton("Resource Packs");
+		GUIToggleButton setting_debug_mode = new GUIToggleButton(settings_list, getDebugMode());
+		GUIColour colourHint = new GUIColour(0x66000000);
+		GUIButton backButton = new GUIButton("Go Back");
 
 		colourHint.setupFullscreen();
 		background.setCentered(600,700);
@@ -46,7 +34,7 @@ public class ScreenSettings extends Screen{
 		settings_input.setupOffsetTo(background,20,70,240,40);
 		settings_texture.setupOffsetTo(background,340,70,240,40);
 		settings_audio.setupOffsetTo(background,20,125,240,40);
-		setting_debugmode.setupOffsetTo(background,340,125,240,40);
+		setting_debug_mode.setupOffsetTo(background,340,125,240,40);
 		backButton.setupOffsetTo(background,170,250,240,40);
 
 		guiObjects.add(colourHint);
@@ -57,14 +45,14 @@ public class ScreenSettings extends Screen{
 		guiObjects.add(settings_texture);
 		guiObjects.add(settings_audio);
 		guiObjects.add(backButton);
-		guiObjects.add(setting_debugmode);
+		guiObjects.add(setting_debug_mode);
 
 		setting_foV.setUpdateFunc(this::onFOVChange);
 		settings_audio.setAction(this::gotoAudioSettings);
 		settings_input.setAction(this::gotoInputSettings);
 		settings_renderer.setAction(this::gotoRendererSettings);
 		settings_texture.setAction(this::gotoTextureSettings);
-		setting_debugmode.setToggleAction(this::onDebugChange);
+		setting_debug_mode.setToggleAction(this::onDebugChange);
 		backButton.setAction(this::onBack);
 	}
 

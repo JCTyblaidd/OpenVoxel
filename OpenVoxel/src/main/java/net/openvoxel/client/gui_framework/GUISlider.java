@@ -6,6 +6,7 @@ import net.openvoxel.common.resources.ResourceManager;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -40,6 +41,10 @@ public class GUISlider extends GUIObjectSizable{
 
 	public void setUpdateFunc(BiConsumer<GUISlider,Integer> update) {
 		updateSliderFunc = update;
+	}
+
+	public void setUpdateFunc(Consumer<Integer> update) {
+		setUpdateFunc((slider,val) -> update.accept(val));
 	}
 
 	@Override

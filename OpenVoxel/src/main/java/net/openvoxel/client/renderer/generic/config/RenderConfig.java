@@ -3,21 +3,12 @@ package net.openvoxel.client.renderer.generic.config;
 /**
  * Created by James on 11/09/2016.
  *
- * Config for Render Pipeline
+ * Config for Render Pipeline (Drawing World)
  */
 public class RenderConfig {
 
 ///////////////SECTION: general display///////////////////////////////////////
 
-	/**
-	 * Targeted FPS Count:
-	 */
-	public int targetFPS = 60;
-
-	/**
-	 * Use V-Sync
-	 */
-	public boolean enableVsync = true;
 
 	/**
 	 * Level of Compression for Texture Atlas
@@ -28,11 +19,6 @@ public class RenderConfig {
 	 * Size of Texture Atlas
 	 */
 	public int pow2AtlasSize = 64;//Valid = Powers of 2//
-
-	/**
-	 * Use Fullscreen Mode
-	 */
-	public boolean fullScreen = false;
 
 	/**
 	 * OpenGL: Allow use of extensions and OpenGL > 3.3

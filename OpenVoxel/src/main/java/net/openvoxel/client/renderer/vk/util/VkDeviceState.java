@@ -4,6 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.renderer.generic.GlobalRenderer;
 import net.openvoxel.client.renderer.vk.*;
 import net.openvoxel.files.FolderUtils;
 import net.openvoxel.files.util.AsyncFileIO;
@@ -78,7 +79,7 @@ public class VkDeviceState extends VkRenderManager {
 		worldRenderManager.initDeviceMetaInfo();
 		initSynchronisation();
 		initSurface();
-		initSwapChain();
+		initSwapChain(false);
 		initSwapChainSynchronisation();
 		initRenderPasses();
 		initGraphicsPipeline();
@@ -101,6 +102,23 @@ public class VkDeviceState extends VkRenderManager {
 				glfwSetWindowMonitor(glfw_window,0,0,0,vidMode.width(),vidMode.height(),0);
 			}
 			window_fullscreen = isFullscreen;
+		}
+	}
+
+	public void setVSync(GlobalRenderer.VSyncType type) {
+		switch(type) {
+			case V_SYNC_ENABLED:
+				chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+				break;
+			case V_SYNC_RELAXED:
+				chosenPresentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
+				break;
+			case V_SYNC_DISABLED:
+				chosenPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+				break;
+			case V_SYNC_TRIPLE_BUFFERED:
+				chosenPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+				break;
 		}
 	}
 
@@ -520,110 +538,100 @@ public class VkDeviceState extends VkRenderManager {
 		}
 	}
 
-	private void initSwapChain() {
+	private void initSwapChain(boolean recreate) {
 		try(MemoryStack stack = stackPush()) {
-			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice.physicalDevice,window_surface,surfaceCapabilities);
 			IntBuffer sizeRef = stack.callocInt(1);
-			vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice.physicalDevice,window_surface,sizeRef,null);
-			surfaceFormats = VkSurfaceFormatKHR.calloc(sizeRef.get(0));
-			vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice.physicalDevice,window_surface,sizeRef,surfaceFormats);
-			vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice.physicalDevice,window_surface,sizeRef,null);
-			presentModes = MemoryUtil.memAllocInt(sizeRef.get(0));
-			vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice.physicalDevice,window_surface,sizeRef, presentModes);
-			//Choose Initial SwapChain Info//
-			//Choose Swapchain Format//
-			if(surfaceFormats.capacity() == 1 && surfaceFormats.get(0).format() == VK_FORMAT_UNDEFINED) {
-				//All are Valid//
-				chosenImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-				chosenColourSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-				vkLogger.Debug("Universal Format Validation");
-				vkLogger.Info("Image Format: B8G8R8A8_UNORM");
-				vkLogger.Info("Colour Space: SRGB_NONLINEAR");
-			}else{
-				boolean found = false;
-				for(int i = 0; i < surfaceFormats.capacity(); i++) {
-					surfaceFormats.position(i);
-					if(surfaceFormats.format() == VK_FORMAT_B8G8R8A8_UNORM && surfaceFormats.colorSpace() == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-						chosenImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-						chosenColourSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-						vkLogger.Info("Image Format: B8G8R8A8_UNORM");
-						vkLogger.Info("Colour Space: SRGB_NONLINEAR");
-						found = true;
+			if(!recreate) {
+				vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice.physicalDevice, window_surface, surfaceCapabilities);
+				vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice.physicalDevice, window_surface, sizeRef, null);
+				surfaceFormats = VkSurfaceFormatKHR.calloc(sizeRef.get(0));
+				vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice.physicalDevice, window_surface, sizeRef, surfaceFormats);
+				vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice.physicalDevice, window_surface, sizeRef, null);
+				presentModes = MemoryUtil.memAllocInt(sizeRef.get(0));
+				vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice.physicalDevice, window_surface, sizeRef, presentModes);
+				//Choose Initial SwapChain Info//
+				//Choose Swapchain Format//
+				if (surfaceFormats.capacity() == 1 && surfaceFormats.get(0).format() == VK_FORMAT_UNDEFINED) {
+					//All are Valid//
+					chosenImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+					chosenColourSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+					vkLogger.Debug("Universal Format Validation");
+					vkLogger.Info("Image Format: B8G8R8A8_UNORM");
+					vkLogger.Info("Colour Space: SRGB_NONLINEAR");
+				} else {
+					boolean found = false;
+					for (int i = 0; i < surfaceFormats.capacity(); i++) {
+						surfaceFormats.position(i);
+						if (surfaceFormats.format() == VK_FORMAT_B8G8R8A8_UNORM && surfaceFormats.colorSpace() == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+							chosenImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+							chosenColourSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+							vkLogger.Info("Image Format: B8G8R8A8_UNORM");
+							vkLogger.Info("Colour Space: SRGB_NONLINEAR");
+							found = true;
+						}
+					}
+					if (!found) {
+						surfaceFormats.position(0);
+						chosenImageFormat = surfaceFormats.format();
+						chosenColourSpace = surfaceFormats.colorSpace();
+						vkLogger.Info("Fallback Image Format: " + chosenImageFormat);
+						vkLogger.Info("Fallback Colour Space: " + chosenColourSpace);
 					}
 				}
-				if(!found) {
-					surfaceFormats.position(0);
-					chosenImageFormat = surfaceFormats.format();
-					chosenColourSpace = surfaceFormats.colorSpace();
-					vkLogger.Info("Fallback Image Format: " + chosenImageFormat);
-					vkLogger.Info("Fallback Colour Space: " + chosenColourSpace);
+				//Choose Present Mode//
+				chosenPresentMode = -1;
+				{
+					vkLogger.Info("Valid Present Modes:");
+					for (int i = 0; i < presentModes.capacity(); i++) {
+						String res;
+						switch (presentModes.get(i)) {
+							case VK_PRESENT_MODE_IMMEDIATE_KHR:
+								res = "Immediate";
+								break;
+							case VK_PRESENT_MODE_FIFO_KHR:
+								res = "FIFO";
+								break;
+							case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+								res = "FIFO Relaxed";
+								break;
+							case VK_PRESENT_MODE_MAILBOX_KHR:
+								res = "Mailbox";
+								break;
+							default:
+								res = "Unknown:{" + presentModes.get(i) + "}";
+								break;
+						}
+						vkLogger.Info(" - " + res);
+					}
 				}
-			}
-			//Choose Present Mode//
-			chosenPresentMode = -1;
-			{
-				vkLogger.Info("Valid Present Modes:");
 				for (int i = 0; i < presentModes.capacity(); i++) {
-					String res;
-					switch (presentModes.get(i)) {
-						case VK_PRESENT_MODE_IMMEDIATE_KHR:
-							res = "Immediate";
-							break;
-						case VK_PRESENT_MODE_FIFO_KHR:
-							res = "FIFO";
-							break;
-						case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
-							res = "FIFO Relaxed";
-							break;
-						case VK_PRESENT_MODE_MAILBOX_KHR:
-							res = "Mailbox";
-							break;
-						default:
-							res = "Unknown:{" + presentModes.get(i) + "}";
-							break;
+					if (presentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR) {
+						vkLogger.Info("Chosen Present Mode: Mailbox");
+						chosenPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 					}
-					vkLogger.Info(" - " + res);
 				}
-			}
-			//boolean fallback_immediate = false;
-			for(int i = 0; i < presentModes.capacity(); i++) {
-				if(presentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR) {
-					vkLogger.Info("Chosen Present Mode: Mailbox");
-					chosenPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+				if (chosenPresentMode == -1) {
+					chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+					vkLogger.Info("Chosen Present Mode: FIFO");
 				}
-				//if(presentModes.get(i) == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-				//	//fallback_immediate = true;
-				//}
+				//Choose Swap Extent//
+				if (surfaceCapabilities.currentExtent().width() != 0xFFFFFFFF) {
+					swapExtent.set(surfaceCapabilities.currentExtent());
+				} else {
+					int width = ClientInput.currentWindowWidth.get();
+					int height = ClientInput.currentWindowHeight.get();
+					width = Math.min(Math.max(width, surfaceCapabilities.minImageExtent().width()), surfaceCapabilities.maxImageExtent().width());
+					height = Math.min(Math.max(height, surfaceCapabilities.minImageExtent().height()), surfaceCapabilities.maxImageExtent().height());
+					swapExtent.set(width, height);
+				}
+				//Choose Image Count//
+				chosenImageCount = surfaceCapabilities.minImageCount() + 1;
+				if (surfaceCapabilities.maxImageCount() > 0 && chosenImageCount > surfaceCapabilities.maxImageCount()) {
+					chosenImageCount = surfaceCapabilities.maxImageCount();
+				}
+				vkLogger.Info("SwapChain Image Range " + surfaceCapabilities.minImageCount() + "<x<" + surfaceCapabilities.maxImageCount());
+				vkLogger.Info("Chosen SwapChain Image Count : " + chosenImageCount);
 			}
-			if(chosenPresentMode == -1) {
-				//String os_type = System.getProperty("os.name").toLowerCase();
-				//if(!os_type.contains("win")  && !os_type.contains("mac") && fallback_immediate) {
-				//	chosenPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-				//	vkLogger.Info("Chosen Present Mode: Immediate(Linux Fix)");
-				//}else {
-				chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-				//TODO: change back
-				chosenPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-				vkLogger.Info("Chosen Present Mode: FIFO");
-				//}
-			}
-			//Choose Swap Extent//
-			if(surfaceCapabilities.currentExtent().width() != 0xFFFFFFFF) {
-				swapExtent.set(surfaceCapabilities.currentExtent());
-			}else{
-				int width = ClientInput.currentWindowWidth.get();
-				int height = ClientInput.currentWindowHeight.get();
-				width = Math.min(Math.max(width,surfaceCapabilities.minImageExtent().width()),surfaceCapabilities.maxImageExtent().width());
-				height = Math.min(Math.max(height,surfaceCapabilities.minImageExtent().height()),surfaceCapabilities.maxImageExtent().height());
-				swapExtent.set(width,height);
-			}
-			//Choose Image Count//
-			chosenImageCount = surfaceCapabilities.minImageCount() + 1;
-			if (surfaceCapabilities.maxImageCount() > 0 && chosenImageCount > surfaceCapabilities.maxImageCount()) {
-				chosenImageCount = surfaceCapabilities.maxImageCount();
-			}
-			vkLogger.Info("SwapChain Image Range " + surfaceCapabilities.minImageCount() + "<x<" + surfaceCapabilities.maxImageCount());
-			vkLogger.Info("Chosen SwapChain Image Count : " + chosenImageCount);
 			//Create The SwapChain//
 			LongBuffer swapChainBuf = stack.callocLong(1);
 			VkSwapchainCreateInfoKHR createInfoKHR = VkSwapchainCreateInfoKHR.callocStack(stack);
@@ -706,7 +714,7 @@ public class VkDeviceState extends VkRenderManager {
 		destroyCommandPools();
 		destroySwapChain();
 		destroySwapChainSynchronisation();
-		initSwapChain();
+		initSwapChain(true);
 		initSwapChainSynchronisation();
 		initRenderPasses();
 		initGraphicsPipeline();

@@ -1,7 +1,11 @@
 package net.openvoxel.client.gui.menu.settings;
 
+import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.renderer.generic.GlobalRenderer;
+import net.openvoxel.client.renderer.generic.config.RenderConfig;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,7 +13,6 @@ import java.util.List;
  */
 public class ScreenGraphicsSettings extends Screen {
 
-	private static final List<String> vSyncStrings = List.of("V-sync: ON","V-sync: MAILBOX","V-sync: OFF");
 	private static final List<String> screenModeStrings = List.of("Fullscreen","Borderless Window","Windowed");
 	private static final List<String> particleStrings = List.of("Particles: ON","Particles: MINIMAL","Particles: NONE");
 	private static final List<String> shadowMapStrings = List.of("Shadows: CASCADE","Shadows: SINGLE","Shadows: NONE");
@@ -25,6 +28,8 @@ public class ScreenGraphicsSettings extends Screen {
 	private int currentLeft = 10;
 	private int currentRight = 10;
 	private GUIVScrollArea section;
+	private Screen advSettings;
+
 
 	private void setupConfig(GUIObjectSizable sizable) {
 		sizable.setSize(0,0,240,40);
@@ -38,7 +43,9 @@ public class ScreenGraphicsSettings extends Screen {
 		section.add(sizable);
 	}
 
-	public ScreenGraphicsSettings() {
+	public ScreenGraphicsSettings(Screen advSettings) {
+		this.advSettings = advSettings;
+
 		GUIColour background = new GUIColour(0xFF464646);
 		background.setupFullscreen();
 		guiObjects.add(background);
@@ -48,16 +55,23 @@ public class ScreenGraphicsSettings extends Screen {
 		section.setSize(0.5f,0.6f,-100,200);
 		guiObjects.add(section);
 
-		GUISlider targetFPS = new GUISlider(10,280,60,e -> "FPS: " + e);
+		GUISlider targetFPS = new GUISlider(10,145,getCurrentTargetFPS(),(e) -> {
+			if(e == 145) return "FPS: Unlimited";
+			return "FPS: " + e;
+		});
+		targetFPS.setUpdateFunc(this::setTargetFPS);
 		setupConfig(targetFPS);
 
-		GUISlider chunkRadius = new GUISlider(4,64,16,e -> "Chunk Radius: "+e);
+		GUISlider chunkRadius = new GUISlider(4,64,getCurrentChunkRadius(),e -> "Chunk Radius: "+e);
+		chunkRadius.setUpdateFunc(this::setChunkRadius);
 		setupConfig(chunkRadius);
 
-		GUIToggleButton vSyncButton = new GUIToggleButton(vSyncStrings,vSyncStrings.get(0));
+		GUIToggleButton vSyncButton = new GUIToggleButton(getVSyncSupport(),getVSyncState());
+		vSyncButton.setToggleAction(this::setVSyncState);
 		setupConfig(vSyncButton);
 
-		GUIToggleButton screenButton = new GUIToggleButton(screenModeStrings,screenModeStrings.get(0));
+		GUIToggleButton screenButton = new GUIToggleButton(getScreenSupport(),getScreenState());
+		screenButton.setToggleAction(this::setScreenState);
 		setupConfig(screenButton);
 
 		GUIToggleButton particleButton = new GUIToggleButton(particleStrings,particleStrings.get(0));
@@ -90,6 +104,10 @@ public class ScreenGraphicsSettings extends Screen {
 		GUIToggleButton transparencyButton = new GUIToggleButton(transparencyStrings,transparencyStrings.get(0));
 		setupConfig(transparencyButton);
 
+		GUIButton advancedSettings = new GUIButton("Advanced Settings");
+		advancedSettings.setAction(this::onAdvancedSettings);
+		setupConfig(advancedSettings);
+
 		GUIButton backButton = new GUIButton("Back");
 		backButton.setPosition(0.5f,1,-140,-50);
 		backButton.setSize(0,0,300,30);
@@ -101,4 +119,67 @@ public class ScreenGraphicsSettings extends Screen {
 		GUI.removeLastScreen();
 	}
 
+	private int getCurrentTargetFPS() {
+		return Renderer.renderer.getTargetFPS();
+	}
+
+	private void setTargetFPS(int targetFPS) {
+		if(targetFPS == 145) {
+			Renderer.renderer.setTargetFPS(Integer.MAX_VALUE);
+		}else{
+			Renderer.renderer.setTargetFPS(targetFPS);
+		}
+	}
+
+	private int getCurrentChunkRadius() {
+		//TODO: IMPLEMENT PROPERLY
+		return 16;
+	}
+
+	private void setChunkRadius(int chunkRadius) {
+		//NO OP//
+	}
+
+	private void setVSyncState(String state_str) {
+		String id_state = state_str.substring("V-sync: ".length());
+		Renderer.renderer.setVSyncState(GlobalRenderer.VSyncType.fromID(id_state));
+	}
+
+	private List<String> getVSyncSupport() {
+		ArrayList<String> supported = new ArrayList<>();
+		for(GlobalRenderer.VSyncType type : GlobalRenderer.VSyncType.values()) {
+			if(Renderer.renderer.isVSyncSupported(type)) {
+				supported.add("V-sync: " + type.getID());
+			}
+		}
+		return supported;
+	}
+
+	private String getVSyncState() {
+		return "V-sync: " + Renderer.renderer.getVSyncState().getID();
+	}
+
+	private void setScreenState(String state_str) {
+		Renderer.renderer.setFullscreenState(GlobalRenderer.ScreenType.fromID(state_str));
+	}
+
+	private List<String> getScreenSupport() {
+		ArrayList<String> supported = new ArrayList<>();
+		for(GlobalRenderer.ScreenType type : GlobalRenderer.ScreenType.values()) {
+			if(Renderer.renderer.isFullscreenSupported(type)) {
+				supported.add(type.getID());
+			}
+		}
+		return supported;
+	}
+
+	private String getScreenState() {
+		return Renderer.renderer.getFullscreenState().getID();
+	}
+
+	private void onAdvancedSettings() {
+		if(advSettings != null) {
+			GUI.addScreen(advSettings);
+		}
+	}
 }
