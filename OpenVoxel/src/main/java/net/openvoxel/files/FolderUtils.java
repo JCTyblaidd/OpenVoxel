@@ -4,6 +4,7 @@ import com.jc.util.filesystem.FileHandle;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.stb.STBImageWrite;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 import javax.imageio.ImageIO;
@@ -11,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,48 +59,43 @@ public class FolderUtils {
 		stbi_write_png(f.getAbsolutePath(),w,h,4,data,0);
 	}
 
-	public static void saveScreenshot(int w, int h,int[] pixels) {
-		saveScreenshot(w,h,pixels,false);
+	public static void saveScreenshot(int w, int h,int[] pixels,boolean swizzle_result) {
+		ByteBuffer byteData = MemoryUtil.memAlloc(w*h*4);
+		try {
+			byteData.asIntBuffer().put(pixels);
+			byteData.position(0);
+			saveScreenshot(w, h, byteData, swizzle_result);
+		}finally {
+			MemoryUtil.memFree(byteData);
+		}
 	}
 
-	public static void saveScreenshot(int w, int h,ByteBuffer pixels) {
-		Date d = new Date();
-		Random rand = new Random();
-		DateFormat format = DateFormat.getDateTimeInstance();
-		File f = new File(ScreenshotsDir, "screenshot " + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png");
-		stbi_write_png(f.getAbsolutePath(),w,h,4,pixels,0);
-	}
-
-	/**
-	 * TODO: Convert BufferedImage Save -> STBIImageWrite Save Function
-	 * @param w the width of the pixel data
-	 * @param h the height of the pixel data
-	 * @param pixels the pixel data (size = w * h)
-	 */
-	public static void saveScreenshot(int w, int h,int[] pixels,boolean flag) {
-		if(flag) {
+	public static void saveScreenshot(int w, int h,ByteBuffer pixels,boolean swizzle_result) {
+		ByteBuffer copy_buffer = pixels;
+		if(swizzle_result) {
+			copy_buffer = MemoryUtil.memAlloc(w * h * 4);
+		}
+		try {
 			Date d = new Date();
 			Random rand = new Random();
 			DateFormat format = DateFormat.getDateTimeInstance();
 			File f = new File(ScreenshotsDir, "screenshot " + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png");
-			ByteBuffer DATA = MemoryUtil.memAlloc(4 * w * h);
-			DATA.asIntBuffer().put(pixels);
-			DATA.position(0);
-			stbi_write_png(f.getAbsolutePath(),w,h,4,DATA,0);
-		}else {
-			BufferedImage IMG = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);//Use BufferedImage for ImageIO
-			for (int x = 0; x < w; x++) {//Set with Y-Invert
-				for (int y = 0; y < h; y++) {
-					IMG.setRGB(x, h - y - 1, pixels[y * w + x]);
+
+			if(swizzle_result) {
+				for(int i = 0; i < w * h; i++) {
+					final int loc = i * 4;
+					copy_buffer.put(loc,pixels.get(loc+2));
+					copy_buffer.put(loc+1,pixels.get(loc+1));
+					copy_buffer.put(loc+2,pixels.get(loc));
+					copy_buffer.put(loc+3,pixels.get(loc+3));
 				}
+				copy_buffer.position(0);
 			}
-			try {
-				Date d = new Date();
-				Random rand = new Random();
-				DateFormat format = DateFormat.getDateTimeInstance();
-				ImageIO.write(IMG, "PNG", new File(ScreenshotsDir, "screenshot" + format.format(d).replace(':', '-') + "-" + rand.nextInt(99) + ".png"));
-			} catch (IOException e) {
-				Logger.getLogger("Screenshots").Severe("Failed to Create New Screenshot");
+
+			stbi_write_png(f.getAbsolutePath(), w, h, 4, copy_buffer, 0);
+		}finally {
+			if(swizzle_result) {
+				MemoryUtil.memFree(copy_buffer);
 			}
 		}
 	}
@@ -106,6 +103,7 @@ public class FolderUtils {
 	public static List<String> listAllGameSaves() {
 		File[] subFiles = SaveDir.listFiles();
 		List<String> saves = new ArrayList<>();
+		if(subFiles == null) return saves;
 		for(File f : subFiles) {
 			saves.add(f.getName());
 		}

@@ -195,8 +195,8 @@ public class ModLoader {
 		}
 	}
 
-	public static class ModLoadingException extends RuntimeException {
-		public ModLoadingException(String str) {super(str);}
+	static class ModLoadingException extends RuntimeException {
+		ModLoadingException(String str) {super(str);}
 	}
 
 	public void propagateInitEvent(ModInitEvent e,String ID,String Pre) {

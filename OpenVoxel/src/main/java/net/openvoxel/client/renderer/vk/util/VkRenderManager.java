@@ -318,7 +318,7 @@ public class VkRenderManager {
 		submitInfo.pWaitSemaphores(null);
 		submitInfo.pWaitDstStageMask(null);
 		submitInfo.pCommandBuffers(stack.pointers(cmd.address()));
-		submitInfo.pWaitSemaphores(null);
+		submitInfo.pSignalSemaphores(null);
 		VkQueue targetQueue = useTransfer ? renderDevice.asyncTransferQueue : renderDevice.renderQueue;
 		vkQueueWaitIdle(targetQueue);
 		vkQueueSubmit(targetQueue,submitInfo,0);

@@ -109,11 +109,12 @@ public class VkDeviceState extends VkRenderManager {
 	 */
 	public void takeScreenshot() {
 		final boolean use_transfer = false;
+		final boolean swizzle_result = true;
 		if(chosenImageFormat != VK_FORMAT_B8G8R8A8_UNORM) return;
 		try(MemoryStack stack = stackPush()) {
 			long target_image = swapChainImages.get(swapChainImageIndex);
 			int img_size = swapExtent.width() * swapExtent.height() * 4;
-			waitForFence(submit_wait_fences_draw.get(swapChainImageIndex));
+			vkWaitForFences(renderDevice.device,submit_wait_fences_draw.get(swapChainImageIndex),true,-1);
 
 			LongBuffer retValue = stack.mallocLong(2);
 			memoryMgr.AllocateExclusive(img_size,
@@ -173,7 +174,7 @@ public class VkDeviceState extends VkRenderManager {
 
 
 			ByteBuffer buffer = memoryMgr.mapMemory(retValue.get(1),0,img_size,stack);
-			FolderUtils.saveScreenshot(swapExtent.width(),swapExtent.height(),buffer);
+			FolderUtils.saveScreenshot(swapExtent.width(),swapExtent.height(),buffer,swizzle_result);
 			memoryMgr.unMapMemory(retValue.get(1));
 			memoryMgr.FreeExclusive(retValue);
 		}

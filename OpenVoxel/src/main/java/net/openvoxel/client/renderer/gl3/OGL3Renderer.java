@@ -204,7 +204,7 @@ public class OGL3Renderer implements GlobalRenderer{
 			final int H = ClientInput.currentWindowHeight.get();
 			int[] pixels = new int[W * H];
 			glReadPixels(0,0,W,H,GL_BGRA,GL_UNSIGNED_BYTE,pixels);
-			FolderUtils.saveScreenshot(W,H,pixels);
+			FolderUtils.saveScreenshot(W,H,pixels,true);
 		}
 		//Next Frame//
 		glfwSwapBuffers(window);
