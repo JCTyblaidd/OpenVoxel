@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk;
 
 import gnu.trove.list.TByteList;
 import gnu.trove.list.array.TByteArrayList;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.gui_framework.Screen;
@@ -45,8 +46,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	//Implementation Flags//
 	public static final boolean GUI_USE_COHERENT_MEMORY = VkImplFlags.gui_use_coherent_memory();
-	private static final boolean GUI_USE_PERMANENT_MAPPING = VkImplFlags.gui_use_coherent_memory();
-	private static final boolean GUI_DIRECT_TO_NON_COHERENT_MEMORY = VkImplFlags.gui_direct_to_non_coherent_memory();
+	private static final boolean GUI_USE_PERMANENT_MAPPING = VkImplFlags.gui_use_permanent_mapping();
+	private static final boolean GUI_DIRECT_TO_MEMORY = VkImplFlags.gui_direct_to_non_coherent_memory();
 	private static final boolean GUI_ALLOW_DRAW_CACHING = VkImplFlags.gui_allow_draw_caching();
 
 	private VkDeviceState state;
@@ -64,6 +65,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	private int stateChangeCount, lastStateChange;
 	private IntBuffer offsetTransitionStack;
 	private TByteList imageEnableStateStack;
+	private IntBuffer scissorTransitionStack;
 
 	//Bound Image Info//
 	private static class BoundResourceHandle {
@@ -91,7 +93,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	VkGUIRenderer(VkDeviceState state) {
 		this.state = state;
 		this.mgr = state.memoryMgr;
-		if(GUI_USE_PERMANENT_MAPPING && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+		if(!GUI_USE_PERMANENT_MAPPING || !GUI_DIRECT_TO_MEMORY) {
 			writeTarget = MemoryUtil.memAlloc(GUI_BUFFER_SIZE);
 		}
 		imgStagingTarget = MemoryUtil.memAlloc(GUI_IMAGE_CACHE_SIZE);
@@ -101,12 +103,13 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		matrixArrayStack = MemoryUtil.memAllocFloat(16 * GUI_STATE_CHANGE_LIMIT);
 		offsetTransitionStack = MemoryUtil.memAllocInt(GUI_STATE_CHANGE_LIMIT);
 		imageEnableStateStack = new TByteArrayList(GUI_STATE_CHANGE_LIMIT);
+		scissorTransitionStack = MemoryUtil.memAllocInt(GUI_STATE_CHANGE_LIMIT * 4);
 		imageBindings = new HashMap<>();
-		if(!GUI_USE_PERMANENT_MAPPING) {
+		if(GUI_USE_PERMANENT_MAPPING) {
 			try (MemoryStack stack = stackPush()) {
 				mappedGUIStaging = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE + GUI_IMAGE_CACHE_SIZE, stack);
 			}
-			if(GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+			if(GUI_DIRECT_TO_MEMORY) {
 				writeTarget = mappedGUIStaging;
 			}
 		}
@@ -165,7 +168,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 	 * Destroy all required images
 	 */
 	void cleanup() {
-		if(!GUI_USE_PERMANENT_MAPPING) {
+		if(GUI_USE_PERMANENT_MAPPING) {
 			mgr.unMapMemory(mgr.memGuiStaging.get(1));
 		}
 		for(BoundResourceHandle handle : imageBindings.values()) {
@@ -174,12 +177,13 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			state.memoryMgr.FreeGuiImage(handle.image,handle.offset,handle.count);
 		}
 		destroy_descriptors();
-		if(GUI_USE_PERMANENT_MAPPING && GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
+		if(!GUI_USE_PERMANENT_MAPPING || !GUI_DIRECT_TO_MEMORY) {
 			MemoryUtil.memFree(writeTarget);
 		}
 		MemoryUtil.memFree(imgStagingTarget);
 		MemoryUtil.memFree(matrixArrayStack);
 		MemoryUtil.memFree(offsetTransitionStack);
+		MemoryUtil.memFree(scissorTransitionStack);
 	}
 
 	@Override
@@ -189,8 +193,14 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void beginDraw() {
-		screenWidth = ClientInput.currentWindowWidth.get();
-		screenHeight = ClientInput.currentWindowHeight.get();
+		int newWidth = ClientInput.currentWindowWidth.get();
+		int newHeight = ClientInput.currentWindowHeight.get();
+		if(newWidth != screenWidth || newHeight != screenHeight) {
+			//Mark screen as dirty
+			dirtyDrawUpdateCountdown = state.swapChainImageViews.capacity() + 1;
+		}
+		screenWidth = newWidth;
+		screenHeight = newHeight;
 		drawCount = 0;
 		requestedImages.clear();
 
@@ -203,6 +213,10 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 		requestedImageStack.add(null);
 		matrixStackHead.set(identity_matrix);
 		offsetTransitionStack.put(0);
+		scissorTransitionStack.put(0,0);
+		scissorTransitionStack.put(1,0);
+		scissorTransitionStack.put(2,screenWidth);
+		scissorTransitionStack.put(3,screenHeight);
 
 		stateChangeCount = 0;
 		lastStateChange = 0;
@@ -487,7 +501,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 			if(drawCount != 0) {
 				boolean has_image_transfer = copyImg.remaining() != 0;
-				if(GUI_USE_PERMANENT_MAPPING) {
+				int img_lim = imgStagingTarget.position();
+				if(!GUI_USE_PERMANENT_MAPPING) {
 					ByteBuffer memMapping = mgr.mapMemory(mgr.memGuiStaging.get(1), 0, GUI_BUFFER_SIZE + GUI_IMAGE_CACHE_SIZE, stack);
 					writeTarget.position(0);
 					memMapping.put(writeTarget);
@@ -495,11 +510,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 					memMapping.position(GUI_BUFFER_SIZE);
 					memMapping.put(imgStagingTarget);
 					memMapping.position(0);
-					mgr.unMapMemory(mgr.memGuiStaging.get(1));
 				}else {
-					int img_lim = imgStagingTarget.position();
-					if(GUI_DIRECT_TO_NON_COHERENT_MEMORY) {
-						if(img_lim != 0) {
+					if (GUI_DIRECT_TO_MEMORY) {
+						if (img_lim != 0) {
 							imgStagingTarget.position(0);
 							mappedGUIStaging.position(GUI_BUFFER_SIZE);
 							imgStagingTarget.limit(img_lim);
@@ -507,7 +520,7 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 							imgStagingTarget.limit(imgStagingTarget.capacity());
 						}
 						mappedGUIStaging.position(0);
-					}else {
+					} else {
 						writeTarget.position(0);
 						mappedGUIStaging.position(0);
 						mappedGUIStaging.put(writeTarget);
@@ -515,7 +528,8 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 						mappedGUIStaging.position(GUI_BUFFER_SIZE);
 						mappedGUIStaging.put(imgStagingTarget);
 					}
-
+				}
+				if(!GUI_USE_COHERENT_MEMORY) {
 					VkMappedMemoryRange.Buffer memoryRanges = VkMappedMemoryRange.mallocStack(has_image_transfer ? 2 : 1, stack);
 					memoryRanges.position(0);
 					memoryRanges.sType(VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE);
@@ -532,6 +546,9 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 						memoryRanges.size(img_lim);
 					}
 					vkFlushMappedMemoryRanges(state.renderDevice.device, memoryRanges);
+				}
+				if(!GUI_USE_PERMANENT_MAPPING) {
+					mgr.unMapMemory(mgr.memGuiStaging.get(1));
 				}
 
 				VkBufferCopy.Buffer copyInfo = VkBufferCopy.mallocStack(1,stack);
@@ -593,7 +610,6 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 			extent.set(screenWidth,screenHeight);
 			scissor.extent(extent);
 
-			vkCmdSetScissor(cmdBuffer,0,scissor);
 
 			if(drawCount != 0) {
 				vkCmdBindVertexBuffers(cmdBuffer, 0, stack.longs(mgr.memGuiDrawing.get(0)), stack.longs(0));
@@ -608,6 +624,16 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 						int selected_image_index = resHandle == null ? 0 : imageBindings.get(resHandle).image_index;
 						pushConstantsBuffer.put(0, selected_image_index);
 						pushConstantsBuffer.put(1, enable_draw ? 1 : 0);
+
+						int scissor_index = i * 4;
+						offset.x(scissorTransitionStack.get(scissor_index));
+						offset.y(scissorTransitionStack.get(scissor_index+1));
+						extent.width(scissorTransitionStack.get(scissor_index+2));
+						extent.height(scissorTransitionStack.get(scissor_index+3));
+						scissor.offset(offset);
+						scissor.extent(extent);
+
+						vkCmdSetScissor(cmdBuffer,0,scissor);
 						vkCmdPushConstants(cmdBuffer, state.guiPipeline.graphics_pipeline_layout,
 								VK_SHADER_STAGE_FRAGMENT_BIT, 0, pushConstantsBuffer);
 						vkCmdSetScissor(cmdBuffer, 0, scissor);//TODO: change values when applicable
@@ -659,6 +685,10 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				for(int i = 0; i < 16; i++) {
 					matrixArrayStack.put(start+16+i,matrixArrayStack.get(start+i));
 				}
+				int scissor_start = stateChangeCount * 4;
+				for(int i = 0; i < 4; i++) {
+					scissorTransitionStack.put(scissor_start+4+i,scissorTransitionStack.get(scissor_start+i));
+				}
 				state_change();
 			}else{
 				requestedImageStack.set(stateChangeCount,handle);
@@ -677,6 +707,10 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				for(int i = 0; i < 16; i++) {
 					matrixArrayStack.put(start+16+i,matrixArrayStack.get(start+i));
 				}
+				int scissor_start = stateChangeCount * 4;
+				for(int i = 0; i < 4; i++) {
+					scissorTransitionStack.put(scissor_start+4+i,scissorTransitionStack.get(scissor_start+i));
+				}
 				state_change();
 			}else{
 				imageEnableStateStack.set(stateChangeCount,change);
@@ -693,6 +727,10 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 				int pos = matrixArrayStack.position();
 				mat.set(matrixArrayStack);
 				matrixArrayStack.position(pos + 16);
+				int scissor_start = stateChangeCount * 4;
+				for(int i = 0; i < 4; i++) {
+					scissorTransitionStack.put(scissor_start+4+i,scissorTransitionStack.get(scissor_start+i));
+				}
 				state_change();
 			}else{
 				int pos = matrixArrayStack.position();
@@ -754,12 +792,37 @@ public class VkGUIRenderer implements GUIRenderer, GUIRenderer.GUITessellator {
 
 	@Override
 	public void resetScissor() {
-		//TODO:
+		scissor(0,0,screenWidth,screenHeight);
 	}
 
 	@Override
 	public void scissor(int x, int y, int w, int h) {
-		//TODO:
+		int current_scissor = stateChangeCount * 4;
+		boolean same_scissor = scissorTransitionStack.get(current_scissor) == x
+		                    && scissorTransitionStack.get(current_scissor+1) == y
+							&& scissorTransitionStack.get(current_scissor+2) == w
+							&& scissorTransitionStack.get(current_scissor+3) == h;
+		if(!same_scissor) {
+			if(has_drawn_since_state_change()) {
+				requestedImageStack.add(requestedImageStack.get(stateChangeCount));
+				imageEnableStateStack.add(imageEnableStateStack.get(stateChangeCount));
+				int start = stateChangeCount * 16;
+				for(int i = 0; i < 16; i++) {
+					matrixArrayStack.put(start+16+i,matrixArrayStack.get(start+i));
+				}
+				int scissor_start = current_scissor + 4;
+				scissorTransitionStack.put(scissor_start,x);
+				scissorTransitionStack.put(scissor_start+1,y);
+				scissorTransitionStack.put(scissor_start+2,w);
+				scissorTransitionStack.put(scissor_start+3,h);
+				state_change();
+			}else{
+				scissorTransitionStack.put(current_scissor,x);
+				scissorTransitionStack.put(current_scissor+1,y);
+				scissorTransitionStack.put(current_scissor+2,w);
+				scissorTransitionStack.put(current_scissor+3,h);
+			}
+		}
 	}
 
 

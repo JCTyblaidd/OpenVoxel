@@ -1,0 +1,23 @@
+locale_english:
+
+# Main Menu #
+menu.main.openvoxel=OpenVoxel
+menu.main.single-player=Single Player
+menu.main.multi-player=Multi Player
+menu.main.settings=Settings
+menu.main.mods=Mods
+menu.main.reload=Reload
+menu.main.quit=Quit
+
+# Debug Menu #
+menu.debug.renderer.type.fallback=Unknown Renderer
+menu.debug.renderer.vendor.fallback=Unknown Vendor
+menu.debug.renderer.driver.fallback=Unknown Driver
+
+menu.debug.info.version=Open Voxel %s
+menu.debug.info.process=Process Memory: %s
+...TODO: Continue
+
+# Settings #
+
+# Graphics Settings #

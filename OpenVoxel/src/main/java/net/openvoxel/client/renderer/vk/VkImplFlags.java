@@ -26,6 +26,14 @@ public class VkImplFlags {
 	}
 
 	/**
+	 * Use a permanently mapped section of memory
+	 * Recommended: True
+	 */
+	static boolean gui_use_permanent_mapping() {
+		return !OpenVoxel.getLaunchParameters().hasFlag("vkGuiDisablePermanentMapping");
+	}
+
+	/**
 	 * Remove the need for copying data while using non-coherent memory
 	 * instead writing it to permanent mapped memory
 	 * Recommended: True
@@ -41,4 +49,5 @@ public class VkImplFlags {
 	static boolean gui_allow_draw_caching() {
 		return !OpenVoxel.getLaunchParameters().hasFlag("vkGuiDisableDrawCaching");
 	}
+
 }

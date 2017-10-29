@@ -32,7 +32,7 @@ public class LocaleLoader {
 			if(str.startsWith("locale_") && str.endsWith(":")) {
 				String locale_id = str.substring(7,str.length() - 1);
 				currentLocale = load_locale(locale_id);
-			}else if(str.length() > 0 && str.contains("=")) {
+			}else if(str.length() > 0 && str.contains("=") && !str.startsWith("#")) {
 				String[] obj_list = str.split("=");
 				String pre = obj_list[0].trim();
 				String post = obj_list[1].trim();
