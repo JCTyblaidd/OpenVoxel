@@ -1,5 +1,7 @@
 package net.openvoxel.api.util;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Created by James on 31/07/2016.
  *
@@ -73,7 +75,7 @@ public class Version implements Comparable<Version>{
 	}
 
 	@Override
-	public int compareTo(Version o) {
+	public int compareTo(@NotNull Version o) {
 		int v1 = toVersionInteger();
 		int v2 = o.toVersionInteger();
 		if(v1 == v2) return 0;

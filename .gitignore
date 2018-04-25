@@ -4,3 +4,5 @@ crash_reports/
 logs/
 save/
 stats/
+
+.idea/libraries

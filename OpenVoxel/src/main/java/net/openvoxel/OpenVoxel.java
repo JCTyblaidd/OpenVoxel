@@ -315,6 +315,7 @@ public class OpenVoxel implements EventListener{
 			}
 			GUI.addScreen(new ScreenMainMenu());
 		}
+		//TODO: CONVERT TO REAL MAIN THREAD IMPLEMENTATION...
 		//Convert Bootstrap Thread Into InputPollThread if clientSide ELSE end the thread//
 		if(isClient) {
 			DisplayHandle handle = Renderer.renderer.getDisplayHandle();
