@@ -39,6 +39,7 @@ public class VkWorldRenderManager {
 
 	//Image Formats//
 	private int imageDepthFormat;
+	private int imageDepthStencilFormat;
 	private int HDRColorFormat;
 	private int HDRColorAlphaFormat;
 
@@ -337,6 +338,12 @@ public class VkWorldRenderManager {
 					VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT |
 							VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
 							VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
+			imageDepthStencilFormat = findSupportedFormat("Depth-Stencil Format:",stack,
+					stack.ints(VK_FORMAT_D24_UNORM_S8_UINT,VK_FORMAT_D32_SFLOAT_S8_UINT,VK_FORMAT_D16_UNORM_S8_UINT),
+					VK_IMAGE_TILING_OPTIMAL,
+					VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT |
+							VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+							VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
 			HDRColorFormat = findSupportedFormat("HDR Format:",stack,
 					stack.ints(VK_FORMAT_R32G32B32_SFLOAT,VK_FORMAT_R16G16B16_SFLOAT,VK_FORMAT_R32G32B32A32_SFLOAT),
 					VK_IMAGE_TILING_OPTIMAL,
@@ -371,20 +378,60 @@ public class VkWorldRenderManager {
 	 *      Texture Atlas:
 	 *          Sampler x3: Diffuse, Normal, PBR {Texture Atlas}
 	 *      Per Draw Constants:
+	 *          //Shadow Info//
+	 *          Mat4 shadowMapView[3];
+	 *          //Draw Info//
 	 *          Mat4 projMatrix;
+	 *          Mat4 projMatrixInv;
 	 *          Mat4 playerPosMatrix;
+	 *          Mat3 camNormMatrix;
+	 *          Mat3 camNormMatrixInv;
+	 *          Vec3 playerPos;
+	 *          Vec2 zLimits;
+	 *          //Dimension Info//
+	 *          Mat3 dayProgressMatrix;
+	 *          Vec3 dirSun;
+	 *          Vec3 fogColour;
+	 *          Vec3 skyLightColour;
+	 *          float dayProgress;
+	 *          float skyLightPower;
+	 *          //Position Constants//
+	 *          bool isRaining;
+	 *          bool isThunder;
+	 *          bool playerInFluid;
 	 *
 	 *  Push Constants:
 	 *      Mat4 chunkPosMatrix
 	 */
 	public void createDescriptorSets() {
-		descriptor_sets = MemoryUtil.memAllocLong(renderManager.swapChainImageViews.capacity());
+		final int DESCRIPTOR_COUNT = 3;
+		descriptor_sets = MemoryUtil.memAllocLong(renderManager.swapChainImageViews.capacity() * DESCRIPTOR_COUNT);
 		try(MemoryStack stack = stackPush()) {
 			LongBuffer pRet = stack.mallocLong(1);
 
-			VkDescriptorPoolSize.Buffer poolSizes = VkDescriptorPoolSize.mallocStack(1,stack);
-			poolSizes.type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-			poolSizes.descriptorCount(1);
+			VkDescriptorPoolSize.Buffer poolSizes = VkDescriptorPoolSize.mallocStack(DESCRIPTOR_COUNT,stack);
+			{
+				//Texture Atlas Descriptor Set//
+				poolSizes.position(0);
+				poolSizes.type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+				poolSizes.descriptorCount(3);
+
+				//Per Frame Constant Descriptor Set//
+				poolSizes.position(1);
+				poolSizes.type(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+				poolSizes.descriptorCount(1);
+
+				//Shadow Map Descriptor Set//
+				poolSizes.position(2);
+				poolSizes.type(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+				poolSizes.descriptorCount(3);
+
+				//GBuffer Descriptor Set//
+				poolSizes.position(3);
+				poolSizes.type(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT);
+				poolSizes.descriptorCount(5);
+			}
+			poolSizes.position(0);
 
 			VkDescriptorPoolCreateInfo createPool = VkDescriptorPoolCreateInfo.mallocStack(stack);
 			createPool.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO);
@@ -396,6 +443,20 @@ public class VkWorldRenderManager {
 				throw new RuntimeException("Failed to create Descriptor Pool");
 			}
 			descriptor_pool = pRet.get(0);
+			VkDescriptorSetAllocateInfo setAllocateInfo = VkDescriptorSetAllocateInfo.mallocStack(stack);
+			setAllocateInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO);
+			setAllocateInfo.pNext(VK_NULL_HANDLE);
+			setAllocateInfo.descriptorPool(descriptor_pool);
+			LongBuffer set_layout_data = stack.mallocLong(renderManager.swapChainImageViews.capacity());
+			setAllocateInfo.pSetLayouts(set_layout_data);
+			for(int descriptor_type = 0; descriptor_type < DESCRIPTOR_COUNT; descriptor_type++) {
+				for(int i = 0; i < set_layout_data.capacity(); i++) {
+					set_layout_data.put(i,descriptor_type);
+				}
+				descriptor_sets.position(descriptor_type * set_layout_data.capacity());
+				vkAllocateDescriptorSets(renderManager.renderDevice.device,setAllocateInfo,descriptor_sets);
+			}
+			descriptor_sets.position(0);
 		}
 	}
 

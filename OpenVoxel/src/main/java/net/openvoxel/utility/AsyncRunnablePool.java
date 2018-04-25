@@ -30,7 +30,7 @@ public class AsyncRunnablePool {
 	 */
 	public static int getWorkerCount(String ID,int fallback) {
 		if(OpenVoxel.getLaunchParameters().hasFlag(ID)) {
-			return OpenVoxel.getLaunchParameters().getIntegerMap(ID);
+			return Math.max(OpenVoxel.getLaunchParameters().getIntegerMap(ID),1);
 		}else {
 			return fallback;
 		}
