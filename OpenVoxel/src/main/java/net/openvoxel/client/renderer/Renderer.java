@@ -13,6 +13,7 @@ import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import net.openvoxel.files.FolderUtils;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.AsyncBarrier;
+import net.openvoxel.utility.AsyncRunnablePool;
 import net.openvoxel.utility.CrashReport;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -30,6 +31,7 @@ public final class Renderer implements EventListener {
 	private final GraphicsAPI api;
 	private final PerSecondTimer frameRateTimer;
 	private final GuiDrawTask guiDrawTask;
+	private final AsyncRunnablePool renderTaskPool;
 
 	//FrameRate Limiting
 	private int targetFrameRate;
@@ -46,6 +48,9 @@ public final class Renderer implements EventListener {
 		logger = Logger.getLogger("Renderer");
 		frameRateTimer = new PerSecondTimer(64);
 		guiDrawTask = new GuiDrawTask();
+		renderTaskPool = new AsyncRunnablePool("Render Pool",AsyncRunnablePool.getWorkerCount("renderWorkerCount",4));
+		renderTaskPool.start();
+
 		targetFrameRate = Integer.MAX_VALUE;
 		previousFrameTimestamp = 0L;
 
@@ -92,6 +97,7 @@ public final class Renderer implements EventListener {
 	}
 
 	public void close() {
+		renderTaskPool.stop();
 		api.close();
 		OpenVoxel.unregisterAllEvents(this);
 	}
@@ -278,8 +284,7 @@ public final class Renderer implements EventListener {
 	public void startAsyncGUIDraw(AsyncBarrier completeBarrier) {
 		completeBarrier.reset(1);
 		guiDrawTask.update(completeBarrier,api);
-		//TODO: ASYNC DISPATCH
-		guiDrawTask.run();
+		renderTaskPool.addWork(guiDrawTask);
 	}
 
 	/**

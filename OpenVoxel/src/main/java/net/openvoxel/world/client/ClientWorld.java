@@ -2,7 +2,6 @@ package net.openvoxel.world.client;
 
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
-import net.openvoxel.client.control.Renderer;
 import net.openvoxel.world.World;
 import net.openvoxel.world.generation.IWorldGenerator;
 

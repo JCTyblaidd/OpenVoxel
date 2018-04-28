@@ -1,7 +1,5 @@
 package net.openvoxel.common.resources;
 
-import net.openvoxel.client.control.Renderer;
-
 /**
  * Created by James on 25/08/2016.
  *
