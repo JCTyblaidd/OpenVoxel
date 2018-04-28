@@ -31,7 +31,7 @@ public class ClientWorld extends World {
 	@Override
 	public void releaseAllChunkData() {
 		chunkMap.forEachChunk(e -> {
-			Renderer.renderer.getWorldRenderer().onChunkUnloaded((ClientChunk)e);
+			//Renderer.renderer.getWorldRenderer().onChunkUnloaded((ClientChunk)e);
 			e.releaseData();
 			return true;
 		});

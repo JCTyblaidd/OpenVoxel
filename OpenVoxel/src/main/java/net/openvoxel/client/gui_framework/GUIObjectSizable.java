@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 
 /**
@@ -31,11 +31,11 @@ public abstract class GUIObjectSizable extends GUIObject{
 		return size_w_rel + (size_w_abs / width);
 	}
 
-	public void DrawSquare(GUIRenderer.GUITessellator drawHandle, ResourceHandle Image) {
+	public void DrawSquare(IGuiRenderer drawHandle, ResourceHandle Image) {
 		DrawSquare(drawHandle,  Image, 0xFFFFFFFF);
 	}
 
-	public void DrawSquare(GUIRenderer.GUITessellator drawHandle, ResourceHandle Image,int col) {
+	public void DrawSquare(IGuiRenderer drawHandle, ResourceHandle Image, int col) {
 		final float screenWidth = drawHandle.getScreenWidth();
 		final float screenHeight = drawHandle.getScreenHeight();
 		final float X1 = getPosX(screenWidth);

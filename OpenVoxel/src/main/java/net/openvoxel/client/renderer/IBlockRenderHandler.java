@@ -1,6 +1,5 @@
 package net.openvoxel.client.renderer;
 
-import net.openvoxel.client.renderer.generic.WorldRenderer;
 import net.openvoxel.common.block.IBlockAccess;
 
 /**
@@ -15,6 +14,6 @@ public interface IBlockRenderHandler {
 	 * @param renderer World Renderer Reference
 	 * @param stateAccess Block Information Accessor
 	 */
-	void storeBlockData(WorldRenderer.WorldBlockRenderer renderer, IBlockAccess stateAccess,boolean opaqueDraw);
+	void storeBlockData(IBlockRenderer renderer, IBlockAccess stateAccess,boolean opaqueDraw);
 
 }

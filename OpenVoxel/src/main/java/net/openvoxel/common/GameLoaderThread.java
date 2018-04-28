@@ -62,7 +62,8 @@ public class GameLoaderThread implements Runnable{
 			ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(), "Final Init", "Sending Final-Initialisation Event to ", loadingScreen);
 			gameLogger.Info("===Load Textures===");
 			loadingScreen.startSection("Texture Loading");
-			OpenVoxel.getInstance().blockRegistry.clientRegisterAll(Renderer.getBlockTextureAtlas());
+			gameLogger.Info("TODO: FIX BLOCK TEXTURE ATLAS LOADING");
+			//OpenVoxel.getInstance().blockRegistry.clientRegisterAll(Renderer.getBlockTextureAtlas());
 			gameLogger.Info("Finished Initializing Game State");
 			GUI.removeAllScreens();
 		}else{

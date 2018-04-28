@@ -40,7 +40,7 @@ public class ResourceHandle {
 			case IMAGE:
 				return "textures/"+this.ID+".png";
 			case SHADER:
-				return "shaders/"+this.ID+"."+Renderer.renderer.getShaderPostfix();
+				return "shaders/"+this.ID+"."+ "vksl";//TODO: Renderer.renderer.getShaderPostfix();
 			case TEXT:
 				return "text/"+this.ID+".txt";
 		}

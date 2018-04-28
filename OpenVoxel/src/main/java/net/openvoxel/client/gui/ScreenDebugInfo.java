@@ -1,9 +1,8 @@
 package net.openvoxel.client.gui;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.client.control.RenderThread;
 import net.openvoxel.client.gui_framework.Screen;
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 import net.openvoxel.statistics.SystemStatistics;
 
 import java.text.DecimalFormat;
@@ -66,7 +65,7 @@ public class ScreenDebugInfo extends Screen {
 	}
 
 	@Override
-	public void DrawScreen(GUIRenderer.GUITessellator tess) {
+	public void DrawScreen(IGuiRenderer tess) {
 		SystemStatistics.requestUpdate();
 		int debug = debugLevel.get().getVal();
 		float screenHeight = tess.getScreenHeight();
@@ -80,7 +79,7 @@ public class ScreenDebugInfo extends Screen {
 			y_pos += height;
 		}
 		if(debug > 0) {//At Least Level::FPS
-			float val = RenderThread.getFrameRate();
+			float val = 40;//TODO: IMPLEMENT RenderThread.getFrameRate();
 			String str = _limit(val);
 			tess.DrawText(x_pos,y_pos,height,str);
 			y_pos += height;
@@ -118,7 +117,7 @@ public class ScreenDebugInfo extends Screen {
 		}
 	}
 
-	private void draw_processor_histogram(GUIRenderer.GUITessellator tess,float x1, float y1, float w, float h) {
+	private void draw_processor_histogram(IGuiRenderer tess, float x1, float y1, float w, float h) {
 		float x2 = x1 + w;
 		float y2 = y1 + h;
 		final int COL = 0x5B000000;
@@ -170,7 +169,7 @@ public class ScreenDebugInfo extends Screen {
 		tess.Draw();
 	}
 
-	private void draw_memory_piechart(GUIRenderer.GUITessellator tess,float x1, float y1, float w, float h) {
+	private void draw_memory_piechart(IGuiRenderer tess, float x1, float y1, float w, float h) {
 		final float JVM = SystemStatistics.getJVMMemoryUsage();
 		final float ALLOC = SystemStatistics.getProcessMemoryUsage();
 		final float GPU = SystemStatistics.getGraphicsLocalMemoryUsage();

@@ -1,6 +1,5 @@
 package net.openvoxel.client.entity;
 
-import net.openvoxel.client.renderer.generic.EntityRenderer;
 import net.openvoxel.common.entity.living.player.EntityPlayer;
 
 /**
@@ -11,7 +10,7 @@ import net.openvoxel.common.entity.living.player.EntityPlayer;
 public class PlayerRenderer implements IEntityRenderer<EntityPlayer>{
 
 	@Override
-	public void render(EntityPlayer object, EntityRenderer entityRenderHandle) {
+	public void render(EntityPlayer object, IEntityRenderer entityRenderHandle) {
 
 	}
 }

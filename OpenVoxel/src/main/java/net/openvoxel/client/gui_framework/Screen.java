@@ -1,7 +1,7 @@
 package net.openvoxel.client.gui_framework;
 
 import net.openvoxel.api.PublicAPI;
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class Screen {
 	}
 
 
-	public void DrawScreen(GUIRenderer.GUITessellator tess) {
+	public void DrawScreen(IGuiRenderer tess) {
 		for(GUIObject object : guiObjects) {
 			object.Draw(tess);
 		}

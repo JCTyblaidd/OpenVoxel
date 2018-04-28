@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 
 /**
  * Created by James on 25/08/2016.
@@ -9,7 +9,7 @@ import net.openvoxel.client.renderer.generic.GUIRenderer;
  */
 public abstract class GUIObject {
 
-	public abstract void Draw(GUIRenderer.GUITessellator drawHandle);
+	public abstract void Draw(IGuiRenderer drawHandle);
 
 	public void OnMousePress(float x, float y, float screenWidth, float screenHeight) {}
 	public void OnMouseRelease(float x, float y, float screenWidth, float screenHeight) {}

@@ -1,7 +1,7 @@
 package net.openvoxel.client.gui.inventory;
 
 import net.openvoxel.client.gui_framework.GUIObjectSizable;
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 
 /**
@@ -47,7 +47,7 @@ public class GUISlot extends GUIObjectSizable {
 	}
 
 	@Override
-	public void Draw(GUIRenderer.GUITessellator drawHandle) {
+	public void Draw(IGuiRenderer drawHandle) {
 		if(mouseOver) {
 			DrawSquare(drawHandle,resourceHandle,0xFFFFFFFF);
 		}else{

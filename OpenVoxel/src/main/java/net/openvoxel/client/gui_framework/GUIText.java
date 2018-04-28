@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 
 /**
  * Created by James on 08/09/2016.
@@ -20,7 +20,7 @@ public class GUIText extends GUIObjectSizable{
 	}
 
 	@Override
-	public synchronized void Draw(GUIRenderer.GUITessellator drawHandle) {
+	public synchronized void Draw(IGuiRenderer drawHandle) {
 		float X = getPosX(drawHandle.getScreenWidth());
 		float Y = getPosY(drawHandle.getScreenHeight());
 		float H = getHeight(drawHandle.getScreenHeight());

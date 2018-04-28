@@ -2,9 +2,9 @@ package net.openvoxel.client.control;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.client.renderer.generic.GlobalRenderer;
-import net.openvoxel.client.renderer.gl3.OGL3Renderer;
-import net.openvoxel.client.renderer.vk.VkRenderer;
+import net.openvoxel.client.old_renderer.generic.GlobalRenderer;
+import net.openvoxel.client.old_renderer.gl3.OGL3Renderer;
+import net.openvoxel.client.old_renderer.vk.VkRenderer;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.utility.AsyncRunnablePool;
 
@@ -16,6 +16,7 @@ import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
  *
  * Main Renderer Wrapper: with reference to the current renderer, main renderer logger and the async work queue
  */
+@Deprecated
 public class Renderer {
 
 	public static GlobalRenderer renderer;

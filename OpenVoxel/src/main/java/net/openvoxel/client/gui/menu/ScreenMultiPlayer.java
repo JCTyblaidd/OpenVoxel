@@ -2,9 +2,7 @@ package net.openvoxel.client.gui.menu;
 
 import net.openvoxel.client.gui_framework.GUIButton;
 import net.openvoxel.client.gui_framework.GUIObjectImage;
-import net.openvoxel.client.gui_framework.GUIObjectSizable;
 import net.openvoxel.client.gui_framework.Screen;
-import net.openvoxel.client.renderer.generic.GUIRenderer;
 
 /**
  * Created by James on 14/09/2016.
@@ -22,12 +20,12 @@ public class ScreenMultiPlayer extends Screen{
 	public ScreenMultiPlayer() {
 
 	}
-
+/**
 	public static class GUIMultiPlayerServer extends GUIObjectSizable {
 		@Override
 		public void Draw(GUIRenderer.GUITessellator drawHandle) {
 
 		}
 	}
-
+**/
 }

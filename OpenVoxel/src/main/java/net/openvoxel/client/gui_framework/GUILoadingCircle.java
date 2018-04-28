@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 import org.joml.Matrix4f;
@@ -44,13 +44,13 @@ public class GUILoadingCircle extends GUIObjectSizable{
 	}
 
 	@Override
-	public void Draw(GUIRenderer.GUITessellator drawHandle) {
+	public void Draw(IGuiRenderer drawHandle) {
 		_rotate();
 		DrawSquare(drawHandle,loadCircle,colour);
 	}
 
 	@Override
-	public void DrawSquare(GUIRenderer.GUITessellator drawHandle, ResourceHandle Image, int col) {
+	public void DrawSquare(IGuiRenderer drawHandle, ResourceHandle Image, int col) {
 		final float screenWidth = drawHandle.getScreenWidth();
 		final float screenHeight = drawHandle.getScreenHeight();
 		final float X1 = getPosX(screenWidth);

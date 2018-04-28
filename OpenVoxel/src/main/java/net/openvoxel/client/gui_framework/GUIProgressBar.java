@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 
 /**
  * Created by James on 08/04/2017.
@@ -28,7 +28,7 @@ public class GUIProgressBar extends GUIObjectSizable{
 	}
 
 	@Override
-	public void Draw(GUIRenderer.GUITessellator drawHandle) {
+	public void Draw(IGuiRenderer drawHandle) {
 		final float screenWidth = drawHandle.getScreenWidth();
 		final float screenHeight = drawHandle.getScreenHeight();
 		final float X1 = getPosX(screenWidth);
@@ -74,7 +74,8 @@ public class GUIProgressBar extends GUIObjectSizable{
 		float H = (Y2 - Y1) * 1.25F;
 		float X = ((X1 + X2) / 2) * 2 - 1 - (H * diff / 2);
 		float Y = -Y2 * 2 + 1 + (H / 2);
-		drawHandle.DrawText(X,Y,H,text,0xFF000000,0xFF000000);
+		drawHandle.DrawText(X,Y,H,text,0xFF000000);
+		//drawHandle.DrawText(X,Y,H,text,0xFF000000,0xFF000000);
 	}
 
 }

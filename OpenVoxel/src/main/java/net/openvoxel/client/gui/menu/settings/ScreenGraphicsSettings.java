@@ -1,9 +1,6 @@
 package net.openvoxel.client.gui.menu.settings;
 
-import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui_framework.*;
-import net.openvoxel.client.renderer.generic.GlobalRenderer;
-import net.openvoxel.client.renderer.generic.config.RenderConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,14 +117,14 @@ public class ScreenGraphicsSettings extends Screen {
 	}
 
 	private int getCurrentTargetFPS() {
-		return Renderer.renderer.getTargetFPS();
+		return 60;//Renderer.renderer.getTargetFPS();
 	}
 
 	private void setTargetFPS(int targetFPS) {
 		if(targetFPS == 145) {
-			Renderer.renderer.setTargetFPS(Integer.MAX_VALUE);
+			//Renderer.renderer.setTargetFPS(Integer.MAX_VALUE);
 		}else{
-			Renderer.renderer.setTargetFPS(targetFPS);
+			//Renderer.renderer.setTargetFPS(targetFPS);
 		}
 	}
 
@@ -142,39 +139,41 @@ public class ScreenGraphicsSettings extends Screen {
 
 	private void setVSyncState(String state_str) {
 		String id_state = state_str.substring("V-sync: ".length());
-		Renderer.renderer.setVSyncState(GlobalRenderer.VSyncType.fromID(id_state));
+		//Renderer.renderer.setVSyncState(GlobalRenderer.VSyncType.fromID(id_state));
 	}
 
 	private List<String> getVSyncSupport() {
 		ArrayList<String> supported = new ArrayList<>();
-		for(GlobalRenderer.VSyncType type : GlobalRenderer.VSyncType.values()) {
-			if(Renderer.renderer.isVSyncSupported(type)) {
-				supported.add("V-sync: " + type.getID());
-			}
-		}
+		supported.add("V-SYNC: NYI");
+		//for(GlobalRenderer.VSyncType type : GlobalRenderer.VSyncType.values()) {
+		//	if(Renderer.renderer.isVSyncSupported(type)) {
+		//		supported.add("V-sync: " + type.getID());
+		//	}
+		//}
 		return supported;
 	}
 
 	private String getVSyncState() {
-		return "V-sync: " + Renderer.renderer.getVSyncState().getID();
+		return "V-sync: NYI";// + Renderer.renderer.getVSyncState().getID();
 	}
 
 	private void setScreenState(String state_str) {
-		Renderer.renderer.setFullscreenState(GlobalRenderer.ScreenType.fromID(state_str));
+		//Renderer.renderer.setFullscreenState(GlobalRenderer.ScreenType.fromID(state_str));
 	}
 
 	private List<String> getScreenSupport() {
 		ArrayList<String> supported = new ArrayList<>();
-		for(GlobalRenderer.ScreenType type : GlobalRenderer.ScreenType.values()) {
-			if(Renderer.renderer.isFullscreenSupported(type)) {
-				supported.add(type.getID());
-			}
-		}
+		supported.add("Screen: NYI");
+		//for(GlobalRenderer.ScreenType type : GlobalRenderer.ScreenType.values()) {
+		//	if(Renderer.renderer.isFullscreenSupported(type)) {
+		//		supported.add(type.getID());
+		//	}
+		//}
 		return supported;
 	}
 
 	private String getScreenState() {
-		return Renderer.renderer.getFullscreenState().getID();
+		return "Unknown";//Renderer.renderer.getFullscreenState().getID();
 	}
 
 	private void onAdvancedSettings() {

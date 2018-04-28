@@ -19,7 +19,17 @@ import net.openvoxel.networking.protocol.AbstractPacket;
  * Server Player Connection
  */
 public class ServerPlayerConnection extends SimpleChannelInboundHandler<AbstractPacket> {
+	@Override
+	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+		super.handlerAdded(ctx);
+	}
 
+	@Override
+	protected void channelRead0(ChannelHandlerContext channelHandlerContext, AbstractPacket abstractPacket) {
+
+	}
+
+	/**
 	private Server server;
 	private EntityPlayerMP playerMP;
 	private UserData userData;
@@ -85,5 +95,5 @@ public class ServerPlayerConnection extends SimpleChannelInboundHandler<Abstract
 		super.channelInactive(ctx);
 		//Shutdown Everything//
 		
-	}
+	}**/
 }

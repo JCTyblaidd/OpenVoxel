@@ -1,15 +1,11 @@
 package net.openvoxel.server;
 
 import net.openvoxel.client.ClientInput;
-import net.openvoxel.client.control.Renderer;
-import net.openvoxel.client.renderer.gl3.OGL3DisplayHandle;
-import net.openvoxel.client.renderer.gl3.OGL3Renderer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.networking.ClientNetworkHandler;
 import net.openvoxel.world.World;
 import net.openvoxel.world.client.ClientWorld;
 import net.openvoxel.world.generation.DebugWorldGenerator;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * Created by James on 10/04/2017.
@@ -48,10 +44,10 @@ public class BackgroundClientServer extends ClientServer{
 		float sinP = (float)Math.cos(thePlayer.getPitch());
 		//Terrible//
 		//if(!ClientInput.isKeyDown(GLFW.GLFW_KEY_ESCAPE)) {
-			OGL3Renderer r = (OGL3Renderer)Renderer.renderer;
-			OGL3DisplayHandle h = (OGL3DisplayHandle)r.getDisplayHandle();
-			long w = h.getWindow();
-			GLFW.glfwSetInputMode(w,GLFW.GLFW_CURSOR,GLFW.GLFW_CURSOR_DISABLED);
+			//OGL3Renderer r = (OGL3Renderer)Renderer.renderer;
+			//OGL3DisplayHandle h = (OGL3DisplayHandle)r.getDisplayHandle();
+			//long w = h.getWindow();
+			//GLFW.glfwSetInputMode(w,GLFW.GLFW_CURSOR,GLFW.GLFW_CURSOR_DISABLED);
 		//}
 		if(EntityPlayerSP.keyForward.isDownRaw()) {
 			thePlayer.xPos += cosP * sin * 1.0F;

@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 
 /**
  * Created by James on 11/09/2016.
@@ -27,11 +27,11 @@ public class GUIColour extends GUIObjectSizable{
 	}
 
 	@Override
-	public void Draw(GUIRenderer.GUITessellator drawHandle) {
+	public void Draw(IGuiRenderer drawHandle) {
 		DrawSquare(drawHandle);
 	}
 
-	public void DrawSquare(GUIRenderer.GUITessellator drawHandle) {
+	public void DrawSquare(IGuiRenderer drawHandle) {
 		final float screenWidth = drawHandle.getScreenWidth();
 		final float screenHeight = drawHandle.getScreenHeight();
 		final float X1 = getPosX(screenWidth);

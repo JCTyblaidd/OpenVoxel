@@ -60,18 +60,18 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 		//TODO: rework for packet based
 		ClientChunk clientChunk = world.requestChunk(x,z);
 		loadManager.loadedChunk(clientChunk);
-		Renderer.renderer.getWorldRenderer().onChunkLoaded(clientChunk);
+		///Renderer.renderer.getWorldRenderer().onChunkLoaded(clientChunk);
 	}
 
 	public void requestChunkUnload(ClientWorld world, int x, int z) {
 		ClientChunk clientChunk = world.requestChunk(x,z);
-		Renderer.renderer.getWorldRenderer().onChunkUnloaded(clientChunk);
+		////Renderer.renderer.getWorldRenderer().onChunkUnloaded(clientChunk);
 		world.unloadChunk(x,z);
 	}
 
 	public void requestChunkUpdate(ClientWorld world, int x, int z) {
 		ClientChunk clientChunk = world.requestChunk(x,z);
-		Renderer.renderer.getWorldRenderer().onChunkDirty(clientChunk);
+		///Renderer.renderer.getWorldRenderer().onChunkDirty(clientChunk);
 	}
 
 	public void requestUnloadAll() {

@@ -6,9 +6,9 @@ import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.gui_framework.Screen;
-import net.openvoxel.client.renderer.generic.GUIRenderer;
-import net.openvoxel.client.renderer.generic.GlobalRenderer;
-import net.openvoxel.client.renderer.generic.WorldRenderer;
+import net.openvoxel.client.old_renderer.generic.GUIRenderer;
+import net.openvoxel.client.old_renderer.generic.GlobalRenderer;
+import net.openvoxel.client.old_renderer.generic.WorldRenderer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Render Thread, async from game thread
  */
+@Deprecated
 public class RenderThread implements Runnable{
 
 	private static RenderThread INSTANCE;

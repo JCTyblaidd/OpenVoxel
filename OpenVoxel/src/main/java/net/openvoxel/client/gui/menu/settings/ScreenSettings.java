@@ -1,6 +1,5 @@
 package net.openvoxel.client.gui.menu.settings;
 
-import net.openvoxel.client.control.Renderer;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.*;
 
@@ -74,10 +73,10 @@ public class ScreenSettings extends Screen{
 
 
 	private void gotoRendererSettings() {
-		Screen screen = Renderer.renderer.getGUIConfigElements();
-		if(screen != null) {
-			GUI.addScreen(screen);
-		}
+		//Screen screen = Renderer.renderer.getGUIConfigElements();
+		//if(screen != null) {
+		//	GUI.addScreen(screen);
+		//}
 	}
 
 	private void gotoTextureSettings() {

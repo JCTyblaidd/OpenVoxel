@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.generic.GUIRenderer;
+import net.openvoxel.client.renderer.IGuiRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 	}
 
 	@Override
-	public void Draw(GUIRenderer.GUITessellator drawHandle) {
+	public void Draw(IGuiRenderer drawHandle) {
 		DrawSquare(drawHandle,null,0xFF5500CC);
 		final float screenWidth = drawHandle.getScreenWidth();
 		final float screenHeight = drawHandle.getScreenHeight();
@@ -47,7 +47,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 		drawHandle.Draw();
 		ResizedGUIHandleWrapper resizedTess = new ResizedGUIHandleWrapper(drawHandle);
 		resizedTess.set(X1,Y1,X2-X1,Y2-Y1);
-		drawHandle.scissor(
+		drawHandle.pushScissor(
 				(int)(X1*screenWidth),
 				(int)(Y1*screenHeight),
 				(int)((X2-X1)*screenWidth),
@@ -56,7 +56,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 		for(GUIObject sub_object : subObjects) {
 			sub_object.Draw(resizedTess);
 		}
-		drawHandle.resetScissor();
+		drawHandle.popScissor();
 	}
 
 	@Override
