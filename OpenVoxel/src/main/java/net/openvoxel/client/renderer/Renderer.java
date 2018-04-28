@@ -4,17 +4,21 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.VulkanRenderer;
+import net.openvoxel.server.ClientServer;
+import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
 
 import java.io.Closeable;
+import java.io.IOException;
 
 import static org.lwjgl.glfw.GLFW.glfwInit;
+import static org.lwjgl.glfw.GLFW.glfwPollEvents;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
 
 /**
  * Wrapper around the rendering api that is going to be used
  */
-public final class Renderer implements Closeable {
+public final class Renderer {
 
 	private final Logger logger;
 	private final GraphicsAPI api;
@@ -55,9 +59,24 @@ public final class Renderer implements Closeable {
 	}
 
 
-	@Override
 	public void close() {
-		//TODO:
+		api.close();
+	}
+
+	public void pollInputs() {
+		glfwPollEvents();
+	}
+
+	public void generateUpdatedChunks(ClientServer server) {
+
+	}
+
+	public void invalidateAllChunks() {
+
+	}
+
+	public void stitchAtlas() {
+
 	}
 
 	/**
@@ -72,7 +91,7 @@ public final class Renderer implements Closeable {
 	/**
 	 * Asynchronously Draw the GUI in another thread
 	 */
-	public void startAsyncGUIDraw() {
+	public void startAsyncGUIDraw(AsyncBarrier completeBarrier) {
 
 	}
 

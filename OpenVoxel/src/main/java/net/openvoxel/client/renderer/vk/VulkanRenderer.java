@@ -12,6 +12,11 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		state = new VulkanState();
 	}
 
+	@Override
+	public void close() {
+
+	}
+
 	////////////////////////////////////
 	/// Configuration State Changing ///
 	////////////////////////////////////

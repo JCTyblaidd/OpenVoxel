@@ -21,7 +21,11 @@ import java.util.function.Consumer;
  * Client Side Server Code
  */
 public class ClientServer extends BaseServer implements Consumer<AbstractPacket> {
+	@Override
+	public void accept(AbstractPacket abstractPacket) {
 
+	}
+	/**
 	protected EntityPlayerSP thePlayer;
 
 	protected ClientNetworkHandler serverConnection;
@@ -101,4 +105,5 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 	public void accept(AbstractPacket abstractPacket) {
 		Logger.INSTANCE.Info("Packet:" + abstractPacket.getClass().getSimpleName());
 	}
+	**/
 }

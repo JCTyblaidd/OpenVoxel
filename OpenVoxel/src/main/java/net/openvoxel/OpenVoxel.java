@@ -15,7 +15,7 @@ import net.openvoxel.client.audio.ClientAudio;
 import net.openvoxel.client.gui.menu.ScreenMainMenu;
 import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.renderer.Renderer;
-import net.openvoxel.common.GameLoaderThread;
+import net.openvoxel.common.GameLoader;
 import net.openvoxel.common.event.AbstractEvent;
 import net.openvoxel.common.event.EventBus;
 import net.openvoxel.common.event.EventListener;
@@ -25,16 +25,14 @@ import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.registry.RegistryEntities;
 import net.openvoxel.common.registry.RegistryItems;
 import net.openvoxel.files.FolderUtils;
-import net.openvoxel.files.GameSave;
 import net.openvoxel.loader.mods.ModLoader;
 import net.openvoxel.networking.protocol.PacketRegistry;
 import net.openvoxel.server.*;
 import net.openvoxel.server.util.CommandInputThread;
+import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.system.Configuration;
 
-import java.io.File;
-import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -142,9 +140,7 @@ public class OpenVoxel implements EventListener{
 	private void setCurrentServer_client(BaseServer server) {
 		ClientServer newServer = (ClientServer)server;
 		if(currentClientServer != null) {
-			openVoxelLogger.Severe("Running Server Was Not Shutdown Correctly");
-			//currentClientServer.shutdown(); TODO: handle server change
-			currentClientServer = null;
+			openVoxelLogger.Info("Changing current Server: Client");
 		}
 	}
 
@@ -152,38 +148,10 @@ public class OpenVoxel implements EventListener{
 	private void setCurrentServer_dedicated(BaseServer server) {
 		Server newServer = (Server)server;
 		if(currentServer != null) {
-			openVoxelLogger.Severe("Running Server Was Not Shutdown Correctly");
-			//currentServer.shutdown(); TODO: handle server change
-			currentServer = null;
+			openVoxelLogger.Info("Changing current Server: Dedicated");
 		}
 		currentServer = newServer;
 	}
-
-	/**
-	 *
-	 * Connect to a hosted server
-	 *
-	 * @param address the address of the server
-	 */
-	public void clientConnectRemote(SocketAddress address) {
-		if(currentClientServer != null) {
-			currentClientServer.disconnect();
-		}
-		currentClientServer = new ClientServer();
-		//TODO: implement connect
-	}
-
-	/**
-	 *  Connect to the currently hosted integrated server
-	 */
-	public void clientConnectLocal() {
-		if(currentClientServer != null) {
-			currentClientServer.disconnect();
-		}
-		currentClientServer = new ClientServer();
-		//TODO: implement connect
-	}
-
 
 	/**
 	 * @return the current instance
@@ -307,23 +275,30 @@ public class OpenVoxel implements EventListener{
 				GLFWLogWrapper.Load();
 			}
 		}
+
 		//Acquire user data if ClientSide
 		if(isClient) {
 			userData = UserData.from(args);
 		}
+
 		//Wrap Mod Launching//
 		ModLoader.Initialize(modClasses);
 		ModLoader.getInstance().asmClasses = asmHandles;// TODO: 25/08/2016 Store ASM Classes Better
 		blockRegistry = new RegistryBlocks();
 		itemRegistry = new RegistryItems(blockRegistry);
 		entityRegistry = new RegistryEntities();
+
 		//Run main code//
 		if(isClient) {
 			clientMain();
 		}else{
 			serverMain();
 		}
-		//Fallback for reload//
+
+		//Finish Shutdown
+		AttemptShutdownSequenceInternal(shutdownIsCrash.get());
+
+		//Reload functionality support
 		if(instance.flagReload.get() && isClient) {
 			//Send Runtime Exception Across the Class Loader Barrier
 			throw new RuntimeException("built_in_exception::mod_reload");
@@ -332,45 +307,118 @@ public class OpenVoxel implements EventListener{
 
 	@SideOnly(side = Side.CLIENT,operation = SideOnly.SideOperation.REMOVE_CODE)
 	private void clientMain() {
+		//Init generic handling code
 		Renderer renderer = new Renderer();
 		ClientAudio.Load();
-		GameLoaderThread.StartLoad();
-		//TODO: Between
-		GameLoaderThread.AwaitLoadFinish();
-		//TODO: stitch texture atlas
+		GameLoader.LoadGameStateClient(renderer);
+
+		//Run initial generic setup code
+		renderer.stitchAtlas();
 		blockRegistry.generateMappingsFromRaw();
+
+		//Set Default Conditions//
 		if(!args.hasFlag("noBackgroundWorld")) {
 			SetCurrentServer(new BackgroundClientServer());
 		}
 		GUI.addScreen(new ScreenMainMenu());
+
+		//Update Tick State//
+		ClientServer lastServer = null;
+		AsyncBarrier updateServerBarrier = new AsyncBarrier();
+		AsyncBarrier drawnChunksBarrier = new AsyncBarrier();
 		try {
 			//Run Main Loop//
 			while (isRunning.get()) {
-				if(currentClientServer != null) {
-					//currentClientServer.updateChunks();
+				//Handle server changes
+				if(lastServer != currentClientServer) {
+					if(lastServer != null) {
+						renderer.invalidateAllChunks();
+						lastServer.shutdown();
+					}
+					if(currentClientServer != null) {
+						currentClientServer.startup();
+					}
+					lastServer = currentClientServer;
 				}
+				//Main Loop//
+				if(lastServer != null) {
+					lastServer.serverTick(updateServerBarrier);
+				}
+				renderer.pollInputs();
+				updateServerBarrier.awaitCompletion();
+				renderer.prepareGPU();
+				renderer.generateUpdatedChunks(lastServer);
+				if(lastServer != null) {
+					lastServer.sendUpdates();
+				}
+				renderer.startAsyncGUIDraw(drawnChunksBarrier);
+				drawnChunksBarrier.awaitCompletion();
+				renderer.submitToGPU();
 			}
+		}catch(Exception ex) {
+			CrashReport report = new CrashReport("Error in main loop");
+			report.caughtException(ex);
+			report.printStackTrace();
+			shutdownIsCrash.set(true);
 		}finally {
-			if(currentClientServer != null) {
-				//currentClientServer.shutdown();
+			if(lastServer != currentClientServer && lastServer != null) {
+				lastServer.shutdown();
 			}
+			if(currentClientServer != null) {
+				currentClientServer.shutdown();
+			}
+			renderer.invalidateAllChunks();
 			renderer.close();
-			//ClientAudio.Shutdown();
+			ClientAudio.Unload();
 		}
 	}
 
 	@SideOnly(side = Side.CLIENT,operation = SideOnly.SideOperation.REMOVE_CODE)
 	private void serverMain() {
-		//CommandInputThread.Start();
-		//GameLoaderThread.StartLoad();
-		//GameLoaderThread.AwaitLoadFinish();
-		//Logger.getLogger("Dedicated Server").Info("Starting Server...");
-		//TODO: FIX
-		//SetCurrentServer(new DedicatedServer(new GameSave(new File("dedicated_save"))));
-		//Logger.getLogger("Dedicated Server").Info("Dedicated NYI... Exiting");
-		//while(isRunning.get()) {
-			//Main Loop
-		//}
+		CommandInputThread.Start();
+		GameLoader.LoadGameStateServer();
+		Logger dedicatedLogger = Logger.getLogger("Server");
+		dedicatedLogger.Info("Starting Server...");
+
+		//Set Default State//
+		SetCurrentServer(null);//TODO: IMPLEMENT DEDICATED SERVER
+		Server lastServer = null;
+		AsyncBarrier updateServerBarrier = new AsyncBarrier();
+		try{
+			while(isRunning.get()) {
+				//Handle Server Changes
+				if (lastServer != currentServer) {
+					if (lastServer != null) {
+						lastServer.shutdown();
+					}
+					if (currentServer != null) {
+						currentServer.startup();
+					}
+					lastServer = currentServer;
+				}
+				//Update Server
+				if (lastServer != null) {
+					lastServer.serverTick(updateServerBarrier);
+					updateServerBarrier.awaitCompletion();
+					lastServer.sendUpdates();
+				}else{
+					//Prevent spinning for non-server
+					Thread.sleep(100);
+				}
+			}
+		}catch(Exception ex) {
+			CrashReport report = new CrashReport("Error in main loop");
+			report.caughtException(ex);
+			shutdownIsCrash.set(true);
+		}finally {
+			if(lastServer != currentServer && lastServer != null) {
+				lastServer.shutdown();
+			}
+			if(currentServer != null) {
+				currentServer.shutdown();
+			}
+			CommandInputThread.Stop();
+		}
 	}
 
 
@@ -379,18 +427,8 @@ public class OpenVoxel implements EventListener{
 	* @param isCrash is the shutdown unexpected, so forcefully exit
 	**/
 	public void AttemptShutdownSequence(boolean isCrash) {
+		//TODO: Does any other code need to be run
 		shutdownIsCrash.set(isCrash);
-		//if(Side.isClient) {
-			//try {
-				//TODO: ensure correct disconnect cache clearing procedure
-				//if (currentClientServer != null) {
-				//	currentClientServer.disconnect();
-				//}
-				//Thread.sleep(100);
-		//	}catch(Exception ignored) {
-		//		ignored.printStackTrace();
-		//	}
-		//}
 		isRunning.set(false);
 	}
 	private void AttemptShutdownSequenceInternal(boolean isCrash) {
@@ -404,7 +442,6 @@ public class OpenVoxel implements EventListener{
 			openVoxelLogger.Info("Starting Shutdown Sequence");
 			isRunning.set(false);
 			if(Side.isClient) {
-				//RenderThread.awaitTermination();
 				GLFWLogWrapper.Unload();
 			}
 			try{
@@ -417,7 +454,11 @@ public class OpenVoxel implements EventListener{
 			ProgramShutdownEvent e2 = new ProgramShutdownEvent(isCrash);
 			eventBus.push(e2);
 			if(isCrash) {
-				preCrash();
+				try {
+					preCrash();
+				}catch(Exception ex) {
+					ex.printStackTrace();
+				}
 				System.exit(-1);
 			}
 		}

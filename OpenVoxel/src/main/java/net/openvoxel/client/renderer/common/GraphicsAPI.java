@@ -6,6 +6,6 @@ public interface GraphicsAPI {
 
 	default void submitNextFrame() {}
 
-
+	default void close() {}
 
 }

@@ -22,6 +22,10 @@ public class CommandInputThread implements Runnable{
 		INSTANCE.thread.start();
 	}
 
+	public static void Stop() {
+
+	}
+
 	private CommandInputThread() {
 		thread = new Thread(this,"Open Voxel: Server Command Input Thread");
 		thread.setDaemon(true);

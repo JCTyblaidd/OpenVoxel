@@ -1,11 +1,15 @@
 package net.openvoxel.server;
 
+import net.openvoxel.utility.AsyncBarrier;
+
+import java.util.concurrent.locks.Condition;
+
 /**
  * Created by James on 09/04/2017.
  *
  * Common Code Between The Client and Standard Server Information
  */
-public abstract class BaseServer implements Runnable{
+public abstract class BaseServer {
 
 	/**
 	 * Synchronised(Concurrent Safe) Map
@@ -24,12 +28,20 @@ public abstract class BaseServer implements Runnable{
 		//connectedPlayers = new ArrayList<>();
 	}
 
-	void start() {
-		//gameTickThread.start();
+	public void startup() {
+
 	}
 
-	void shutdown() {
-		//gameTickThread.terminate();
+	public void shutdown() {
+
+	}
+
+	public void serverTick(AsyncBarrier barrier) {
+
+	}
+
+	public void sendUpdates() {
+
 	}
 
 	//void onCleanup() {
