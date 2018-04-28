@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.common;
 
+import net.openvoxel.common.item.ItemStack;
 import net.openvoxel.common.resources.ResourceHandle;
 import org.joml.Matrix4f;
 
@@ -16,7 +17,8 @@ public abstract class IGuiRenderer {
 	public abstract void DrawText(float x, float y, float height,String text, int col);
 	public abstract float GetTextWidthRatio(String text);
 
-	public abstract void DrawItem(float x, float y, float width, float height);
+	//TODO: DRAW ITEM & BLOCKS IN GUI
+	public void DrawItem(ItemStack stack, float x, float y, float z, float scale) {}
 
 	public abstract float getScreenWidth();
 	public abstract float getScreenHeight();

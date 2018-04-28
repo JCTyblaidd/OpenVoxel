@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.common;
 
+import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -16,6 +17,13 @@ public interface GraphicsAPI {
 
 	void startStateChange();
 	void stopStateChange();
+
+	/////////////////////////////
+	/// Graphics Draw Methods ///
+	/////////////////////////////
+
+	default BaseGuiRenderer getGuiRenderer() {return null;}
+
 
 	///////////////////////
 	/// Utility Methods ///

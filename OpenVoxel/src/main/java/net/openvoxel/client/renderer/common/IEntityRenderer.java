@@ -4,6 +4,8 @@ import org.joml.Matrix4f;
 
 public interface IEntityRenderer {
 
+	//TODO: REDESIGN DRAWING
+
 	void beginDraw();
 	void endDraw();
 
