@@ -1,7 +1,7 @@
 package net.openvoxel.client.gui_framework;
 
 import net.openvoxel.api.PublicAPI;
-import net.openvoxel.client.renderer.IGuiRenderer;
+import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import org.joml.Matrix4f;
 

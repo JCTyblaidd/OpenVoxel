@@ -2,6 +2,7 @@ package net.openvoxel.files;
 
 import com.jc.util.filesystem.FileHandle;
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.stb.STBImageWrite;
 import org.lwjgl.system.MemoryStack;
@@ -68,6 +69,11 @@ public class FolderUtils {
 		}finally {
 			MemoryUtil.memFree(byteData);
 		}
+	}
+
+	public static void saveScreenshot(GraphicsAPI.ScreenshotInfo screenshotInfo) {
+		//TODO: SWIZZLE OR NOT TO SWIZZLE???
+		saveScreenshot(screenshotInfo.width,screenshotInfo.height,screenshotInfo.bytes,true);
 	}
 
 	public static void saveScreenshot(int w, int h,ByteBuffer pixels,boolean swizzle_result) {

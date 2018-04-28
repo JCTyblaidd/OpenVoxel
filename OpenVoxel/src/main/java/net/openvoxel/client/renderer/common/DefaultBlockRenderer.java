@@ -1,7 +1,5 @@
 package net.openvoxel.client.renderer.common;
 
-import net.openvoxel.client.renderer.IBlockRenderHandler;
-import net.openvoxel.client.renderer.IBlockRenderer;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.block.IBlockAccess;

@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
-import net.openvoxel.client.renderer.IGuiRenderer;
+import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 /**
  * Created by James on 08/09/2016.

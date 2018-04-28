@@ -1,4 +1,4 @@
-package net.openvoxel.client.renderer;
+package net.openvoxel.client.renderer.common;
 
 import net.openvoxel.common.resources.ResourceHandle;
 import org.joml.Matrix4f;

@@ -1,7 +1,7 @@
 package net.openvoxel.client.gui_framework;
 
 import net.openvoxel.api.PublicAPI;
-import net.openvoxel.client.renderer.IGuiRenderer;
+import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk.core;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.renderer.glfw.GLFWEventHandler;
 import net.openvoxel.utility.CrashReport;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
@@ -22,7 +23,7 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-public final class VulkanState implements Closeable {
+public final class VulkanState {
 
 	///Flags
 	private static boolean flag_vulkanDetailedDeviceInfo = OpenVoxel.getLaunchParameters().hasFlag("vkDeviceInfo");
@@ -46,6 +47,7 @@ public final class VulkanState implements Closeable {
 	 */
 	public VulkanState() {
 		GLFWWindow = createWindow();
+		GLFWEventHandler.Load(GLFWWindow);
 		VulkanInstance = createInstance();
 		createDebugReport();
 		VulkanDevice = new VulkanDevice(VulkanInstance);
@@ -58,12 +60,12 @@ public final class VulkanState implements Closeable {
 	/*
 	 * Cleanup all allocated resources
 	 */
-	@Override
 	public void close() {
 		VulkanMemory.close();
 		VulkanDevice.close();
 		destroyDebugReport();
 		destroyInstance();
+		GLFWEventHandler.Unload();
 		destroyWindow();
 	}
 

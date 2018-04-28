@@ -1,18 +1,8 @@
 package net.openvoxel.server;
 
-import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.logger.Logger;
-import net.openvoxel.client.control.Renderer;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.networking.ClientNetworkHandler;
 import net.openvoxel.networking.protocol.AbstractPacket;
-import net.openvoxel.server.util.ClientChunkLoadManager;
-import net.openvoxel.utility.CrashReport;
-import net.openvoxel.world.client.ClientChunk;
-import net.openvoxel.world.client.ClientWorld;
 
-import java.io.IOException;
-import java.net.SocketAddress;
 import java.util.function.Consumer;
 
 /**
@@ -21,12 +11,24 @@ import java.util.function.Consumer;
  * Client Side Server Code
  */
 public class ClientServer extends BaseServer implements Consumer<AbstractPacket> {
+
+	EntityPlayerSP thePlayer;
+
+	/**
+	 * Allow other players to connect
+	 */
+	private boolean isLocalHost = false;
+
+	public EntityPlayerSP getThePlayer() {
+		return thePlayer;
+	}
+
 	@Override
 	public void accept(AbstractPacket abstractPacket) {
 
 	}
-	/**
-	protected EntityPlayerSP thePlayer;
+	/*
+
 
 	protected ClientNetworkHandler serverConnection;
 

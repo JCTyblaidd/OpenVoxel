@@ -7,10 +7,6 @@ import net.openvoxel.common.event.AbstractEvent;
  *
  * Window Close is Being Requested
  */
-public class WindowCloseRequestedEvent extends AbstractEvent{
-
-	public final boolean isErrorState;
-	public WindowCloseRequestedEvent(boolean errorState) {
-		isErrorState = errorState;
-	}
+public class WindowCloseRequestedEvent extends AbstractEvent {
+	public WindowCloseRequestedEvent() {}
 }

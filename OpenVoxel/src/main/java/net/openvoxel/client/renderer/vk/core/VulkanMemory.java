@@ -5,7 +5,7 @@ import org.lwjgl.system.MemoryUtil;
 import java.io.Closeable;
 import java.nio.LongBuffer;
 
-final class VulkanMemory implements Closeable {
+final class VulkanMemory {
 
 	private final VulkanDevice device;
 
@@ -47,7 +47,6 @@ final class VulkanMemory implements Closeable {
 		LengthInterfaceImg = 0;
 	}
 
-	@Override
 	public void close() {
 		//Cleanup//
 		if(MemoryPages != null) {

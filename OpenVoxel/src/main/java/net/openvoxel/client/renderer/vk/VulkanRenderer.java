@@ -14,34 +14,40 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void close() {
-
+		state.close();
 	}
 
-	////////////////////////////////////
-	/// Configuration State Changing ///
-	////////////////////////////////////
-
-	/**
 
 	@Override
-	public void setTargetFPS(int target) {
+	public void acquireNextFrame() {
 
 	}
 
 	@Override
-	public int getTargetFPS() {
-		return 0;
-	}
-
-	@Override
-	public void requestScreenshot() {
+	public void submitNextFrame() {
 
 	}
 
 	@Override
-	public void setVSyncState(VSyncType state) {
+	public void startStateChange() {
 
 	}
+
+	@Override
+	public void stopStateChange() {
+
+	}
+
+	/////////////////////
+	/// State Changes ///
+	/////////////////////
+
+	@Override
+	public ScreenshotInfo takeScreenshot() {
+		return null;
+	}
+
+	///////////////////////////////////
 
 	@Override
 	public boolean isVSyncSupported(VSyncType type) {
@@ -49,24 +55,37 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	}
 
 	@Override
-	public VSyncType getVSyncState() {
+	public VSyncType getCurrentVSync() {
 		return null;
 	}
 
 	@Override
-	public void setFullscreenState(ScreenType state) {
+	public void setVSync(VSyncType type) {
 
 	}
 
+	////////////////////////////////////
+
 	@Override
-	public boolean isFullscreenSupported(ScreenType type) {
+	public boolean isScreenSupported(ScreenType type) {
 		return false;
 	}
 
 	@Override
-	public ScreenType getFullscreenState() {
+	public ScreenType getCurrentScreen() {
 		return null;
 	}
+
+	@Override
+	public void setScreenType(ScreenType type) {
+
+	}
+
+	////////////////////////////////////
+	/// Configuration State Changing ///
+	////////////////////////////////////
+
+	/*
 
 	@Override
 	public void requestSettingsChange(RenderConfig newConfig) {
@@ -89,29 +108,10 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	}
 
 	@Override
-	public void loadPreRenderThread() {
-
-	}
-
-	@Override
-	public void loadPostRenderThread() {
-
-	}
-
-	@Override
 	public String getShaderPostfix() {
 		return null;
 	}
 
-	@Override
-	public void nextFrame() {
-
-	}
-
-	@Override
-	public void kill() {
-
-	}
 
 	@Override
 	public IconAtlas getBlockAtlas() {

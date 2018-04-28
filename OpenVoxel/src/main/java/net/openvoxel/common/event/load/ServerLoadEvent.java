@@ -1,7 +1,7 @@
 package net.openvoxel.common.event.load;
 
 import net.openvoxel.common.event.AbstractEvent;
-import net.openvoxel.server.Server;
+import net.openvoxel.server.DedicatedServer;
 
 /**
  * Created by James on 08/09/2016.
@@ -11,9 +11,9 @@ import net.openvoxel.server.Server;
 public class ServerLoadEvent extends AbstractEvent{
 
 	public final boolean isNew;
-	public final Server theServer;
+	public final DedicatedServer theServer;
 
-	public ServerLoadEvent(boolean isNew, Server server) {
+	public ServerLoadEvent(boolean isNew, DedicatedServer server) {
 		this.isNew = isNew;
 		this.theServer = server;
 	}

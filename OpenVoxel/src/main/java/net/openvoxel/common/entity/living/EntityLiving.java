@@ -5,7 +5,7 @@ import com.jc.util.format.json.JSONMap;
 import com.jc.util.format.json.JSONObject;
 import com.jc.util.format.json.JSONString;
 import net.openvoxel.common.entity.Entity;
-import net.openvoxel.server.Server;
+import net.openvoxel.server.DedicatedServer;
 
 /**
  * Created by James on 15/09/2016.
@@ -44,7 +44,7 @@ public abstract class EntityLiving extends Entity{
 	}
 
 	@Override
-	public void tickServer(Server server) {
+	public void tickServer(DedicatedServer server) {
 		super.tickServer(server);
 		regen();
 	}

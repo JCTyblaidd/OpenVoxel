@@ -1,6 +1,6 @@
 package net.openvoxel.common.event.load;
 
-import net.openvoxel.server.Server;
+import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.world.World;
 
 /**
@@ -11,10 +11,10 @@ import net.openvoxel.world.World;
  */
 public class WorldLoadEvent {
 
-	public final Server theServer;
+	public final DedicatedServer theServer;
 	public final World theWorld;
 
-	public WorldLoadEvent(Server theServer, World theWorld) {
+	public WorldLoadEvent(DedicatedServer theServer, World theWorld) {
 		this.theServer = theServer;
 		this.theWorld = theWorld;
 	}

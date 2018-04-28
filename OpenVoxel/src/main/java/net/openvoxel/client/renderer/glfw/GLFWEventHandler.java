@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer.glfw;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.common.event.input.*;
+import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import org.lwjgl.glfw.*;
 import org.lwjgl.system.Callback;
 
@@ -41,6 +42,7 @@ public class GLFWEventHandler {
 		glfwSetCharCallback(window,_register(new CharacterCallback()));
 		glfwSetMouseButtonCallback(window,_register(new CursorButtonCallback()));
 		glfwSetWindowSizeCallback(window,_register(new WindowSizeCallback()));
+		glfwSetWindowCloseCallback(window,_register(new WindowCloseCallback()));
 	}
 
 	private static class CursorPosCallback extends GLFWCursorPosCallback {
@@ -81,6 +83,13 @@ public class GLFWEventHandler {
 			OpenVoxel.pushEvent(new WindowResizeEvent(width,height));
 			ClientInput.currentWindowHeight.set(height);
 			ClientInput.currentWindowWidth.set(width);
+		}
+	}
+
+	private static class WindowCloseCallback extends GLFWWindowCloseCallback {
+		@Override
+		public void invoke(long window) {
+			OpenVoxel.pushEvent(new WindowCloseRequestedEvent());
 		}
 	}
 }

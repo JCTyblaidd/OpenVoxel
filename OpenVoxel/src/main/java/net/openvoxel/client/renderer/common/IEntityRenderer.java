@@ -1,4 +1,4 @@
-package net.openvoxel.client.renderer;
+package net.openvoxel.client.renderer.common;
 
 import org.joml.Matrix4f;
 

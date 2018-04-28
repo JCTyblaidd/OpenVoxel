@@ -20,14 +20,16 @@ import net.openvoxel.common.event.AbstractEvent;
 import net.openvoxel.common.event.EventBus;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.common.event.window.ProgramShutdownEvent;
-import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.registry.RegistryEntities;
 import net.openvoxel.common.registry.RegistryItems;
 import net.openvoxel.files.FolderUtils;
 import net.openvoxel.loader.mods.ModLoader;
 import net.openvoxel.networking.protocol.PacketRegistry;
-import net.openvoxel.server.*;
+import net.openvoxel.server.BackgroundClientServer;
+import net.openvoxel.server.BaseServer;
+import net.openvoxel.server.ClientServer;
+import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
@@ -49,9 +51,10 @@ public class OpenVoxel implements EventListener{
 	public static final Version currentVersion = new Version(0,0,1);
 
 	/**
-	 * Is the game currently Running
+	 * Is the game currently Running (in main loop)
 	 */
-	public AtomicBoolean isRunning = new AtomicBoolean(true);
+	private  AtomicBoolean isRunning = new AtomicBoolean(true);
+
 	/**
 	 * The Global EventBus
 	 */
@@ -70,7 +73,7 @@ public class OpenVoxel implements EventListener{
 	 * Currently Running Standard Server
 	 */
 	@SideOnly(side = Side.DEDICATED_SERVER)
-	private Server currentServer = null;
+	private DedicatedServer currentServer = null;
 
 	/**
 	 * Currently Running Client Server
@@ -146,7 +149,7 @@ public class OpenVoxel implements EventListener{
 
 	@SideOnly(side=Side.DEDICATED_SERVER,operation = SideOnly.SideOperation.REMOVE_CODE)
 	private void setCurrentServer_dedicated(BaseServer server) {
-		Server newServer = (Server)server;
+		DedicatedServer newServer = (DedicatedServer)server;
 		if(currentServer != null) {
 			openVoxelLogger.Info("Changing current Server: Dedicated");
 		}
@@ -170,7 +173,7 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * @return the current server, NULL if it doesn't exist
 	 */
-	public static Server getServer() {
+	public static DedicatedServer getServer() {
 		return instance.currentServer;
 	}
 
@@ -326,6 +329,7 @@ public class OpenVoxel implements EventListener{
 		ClientServer lastServer = null;
 		AsyncBarrier updateServerBarrier = new AsyncBarrier();
 		AsyncBarrier drawnChunksBarrier = new AsyncBarrier();
+		AsyncBarrier drawnGuiBarrier = new AsyncBarrier();
 		try {
 			//Run Main Loop//
 			while (isRunning.get()) {
@@ -346,14 +350,15 @@ public class OpenVoxel implements EventListener{
 				}
 				renderer.pollInputs();
 				updateServerBarrier.awaitCompletion();
-				renderer.prepareGPU();
-				renderer.generateUpdatedChunks(lastServer);
+				renderer.prepareFrame();
+				renderer.generateUpdatedChunks(lastServer,drawnChunksBarrier);
 				if(lastServer != null) {
 					lastServer.sendUpdates();
 				}
-				renderer.startAsyncGUIDraw(drawnChunksBarrier);
+				renderer.startAsyncGUIDraw(drawnGuiBarrier);
 				drawnChunksBarrier.awaitCompletion();
-				renderer.submitToGPU();
+				drawnGuiBarrier.awaitCompletion();
+				renderer.submitFrame();
 			}
 		}catch(Exception ex) {
 			CrashReport report = new CrashReport("Error in main loop");
@@ -382,7 +387,7 @@ public class OpenVoxel implements EventListener{
 
 		//Set Default State//
 		SetCurrentServer(null);//TODO: IMPLEMENT DEDICATED SERVER
-		Server lastServer = null;
+		DedicatedServer lastServer = null;
 		AsyncBarrier updateServerBarrier = new AsyncBarrier();
 		try{
 			while(isRunning.get()) {
@@ -427,41 +432,34 @@ public class OpenVoxel implements EventListener{
 	* @param isCrash is the shutdown unexpected, so forcefully exit
 	**/
 	public void AttemptShutdownSequence(boolean isCrash) {
-		//TODO: Does any other code need to be run
 		shutdownIsCrash.set(isCrash);
+		openVoxelLogger.Info("Starting Shutdown Sequence");
 		isRunning.set(false);
 	}
+
 	private void AttemptShutdownSequenceInternal(boolean isCrash) {
-		WindowCloseRequestedEvent e1 = new WindowCloseRequestedEvent(isCrash);
-		eventBus.push(e1);
-		if(e1.isCancelled() && isCrash) {
-			openVoxelLogger.Warning("Window Close Requested Event for Crash Stopped, Invalid Behaviour");
+		//notifyEvent Main Loops Of Shutdown//
+		openVoxelLogger.Info("Finishing Shutdown Sequence");
+		if(Side.isClient) {
+			GLFWLogWrapper.Unload();
 		}
-		if(!e1.isCancelled() || isCrash) {
-			//notifyEvent Main Loops Of Shutdown//
-			openVoxelLogger.Info("Starting Shutdown Sequence");
-			isRunning.set(false);
-			if(Side.isClient) {
-				GLFWLogWrapper.Unload();
+		//Push Event After Timeout//
+		openVoxelLogger.Info("Calling Shutdown Event");
+		ProgramShutdownEvent e2 = new ProgramShutdownEvent(isCrash);
+		eventBus.push(e2);
+		openVoxelLogger.Info("Finished Shutdown Event");
+		if(isCrash) {
+			try {
+				openVoxelLogger.Info("Preventing Memory Dump on Crash");
+				preCrash();
+			}catch(Exception ex) {
+				openVoxelLogger.Warning("Failed to Prevent Memory Dump on Crash");
+				ex.printStackTrace();
 			}
-			try{
-				Thread.sleep(3000);//TODO: await more efficiently
-			}catch(InterruptedException e) {
-				openVoxelLogger.Warning("Thread Wait Was Interrupted");
-			}
-			//Push Event After Timeout//
-			openVoxelLogger.Info("Shutting Down...");
-			ProgramShutdownEvent e2 = new ProgramShutdownEvent(isCrash);
-			eventBus.push(e2);
-			if(isCrash) {
-				try {
-					preCrash();
-				}catch(Exception ex) {
-					ex.printStackTrace();
-				}
-				System.exit(-1);
-			}
+			openVoxelLogger.Info("Forcefully Exiting");
+			System.exit(-1);
 		}
+		openVoxelLogger.Info("Shutting Down");
 	}
 
 	/**

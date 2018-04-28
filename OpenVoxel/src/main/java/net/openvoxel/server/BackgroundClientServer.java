@@ -12,9 +12,10 @@ import net.openvoxel.world.generation.DebugWorldGenerator;
  *
  * Screen Background Client Server : automatically rotates the player
  */
-public class BackgroundClientServer extends ClientServer{
+public class BackgroundClientServer extends ClientServer {
 
 	public BackgroundClientServer() {
+		/**
 		thePlayer = null;
 		serverConnection = new ClientNetworkHandler();
 		//DEBUG CODE TODO: remove and update
@@ -28,13 +29,9 @@ public class BackgroundClientServer extends ClientServer{
 		thePlayer.setYaw(0);
 		dimensionMap.put(0,theWorld);
 		//END OF DEBUG CODE
+		 **/
 	}
 
-	@Override
-	public void run() {
-		super.run();
-		//debug_tick();
-	}
 	private void debug_tick() {
 		//thePlayer.setYaw(thePlayer.getYaw() + 0.004F);
 		//thePlayer.xPos += 0.004F;

@@ -2,7 +2,7 @@ package net.openvoxel.common.block;
 
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
-import net.openvoxel.client.renderer.IBlockRenderHandler;
+import net.openvoxel.client.renderer.common.IBlockRenderHandler;
 import net.openvoxel.client.renderer.common.DefaultBlockRenderer;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;

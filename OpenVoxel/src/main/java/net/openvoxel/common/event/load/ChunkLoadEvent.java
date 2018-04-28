@@ -1,7 +1,7 @@
 package net.openvoxel.common.event.load;
 
 import net.openvoxel.common.event.AbstractEvent;
-import net.openvoxel.server.Server;
+import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.world.World;
 import net.openvoxel.world.chunk.Chunk;
 
@@ -12,12 +12,12 @@ import net.openvoxel.world.chunk.Chunk;
  */
 public class ChunkLoadEvent extends AbstractEvent{
 
-	public final Server theServer;
+	public final DedicatedServer theServer;
 	public final World theWorld;
 	public final Chunk theChunk;
 	public final boolean wasGenerated;
 
-	public ChunkLoadEvent(Server theServer, World theWorld, Chunk theChunk,boolean wasGenerated) {
+	public ChunkLoadEvent(DedicatedServer theServer, World theWorld, Chunk theChunk, boolean wasGenerated) {
 		this.theServer = theServer;
 		this.theWorld = theWorld;
 		this.theChunk = theChunk;

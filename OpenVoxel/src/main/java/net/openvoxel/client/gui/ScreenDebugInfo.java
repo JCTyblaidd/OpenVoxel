@@ -2,7 +2,7 @@ package net.openvoxel.client.gui;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui_framework.Screen;
-import net.openvoxel.client.renderer.IGuiRenderer;
+import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.statistics.SystemStatistics;
 
 import java.text.DecimalFormat;

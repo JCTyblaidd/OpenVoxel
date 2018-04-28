@@ -4,7 +4,7 @@ import com.jc.util.format.json.JSONDouble;
 import com.jc.util.format.json.JSONMap;
 import com.jc.util.format.json.JSONObject;
 import net.openvoxel.common.util.AABB;
-import net.openvoxel.server.Server;
+import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.world.World;
 
 /**
@@ -73,7 +73,7 @@ public abstract class Entity {
 	/**
 	 * Tick - Server Side
 	 */
-	public void tickServer(Server server) {
+	public void tickServer(DedicatedServer server) {
 		simulateGravity();
 
 		updatePosition();

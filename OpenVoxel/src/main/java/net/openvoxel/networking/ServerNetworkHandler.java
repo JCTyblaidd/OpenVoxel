@@ -5,7 +5,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.networking.protocol.PacketChannelInitializer;
-import net.openvoxel.server.Server;
+import net.openvoxel.server.DedicatedServer;
 
 import java.io.IOException;
 
@@ -16,16 +16,16 @@ import java.io.IOException;
  */
 public class ServerNetworkHandler extends NetworkHandler{
 
-	private Server server;
+	private DedicatedServer server;
 	private ServerBootstrap NETTY;
 	private ChannelFuture connectionFuture;
 
-	public ServerNetworkHandler(Server server) {
+	public ServerNetworkHandler(DedicatedServer server) {
 		this.server = server;
 		NETTY = new ServerBootstrap();
 		NETTY.channel(NioServerSocketChannel.class);
 		NETTY.group(controlGroup,workerGroup);
-		NETTY.childHandler(new PacketChannelInitializer(OpenVoxel.getInstance().packetRegistry,this.server));
+		//NETTY.childHandler(new PacketChannelInitializer(OpenVoxel.getInstance().packetRegistry,this.server));
 	}
 
 

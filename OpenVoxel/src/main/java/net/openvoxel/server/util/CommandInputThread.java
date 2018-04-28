@@ -1,7 +1,7 @@
 package net.openvoxel.server.util;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.server.Server;
+import net.openvoxel.server.DedicatedServer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class CommandInputThread implements Runnable{
 	}
 
 	private void handleCmd(String cmd) {
-		Server server = OpenVoxel.getServer();
+		DedicatedServer server = OpenVoxel.getServer();
 		if(server != null) {
 			//server.callCommand(new Command(cmd));
 		}

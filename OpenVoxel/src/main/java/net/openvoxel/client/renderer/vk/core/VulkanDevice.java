@@ -20,7 +20,7 @@ import static org.lwjgl.vulkan.VK10.*;
 //////////////////////////////////////
 /// Wrapper around a vulkan device ///
 //////////////////////////////////////
-public final class VulkanDevice implements Closeable {
+public final class VulkanDevice {
 
 	private final VkPhysicalDevice physicalDevice;
 	private final VkDevice logicalDevice;
@@ -64,7 +64,6 @@ public final class VulkanDevice implements Closeable {
 		updateMetadata();
 	}
 
-	@Override
 	public void close() {
 		vkDestroyDevice(logicalDevice,null);
 		memory.free();
