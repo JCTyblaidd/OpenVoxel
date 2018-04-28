@@ -10,7 +10,7 @@ public class BaseTextRenderer {
 	public void DrawText(BaseGuiRenderer draw,float x, float y, float height, String text, int col) {
 		//TODO: IMPLEMENT
 	}
-	
+
 	public float GetTextWidthRatio(String text) {
 		//TODO: IMPLEMENT
 		return 0;
