@@ -8,13 +8,13 @@ import org.lwjgl.glfw.GLFWVulkan;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
-import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR;
 import static org.lwjgl.vulkan.VK10.*;
 
 //////////////////////////////////////
@@ -39,6 +39,9 @@ public final class VulkanDevice {
 	 */
 	private final VkQueue transferQueue;
 
+	//Queue Properties
+	public final VkExtent3D transferQueueImageGranularity;
+	public int allQueueTimestampValidBits;
 
 	private boolean enableAsyncTransfer;
 	private int familyQueue;
@@ -51,9 +54,11 @@ public final class VulkanDevice {
 	private static final float PriorityTrueAsyncQueue = 0.0F;
 
 
-	public VulkanDevice(VkInstance instance) {
-		physicalDevice = chooseDevice(instance);
-		if(physicalDevice == null || !isDeviceValid(physicalDevice)) {
+	VulkanDevice(VkInstance instance,long surface) {
+		transferQueueImageGranularity = VkExtent3D.calloc();
+		allQueueTimestampValidBits = 0;
+		physicalDevice = chooseDevice(instance,surface);
+		if(physicalDevice == null || !isDeviceValid(physicalDevice,surface)) {
 			VulkanUtility.LogSevere("Failed to Find Valid Device");
 			throw new RuntimeException("Failed to Find Valid Vulkan Device");
 		}
@@ -69,6 +74,7 @@ public final class VulkanDevice {
 		memory.free();
 		properties.free();
 		features.free();
+		transferQueueImageGranularity.free();
 	}
 
 	//////////////////////
@@ -89,12 +95,19 @@ public final class VulkanDevice {
 		if(enableAsyncTransfer) {
 			if(familyTransfer == familyQueue) {
 				VulkanUtility.LogInfo("    2x All Property Queue");
+				VulkanUtility.LogInfo("      - Image Granularity = (1,1,1)");
 			}else{
 				VulkanUtility.LogInfo("    1x All Property Queue");
+				VulkanUtility.LogInfo("      - Image Granularity = (1,1,1)");
 				VulkanUtility.LogInfo("    1x Transfer Only Queue");
+				VulkanUtility.LogInfo("      - Image Granularity = (" +
+						                      transferQueueImageGranularity.width() + "," +
+						                      transferQueueImageGranularity.height() + "," +
+						                      transferQueueImageGranularity.depth() + ")");
 			}
 		}else{
 			VulkanUtility.LogInfo("    1x All Property Queue");
+			VulkanUtility.LogInfo("      - Image Granularity = (1,1,1)");
 		}
 		VulkanUtility.LogInfo(" - Device Memory:");
 		for(int i = 0; i < memory.memoryTypeCount(); i++) {
@@ -141,8 +154,17 @@ public final class VulkanDevice {
 	///////////////////////////
 
 
-	private boolean isDeviceValid(@NotNull VkPhysicalDevice device) {
+	private boolean isDeviceValid(@NotNull VkPhysicalDevice device, long surface) {
 		try(MemoryStack stack = stackPush()) {
+			{
+				//Check surface Validity
+				IntBuffer isSupported = stack.mallocInt(1);
+				int res = vkGetPhysicalDeviceSurfaceSupportKHR(device,familyQueue,surface,isSupported);
+				if(res != VK_SUCCESS || isSupported.get(0) == 0) {
+					VulkanUtility.LogSevere("Chosen device lacks surface support!");
+					return false;
+				}
+			}
 			VkPhysicalDeviceFeatures tmpFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
 			vkGetPhysicalDeviceFeatures(device, tmpFeatures);
 			//TODO: replace with better validity check
@@ -150,7 +172,7 @@ public final class VulkanDevice {
 		}
 	}
 
-	private VkPhysicalDevice chooseDevice(VkInstance instance) {
+	private VkPhysicalDevice chooseDevice(VkInstance instance, long surface) {
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer sizeRef = stack.mallocInt(1);
 			final String err = "Failed to enumerate physical devices";
@@ -161,7 +183,7 @@ public final class VulkanDevice {
 			double bestScore = Double.MIN_VALUE;
 			for(int i = 0; i < sizeRef.get(0); i++) {
 				VkPhysicalDevice device = new VkPhysicalDevice(physicalDeviceList.get(i),instance);
-				double score = scoreDevice(stack,device);
+				double score = scoreDevice(stack,device,surface);
 				if(score > bestScore) {
 					bestScore = score;
 					bestDevice = device;
@@ -171,7 +193,7 @@ public final class VulkanDevice {
 		}
 	}
 
-	private static double scoreDevice(@NotNull MemoryStack supStack,@NotNull VkPhysicalDevice device) {
+	private double scoreDevice(@NotNull MemoryStack supStack,@NotNull VkPhysicalDevice device, long surface) {
 		try(MemoryStack stack = supStack.push()) {
 			VkPhysicalDeviceFeatures tmpFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
 			vkGetPhysicalDeviceFeatures(device, tmpFeatures);
@@ -197,6 +219,9 @@ public final class VulkanDevice {
 				if((flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) != 0) {
 					memAmount += tmpMems.memoryHeaps(i).size();
 				}
+			}
+			if(!isDeviceValid(device,surface)) {
+				score = Double.MIN_VALUE;
 			}
 			return score * memAmount;
 		}
@@ -253,12 +278,15 @@ public final class VulkanDevice {
 			if(allType && presentSupport) {
 				allQueue = i;
 				allQueueLim = queueProperties.queueCount();
+				allQueueTimestampValidBits = queueProperties.timestampValidBits();
 			}
 			if(hasTransfer && transferOnlyQueue == -1) {
 				transferOnlyQueue = i;
+				transferQueueImageGranularity.set(queueProperties.minImageTransferGranularity());
 			}
 			if(onlyTransfer) {
 				transferOnlyQueue = i;
+				transferQueueImageGranularity.set(queueProperties.minImageTransferGranularity());
 			}
 		}
 		if(allQueue == -1) {

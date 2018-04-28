@@ -18,9 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface;
 import static org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.EXTDebugReport.*;
+import static org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR;
+import static org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR;
 import static org.lwjgl.vulkan.VK10.*;
 
 public final class VulkanState {
@@ -32,11 +35,26 @@ public final class VulkanState {
 	static boolean flag_vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
 
 	///State
-	private final long GLFWWindow;
+	public final long GLFWWindow;
 	private final VkInstance VulkanInstance;
 	private final VulkanDevice VulkanDevice;
 	private final VulkanMemory VulkanMemory;
+	private final long VulkanSurface;
 
+	///Dynamic State
+	private long VulkanSwapChain;
+
+
+	//SwapChain Configuration
+	public int validPresentModes;
+	//
+	public int chosenPresentMode;
+	private int chosenImageFormat;
+	private int chosenColourSpace;
+	private int chosenImageCount;
+	private VkExtent2D swapExtent;
+
+	//Configuration Settings
 	private boolean HasDebugReport = false;
 	private long DebugReportCallback = 0;
 	private VkDebugReportCallbackEXT DebugReportCallbackFunc = null;
@@ -46,23 +64,33 @@ public final class VulkanState {
 	 * Allocate all resources
 	 */
 	public VulkanState() {
+		////Create Constants////
 		GLFWWindow = createWindow();
 		GLFWEventHandler.Load(GLFWWindow);
 		VulkanInstance = createInstance();
 		createDebugReport();
-		VulkanDevice = new VulkanDevice(VulkanInstance);
+		VulkanSurface = createSurface();
+		////Create Managers////
+		VulkanDevice = new VulkanDevice(VulkanInstance,VulkanSurface);
 		if(flag_vulkanDetailedDeviceInfo) {
 			VulkanDevice.printDetailedDeviceInfo();
 		}
 		VulkanMemory = new VulkanMemory(VulkanDevice);
+		///Create Swap-Chain///
+		createSwapChain(false);
 	}
 
 	/*
 	 * Cleanup all allocated resources
 	 */
 	public void close() {
+		///Destroy Swap-Chain///
+		destroySwapChain();
+		////Destroy Managers////
 		VulkanMemory.close();
 		VulkanDevice.close();
+		////Destroy Constants////
+		destroySurface();
 		destroyDebugReport();
 		destroyInstance();
 		GLFWEventHandler.Unload();
@@ -78,8 +106,8 @@ public final class VulkanState {
 		glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API);
 		long window = glfwCreateWindow(ClientInput.currentWindowWidth.get(), ClientInput.currentWindowHeight.get(), "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
 		try(MemoryStack stack = stackPush()) {
-			IntBuffer windowWidth = stack.mallocInt(0);
-			IntBuffer windowHeight = stack.mallocInt(0);
+			IntBuffer windowWidth = stack.mallocInt(1);
+			IntBuffer windowHeight = stack.mallocInt(1);
 			glfwGetWindowSize(window,windowWidth,windowHeight);
 			ClientInput.currentWindowWidth.set(windowWidth.get(0));
 			ClientInput.currentWindowHeight.set(windowHeight.get(0));
@@ -218,6 +246,35 @@ public final class VulkanState {
 
 	private void destroyInstance() {
 		vkDestroyInstance(VulkanInstance,null);
+	}
+
+	//////////////////////
+	/// Vulkan Surface ///
+	//////////////////////
+
+	private long createSurface() {
+		try(MemoryStack stack = stackPush()) {
+			LongBuffer tmpSurface = stack.mallocLong(1);
+			int res = glfwCreateWindowSurface(VulkanInstance,GLFWWindow,null,tmpSurface);
+			VulkanUtility.ValidateSuccess("Error creating window surface",res);
+			return tmpSurface.get(0);
+		}
+	}
+
+	private void destroySurface() {
+		vkDestroySurfaceKHR(VulkanInstance,VulkanSurface,null);
+	}
+
+	////////////////////////
+	/// Vulkan SwapChain ///
+	////////////////////////
+
+	private void createSwapChain(boolean isRecreated) {
+
+	}
+
+	private void destroySwapChain() {
+
 	}
 
 	////////////////////

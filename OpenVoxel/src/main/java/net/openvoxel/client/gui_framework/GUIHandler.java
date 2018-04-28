@@ -20,7 +20,7 @@ public class GUIHandler implements EventListener{
 		handler = new GUIHandler();
 	}
 
-	public GUIHandler() {
+	private GUIHandler() {
 		OpenVoxel.registerEvents(this);
 	}
 

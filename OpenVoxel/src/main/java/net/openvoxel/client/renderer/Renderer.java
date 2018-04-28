@@ -15,9 +15,6 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F12;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
@@ -28,13 +25,17 @@ import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
  */
 public final class Renderer implements EventListener {
 
+	//Sub Objects
 	private final Logger logger;
 	private final GraphicsAPI api;
 	private final PerSecondTimer frameRateTimer;
+	private final GuiDrawTask guiDrawTask;
 
+	//FrameRate Limiting
 	private int targetFrameRate;
 	private long previousFrameTimestamp;
 
+	//State Changes
 	private boolean screenshotRequest;
 	private boolean changeStateRequest;
 	private boolean reloadTextureRequest;
@@ -44,6 +45,7 @@ public final class Renderer implements EventListener {
 	public Renderer() {
 		logger = Logger.getLogger("Renderer");
 		frameRateTimer = new PerSecondTimer(64);
+		guiDrawTask = new GuiDrawTask();
 		targetFrameRate = Integer.MAX_VALUE;
 		previousFrameTimestamp = 0L;
 
@@ -250,6 +252,8 @@ public final class Renderer implements EventListener {
 	 */
 	public void generateUpdatedChunks(ClientServer server, AsyncBarrier completeBarrier) {
 		//TODO: IMPLEMENT Chunk Rendering
+		completeBarrier.reset(1);
+		completeBarrier.completeTask();
 	}
 
 	/**
@@ -272,7 +276,10 @@ public final class Renderer implements EventListener {
 	 * Asynchronously Draw the GUI in another thread
 	 */
 	public void startAsyncGUIDraw(AsyncBarrier completeBarrier) {
-		//TODO: IMPLEMENT GUI Drawing & Updating
+		completeBarrier.reset(1);
+		guiDrawTask.update(completeBarrier,api);
+		//TODO: ASYNC DISPATCH
+		guiDrawTask.run();
 	}
 
 	/**

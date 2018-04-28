@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientInput {
 	public static Vector2d unhandledMouseDelta;
 	public static Vector2d mousePosition;
+	//TODO: remove atomicity
 	public static AtomicInteger currentWindowWidth;
 	public static AtomicInteger currentWindowHeight;
 

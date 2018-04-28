@@ -57,6 +57,7 @@ public class ClientChunkLoadManager {
 	private static final int requestLimit = 5;
 
 	public void tick() {
+		/**
 		int requestCount = 0;
 		EntityPlayerSP player = clientServer.getThePlayer();
 		ClientWorld world = (ClientWorld)player.currentWorld;
@@ -88,8 +89,8 @@ public class ClientChunkLoadManager {
 					}
 				}
 			}
-		}
-		/**
+		}**/
+		/*
 		for(int z = zMin; z <= zMax; z++) {
 			for(int x = xMin; x <= xMax; x++) {
 				ClientChunk value = loadedChunks.get(x,z);
@@ -105,6 +106,7 @@ public class ClientChunkLoadManager {
 				}
 			}
 		}**/
+		/*
 		List<ClientChunk> toUnloadChunks = new ArrayList<>();
 		loadedChunks.forEachChunkCoord((x,z,chunk) -> {
 			if(x < xMin || x > xMax || z < zMin || z > zMax) {
@@ -118,14 +120,17 @@ public class ClientChunkLoadManager {
 			clientServer.requestChunkUnload(world,chunk.chunkX,chunk.chunkZ);
 			loadedChunks.remove(chunk.chunkX,chunk.chunkZ);
 		});
+		 **/
 	}
 
 	public void unloadAll() {
+		/*
 		EntityPlayerSP player = clientServer.getThePlayer();
 		ClientWorld world = (ClientWorld)player.currentWorld;
 		loadedChunks.forEachChunk(chunk -> {
 			clientServer.requestChunkUnload(world,chunk.chunkX,chunk.chunkZ);
 			return true;
 		});
+		 **/
 	}
 }

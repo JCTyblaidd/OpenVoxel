@@ -6,7 +6,7 @@ import java.util.Deque;
 /**
  * Created by James on 25/08/2016.
  *
- * Synchronised Between RenderThread & GameThread
+ * TODO: Remove Synchronisation
  *
  */
 public abstract class GUI {
