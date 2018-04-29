@@ -22,7 +22,7 @@ public interface GraphicsAPI {
 	/// Graphics Draw Methods ///
 	/////////////////////////////
 
-	default BaseGuiRenderer getGuiRenderer() {return null;}
+	BaseGuiRenderer getGuiRenderer();
 
 
 	///////////////////////

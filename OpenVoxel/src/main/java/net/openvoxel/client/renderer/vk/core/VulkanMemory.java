@@ -63,18 +63,20 @@ public final class VulkanMemory {
 		if(usedDevice != 0L) {
 			VulkanUtility.LogSevere("Cleaning vulkan memory w/ usedDevice != 0");
 		}
-		VulkanUtility.LogSevere("Listing Bad Memory Pages");
-		for(long allocation : memoryHostMap.keys()) {
-			boolean isDeviceLocal = memoryHostMap.get(allocation) != 0;
-			long allocationSize = memorySizeMap.get(allocation);
-			if(allocationSize == memorySizeMap.getNoEntryValue()) {
-				VulkanUtility.LogSevere(" - #" + Long.toHexString(allocation) +
-						                        ": MEMORY-PAGE @ " +
-						                        (isDeviceLocal ? "Device" : "Host"));
-			}else{
-				VulkanUtility.LogSevere(" - #" + Long.toHexString(allocation) +
-												": Size = " + Long.toString(allocationSize) +
-						                        " @ " + (isDeviceLocal ? "Device" : "Host"));
+		if(usedHost != 0L || usedDevice != 0L) {
+			VulkanUtility.LogSevere("Listing Bad Memory Pages");
+			for (long allocation : memoryHostMap.keys()) {
+				boolean isDeviceLocal = memoryHostMap.get(allocation) != 0;
+				long allocationSize = memorySizeMap.get(allocation);
+				if (allocationSize == memorySizeMap.getNoEntryValue()) {
+					VulkanUtility.LogSevere(" - #" + Long.toHexString(allocation) +
+							                        ": MEMORY-PAGE @ " +
+							                        (isDeviceLocal ? "Device" : "Host"));
+				} else {
+					VulkanUtility.LogSevere(" - #" + Long.toHexString(allocation) +
+							                        ": Size = " + Long.toString(allocationSize) +
+							                        " @ " + (isDeviceLocal ? "Device" : "Host"));
+				}
 			}
 		}
 	}

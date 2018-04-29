@@ -81,7 +81,7 @@ class CommonLauncher {
 				mod_args[mod_args.length-1]=VanillaClass;
 				Logger.INSTANCE.Info("Added Vanilla");
 			}
-			if(argParser.hasFlag("optimizeBytecode")) {
+			if(argParser.hasFlag("optimizeBytecode")) {//TODO: rename removeValidation?
 				TweakableClassLoader.INSTANCE.registerTransformer(new Optimizer(argParser));
 			}
 			if(argParser.hasFlag("noASM")) {//Allow Option of no ASM: for debug purposes

@@ -25,6 +25,8 @@
     <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-jemalloc:natives-linux:3.1.6" level="project" />
     <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-rpmalloc:3.1.6" level="project" />
     <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-rpmalloc:natives-linux:3.1.6" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-remotery:3.1.6" level="project" />
+    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-remotery:natives-linux:3.1.6" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.15.Final" level="project" />
     <orderEntry type="library" name="Maven: org.ow2.asm:asm-all:6.0_BETA" level="project" />
     <orderEntry type="library" name="Maven: org.joml:joml:1.9.9" level="project" />

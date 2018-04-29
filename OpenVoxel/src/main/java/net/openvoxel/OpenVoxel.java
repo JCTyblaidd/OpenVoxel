@@ -33,6 +33,7 @@ import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.util.CommandInputThread;
 import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
+import net.openvoxel.utility.debug.UsageAnalyses;
 import org.lwjgl.system.Configuration;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -208,12 +209,12 @@ public class OpenVoxel implements EventListener{
 	}
 
 	/**
-	 * @param report a crash
+	 * @param report a crash: throws an exception to unwind the stack
 	 */
-	public static void reportCrash(CrashReport report) {
-		report.printStackTrace();
+	public static void reportCrash(CrashReport report) throws RuntimeException{
 		FolderUtils.storeCrashReport(report);
 		instance.AttemptShutdownSequence(true);
+		throw report.getThrowable();
 	}
 
 	private AtomicBoolean shutdownIsCrash = new AtomicBoolean(false);
@@ -291,12 +292,23 @@ public class OpenVoxel implements EventListener{
 		itemRegistry = new RegistryItems(blockRegistry);
 		entityRegistry = new RegistryEntities();
 
+		//Start Usage Analysis
+		UsageAnalyses.Init();
+		UsageAnalyses.SetThreadName("Main");
+
 		//Run main code//
 		if(isClient) {
+			UsageAnalyses.StartCPUSample("clientMain()",0);
 			clientMain();
+			UsageAnalyses.StopCPUSample();
 		}else{
+			UsageAnalyses.StartCPUSample("serverMain()",0);
 			serverMain();
+			UsageAnalyses.StopCPUSample();
 		}
+
+		//Stop Usage Analysis
+		UsageAnalyses.Shutdown();
 
 		//Finish Shutdown
 		AttemptShutdownSequenceInternal(shutdownIsCrash.get());
@@ -332,6 +344,7 @@ public class OpenVoxel implements EventListener{
 		AsyncBarrier drawnGuiBarrier = new AsyncBarrier();
 		try {
 			//Run Main Loop//
+			UsageAnalyses.StartCPUSample("while(isRunning)",0);
 			while (isRunning.get()) {
 				//Handle server changes
 				if(lastServer != currentClientServer) {
@@ -361,11 +374,12 @@ public class OpenVoxel implements EventListener{
 				renderer.submitFrame();
 			}
 		}catch(Exception ex) {
-			CrashReport report = new CrashReport("Error in main loop");
+			CrashReport report = new CrashReport("Error in Main Loop");
 			report.caughtException(ex);
-			report.printStackTrace();
+			report.getThrowable().printStackTrace();
 			shutdownIsCrash.set(true);
 		}finally {
+			UsageAnalyses.StopCPUSample();
 			if(lastServer != currentClientServer && lastServer != null) {
 				lastServer.shutdown();
 			}
@@ -390,6 +404,8 @@ public class OpenVoxel implements EventListener{
 		DedicatedServer lastServer = null;
 		AsyncBarrier updateServerBarrier = new AsyncBarrier();
 		try{
+			//Main Loop
+			UsageAnalyses.StartCPUSample("while(isRunning)",0);
 			while(isRunning.get()) {
 				//Handle Server Changes
 				if (lastServer != currentServer) {
@@ -416,6 +432,7 @@ public class OpenVoxel implements EventListener{
 			report.caughtException(ex);
 			shutdownIsCrash.set(true);
 		}finally {
+			UsageAnalyses.StopCPUSample();
 			if(lastServer != currentServer && lastServer != null) {
 				lastServer.shutdown();
 			}

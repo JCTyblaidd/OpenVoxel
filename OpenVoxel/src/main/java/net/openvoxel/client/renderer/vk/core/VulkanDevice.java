@@ -23,7 +23,7 @@ import static org.lwjgl.vulkan.VK10.*;
 public final class VulkanDevice {
 
 	//State
-	private final VkPhysicalDevice physicalDevice;
+	final VkPhysicalDevice physicalDevice;
 	final VkDevice logicalDevice;
 
 	///Enabled Extensions
@@ -76,12 +76,17 @@ public final class VulkanDevice {
 		transferQueueImageGranularity = VkExtent3D.calloc();
 		allQueueTimestampValidBits = 0;
 		physicalDevice = chooseDevice(instance,surface);
-		if(physicalDevice == null || !isDeviceValid(physicalDevice,surface)) {
+		if(physicalDevice == null || !isDeviceValid(physicalDevice)) {
 			VulkanUtility.LogSevere("Failed to Find Valid Device");
 			throw new RuntimeException("Failed to Find Valid Vulkan Device");
 		}
 		logicalDevice = createLogicalDevice(instance,physicalDevice);
 		allQueue = getQueue(false);
+		if(!isDeviceSurfaceValid(physicalDevice,surface)) {
+			//TODO: IMPLEMENT VALIDITY CHECKING BETTER
+			VulkanUtility.LogSevere("Failed to Find Valid Vulkan Device: Invalid Surface Support");
+			throw new RuntimeException("Failed to Find Valid Vulkan Device Surface Support");
+		}
 		transferQueue = getQueue(true);
 		loadDeviceInfo();
 		updateMetadata();
@@ -171,18 +176,22 @@ public final class VulkanDevice {
 	/// Initialization Code ///
 	///////////////////////////
 
-
-	private boolean isDeviceValid(@NotNull VkPhysicalDevice device, long surface) {
+	private boolean isDeviceSurfaceValid(@NotNull VkPhysicalDevice device, long surface) {
 		try(MemoryStack stack = stackPush()) {
-			{
-				//Check surface Validity
-				IntBuffer isSupported = stack.mallocInt(1);
-				int res = vkGetPhysicalDeviceSurfaceSupportKHR(device,familyQueue,surface,isSupported);
-				if(res != VK_SUCCESS || isSupported.get(0) == 0) {
-					VulkanUtility.LogSevere("Chosen device lacks surface support!");
-					return false;
-				}
+			//Check surface Validity
+			IntBuffer isSupported = stack.mallocInt(1);
+			int res = vkGetPhysicalDeviceSurfaceSupportKHR(device, familyQueue, surface, isSupported);
+			if (res != VK_SUCCESS || isSupported.get(0) == 0) {
+				VulkanUtility.LogSevere("Chosen device lacks surface support!");
+				return false;
+			}else{
+				return true;
 			}
+		}
+	}
+
+	private boolean isDeviceValid(@NotNull VkPhysicalDevice device) {
+		try(MemoryStack stack = stackPush()) {
 			VkPhysicalDeviceFeatures tmpFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
 			vkGetPhysicalDeviceFeatures(device, tmpFeatures);
 			//TODO: replace with better validity check
@@ -238,9 +247,7 @@ public final class VulkanDevice {
 					memAmount += tmpMems.memoryHeaps(i).size();
 				}
 			}
-			if(!isDeviceValid(device,surface)) {
-				score = Double.MIN_VALUE;
-			}
+			//TODO: CHECK VALID vkGetPhysicalDeviceSurfaceSupportKHR
 			return score * memAmount;
 		}
 	}

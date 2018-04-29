@@ -1,5 +1,7 @@
 package net.openvoxel.client.renderer.vk.core;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.glfw.GLFWEventHandler;
@@ -20,10 +22,11 @@ import java.util.List;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface;
 import static org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions;
+import static org.lwjgl.system.MemoryStack.create;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.EXTDebugReport.*;
-import static org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR;
-import static org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR;
+import static org.lwjgl.vulkan.KHRSurface.*;
+import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
 public final class VulkanState {
@@ -44,16 +47,21 @@ public final class VulkanState {
 
 	///Dynamic State
 	private long VulkanSwapChain;
+	private LongBuffer VulkanSwapChainImages;
+	private LongBuffer VulkanSwapChainImageViews;
+	private int VulkanSwapChainSize;
 
 
 	//SwapChain Configuration
-	public int validPresentModes;
-	//
+	public TIntList validPresentModes = new TIntArrayList();
+	public VkSurfaceFormatKHR.Buffer validSurfaceFormats;
+	public VkSurfaceCapabilitiesKHR surfaceCapabilities;
+	//Chosen SwapChain Values
+	private VkExtent2D chosenSwapExtent;
 	public int chosenPresentMode;
 	private int chosenImageFormat;
 	private int chosenColourSpace;
 	private int chosenImageCount;
-	private VkExtent2D swapExtent;
 
 	//Configuration Settings
 	private boolean HasDebugReport = false;
@@ -85,9 +93,11 @@ public final class VulkanState {
 
 	public void recreate() {
 		vkDeviceWaitIdle(VulkanDevice.logicalDevice);
+		//Destroy///
 		VulkanCommands.close();
-		//Create//
+		//ReCreate//
 		createSwapChain(true);
+		//Create//
 		VulkanCommands.init(chosenImageCount);
 	}
 
@@ -282,11 +292,174 @@ public final class VulkanState {
 	////////////////////////
 
 	private void createSwapChain(boolean isRecreated) {
+		try(MemoryStack stack = stackPush()) {
+			if(!isRecreated) {
+				//Init Memory
+				chosenSwapExtent = VkExtent2D.malloc();
+				surfaceCapabilities = VkSurfaceCapabilitiesKHR.malloc();
+				IntBuffer sizeRef = stack.mallocInt(1);
 
+				//Load Information
+				vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VulkanDevice.physicalDevice,VulkanSurface,surfaceCapabilities);
+				vkGetPhysicalDeviceSurfaceFormatsKHR(VulkanDevice.physicalDevice,VulkanSurface,sizeRef,null);
+				validSurfaceFormats = VkSurfaceFormatKHR.malloc(sizeRef.get(0));
+				vkGetPhysicalDeviceSurfaceFormatsKHR(VulkanDevice.physicalDevice,VulkanSurface,sizeRef,validSurfaceFormats);
+				vkGetPhysicalDeviceSurfacePresentModesKHR(VulkanDevice.physicalDevice,VulkanSurface,sizeRef,null);
+				IntBuffer presentModeBuffer = stack.mallocInt(sizeRef.get(0));
+				vkGetPhysicalDeviceSurfacePresentModesKHR(VulkanDevice.physicalDevice,VulkanSurface,sizeRef,presentModeBuffer);
+				validPresentModes.clear();
+				for(int i = 0; i < sizeRef.get(0); i++) {
+					validPresentModes.add(presentModeBuffer.get(i));
+				}
+
+				//Choose Defaults
+				VulkanUtility.chooseSwapExtent(surfaceCapabilities,chosenSwapExtent);
+				chosenPresentMode = VulkanUtility.chooseDefaultPresentMode(validPresentModes);
+				chosenImageFormat = VulkanUtility.chooseSurfaceFormat(validSurfaceFormats,true);
+				chosenColourSpace = VulkanUtility.chooseSurfaceFormat(validSurfaceFormats,false);
+				chosenImageCount  = VulkanUtility.chooseImageCount(surfaceCapabilities);
+			}else{
+				//Destroy Old Swap Chain Image Views
+				{
+					MemoryUtil.memFree(VulkanSwapChainImages);
+					VulkanSwapChainImages = null;
+				}
+				for(int i = 0; i < VulkanSwapChainSize; i++) {
+					vkDestroyImageView(VulkanDevice.logicalDevice,VulkanSwapChainImageViews.get(i),null);
+				}
+				{
+					MemoryUtil.memFree(VulkanSwapChainImageViews);
+					VulkanSwapChainImageViews = null;
+				}
+			}
+
+			//Update Surface Capabilities
+			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VulkanDevice.physicalDevice,VulkanSurface,surfaceCapabilities);
+			VulkanUtility.chooseSwapExtent(surfaceCapabilities,chosenSwapExtent);
+
+			//Skip if invalid
+			if(ClientInput.currentWindowHeight.get() == 0 || ClientInput.currentWindowWidth.get() == 0) {
+				return;
+			}
+
+			//Create Swap Chain
+			VkSwapchainCreateInfoKHR swapCreateInfo = VkSwapchainCreateInfoKHR.mallocStack(stack);
+			swapCreateInfo.sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
+			swapCreateInfo.pNext(VK_NULL_HANDLE);
+			swapCreateInfo.flags(0);
+			swapCreateInfo.surface(VulkanSurface);
+			swapCreateInfo.minImageCount(chosenImageCount);
+			swapCreateInfo.imageFormat(chosenImageFormat);
+			swapCreateInfo.imageColorSpace(chosenColourSpace);
+			swapCreateInfo.imageExtent(chosenSwapExtent);
+			swapCreateInfo.imageArrayLayers(1);
+			swapCreateInfo.imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+			swapCreateInfo.imageSharingMode(VK_SHARING_MODE_EXCLUSIVE);
+			swapCreateInfo.pQueueFamilyIndices(null);
+			swapCreateInfo.preTransform(surfaceCapabilities.currentTransform());
+			swapCreateInfo.compositeAlpha(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
+			swapCreateInfo.presentMode(chosenPresentMode);
+			swapCreateInfo.clipped(true);
+			swapCreateInfo.oldSwapchain(isRecreated ? VulkanSwapChain : 0L);
+
+			LongBuffer pLongValue = stack.mallocLong(1);
+			int vkResult = vkCreateSwapchainKHR(VulkanDevice.logicalDevice,swapCreateInfo,null,pLongValue);
+			if(vkResult == VK_SUCCESS) {
+				VulkanSwapChain = pLongValue.get(0);
+			}else if(vkResult == VK_ERROR_OUT_OF_HOST_MEMORY || vkResult == VK_ERROR_OUT_OF_DEVICE_MEMORY) {
+				VulkanUtility.LogWarn("Failed to create swap-chain: Out of Memory");
+				//TODO: RETRY AFTER FREE MEMORY
+				VulkanUtility.CrashOnBadResult("Failed to create swap-chain",vkResult);
+				return;
+			}else{
+				VulkanUtility.CrashOnBadResult("Failed to create swap-chain",vkResult);
+				return;
+			}
+
+			//Get Swap Chain Images
+			IntBuffer returnVal = stack.mallocInt(1);
+			vkResult = vkGetSwapchainImagesKHR(VulkanDevice.logicalDevice,VulkanSwapChain,returnVal,null);
+			if(vkResult != VK_SUCCESS) {
+				VulkanUtility.CrashOnBadResult("Failed to get swap-chain images",vkResult);
+				return;
+			}
+			VulkanSwapChainSize = returnVal.get(0);
+			VulkanSwapChainImages = MemoryUtil.memAllocLong(VulkanSwapChainSize);
+			vkResult = vkGetSwapchainImagesKHR(VulkanDevice.logicalDevice,VulkanSwapChain,returnVal,VulkanSwapChainImages);
+			if(vkResult == VK_INCOMPLETE) {
+				VulkanUtility.LogWarn("Loading incomplete selection of swap-chain images!");
+			}else if(vkResult != VK_SUCCESS) {
+				VulkanUtility.LogWarn("Failed to get swap-chain images: Out of Memory");
+				//TODO: RETRY AFTER FREE MEMORY
+				VulkanUtility.CrashOnBadResult("Failed to get swap-chain images",vkResult);
+				return;
+			}
+
+			//Temp Data Structures
+			VkComponentMapping components = VkComponentMapping.mallocStack(stack);
+			components.set(
+					VK_COMPONENT_SWIZZLE_IDENTITY,
+					VK_COMPONENT_SWIZZLE_IDENTITY,
+					VK_COMPONENT_SWIZZLE_IDENTITY,
+					VK_COMPONENT_SWIZZLE_IDENTITY
+			);
+			VkImageSubresourceRange subResource = VkImageSubresourceRange.mallocStack(stack);
+			subResource.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
+			subResource.baseMipLevel(0);
+			subResource.levelCount(1);
+			subResource.baseArrayLayer(0);
+			subResource.layerCount(1);
+
+			//Create Swap Chain Image Views
+			VulkanSwapChainImageViews = MemoryUtil.memCallocLong(VulkanSwapChainSize);
+			VkImageViewCreateInfo createImageView = VkImageViewCreateInfo.mallocStack(stack);
+			createImageView.sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO);
+			createImageView.pNext(VK_NULL_HANDLE);
+			createImageView.flags(0);
+			createImageView.viewType(VK_IMAGE_VIEW_TYPE_2D);
+			createImageView.format(chosenImageFormat);
+			createImageView.components(components);
+			createImageView.subresourceRange(subResource);
+			for(int i = 0; i < VulkanSwapChainSize; i++) {
+				createImageView.image(VulkanSwapChainImages.get(i));
+				vkResult = vkCreateImageView(VulkanDevice.logicalDevice,createImageView,null,pLongValue);
+				if(vkResult != VK_SUCCESS) {
+					VulkanUtility.LogWarn("Failed to create swap-chain image view: Out of Memory");
+					//TODO: RETRY AFTER FREE MEMORY
+					VulkanUtility.CrashOnBadResult("Failed to get swap-chain images",vkResult);
+				}
+				VulkanSwapChainImageViews.put(i,pLongValue.get(0));
+			}
+		}
 	}
 
 	private void destroySwapChain() {
+		if(VulkanSwapChainImages != null) {
+			MemoryUtil.memFree(VulkanSwapChainImages);
+			VulkanSwapChainImages = null;
+		}else{
+			VulkanUtility.LogWarn("Unexpected: Swap-chain image list == null");
+		}
+		if(VulkanSwapChainImageViews != null) {
+			for (int i = 0; i < VulkanSwapChainSize; i++) {
+				if (VulkanSwapChainImageViews.get(i) != VK_NULL_HANDLE) {
+					vkDestroyImageView(VulkanDevice.logicalDevice, VulkanSwapChainImageViews.get(i), null);
+				} else {
+					VulkanUtility.LogWarn("Unexpected: Swap-chain image view == VK_NULL_HANDLE");
+				}
+			}
+			MemoryUtil.memFree(VulkanSwapChainImageViews);
+			VulkanSwapChainImageViews = null;
+		}else{
+			VulkanUtility.LogWarn("Unexpected: Swap-chain image view list == null");
+		}
+		vkDestroySwapchainKHR(VulkanDevice.logicalDevice,VulkanSwapChain,null);
 
+		//Free Memory
+		validPresentModes.clear();
+		validSurfaceFormats.free();
+		surfaceCapabilities.free();
+		chosenSwapExtent.free();
 	}
 
 	////////////////////

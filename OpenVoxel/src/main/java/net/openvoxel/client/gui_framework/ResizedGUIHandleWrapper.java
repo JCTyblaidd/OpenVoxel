@@ -2,6 +2,7 @@ package net.openvoxel.client.gui_framework;
 
 import net.openvoxel.api.PublicAPI;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
+import net.openvoxel.common.item.ItemStack;
 import net.openvoxel.common.resources.ResourceHandle;
 import org.joml.Matrix4f;
 
@@ -65,10 +66,11 @@ public class ResizedGUIHandleWrapper extends IGuiRenderer {
 		tessellator.DrawText(x * x_scale + x_offset,y * y_scale + y_offset,height * y_scale,text,col);
 	}
 
+	/*
 	@Override
-	public void DrawItem(float x, float y, float width, float height) {
-		tessellator.DrawItem(x * x_scale + x_offset,y * y_scale + y_offset,width * x_scale,height * y_scale);
-	}
+	public void DrawItem(ItemStack stack, float x, float y, float width, float height) {
+		tessellator.DrawItem(stack,x * x_scale + x_offset,y * y_scale + y_offset,width * x_scale,height * y_scale);
+	}*/
 
 	@Override
 	public float GetTextWidthRatio(String text) {

@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk;
 
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.common.event.EventListener;
@@ -15,16 +16,33 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	public final VulkanState state;
 	private final Logger logger;
+	private final VulkanGuiRenderer guiRenderer;
 
 	public VulkanRenderer() {
 		state = new VulkanState();
 		logger = Logger.getLogger("Vulkan").getSubLogger("Renderer");
+		guiRenderer = new VulkanGuiRenderer();
 	}
 
 	@Override
 	public void close() {
+		guiRenderer.close();
 		state.close();
 	}
+
+	//////////////////////////////////////
+	/// Rendering Handle Functionality ///
+	//////////////////////////////////////
+
+	@Override
+	public BaseGuiRenderer getGuiRenderer() {
+		return guiRenderer;
+	}
+
+
+	///////////////////////////////
+	/// Main Loop Functionality ///
+	///////////////////////////////
 
 
 	@Override
@@ -70,7 +88,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public boolean isVSyncSupported(VSyncType type) {
-		return (state.validPresentModes & getVSyncRef(type)) != 0;
+		return state.validPresentModes.contains(getVSyncRef(type));
 	}
 
 	@Override
@@ -86,7 +104,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void setVSync(VSyncType type) {
-		state.validPresentModes = getVSyncRef(type);
+		state.chosenPresentMode = getVSyncRef(type);
 	}
 
 	////////////////////////////////////

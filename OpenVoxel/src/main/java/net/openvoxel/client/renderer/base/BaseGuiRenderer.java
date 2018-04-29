@@ -66,6 +66,7 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 		MemoryUtil.memFree(matrixStateList);
 		MemoryUtil.memFree(useTexStateList);
 		MemoryUtil.memFree(scissorStateList);
+		MemoryUtil.memFree(offsetStateList);
 	}
 
 	private void advanceState() {

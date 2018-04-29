@@ -1,12 +1,18 @@
 package net.openvoxel.client.renderer.vk.core;
 
+import gnu.trove.list.TIntList;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.Version;
+import net.openvoxel.client.ClientInput;
 import net.openvoxel.utility.CrashReport;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VkExtent2D;
+import org.lwjgl.vulkan.VkSurfaceCapabilities2KHR;
+import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
+import org.lwjgl.vulkan.VkSurfaceFormatKHR;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -16,8 +22,7 @@ import static org.lwjgl.vulkan.EXTDebugReport.VK_DEBUG_REPORT_INFORMATION_BIT_EX
 import static org.lwjgl.vulkan.EXTDebugReport.VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
 import static org.lwjgl.vulkan.EXTGlobalPriority.VK_ERROR_NOT_PERMITTED_EXT;
 import static org.lwjgl.vulkan.KHRDisplaySwapchain.VK_ERROR_INCOMPATIBLE_DISPLAY_KHR;
-import static org.lwjgl.vulkan.KHRSurface.VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
-import static org.lwjgl.vulkan.KHRSurface.VK_ERROR_SURFACE_LOST_KHR;
+import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR;
 import static org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR;
 import static org.lwjgl.vulkan.NVGLSLShader.VK_ERROR_INVALID_SHADER_NV;
@@ -82,6 +87,76 @@ final class VulkanUtility {
 		return output;
 	}
 
+	////////////////////////////////////
+	/// Default Choice Functionality ///
+	////////////////////////////////////
+
+	public static int chooseDefaultPresentMode(TIntList validPresentModes) {
+		if(validPresentModes.contains(VK_PRESENT_MODE_MAILBOX_KHR)) {
+			LogInfo("Chosen Present Mode: Mailbox");
+			return VK_PRESENT_MODE_MAILBOX_KHR;
+		}
+		LogInfo("Chosen Present Mode: FIFO");
+		return VK_PRESENT_MODE_FIFO_KHR;
+	}
+
+	public static int chooseSurfaceFormat(VkSurfaceFormatKHR.Buffer validFormats,boolean getImageFormat) {
+		if (validFormats.capacity() == 1 && validFormats.get(0).format() == VK_FORMAT_UNDEFINED) {
+			if(getImageFormat) {
+				LogInfo("Chosen Surface Format: Default[Universal]");
+				return VK_FORMAT_B8G8R8A8_UNORM;
+			}else{
+				LogInfo("Chosen Colour Space: Default[Universal]");
+				return VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+			}
+		} else {
+			for (int i = 0; i < validFormats.capacity(); i++) {
+				validFormats.position(i);
+				if (validFormats.format() == VK_FORMAT_B8G8R8A8_UNORM && validFormats.colorSpace() == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+					if(getImageFormat) {
+						LogInfo("Chosen Surface Format: Default[Found]");
+						return validFormats.format();
+					}else{
+						LogInfo("Chosen Colour Space: Default[Found]");
+						return validFormats.colorSpace();
+					}
+				}
+			}
+			validFormats.position(0);
+			if(getImageFormat) {
+				LogInfo("Chosen Surface Format: Fallback[#"+Integer.toHexString(validFormats.format()));
+				return validFormats.format();
+			}else{
+				LogInfo("Chosen Colour Space: Fallback[#"+Integer.toHexString(validFormats.colorSpace()));
+				return validFormats.colorSpace();
+			}
+		}
+	}
+
+	public static void chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent2D swapExtent) {
+		if (capabilities.currentExtent().width() != 0xFFFFFFFF) {
+			swapExtent.set(capabilities.currentExtent());
+		} else {
+			int width = ClientInput.currentWindowWidth.get();
+			int height = ClientInput.currentWindowHeight.get();
+			width = Math.min(Math.max(width, capabilities.minImageExtent().width()), capabilities.maxImageExtent().width());
+			height = Math.min(Math.max(height, capabilities.minImageExtent().height()), capabilities.maxImageExtent().height());
+			swapExtent.set(width, height);
+		}
+		LogInfo("Chosen Swap Extent: ("+ swapExtent.width()+","+swapExtent.height()+")");
+	}
+
+	public static int chooseImageCount(VkSurfaceCapabilitiesKHR capabilities) {
+		int imageCount = capabilities.minImageCount() + 1;
+		if (capabilities.maxImageCount() > 0 && imageCount > capabilities.maxImageCount()) {
+			LogInfo("Chosen Image Count: " + capabilities.maxImageCount());
+			return capabilities.maxImageCount();
+		}else{
+			LogInfo("Chosen Image Count: " + imageCount);
+			return imageCount;
+		}
+	}
+
 	//////////////////////////////////
 	/// Internal Utility Functions ///
 	//////////////////////////////////
@@ -121,7 +196,7 @@ final class VulkanUtility {
 		}
 	}
 
-	public static String getVendorAsString(int vendorID) {
+	static String getVendorAsString(int vendorID) {
 		switch(vendorID) {
 			case 0x1002: return "AMD";
 			case 0x1010: return "ImgTec";
