@@ -33,10 +33,13 @@ public interface IconAtlas {
 	}
 
 	//TODO: implement GUI & Particle & Entity
+	//NB: GUI PROBABLY IS GOING TO BE DYNAMICALLY STREAMED & NOT UPDATED!!!
 	//Icon registerGUITex(ResourceHandle handleTex);
 
+	//NB: Particle are going to be stitched
 	//Icon registerParticleTex(ResourceHandle handleParticle);
 
+	//NB: TODO: are entitys going to be stitched
 	//Icon registerEntityTex(ResourceHandle handle_diffuse, ResourceHandle handle_normal, ResourceHandle handle_pbr);
 
 	void performStitch();

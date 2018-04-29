@@ -52,6 +52,8 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 
 	protected abstract void createNewDraw();
 
+	public abstract boolean allowDrawCaching();
+
 	////////////////////////////
 	/// State Change Methods ///
 	////////////////////////////

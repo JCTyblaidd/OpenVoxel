@@ -30,14 +30,16 @@ public class GuiDrawTask implements Runnable {
 	public void run() {
 		try {
 			boolean guiDirty = ScreenDebugInfo.debugLevel.get() != ScreenDebugInfo.GUIDebugLevel.NONE;
+			guiDirty |= !guiRenderer.allowDrawCaching();
 			synchronized (GUI.class) {//TODO: remove sync
+				//Check if dirty
 				if(!guiDirty) {
 					for (Screen screen : GUI.getStack()) {
 						guiDirty |= screen.isDrawDirty();
 					}
 				}
-				if(guiDirty){ // || !guiRenderer.supportDirty()) {
-					//guiDirty = true;
+				//Update if dirty
+				if(guiDirty) {
 					guiRenderer.StartDraw(width,height);
 					Iterator<Screen> iterate = GUI.getStack().descendingIterator();
 					while(iterate.hasNext()) {
@@ -46,7 +48,7 @@ public class GuiDrawTask implements Runnable {
 				}
 			}
 			//Debug Screen Renderer//
-			if(guiDirty) {
+			if(guiDirty) {//TODO: merge after sync removed
 				ScreenDebugInfo.instance.DrawScreen(guiRenderer);
 			}
 			guiRenderer.finishDraw(guiDirty);

@@ -22,19 +22,37 @@ import static org.lwjgl.vulkan.VK10.*;
 //////////////////////////////////////
 public final class VulkanDevice {
 
+	//State
 	private final VkPhysicalDevice physicalDevice;
-	private final VkDevice logicalDevice;
+	final VkDevice logicalDevice;
 
-	private final VkPhysicalDeviceProperties properties = VkPhysicalDeviceProperties.malloc();
-	private final  VkPhysicalDeviceMemoryProperties memory = VkPhysicalDeviceMemoryProperties.malloc();
-	private final VkPhysicalDeviceFeatures features = VkPhysicalDeviceFeatures.malloc();
+	///Enabled Extensions
+	public boolean enabled_KHR_maintenance1 = false;
+	public boolean enabled_KHR_maintenance2 = false;
+	//public boolean enabled_KHR_dedicated_allocation = false;
+	//public boolean enabled_KHR_get_memory_requirements2 = false;
+	//public boolean enabled_KHR_push_descriptor = false;
+	public boolean enabled_NV_geometry_passthrough = false;
 
-	/**
+	//Properties & Features
+	public final VkPhysicalDeviceProperties properties = VkPhysicalDeviceProperties.malloc();
+	//private final VkPhysicalDeviceBlendOperationAdvancedPropertiesEXT advBlendProperties;
+	//private final VkPhysicalDevicePointClippingPropertiesKHR pointClippingProperties;
+	//private final VkPhysicalDevicePushDescriptorPropertiesKHR pushDescriptorProperties;
+	//private final VkPhysicalDeviceDiscardRectanglePropertiesEXT discardRectangleProperties;
+	public final VkPhysicalDeviceMemoryProperties memory = VkPhysicalDeviceMemoryProperties.malloc();
+	public final VkPhysicalDeviceFeatures features = VkPhysicalDeviceFeatures.malloc();
+	//private final VkPhysicalDevice16BitStorageFeaturesKHR memory16BitProperties;
+	//private final VkPhysicalDeviceSamplerYcbcrConversionFeaturesKHR ycbrConversionFeatures;
+	//private final VkPhysicalDeviceVariablePointerFeaturesKHR pointerFeatures;
+	//private final VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT advBlendFeatures;
+
+	/*
 	 * All capability queue including present support
 	 */
 	private final VkQueue allQueue;
 
-	/**
+	/*
 	 * Transfer capability queue for asynchronous transfers
 	 */
 	private final VkQueue transferQueue;
@@ -388,15 +406,21 @@ public final class VulkanDevice {
 			if(extName.equals("VK_KHR_maintenance1") || extName.equals("VK_KHR_maintenance2")) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: KHR Maintenance Extension: " + extName);
+				if(extName.equals("VK_KHR_maintenance1")) {
+					enabled_KHR_maintenance1 = true;
+				}else{
+					enabled_KHR_maintenance2 = true;
+				}
 			}
 			if(extName.equals("VK_NV_geometry_shader_passthrough")) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: NV Geometry Shader Passthrough");
+				enabled_NV_geometry_passthrough = true;
 			}
-			if(extName.equals("VK_EXT_blend_operation_advanced")) {
-				enabledExtensions.add(extensionList.extensionName());
-				VulkanUtility.LogInfo("Enabled Ext: EXT Advanced Blend Operations");
-			}
+			//if(extName.equals("VK_EXT_blend_operation_advanced")) {
+			//	enabledExtensions.add(extensionList.extensionName());
+			//	VulkanUtility.LogInfo("Enabled Ext: EXT Advanced Blend Operations");
+			//}
 		}
 		return VulkanUtility.toPointerBuffer(stack,enabledExtensions);
 	}

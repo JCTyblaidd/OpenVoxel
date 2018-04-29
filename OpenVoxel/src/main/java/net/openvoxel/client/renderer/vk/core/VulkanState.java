@@ -40,6 +40,7 @@ public final class VulkanState {
 	private final VulkanDevice VulkanDevice;
 	private final VulkanMemory VulkanMemory;
 	private final long VulkanSurface;
+	private final VulkanCommandHandler VulkanCommands;
 
 	///Dynamic State
 	private long VulkanSwapChain;
@@ -78,6 +79,16 @@ public final class VulkanState {
 		VulkanMemory = new VulkanMemory(VulkanDevice);
 		///Create Swap-Chain///
 		createSwapChain(false);
+		VulkanCommands = new VulkanCommandHandler();
+		VulkanCommands.init(chosenImageCount);
+	}
+
+	public void recreate() {
+		vkDeviceWaitIdle(VulkanDevice.logicalDevice);
+		VulkanCommands.close();
+		//Create//
+		createSwapChain(true);
+		VulkanCommands.init(chosenImageCount);
 	}
 
 	/*
@@ -85,6 +96,7 @@ public final class VulkanState {
 	 */
 	public void close() {
 		///Destroy Swap-Chain///
+		VulkanCommands.close();
 		destroySwapChain();
 		////Destroy Managers////
 		VulkanMemory.close();
