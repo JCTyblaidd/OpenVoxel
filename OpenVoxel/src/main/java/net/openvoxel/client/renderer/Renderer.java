@@ -303,8 +303,12 @@ public final class Renderer implements EventListener {
 	 * Asynchronously Draw the GUI in another thread
 	 */
 	public void startAsyncGUIDraw(AsyncBarrier completeBarrier) {
+		//Prepare the Async Task
 		completeBarrier.reset(1);
 		guiDrawTask.update(completeBarrier,api);
+
+		//Submit the Async Task
+		api.prepareForSubmit();
 		renderTaskPool.addWork(guiDrawTask);
 	}
 
@@ -312,9 +316,9 @@ public final class Renderer implements EventListener {
 	 * Asynchronously generate command buffers
 	 *  & then submit the frames to the GPU to present
 	 */
-	public void submitFrame() {
-		//Start ASYNC Memory Updating//
-		api.submitNextFrame();
+	public void submitFrame(AsyncBarrier barrier) {
+		api.submitNextFrame(renderTaskPool,barrier);
+		barrier.awaitCompletion();
 	}
 
 }

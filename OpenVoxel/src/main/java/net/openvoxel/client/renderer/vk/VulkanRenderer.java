@@ -6,11 +6,19 @@ import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.common.event.EventListener;
+import net.openvoxel.utility.AsyncBarrier;
+import net.openvoxel.utility.AsyncRunnablePool;
 import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VkClearValue;
+import org.lwjgl.vulkan.VkCommandBuffer;
+import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
+import org.lwjgl.vulkan.VkRenderPassBeginInfo;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.KHRSurface.*;
-import static org.lwjgl.vulkan.VK10.vkDeviceWaitIdle;
+import static org.lwjgl.vulkan.VK10.*;
 
 public class VulkanRenderer implements EventListener, GraphicsAPI {
 
@@ -61,14 +69,62 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void acquireNextFrame() {
-		//Prepare Command Buffers for editing...
-
+		long timeout = 100000000;
+		boolean success = commandHandler.AcquireNextImage(timeout);
+		if(!success) {
+			throw new RuntimeException("PANIC!!");
+		}
+		commandHandler.AwaitTransferFence(timeout);
 	}
 
 	@Override
-	public void submitNextFrame() {
-		//Generate Main Command Buffer
+	public void prepareForSubmit() {
+		long timeout = 100000000;
+		commandHandler.AwaitGraphicsFence(timeout);
+	}
 
+	@Override
+	public void submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier) {
+		VkCommandBuffer transferBuffer = commandHandler.getTransferCommandBuffer();
+		try(MemoryStack stack = stackPush()) {
+			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
+			beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+			beginInfo.pNext(VK_NULL_HANDLE);
+			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+			beginInfo.pInheritanceInfo(null);
+			vkBeginCommandBuffer(transferBuffer,beginInfo);
+			vkEndCommandBuffer(transferBuffer);
+			commandHandler.SubmitCommandTransfer(transferBuffer);
+		}
+		VkCommandBuffer mainBuffer = commandHandler.getMainDrawCommandBuffer();
+		try(MemoryStack stack = stackPush()) {
+			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
+			beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+			beginInfo.pNext(VK_NULL_HANDLE);
+			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+			beginInfo.pInheritanceInfo(null);
+			vkBeginCommandBuffer(mainBuffer,beginInfo);
+
+			VkClearValue.Buffer clearValues = VkClearValue.mallocStack(2,stack);
+			clearValues.color().float32(0,1.0f);
+			clearValues.color().float32(1,0.0f);
+			clearValues.color().float32(2,0.0f);
+			clearValues.color().float32(3,1.0f);
+			clearValues.get(1).depthStencil().depth(0.0f);
+			VkRenderPassBeginInfo renderPassBegin = VkRenderPassBeginInfo.mallocStack(stack);
+			renderPassBegin.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
+			renderPassBegin.pNext(VK_NULL_HANDLE);
+			renderPassBegin.renderPass(cachedLayout.RENDER_PASS_FORWARD_ONLY.RenderPass);
+			renderPassBegin.framebuffer(commandHandler.getFrameBuffer_ForwardOnly());
+			renderPassBegin.renderArea().offset().set(0,0);
+			renderPassBegin.renderArea().extent(state.chosenSwapExtent);
+			renderPassBegin.pClearValues(clearValues);
+			vkCmdBeginRenderPass(mainBuffer,renderPassBegin,VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdEndRenderPass(mainBuffer);
+			vkEndCommandBuffer(mainBuffer);
+			commandHandler.SubmitCommandGraphics(mainBuffer);
+		}
+		commandHandler.PresentImage();
 	}
 
 	@Override

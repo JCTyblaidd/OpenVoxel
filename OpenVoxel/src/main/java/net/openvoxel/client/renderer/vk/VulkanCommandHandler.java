@@ -2,13 +2,11 @@ package net.openvoxel.client.renderer.vk;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
-import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
-import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
@@ -19,8 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
-import static org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR;
-import static org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR;
+import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
 /**
@@ -437,7 +434,7 @@ public final class VulkanCommandHandler {
 					MainTransferSemaphores.add(pResult.get(0));
 				}else{
 					//Out of Memory
-					VulkanUtility.CrashOnBadResult("Failed to create Semaphore[Acquire Image]",vkResult);
+					VulkanUtility.CrashOnBadResult("Failed to create Semaphore[Transfer]",vkResult);
 				}
 			}
 
@@ -522,6 +519,8 @@ public final class VulkanCommandHandler {
 		return FrameBuffers_ForwardOnly.get(currentFrameIndex);
 	}
 
+	//TODO: GET OTHER FRAME BUFFER TYPES
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -560,13 +559,17 @@ public final class VulkanCommandHandler {
 	 * Wait till This Frames Transfer Queue is Valid
 	 */
 	public void AwaitTransferFence(long timeout) {
-		WaitForFence(MainThreadFenceList.get(currentFrameIndex),timeout);
+		WaitForFence(TransferFenceList.get(currentFrameIndex),timeout);
 	}
 
 	public void ResetSwapChainTracking() {
 		currentFrameIndex = 0;
 	}
 
+
+	/**
+	 * @return if the acquire succeeded, otherwise the swap-chain needs recreating
+	 */
 	public boolean AcquireNextImage(long timeout) {
 		try(MemoryStack stack = stackPush()) {
 			WaitForFence(MainThreadAcquireFence, timeout);
@@ -579,6 +582,7 @@ public final class VulkanCommandHandler {
 					MainThreadAcquireFence,
 					pImageIndex
 			);
+			currentFrameIndex = pImageIndex.get(0);
 			if (vkResult != VK_SUCCESS) {
 				if (vkResult == VK_SUBOPTIMAL_KHR) {
 					VulkanUtility.LogWarn("Sub-Optimal Swap-Chain");
@@ -591,6 +595,42 @@ public final class VulkanCommandHandler {
 					return false;
 				}
 			}else{
+				return true;
+			}
+		}
+	}
+
+	/**
+	 * @return if the present succeeded, otherwise the swap-chain needs recreating
+	 */
+	public boolean PresentImage() {
+		try(MemoryStack stack = stackPush()) {
+			VkPresentInfoKHR presentInfo = VkPresentInfoKHR.mallocStack(stack);
+			presentInfo.sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);
+			presentInfo.pNext(VK_NULL_HANDLE);
+			presentInfo.pWaitSemaphores(stack.longs(
+					MainThreadPresentSemaphores.get(currentFrameIndex)
+			));
+			presentInfo.swapchainCount(1);
+			presentInfo.pSwapchains(stack.longs(
+					state.VulkanSwapChain
+			));
+			presentInfo.pImageIndices(stack.ints(
+					currentFrameIndex
+			));
+			presentInfo.pResults(null);
+
+			int vkResult = vkQueuePresentKHR(device.allQueue,presentInfo);
+			if(vkResult == VK_ERROR_OUT_OF_DATE_KHR) {
+				VulkanUtility.LogWarn("Out of Date Present");
+				return false;
+			}else if(vkResult == VK_SUBOPTIMAL_KHR) {
+				VulkanUtility.LogWarn("Sub Optimal Present");
+				return true;
+			}else if(vkResult != VK_SUCCESS) {
+				VulkanUtility.CrashOnBadResult("Failed to present image",vkResult);
+				return false;
+			}else {
 				return true;
 			}
 		}
@@ -647,7 +687,6 @@ public final class VulkanCommandHandler {
 	////////////////////////////////////////////////////////////
 
 
-
 	/**
 	 * @return The command buffer for the entire draw call
 	 */
@@ -663,9 +702,9 @@ public final class VulkanCommandHandler {
 	}
 
 	/**
-	 * @return The command buffer for the async GUI Image Transfer
+	 * @return The command buffer for the async Data Transfer
 	 */
-	public VkCommandBuffer getGuiTransferCommandBuffer() {
+	public VkCommandBuffer getTransferCommandBuffer() {
 		return commandBuffersTransfer.get(currentFrameIndex);
 	}
 

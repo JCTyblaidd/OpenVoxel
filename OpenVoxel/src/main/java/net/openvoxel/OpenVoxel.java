@@ -342,6 +342,7 @@ public class OpenVoxel implements EventListener{
 		AsyncBarrier updateServerBarrier = new AsyncBarrier();
 		AsyncBarrier drawnChunksBarrier = new AsyncBarrier();
 		AsyncBarrier drawnGuiBarrier = new AsyncBarrier();
+		AsyncBarrier drawCompletionBarrier = new AsyncBarrier();
 		try {
 			//Run Main Loop//
 			UsageAnalyses.StartCPUSample("while(isRunning)",0);
@@ -371,7 +372,7 @@ public class OpenVoxel implements EventListener{
 				renderer.startAsyncGUIDraw(drawnGuiBarrier);
 				drawnChunksBarrier.awaitCompletion();
 				drawnGuiBarrier.awaitCompletion();
-				renderer.submitFrame();
+				renderer.submitFrame(drawCompletionBarrier);
 			}
 		}catch(Exception ex) {
 			CrashReport report = new CrashReport("Error in Main Loop");

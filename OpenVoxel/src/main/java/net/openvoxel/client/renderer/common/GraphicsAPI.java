@@ -1,6 +1,8 @@
 package net.openvoxel.client.renderer.common;
 
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
+import net.openvoxel.utility.AsyncBarrier;
+import net.openvoxel.utility.AsyncRunnablePool;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -12,7 +14,8 @@ public interface GraphicsAPI {
 	////////////////////////////
 
 	void acquireNextFrame();
-	void submitNextFrame();
+	void prepareForSubmit();
+	void submitNextFrame(AsyncRunnablePool pool,AsyncBarrier barrier);
 	void close();
 
 	void startStateChange();
