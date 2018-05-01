@@ -2,27 +2,32 @@ package net.openvoxel.client.renderer.vk;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
+import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
+import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR;
+import static org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR;
 import static org.lwjgl.vulkan.VK10.*;
 
 /**
  * Vulkan: Manage Command Buffer submission & threading
  *       : Also Managed Render Pass Images & Attachments
  */
-public class VulkanCommandHandler {
+public final class VulkanCommandHandler {
 
 	//Current Frame Index:
 	private int currentFrameIndex = 0;
@@ -35,8 +40,8 @@ public class VulkanCommandHandler {
 
 	//Main Draw Depth...
 	private long DepthImageMemory = VK_NULL_HANDLE;
-	private  long DepthImage = VK_NULL_HANDLE;
-	private  long DepthImageView = VK_NULL_HANDLE;
+	private long DepthImage = VK_NULL_HANDLE;
+	private long DepthImageView = VK_NULL_HANDLE;
 
 	//Frame Buffers...
 	private TLongList FrameBuffers_ForwardOnly;
@@ -44,14 +49,26 @@ public class VulkanCommandHandler {
 	//Command Pools...
 	private long commandPoolMainThread = VK_NULL_HANDLE;
 	private long commandPoolGuiAsync = VK_NULL_HANDLE;
+	private long commandPoolTransfer = VK_NULL_HANDLE;
+	private TLongList commandPoolsAsync;
+	private TLongList commandPoolsTransferAsync;
 
 	//Command Buffers...
 	private List<VkCommandBuffer> commandBuffersMainThread;
 	private List<VkCommandBuffer> commandBuffersGuiAsync;
+	private List<VkCommandBuffer> commandBuffersTransfer;
+	//NB: idx = pool*swapSize + swapImage
+	private List<VkCommandBuffer> commandBuffersAsync;
+	private List<VkCommandBuffer> commandBuffersTransferAsync;
 
 	//Synchronisation
 	private TLongList MainThreadFenceList;
-	private TLongList MainThreadAcquireSemaphores;
+	private TLongList TransferFenceList;
+
+	private long MainThreadAcquireFence;
+	private long MainThreadAcquireSemaphore;
+
+	private TLongList MainTransferSemaphores;
 	private TLongList MainThreadPresentSemaphores;
 
 	VulkanCommandHandler(VulkanState state,VulkanCache cache) {
@@ -63,10 +80,20 @@ public class VulkanCommandHandler {
 			throw new RuntimeException("Formats have not been initialized");
 		}
 		FrameBuffers_ForwardOnly = new TLongArrayList();
+
+		commandPoolsAsync = new TLongArrayList();
+		commandPoolsTransferAsync = new TLongArrayList();
+
 		commandBuffersMainThread = new ArrayList<>();
 		commandBuffersGuiAsync = new ArrayList<>();
+		commandBuffersTransfer = new ArrayList<>();
+		commandBuffersAsync = new ArrayList<>();
+		commandBuffersTransferAsync = new ArrayList<>();
+
 		MainThreadFenceList = new TLongArrayList();
-		MainThreadAcquireSemaphores = new TLongArrayList();
+		TransferFenceList = new TLongArrayList();
+		MainThreadAcquireSemaphore = VK_NULL_HANDLE;
+		MainTransferSemaphores = new TLongArrayList();
 		MainThreadPresentSemaphores = new TLongArrayList();
 	}
 
@@ -187,7 +214,7 @@ public class VulkanCommandHandler {
 		FrameBuffers_ForwardOnly.clear();
 	}
 
-	private void initCommandBuffers(int swapSize) {
+	private void initCommandBuffers(int swapSize,int asyncPoolSize) {
 		try(MemoryStack stack = stackPush()) {
 			VkCommandPoolCreateInfo commandPoolCreate = VkCommandPoolCreateInfo.mallocStack(stack);
 			commandPoolCreate.sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO);
@@ -216,6 +243,46 @@ public class VulkanCommandHandler {
 				//No Memory
 				VulkanUtility.CrashOnBadResult("Failed to create Command Pool[GUI Async]",vkResult);
 			}
+
+			commandPoolCreate.flags(
+					VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
+					VK_COMMAND_POOL_CREATE_TRANSIENT_BIT
+			);
+			commandPoolCreate.queueFamilyIndex(device.familyTransfer);
+
+			vkResult = vkCreateCommandPool(device.logicalDevice,commandPoolCreate,null,pResult);
+			if(vkResult == VK_SUCCESS) {
+				commandPoolTransfer = pResult.get(0);
+			}else{
+				//No Memory
+				VulkanUtility.CrashOnBadResult("Failed to create Command Pool[Transfer]",vkResult);
+			}
+
+			commandPoolCreate.queueFamilyIndex(device.familyQueue);
+
+			for(int pool = 0; pool < asyncPoolSize; pool++) {
+				vkResult = vkCreateCommandPool(device.logicalDevice,commandPoolCreate,null,pResult);
+				if(vkResult == VK_SUCCESS) {
+					commandPoolsAsync.add(pResult.get(0));
+				}else{
+					//No Memory
+					VulkanUtility.CrashOnBadResult("Failed to create Command Pool[Async-"+pool+"]",vkResult);
+				}
+			}
+
+			commandPoolCreate.queueFamilyIndex(device.familyTransfer);
+
+			for(int pool = 0; pool < asyncPoolSize; pool++) {
+				vkResult = vkCreateCommandPool(device.logicalDevice,commandPoolCreate,null,pResult);
+				if(vkResult == VK_SUCCESS) {
+					commandPoolsTransferAsync.add(pResult.get(0));
+				}else{
+					//No Memory
+					VulkanUtility.CrashOnBadResult("Failed to create Command Pool[Transfer Async-"+pool+"]",vkResult);
+				}
+			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////
 
 			VkCommandBufferAllocateInfo commandAllocateInfo = VkCommandBufferAllocateInfo.mallocStack(stack);
 			commandAllocateInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
@@ -247,14 +314,68 @@ public class VulkanCommandHandler {
 				//No Memory
 				VulkanUtility.CrashOnBadResult("Failed to allocate Command Buffers[GUI Async]",vkResult);
 			}
+
+			commandAllocateInfo.commandPool(commandPoolTransfer);
+			commandAllocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+			vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
+			if(vkResult == VK_SUCCESS) {
+				for(int i = 0; i < swapSize; i++) {
+					commandBuffersTransfer.add(new VkCommandBuffer(bufferResult.get(i),device.logicalDevice));
+				}
+			}else{
+				//No Memory
+				VulkanUtility.CrashOnBadResult("Failed to allocate Command Buffers[Transfer]",vkResult);
+			}
+
+			commandAllocateInfo.level(VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+
+			for(int pool = 0; pool < asyncPoolSize; pool++) {
+				commandAllocateInfo.commandPool(commandPoolsAsync.get(pool));
+
+				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
+				if(vkResult == VK_SUCCESS) {
+					for (int i = 0; i < swapSize; i++) {
+						commandBuffersAsync.add(new VkCommandBuffer(bufferResult.get(i),device.logicalDevice));
+					}
+				}else{
+					//No Memory
+					VulkanUtility.CrashOnBadResult("Failed to allocate Command Buffers[Async..]",vkResult);
+				}
+
+				commandAllocateInfo.commandPool(commandPoolsTransferAsync.get(pool));
+
+				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
+				if(vkResult == VK_SUCCESS) {
+					for(int i = 0; i < swapSize; i++) {
+						commandBuffersTransferAsync.add(new VkCommandBuffer(bufferResult.get(i),device.logicalDevice));
+					}
+				}else{
+					//No Memory
+					VulkanUtility.CrashOnBadResult("Failed to allocate Command Buffers[Async..]",vkResult);
+				}
+			}
 		}
 	}
 
 	private void destroyCommandBuffers() {
 		vkDestroyCommandPool(device.logicalDevice,commandPoolGuiAsync,null);
 		vkDestroyCommandPool(device.logicalDevice,commandPoolMainThread,null);
+		vkDestroyCommandPool(device.logicalDevice,commandPoolTransfer,null);
+
+		for(int i = 0; i < commandPoolsAsync.size(); i++) {
+			vkDestroyCommandPool(device.logicalDevice,commandPoolsAsync.get(i),null);
+			vkDestroyCommandPool(device.logicalDevice,commandPoolsTransferAsync.get(i),null);
+		}
+		commandPoolsAsync.clear();
+		commandPoolsTransferAsync.clear();
+
+		//Clear Command Buffers:
 		commandBuffersMainThread.clear();
 		commandBuffersGuiAsync.clear();
+		commandBuffersTransfer.clear();
+		commandBuffersAsync.clear();
+		commandBuffersTransferAsync.clear();
 	}
 
 	private void initSynchronisation(int swapSize) {
@@ -275,15 +396,45 @@ public class VulkanCommandHandler {
 				}
 			}
 
+			for(int i = 0; i < swapSize; i++) {
+				int vkResult = vkCreateFence(device.logicalDevice,fenceCreateInfo,null,pResult);
+				if(vkResult == VK_SUCCESS) {
+					TransferFenceList.add(pResult.get(0));
+				}else{
+					//Out of Memory
+					VulkanUtility.CrashOnBadResult("Failed to create Fence[Transfer]",vkResult);
+				}
+			}
+
+			{
+				int vkResult = vkCreateFence(device.logicalDevice,fenceCreateInfo,null,pResult);
+				if(vkResult == VK_SUCCESS) {
+					MainThreadAcquireFence = pResult.get(0);
+				}else{
+					//Out of Memory
+					VulkanUtility.CrashOnBadResult("Failed to create acquire fence",vkResult);
+				}
+			}
+
 			VkSemaphoreCreateInfo semaphoreCreateInfo = VkSemaphoreCreateInfo.mallocStack(stack);
 			semaphoreCreateInfo.sType(VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO);
 			semaphoreCreateInfo.pNext(VK_NULL_HANDLE);
 			semaphoreCreateInfo.flags(0);
 
+			{
+				int vkResult = vkCreateSemaphore(device.logicalDevice, semaphoreCreateInfo, null, pResult);
+				if (vkResult == VK_SUCCESS) {
+					MainThreadAcquireSemaphore = pResult.get(0);
+				} else {
+					//Out of Memory
+					VulkanUtility.CrashOnBadResult("Failed to create Semaphore[Acquire Image]", vkResult);
+				}
+			}
+
 			for(int i = 0; i < swapSize; i++) {
 				int vkResult = vkCreateSemaphore(device.logicalDevice,semaphoreCreateInfo,null,pResult);
 				if(vkResult == VK_SUCCESS) {
-					MainThreadAcquireSemaphores.add(pResult.get(0));
+					MainTransferSemaphores.add(pResult.get(0));
 				}else{
 					//Out of Memory
 					VulkanUtility.CrashOnBadResult("Failed to create Semaphore[Acquire Image]",vkResult);
@@ -308,10 +459,19 @@ public class VulkanCommandHandler {
 		}
 		MainThreadFenceList.clear();
 
-		for(int i = 0; i < MainThreadAcquireSemaphores.size(); i++) {
-			vkDestroySemaphore(device.logicalDevice,MainThreadAcquireSemaphores.get(i),null);
+		for(int i = 0; i < TransferFenceList.size(); i++) {
+			vkDestroyFence(device.logicalDevice,TransferFenceList.get(i),null);
 		}
-		MainThreadAcquireSemaphores.clear();
+		TransferFenceList.clear();
+
+		vkDestroyFence(device.logicalDevice,MainThreadAcquireFence,null);
+
+		vkDestroySemaphore(device.logicalDevice,MainThreadAcquireSemaphore,null);
+
+		for(int i = 0; i < MainTransferSemaphores.size(); i++) {
+			vkDestroySemaphore(device.logicalDevice,MainTransferSemaphores.get(i),null);
+		}
+		MainTransferSemaphores.clear();
 
 		for(int i = 0; i < MainThreadPresentSemaphores.size(); i++) {
 			vkDestroySemaphore(device.logicalDevice,MainThreadPresentSemaphores.get(i),null);
@@ -336,9 +496,9 @@ public class VulkanCommandHandler {
 		destroyImages();
 	}
 
-	void init() {
+	void init(int asyncCount) {
 		initResizeable();
-		initCommandBuffers(state.VulkanSwapChainSize);
+		initCommandBuffers(state.VulkanSwapChainSize,asyncCount);
 		initSynchronisation(state.VulkanSwapChainSize);
 	}
 
@@ -362,6 +522,9 @@ public class VulkanCommandHandler {
 		return FrameBuffers_ForwardOnly.get(currentFrameIndex);
 	}
 
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	public VkCommandBuffer getSingleUseCommandBuffer() {
 		return null;
 	}
@@ -369,6 +532,121 @@ public class VulkanCommandHandler {
 	public void SubmitSingleUseCommandBuffer() {
 		//TODO:
 	}
+
+	private void WaitForFence(long fence,long timeout) {
+		int result = vkWaitForFences(device.logicalDevice, fence, true, timeout);
+		if (result == VK_TIMEOUT) {
+			VulkanUtility.LogWarn("Fence Timed-out!!!");
+			vkDeviceWaitIdle(device.logicalDevice);
+		} else if (result != VK_SUCCESS) {
+			//No Memory
+			VulkanUtility.CrashOnBadResult("Failed to wait for fence",result);
+		}
+		result = vkResetFences(device.logicalDevice, fence);
+		if(result != VK_SUCCESS) {
+			//No Memory
+			VulkanUtility.CrashOnBadResult("Failed to reset fence",result);
+		}
+	}
+
+	/*
+	 * Wait till This Frames Graphics Queue is Valid
+	 */
+	public void AwaitGraphicsFence(long timeout) {
+		WaitForFence(MainThreadFenceList.get(currentFrameIndex), timeout);
+	}
+
+	/*
+	 * Wait till This Frames Transfer Queue is Valid
+	 */
+	public void AwaitTransferFence(long timeout) {
+		WaitForFence(MainThreadFenceList.get(currentFrameIndex),timeout);
+	}
+
+	public void ResetSwapChainTracking() {
+		currentFrameIndex = 0;
+	}
+
+	public boolean AcquireNextImage(long timeout) {
+		try(MemoryStack stack = stackPush()) {
+			WaitForFence(MainThreadAcquireFence, timeout);
+			IntBuffer pImageIndex = stack.mallocInt(1);
+			int vkResult = KHRSwapchain.vkAcquireNextImageKHR(
+					device.logicalDevice,
+					state.VulkanSwapChain,
+					timeout,
+					MainThreadAcquireSemaphore,
+					MainThreadAcquireFence,
+					pImageIndex
+			);
+			if (vkResult != VK_SUCCESS) {
+				if (vkResult == VK_SUBOPTIMAL_KHR) {
+					VulkanUtility.LogWarn("Sub-Optimal Swap-Chain");
+					return true;
+				}else if(vkResult == VK_ERROR_OUT_OF_DATE_KHR) {
+					VulkanUtility.LogWarn("Out-Of-Date Swap-Chain");
+					return false;
+				}else{
+					VulkanUtility.CrashOnBadResult("Failed to acquire swap-chain",vkResult);
+					return false;
+				}
+			}else{
+				return true;
+			}
+		}
+	}
+
+	/*
+	 * Submit This Frames Command Queue
+	 */
+	public void SubmitCommandGraphics(VkCommandBuffer submit) {
+		try(MemoryStack stack = stackPush()) {
+			VkSubmitInfo.Buffer submitInfo = VkSubmitInfo.mallocStack(1,stack);
+			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
+			submitInfo.pNext(VK_NULL_HANDLE);
+			submitInfo.waitSemaphoreCount(1);
+			submitInfo.pWaitSemaphores(stack.longs(
+					MainThreadAcquireSemaphore,
+					MainTransferSemaphores.get(currentFrameIndex)
+			));
+			submitInfo.pWaitDstStageMask(stack.ints(
+					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT
+			));
+			submitInfo.pCommandBuffers(stack.pointers(
+					submit
+			));
+			submitInfo.pSignalSemaphores(stack.longs(
+					MainThreadPresentSemaphores.get(currentFrameIndex)
+			));
+			vkQueueSubmit(device.allQueue,submitInfo,MainThreadFenceList.get(currentFrameIndex));
+		}
+	}
+
+	/*
+	 * Submit This Frames Transfer Queue
+	 */
+	public void SubmitCommandTransfer(VkCommandBuffer submit) {
+		try(MemoryStack stack = stackPush()) {
+			VkSubmitInfo.Buffer submitInfo = VkSubmitInfo.mallocStack(1,stack);
+			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
+			submitInfo.pNext(VK_NULL_HANDLE);
+			submitInfo.waitSemaphoreCount(0);
+			submitInfo.pWaitSemaphores(null);
+			submitInfo.pWaitDstStageMask(null);
+			submitInfo.pCommandBuffers(stack.pointers(
+					submit
+			));
+			submitInfo.pSignalSemaphores(stack.longs(
+					MainTransferSemaphores.get(currentFrameIndex)
+			));
+			vkQueueSubmit(device.transferQueue,submitInfo,TransferFenceList.get(currentFrameIndex));
+		}
+	}
+
+	////////////////////////////////////////////////////////////
+
+
 
 	/**
 	 * @return The command buffer for the entire draw call
@@ -388,10 +666,20 @@ public class VulkanCommandHandler {
 	 * @return The command buffer for the async GUI Image Transfer
 	 */
 	public VkCommandBuffer getGuiTransferCommandBuffer() {
-		return null;
+		return commandBuffersTransfer.get(currentFrameIndex);
 	}
 
-	public void setCurrentFrameIndex(int idx) {
-		currentFrameIndex = idx;
+	/**
+	 * @return The command buffer for the poolID'th Async Task
+	 */
+	public VkCommandBuffer getAsyncMainCommandBuffer(int poolID) {
+		int idx = (poolID * state.VulkanSwapChainSize) + currentFrameIndex;
+		return commandBuffersAsync.get(idx);
 	}
+
+	public VkCommandBuffer getAsyncTransferCommandBuffer(int poolID) {
+		int idx = (poolID * state.VulkanSwapChainSize) + currentFrameIndex;
+		return commandBuffersTransferAsync.get(idx);
+	}
+
 }

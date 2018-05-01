@@ -19,14 +19,16 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	private final VulkanGuiRenderer guiRenderer;
 	private final VulkanCache cachedLayout;
 	private final VulkanCommandHandler commandHandler;
+	private final int poolSize;
 
-	public VulkanRenderer() {
+	public VulkanRenderer(int asyncCount) {
+		poolSize = asyncCount;
 		state = new VulkanState();
 		logger = Logger.getLogger("Vulkan").getSubLogger("Renderer");
 		cachedLayout = new VulkanCache();
 		cachedLayout.LoadSingle(state);
 		commandHandler = new VulkanCommandHandler(state,cachedLayout);
-		commandHandler.init();
+		commandHandler.init(poolSize);
 
 		//Draw Handlers
 		guiRenderer = new VulkanGuiRenderer();
@@ -83,7 +85,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			//Total Recreate...
 			//TODO: WHERE IS MAIN RENDER MODE STORED??
 			commandHandler.close();
-			commandHandler.init();
+			commandHandler.init(poolSize);
 		}else {
 			//Window Resize Only...
 			commandHandler.reload();

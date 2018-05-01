@@ -51,12 +51,12 @@ public final class VulkanDevice {
 	/*
 	 * All capability queue including present support
 	 */
-	private final VkQueue allQueue;
+	public final VkQueue allQueue;
 
 	/*
 	 * Transfer capability queue for asynchronous transfers
 	 */
-	private final VkQueue transferQueue;
+	public final VkQueue transferQueue;
 
 	//Queue Properties
 	public final VkExtent3D transferQueueImageGranularity;

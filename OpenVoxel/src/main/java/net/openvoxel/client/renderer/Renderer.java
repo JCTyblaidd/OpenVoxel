@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.PublicAPI;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
@@ -88,10 +89,10 @@ public final class Renderer implements EventListener {
 		}
 		if(vulkan_supported && !flag_gl){
 			logger.Info("Loading: Vulkan Renderer");
-			api = new VulkanRenderer();
+			api = new VulkanRenderer(renderTaskPool.getWorkerCount());
 		}else {
 			logger.Info("Loading: OGL3 Renderer");
-			api = new VulkanRenderer();//TODO: IMPLEMENT OPENGL RENDERER!!!
+			api = new VulkanRenderer(renderTaskPool.getWorkerCount());//TODO: IMPLEMENT OPENGL RENDERER!!!
 			System.exit(0);//TODO: IMPLEMENT OpenGL Renderer
 		}
 	}
@@ -313,7 +314,6 @@ public final class Renderer implements EventListener {
 	 */
 	public void submitFrame() {
 		//Start ASYNC Memory Updating//
-
 		api.submitNextFrame();
 	}
 
