@@ -55,7 +55,7 @@ public final class VulkanState {
 	public VkSurfaceFormatKHR.Buffer validSurfaceFormats;
 	public VkSurfaceCapabilitiesKHR surfaceCapabilities;
 	//Chosen SwapChain Values
-	private VkExtent2D chosenSwapExtent;
+	public VkExtent2D chosenSwapExtent;
 	public int chosenPresentMode;
 	private int chosenImageFormat;
 	private int chosenColourSpace;
@@ -97,12 +97,7 @@ public final class VulkanState {
 	 */
 	public boolean recreate() {
 		int oldSize = VulkanSwapChainSize;
-		//Destroy///
-
-		//ReCreate//
 		createSwapChain(true);
-		//Create//
-
 		return oldSize != chosenImageCount;
 	}
 
@@ -411,6 +406,9 @@ public final class VulkanState {
 			LongBuffer pLongValue = stack.mallocLong(1);
 			int vkResult = vkCreateSwapchainKHR(VulkanDevice.logicalDevice,swapCreateInfo,null,pLongValue);
 			if(vkResult == VK_SUCCESS) {
+				if(isRecreated) {
+					vkDestroySwapchainKHR(VulkanDevice.logicalDevice,VulkanSwapChain,null);
+				}
 				VulkanSwapChain = pLongValue.get(0);
 			}else if(vkResult == VK_ERROR_OUT_OF_HOST_MEMORY || vkResult == VK_ERROR_OUT_OF_DEVICE_MEMORY) {
 				VulkanUtility.LogWarn("Failed to create swap-chain: Out of Memory");

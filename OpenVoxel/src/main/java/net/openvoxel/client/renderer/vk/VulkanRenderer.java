@@ -25,8 +25,8 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		logger = Logger.getLogger("Vulkan").getSubLogger("Renderer");
 		cachedLayout = new VulkanCache();
 		cachedLayout.LoadSingle(state);
-		commandHandler = new VulkanCommandHandler();
-		commandHandler.init(state.VulkanSwapChainSize);
+		commandHandler = new VulkanCommandHandler(state,cachedLayout);
+		commandHandler.init();
 
 		//Draw Handlers
 		guiRenderer = new VulkanGuiRenderer();
@@ -34,6 +34,8 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void close() {
+		vkDeviceWaitIdle(state.getLogicalDevice());
+
 		commandHandler.close();
 		cachedLayout.FreeSingle(state.getLogicalDevice());
 		guiRenderer.close();
@@ -57,11 +59,13 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void acquireNextFrame() {
+		//Prepare Command Buffers for editing...
 
 	}
 
 	@Override
 	public void submitNextFrame() {
+		//Generate Main Command Buffer
 
 	}
 
@@ -73,14 +77,18 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	@Override
 	public void stopStateChange() {
 		boolean swapSizeChanged = state.recreate();
-		if(swapSizeChanged) {
-			throw new RuntimeException("Not Yet Implemented: Swap Chain Size Change");
-			//commandHandler.close();
-			//commandHandler.init(state.VulkanSwapChainSize);
+		boolean renderModeChanged = false;//TODO: IMPLEMENT
+		//TODO: CHECK FOR GRAPHICS TYPE REGEN
+		if(swapSizeChanged || renderModeChanged) {
+			//Total Recreate...
+			//TODO: WHERE IS MAIN RENDER MODE STORED??
+			commandHandler.close();
+			commandHandler.init();
+		}else {
+			//Window Resize Only...
+			commandHandler.reload();
 		}
-		commandHandler.reload();
-		//swapSizeChanged = Number of Images in swap chain changed..
-		//The size of the window has however changed
+		//TODO: INVALIDATE EVERYTHING
 	}
 
 	/////////////////////

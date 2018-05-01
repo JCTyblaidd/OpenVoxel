@@ -63,9 +63,9 @@ public final class VulkanDevice {
 	public int allQueueTimestampValidBits;
 
 	private boolean enableAsyncTransfer;
-	private int familyQueue;
+	public int familyQueue;
+	public int familyTransfer;
 	private int indexQueue;
-	private int familyTransfer;
 	private int indexTransfer;
 
 	private static final float PriorityAllQueue = 1.0F;
