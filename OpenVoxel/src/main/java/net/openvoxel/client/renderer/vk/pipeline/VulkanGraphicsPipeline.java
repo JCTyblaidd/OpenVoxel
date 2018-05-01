@@ -1,7 +1,6 @@
 package net.openvoxel.client.renderer.vk.pipeline;
 
 import gnu.trove.list.TIntList;
-import net.openvoxel.client.renderer.vk.VulkanDebug;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
@@ -44,8 +43,6 @@ public abstract class VulkanGraphicsPipeline {
 			createInfo.subpass(subPass);
 			createInfo.basePipelineHandle(basePipeline);
 			createInfo.basePipelineIndex(-1);
-			VulkanUtility.LogDebug(VulkanDebug.ToString(createInfo));
-			System.exit(0);
 			//Create Pipeline
 			LongBuffer pPipelines = stack.mallocLong(1);
 			int vkResult = vkCreateGraphicsPipelines(device,pipelineCache,createInfo,null,pPipelines);
@@ -85,14 +82,13 @@ public abstract class VulkanGraphicsPipeline {
 			createInfos.pName(entryName);
 			createInfos.pSpecializationInfo(specializationInfo);
 		}
-		createInfos.position(0);//TODO: SPECIAL BUG!
+		createInfos.position(0);
 		return createInfos;
 	}
 
 	protected abstract VkPipelineVertexInputStateCreateInfo getVertexState(MemoryStack stack);
 
 	protected VkPipelineInputAssemblyStateCreateInfo getInputState(MemoryStack stack) {
-
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkPipelineInputAssemblyStateCreateInfo.mallocStack(stack);
 		inputAssembly.sType(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO);
 		inputAssembly.pNext(VK_NULL_HANDLE);
@@ -117,15 +113,17 @@ public abstract class VulkanGraphicsPipeline {
 		viewportState.sType(VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO);
 		viewportState.pNext(VK_NULL_HANDLE);
 		viewportState.flags(0);
-		//Are Both Dynamic State : [ADDED FALLBACKS ANYWAY]
+		//Are Both Dynamic State : But Are Required!!!!
 		VkViewport.Buffer fallbackViewport = VkViewport.mallocStack(1,stack);
-		fallbackViewport.get(0).set(0,0,100,100,0,1);
-		viewportState.pViewports(fallbackViewport);
+		fallbackViewport.get(0).set(0,0,
+				100,100,0,1);
+
 		VkRect2D.Buffer fallbackScissor = VkRect2D.callocStack(1,stack);
 		fallbackScissor.extent().set(100,100);
 		fallbackScissor.offset().set(0,0);
+
+		viewportState.pViewports(fallbackViewport);
 		viewportState.pScissors(fallbackScissor);
-		//
 		viewportState.viewportCount(1);
 		viewportState.scissorCount(1);
 		return viewportState;
@@ -136,8 +134,8 @@ public abstract class VulkanGraphicsPipeline {
 		rasterState.sType(VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO);
 		rasterState.pNext(VK_NULL_HANDLE);
 		rasterState.flags(0);
-		rasterState.depthClampEnable(false);
-		rasterState.rasterizerDiscardEnable(true);
+		rasterState.depthClampEnable(false);       //was false -> true??
+		rasterState.rasterizerDiscardEnable(false);//was true -> false???
 		rasterState.polygonMode(VK_POLYGON_MODE_FILL);
 		rasterState.cullMode(VK_CULL_MODE_BACK_BIT);
 		rasterState.frontFace(VK_FRONT_FACE_CLOCKWISE);

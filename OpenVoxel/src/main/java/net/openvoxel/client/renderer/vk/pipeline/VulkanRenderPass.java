@@ -1,6 +1,5 @@
 package net.openvoxel.client.renderer.vk.pipeline;
 
-import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import org.lwjgl.system.MemoryStack;
@@ -124,7 +123,7 @@ public class VulkanRenderPass {
 		}else if(type == RENDER_PASS_TYPE_FINAL_VOXEL) {
 			return null;
 		}else if(type == RENDER_PASS_TYPE_FORWARD) {
-			VkAttachmentDescription.Buffer attachmentList = VkAttachmentDescription.mallocStack(2,stack);
+			VkAttachmentDescription.Buffer attachmentList = VkAttachmentDescription.mallocStack(1,stack);
 			attachmentList.position(0);
 			if(type == RENDER_PASS_TYPE_FORWARD || type == RENDER_PASS_TYPE_FINAL_VOXEL) {
 				//Attachment 0: Swap Color
@@ -138,6 +137,7 @@ public class VulkanRenderPass {
 				attachmentList.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED);
 				attachmentList.finalLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 			}
+			/**
 			attachmentList.position(1);
 			{
 				//Attachment 1: Depth Buffer
@@ -150,7 +150,7 @@ public class VulkanRenderPass {
 				attachmentList.stencilStoreOp(VK_ATTACHMENT_STORE_OP_DONT_CARE);
 				attachmentList.initialLayout(VK_IMAGE_LAYOUT_UNDEFINED);
 				attachmentList.finalLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-			}
+			}**/
 			attachmentList.position(0);
 			return attachmentList;
 		}else {
@@ -169,11 +169,11 @@ public class VulkanRenderPass {
 			VkAttachmentReference.Buffer refPresent = VkAttachmentReference.mallocStack(1,stack);
 			refPresent.attachment(0);
 			refPresent.layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
+/*
 			VkAttachmentReference refDepth = VkAttachmentReference.mallocStack(stack);
 			refDepth.attachment(1);
 			refDepth.layout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
+*/
 			VkSubpassDescription.Buffer subPassList = VkSubpassDescription.mallocStack(1, stack);
 			subPassList.position(0);
 			{
@@ -183,7 +183,7 @@ public class VulkanRenderPass {
 				subPassList.colorAttachmentCount(1);
 				subPassList.pColorAttachments(refPresent);
 				subPassList.pResolveAttachments(null);
-				subPassList.pDepthStencilAttachment(refDepth);
+				subPassList.pDepthStencilAttachment(null);//TODO: REMOVE CHANGES refDepth);
 				subPassList.pPreserveAttachments(null);
 			}
 			subPassList.position(0);

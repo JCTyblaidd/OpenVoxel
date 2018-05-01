@@ -66,8 +66,6 @@ public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 		return vertexInputState;
 	}
 
-
-
 	@Override
 	protected VkPipelineColorBlendStateCreateInfo getColorBlendState(MemoryStack stack) {
 		VkPipelineColorBlendStateCreateInfo blendState = VkPipelineColorBlendStateCreateInfo.mallocStack(stack);
@@ -86,7 +84,12 @@ public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 			attachments.srcAlphaBlendFactor(VK_BLEND_FACTOR_ZERO);
 			attachments.dstAlphaBlendFactor(VK_BLEND_FACTOR_ONE);
 			attachments.alphaBlendOp(VK_BLEND_OP_ADD);
-			attachments.colorWriteMask(0xFFFFFFFF);
+			attachments.colorWriteMask(
+					VK_COLOR_COMPONENT_R_BIT |
+					VK_COLOR_COMPONENT_G_BIT |
+					VK_COLOR_COMPONENT_B_BIT |
+					VK_COLOR_COMPONENT_A_BIT
+			);
 		}
 		attachments.position(0);
 		blendState.pAttachments(attachments);
@@ -97,9 +100,6 @@ public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 		return blendState;
 	}
 
-	/*
-	 * Depth & Stencil Testing All disabled...
-	 */
 	@Override
 	protected VkPipelineDepthStencilStateCreateInfo getDepthStencilState(MemoryStack stack) {
 		VkPipelineDepthStencilStateCreateInfo depthStencilState = VkPipelineDepthStencilStateCreateInfo.mallocStack(stack);
@@ -117,5 +117,8 @@ public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 		depthStencilState.maxDepthBounds(1.0F);
 		return depthStencilState;
 	}
+
+
+
 
 }

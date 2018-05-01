@@ -146,11 +146,14 @@ public class VulkanCache {
 				//GUI Texture Array
 				VkDescriptorSetLayoutBinding.Buffer bindings = VkDescriptorSetLayoutBinding.mallocStack(1,stack);
 				bindings.position(0);
-				bindings.binding(0);
-				bindings.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-				bindings.descriptorCount(32);
-				bindings.stageFlags(VK_SHADER_STAGE_FRAGMENT_BIT);
-				bindings.pImmutableSamplers(null);
+				{
+					bindings.binding(0);
+					bindings.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+					bindings.descriptorCount(32);
+					bindings.stageFlags(VK_SHADER_STAGE_FRAGMENT_BIT);
+					bindings.pImmutableSamplers(null);
+				}
+				bindings.position(0);
 				createInfo.pBindings(bindings);
 			}else{
 				throw new RuntimeException("Unknown ID");
