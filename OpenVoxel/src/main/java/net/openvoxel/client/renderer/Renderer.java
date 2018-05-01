@@ -1,7 +1,6 @@
 package net.openvoxel.client.renderer;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.PublicAPI;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
@@ -18,8 +17,6 @@ import net.openvoxel.utility.AsyncRunnablePool;
 import net.openvoxel.utility.CrashReport;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F12;
-import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
 
 /**
@@ -197,6 +194,9 @@ public final class Renderer implements EventListener {
 			}
 		}else if (e.GLFW_KEY == GLFW_KEY_F12 && e.GLFW_KEY_STATE == GLFW_PRESS) {
 			requestScreenshot();
+		}else if(e.GLFW_KEY == GLFW_KEY_DELETE) {
+			//TODO: REMOVE THIS FUNCTION WHEN IT IS NO LONGER NEEDED FOR DEBUGGING
+			System.exit(0);
 		}
 	}
 

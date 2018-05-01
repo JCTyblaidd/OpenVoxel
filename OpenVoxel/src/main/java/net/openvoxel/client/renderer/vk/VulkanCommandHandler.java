@@ -2,11 +2,13 @@ package net.openvoxel.client.renderer.vk;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
+import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
@@ -500,11 +502,15 @@ public final class VulkanCommandHandler {
 	}
 
 	void reload() {
+		//WaitForFence(MainThreadAcquireFence,50*1000*1000);
+		destroySynchronisation();
 		destroyResizeable();
 		initResizeable();
+		initSynchronisation(state.VulkanSwapChainSize);
 	}
 
 	void close() {
+		WaitForFence(MainThreadAcquireFence,50*1000*1000);
 		destroySynchronisation();
 		destroyCommandBuffers();
 		destroyResizeable();
@@ -533,10 +539,28 @@ public final class VulkanCommandHandler {
 	}
 
 	private void WaitForFence(long fence,long timeout) {
+		//TODO: REMOVE DEBUG TIMEOUT
+		long _time1 = System.currentTimeMillis();
 		int result = vkWaitForFences(device.logicalDevice, fence, true, timeout);
+		long _time2 = System.currentTimeMillis();
+		long _delta = _time2 - _time1;
+		if(_delta > timeout / 2 || result == VK_TIMEOUT) {
+			if (fence == MainThreadAcquireFence) {
+				VulkanUtility.LogDebug("Acquire Fence: " + _delta);
+			} else if (MainThreadFenceList.contains(fence)) {
+				VulkanUtility.LogDebug("Main Fence: " + _delta);
+			} else {
+				VulkanUtility.LogDebug("Transfer Fence: " + _delta);
+			}
+		}
 		if (result == VK_TIMEOUT) {
+			//Fallback Fence Timeout...
 			VulkanUtility.LogWarn("Fence Timed-out!!!");
 			vkDeviceWaitIdle(device.logicalDevice);
+			result = vkWaitForFences(device.logicalDevice,fence,true,100);
+			if(result  != VK_SUCCESS) {
+				VulkanUtility.CrashOnBadResult("Fence still in use after vkDeviceWaitIdle(...)",result);
+			}
 		} else if (result != VK_SUCCESS) {
 			//No Memory
 			VulkanUtility.CrashOnBadResult("Failed to wait for fence",result);
@@ -551,26 +575,46 @@ public final class VulkanCommandHandler {
 	/*
 	 * Wait till This Frames Graphics Queue is Valid
 	 */
-	public void AwaitGraphicsFence(long timeout) {
+	void AwaitGraphicsFence(long timeout) {
 		WaitForFence(MainThreadFenceList.get(currentFrameIndex), timeout);
 	}
 
 	/*
 	 * Wait till This Frames Transfer Queue is Valid
 	 */
-	public void AwaitTransferFence(long timeout) {
+	void AwaitTransferFence(long timeout) {
 		WaitForFence(TransferFenceList.get(currentFrameIndex),timeout);
 	}
 
-	public void ResetSwapChainTracking() {
-		currentFrameIndex = 0;
+/*
+	TODO: REMOVE IF UNEEDED - DOESNT SEEM TO FIX THE ISSUE
+	void TESTING_0(long timeout) {
+		WaitForFence(MainThreadAcquireFence,timeout);
 	}
+
+	void TESTING_1() {
+		vkDestroyFence(device.logicalDevice,MainThreadAcquireFence,null);
+		MainThreadAcquireFence = VK_NULL_HANDLE;
+		try(MemoryStack stack = stackPush()) {
+			VkFenceCreateInfo fenceCreate = VkFenceCreateInfo.mallocStack(stack);
+			fenceCreate.sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO);
+			fenceCreate.pNext(VK_NULL_HANDLE);
+			fenceCreate.flags(VK_FENCE_CREATE_SIGNALED_BIT);
+			LongBuffer pReturn = stack.mallocLong(1);
+			int vk_result = vkCreateFence(device.logicalDevice,fenceCreate,null,pReturn);
+			MainThreadAcquireFence = pReturn.get(0);
+			if(vk_result != VK_SUCCESS) {
+				VulkanUtility.CrashOnBadResult("Failed to recreate acquire fence",vk_result);
+			}
+		}
+	}
+*/
 
 
 	/**
 	 * @return if the acquire succeeded, otherwise the swap-chain needs recreating
 	 */
-	public boolean AcquireNextImage(long timeout) {
+	boolean AcquireNextImage(long timeout) {
 		try(MemoryStack stack = stackPush()) {
 			WaitForFence(MainThreadAcquireFence, timeout);
 			IntBuffer pImageIndex = stack.mallocInt(1);
@@ -603,7 +647,7 @@ public final class VulkanCommandHandler {
 	/**
 	 * @return if the present succeeded, otherwise the swap-chain needs recreating
 	 */
-	public boolean PresentImage() {
+	boolean PresentImage() {
 		try(MemoryStack stack = stackPush()) {
 			VkPresentInfoKHR presentInfo = VkPresentInfoKHR.mallocStack(stack);
 			presentInfo.sType(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);
@@ -639,12 +683,12 @@ public final class VulkanCommandHandler {
 	/*
 	 * Submit This Frames Command Queue
 	 */
-	public void SubmitCommandGraphics(VkCommandBuffer submit) {
+	void SubmitCommandGraphics(VkCommandBuffer submit) {
 		try(MemoryStack stack = stackPush()) {
 			VkSubmitInfo.Buffer submitInfo = VkSubmitInfo.mallocStack(1,stack);
 			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
 			submitInfo.pNext(VK_NULL_HANDLE);
-			submitInfo.waitSemaphoreCount(1);
+			submitInfo.waitSemaphoreCount(2);
 			submitInfo.pWaitSemaphores(stack.longs(
 					MainThreadAcquireSemaphore,
 					MainTransferSemaphores.get(currentFrameIndex)
@@ -666,7 +710,7 @@ public final class VulkanCommandHandler {
 	/*
 	 * Submit This Frames Transfer Queue
 	 */
-	public void SubmitCommandTransfer(VkCommandBuffer submit) {
+	void SubmitCommandTransfer(VkCommandBuffer submit) {
 		try(MemoryStack stack = stackPush()) {
 			VkSubmitInfo.Buffer submitInfo = VkSubmitInfo.mallocStack(1,stack);
 			submitInfo.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
@@ -690,7 +734,7 @@ public final class VulkanCommandHandler {
 	/**
 	 * @return The command buffer for the entire draw call
 	 */
-	public VkCommandBuffer getMainDrawCommandBuffer() {
+	VkCommandBuffer getMainDrawCommandBuffer() {
 		return commandBuffersMainThread.get(currentFrameIndex);
 	}
 
@@ -704,7 +748,7 @@ public final class VulkanCommandHandler {
 	/**
 	 * @return The command buffer for the async Data Transfer
 	 */
-	public VkCommandBuffer getTransferCommandBuffer() {
+	VkCommandBuffer getTransferCommandBuffer() {
 		return commandBuffersTransfer.get(currentFrameIndex);
 	}
 

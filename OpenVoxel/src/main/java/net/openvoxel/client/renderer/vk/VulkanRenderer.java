@@ -15,6 +15,8 @@ import org.lwjgl.vulkan.VkCommandBuffer;
 import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
 import org.lwjgl.vulkan.VkRenderPassBeginInfo;
 
+import java.util.Random;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.KHRSurface.*;
@@ -28,6 +30,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	private final VulkanCache cachedLayout;
 	private final VulkanCommandHandler commandHandler;
 	private final int poolSize;
+
+	//100 millis...
+	private static final int TIME_OUT_LENGTH = 100 * 1000 *1000;
 
 	public VulkanRenderer(int asyncCount) {
 		poolSize = asyncCount;
@@ -69,18 +74,16 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void acquireNextFrame() {
-		long timeout = 100000000;
-		boolean success = commandHandler.AcquireNextImage(timeout);
+		boolean success = commandHandler.AcquireNextImage(TIME_OUT_LENGTH);
 		if(!success) {
 			throw new RuntimeException("PANIC!!");
 		}
-		commandHandler.AwaitTransferFence(timeout);
+		commandHandler.AwaitTransferFence(TIME_OUT_LENGTH);
 	}
 
 	@Override
 	public void prepareForSubmit() {
-		long timeout = 100000000;
-		commandHandler.AwaitGraphicsFence(timeout);
+		commandHandler.AwaitGraphicsFence(TIME_OUT_LENGTH);
 	}
 
 	@Override
@@ -104,7 +107,6 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(mainBuffer,beginInfo);
-
 			VkClearValue.Buffer clearValues = VkClearValue.mallocStack(2,stack);
 			clearValues.color().float32(0,1.0f);
 			clearValues.color().float32(1,0.0f);
@@ -124,7 +126,10 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			vkEndCommandBuffer(mainBuffer);
 			commandHandler.SubmitCommandGraphics(mainBuffer);
 		}
-		commandHandler.PresentImage();
+		boolean success = commandHandler.PresentImage();
+		if(!success) {
+			throw new RuntimeException("PANIC!!!");
+		}
 	}
 
 	@Override
@@ -147,6 +152,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			commandHandler.reload();
 		}
 		//TODO: INVALIDATE EVERYTHING
+
 	}
 
 	/////////////////////

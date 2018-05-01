@@ -52,7 +52,7 @@ public final class VulkanUtility {
 
 	public static void CrashOnBadResult(String str,int res) {
 		String resString = vkResultToString(res);
-		VulkanLog.Severe(str,resString);
+		VulkanLog.Severe(str," ",resString);
 		CrashReport report = new CrashReport(str).invalidState(resString);
 		OpenVoxel.reportCrash(report);
 	}
