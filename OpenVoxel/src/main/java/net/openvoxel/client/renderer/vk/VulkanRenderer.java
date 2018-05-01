@@ -6,26 +6,36 @@ import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.common.event.EventListener;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
+import static org.lwjgl.vulkan.VK10.vkDeviceWaitIdle;
 
 public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	public final VulkanState state;
 	private final Logger logger;
 	private final VulkanGuiRenderer guiRenderer;
+	private final VulkanCache cachedLayout;
+	private final VulkanCommandHandler commandHandler;
 
 	public VulkanRenderer() {
 		state = new VulkanState();
 		logger = Logger.getLogger("Vulkan").getSubLogger("Renderer");
+		cachedLayout = new VulkanCache();
+		cachedLayout.LoadSingle(state);
+		commandHandler = new VulkanCommandHandler();
+		commandHandler.init(state.VulkanSwapChainSize);
+
+		//Draw Handlers
 		guiRenderer = new VulkanGuiRenderer();
 	}
 
 	@Override
 	public void close() {
+		commandHandler.close();
+		cachedLayout.FreeSingle(state.getLogicalDevice());
 		guiRenderer.close();
 		state.close();
 	}
@@ -57,12 +67,20 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void startStateChange() {
-
+		vkDeviceWaitIdle(state.getLogicalDevice());
 	}
 
 	@Override
 	public void stopStateChange() {
-
+		boolean swapSizeChanged = state.recreate();
+		if(swapSizeChanged) {
+			throw new RuntimeException("Not Yet Implemented: Swap Chain Size Change");
+			//commandHandler.close();
+			//commandHandler.init(state.VulkanSwapChainSize);
+		}
+		commandHandler.reload();
+		//swapSizeChanged = Number of Images in swap chain changed..
+		//The size of the window has however changed
 	}
 
 	/////////////////////

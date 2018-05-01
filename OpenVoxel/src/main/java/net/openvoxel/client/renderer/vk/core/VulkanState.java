@@ -5,6 +5,7 @@ import gnu.trove.list.array.TIntArrayList;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.glfw.GLFWEventHandler;
+import net.openvoxel.client.renderer.vk.VulkanCommandHandler;
 import net.openvoxel.utility.CrashReport;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
@@ -12,7 +13,6 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
 
-import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
@@ -34,22 +34,22 @@ public final class VulkanState {
 	///Flags
 	private static boolean flag_vulkanDetailedDeviceInfo = OpenVoxel.getLaunchParameters().hasFlag("vkDeviceInfo");
 	private static boolean flag_vulkanDetailLog = OpenVoxel.getLaunchParameters().hasFlag("vkDebugDetailed");
+	private static boolean flag_vulkanDumpAPI = OpenVoxel.getLaunchParameters().hasFlag("vkDumpAPI");
 	static boolean flag_vulkanDebug = OpenVoxel.getLaunchParameters().hasFlag("vkDebug") || flag_vulkanDetailLog;
 	static boolean flag_vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
 
 	///State
 	public final long GLFWWindow;
 	private final VkInstance VulkanInstance;
-	private final VulkanDevice VulkanDevice;
-	private final VulkanMemory VulkanMemory;
+	public final VulkanDevice VulkanDevice;
+	public final VulkanMemory VulkanMemory;
 	private final long VulkanSurface;
-	private final VulkanCommandHandler VulkanCommands;
 
 	///Dynamic State
-	private long VulkanSwapChain;
-	private LongBuffer VulkanSwapChainImages;
-	private LongBuffer VulkanSwapChainImageViews;
-	private int VulkanSwapChainSize;
+	public long VulkanSwapChain;
+	public LongBuffer VulkanSwapChainImages;
+	public LongBuffer VulkanSwapChainImageViews;
+	public int VulkanSwapChainSize;
 
 
 	//SwapChain Configuration
@@ -87,18 +87,25 @@ public final class VulkanState {
 		VulkanMemory = new VulkanMemory(VulkanDevice);
 		///Create Swap-Chain///
 		createSwapChain(false);
-		VulkanCommands = new VulkanCommandHandler();
-		VulkanCommands.init(chosenImageCount);
 	}
 
-	public void recreate() {
-		vkDeviceWaitIdle(VulkanDevice.logicalDevice);
+	public VkDevice getLogicalDevice() {
+		return VulkanDevice.logicalDevice;
+	}
+
+	/**
+	 * Recreates the swapchain...
+	 * @return If the image count changed?
+	 */
+	public boolean recreate() {
+		int oldSize = VulkanSwapChainSize;
 		//Destroy///
-		VulkanCommands.close();
+
 		//ReCreate//
 		createSwapChain(true);
 		//Create//
-		VulkanCommands.init(chosenImageCount);
+
+		return oldSize != chosenImageCount;
 	}
 
 	/*
@@ -106,7 +113,6 @@ public final class VulkanState {
 	 */
 	public void close() {
 		///Destroy Swap-Chain///
-		VulkanCommands.close();
 		destroySwapChain();
 		////Destroy Managers////
 		VulkanMemory.close();
@@ -117,6 +123,34 @@ public final class VulkanState {
 		destroyInstance();
 		GLFWEventHandler.Unload();
 		destroyWindow();
+	}
+
+	///////////////////////////////
+	/// Other API Functionality ///
+	///////////////////////////////
+
+	public int getPresentImageFormat() {
+		return chosenImageFormat;
+	}
+
+	public int findSupportedFormat(int imageTiling,int features,int... all_formats) {
+		try(MemoryStack stack = stackPush()) {
+			VkFormatProperties props = VkFormatProperties.mallocStack(stack);
+			for (int format : all_formats) {
+				vkGetPhysicalDeviceFormatProperties(VulkanDevice.physicalDevice, format, props);
+				if(imageTiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures() & features) == features) {
+					return format;
+				}else if(imageTiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures() & features) == features) {
+					return format;
+				}
+			}
+			CrashReport crashReport = new CrashReport("Failed to find valid Vulkan Image Format");
+			for (int format : all_formats) {
+				crashReport.invalidState("Format: #" + Integer.toHexString(format) + " = Failure");
+			}
+			OpenVoxel.reportCrash(crashReport);
+			return 0;
+		}
 	}
 
 	/////////////////////////////////////
@@ -219,9 +253,23 @@ public final class VulkanState {
 				VulkanUtility.LogDebug("Instance Layer: " + layerList.layerNameString());
 			}
 			if(flag_vulkanDebug) {
-				if(layerList.layerNameString().equals("VK_LAYER_LUNARG_standard_validation")) {
+				if (layerList.layerNameString().equals("VK_LAYER_LUNARG_standard_validation")) {
 					enabledLayers.add(layerList.layerName());
 					VulkanUtility.LogInfo("Enabled Layer: Standard Validation");
+					continue;
+				}
+			}
+			if(flag_vulkanDetailLog) {
+				if (layerList.layerNameString().equals("VK_LAYER_LUNARG_assistant_layer")) {
+					enabledLayers.add(layerList.layerName());
+					VulkanUtility.LogInfo("Enabled Layer: Assistant Layer");
+					continue;
+				}
+			}
+			if(flag_vulkanDumpAPI) {
+				if(layerList.layerNameString().equals("VK_LAYER_LUNARG_api_dump")) {
+					enabledLayers.add(layerList.layerName());
+					VulkanUtility.LogInfo("Enabled Layer: API DUMP...");
 					continue;
 				}
 			}

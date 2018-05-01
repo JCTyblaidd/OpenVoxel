@@ -40,7 +40,7 @@ public final class Renderer implements EventListener {
 	//State Changes
 	private boolean screenshotRequest;
 	private boolean changeStateRequest;
-	private boolean reloadTextureRequest;
+	private boolean reloadResourceRequest;
 	private GraphicsAPI.VSyncType requestVSync;
 	private GraphicsAPI.ScreenType requestScreen;
 
@@ -56,7 +56,7 @@ public final class Renderer implements EventListener {
 
 		screenshotRequest = false;
 		changeStateRequest = false;
-		reloadTextureRequest = false;
+		reloadResourceRequest = false;
 		requestVSync = null;
 		requestScreen = null;
 
@@ -208,6 +208,48 @@ public final class Renderer implements EventListener {
 	/// Main Loop Functions ///
 	///////////////////////////
 
+	private void takeScreenshot() {
+		screenshotRequest = false;
+		GraphicsAPI.ScreenshotInfo screenshot = api.takeScreenshot();
+		try {
+			if(screenshot != null) {
+				FolderUtils.saveScreenshot(screenshot);
+			}else{
+				logger.Warning("Failed to take screenshot");
+			}
+		}catch(Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			if(screenshot != null) {
+				screenshot.free();
+			}
+		}
+	}
+
+	private void handleStateChange() {
+		changeStateRequest = false;
+		api.startStateChange();
+
+		//Change Display Configuration
+		if(requestVSync != null) {
+			api.setVSync(requestVSync);
+			requestVSync = null;
+		}
+		if(requestScreen != null) {
+			api.setScreenType(requestScreen);
+			requestScreen = null;
+		}
+
+		//Resource Shader Sources & Textures
+		if(reloadResourceRequest) {
+			//TODO: Invalidate all stored textures & update all of them
+			logger.Warning("Reloading of Resources: Not Yet Implemented");
+			reloadResourceRequest = false;
+		}
+
+		api.stopStateChange();
+	}
+
 	/**
 	 * Prepare GPU for Streaming of data
 	 *
@@ -217,33 +259,11 @@ public final class Renderer implements EventListener {
 		awaitFPSTarget();
 		//Handle Screenshots
 		if(screenshotRequest) {
-			screenshotRequest = false;
-			GraphicsAPI.ScreenshotInfo screenshot = api.takeScreenshot();
-			try {
-				FolderUtils.saveScreenshot(screenshot);
-			}catch(Exception ex) {
-				ex.printStackTrace();
-			} finally {
-				screenshot.free();
-			}
+			takeScreenshot();
 		}
 		//Handle resize & vSync & window changes
 		if(changeStateRequest) {
-			changeStateRequest = false;
-			api.startStateChange();
-			if(requestVSync != null) {
-				api.setVSync(requestVSync);
-				requestVSync = null;
-			}
-			if(requestScreen != null) {
-				api.setScreenType(requestScreen);
-				requestScreen = null;
-			}
-			api.stopStateChange();
-		}
-		//Handle texture reloading
-		if(reloadTextureRequest) {
-			logger.Warning("Reloading of Textures is NYI!!!!");
+			handleStateChange();
 		}
 		api.acquireNextFrame();
 		frameRateTimer.notifyEvent();

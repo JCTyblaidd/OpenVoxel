@@ -24,7 +24,7 @@ public final class VulkanDevice {
 
 	//State
 	final VkPhysicalDevice physicalDevice;
-	final VkDevice logicalDevice;
+	public final VkDevice logicalDevice;
 
 	///Enabled Extensions
 	public boolean enabled_KHR_maintenance1 = false;
@@ -33,6 +33,7 @@ public final class VulkanDevice {
 	//public boolean enabled_KHR_get_memory_requirements2 = false;
 	//public boolean enabled_KHR_push_descriptor = false;
 	public boolean enabled_NV_geometry_passthrough = false;
+	public boolean enabled_NV_glsl_shader = false;
 
 	//Properties & Features
 	public final VkPhysicalDeviceProperties properties = VkPhysicalDeviceProperties.malloc();
@@ -421,8 +422,13 @@ public final class VulkanDevice {
 			}
 			if(extName.equals("VK_NV_geometry_shader_passthrough")) {
 				enabledExtensions.add(extensionList.extensionName());
-				VulkanUtility.LogInfo("Enabled Ext: NV Geometry Shader Passthrough");
+				VulkanUtility.LogInfo("Enabled Ext: NV Geometry Shader PassThrough");
 				enabled_NV_geometry_passthrough = true;
+			}
+			if(extName.equals("VK_NV_glsl_shader")) {
+				enabledExtensions.add(extensionList.extensionName());
+				VulkanUtility.LogInfo("Enabled Ext: NV GLSL Shader");
+				enabled_NV_glsl_shader = true;
 			}
 			//if(extName.equals("VK_EXT_blend_operation_advanced")) {
 			//	enabledExtensions.add(extensionList.extensionName());
