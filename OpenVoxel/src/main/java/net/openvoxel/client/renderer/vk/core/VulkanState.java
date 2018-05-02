@@ -258,20 +258,6 @@ public final class VulkanState {
 		VulkanUtility.ValidateSuccess(error,vkEnumerateInstanceLayerProperties(sizeRef,layerList));
 
 		List<ByteBuffer> enabledLayers = new ArrayList<>();
-		//RenderDoc needs to be first to play nice with the debug layers...
-		/*
-		if(flag_vulkanRenderDoc) {
-			for(int i = 0; i < sizeRef.get(0); i++) {
-				layerList.position(i);
-				if(layerList.layerNameString().equals("VK_LAYER_RENDERDOC_Capture")) {
-					enabledLayers.add(layerList.layerName());
-					VulkanUtility.LogInfo("Enabled Layer: RenderDoc Capture");
-					break;
-				}
-			}
-		}
-		*/
-		//Normal Layer Loading...
 		for(int i = 0; i < sizeRef.get(0); i++) {
 			layerList.position(i);
 			if(flag_vulkanDebug) {

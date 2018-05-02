@@ -44,12 +44,6 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 		//Draw Handlers
 		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory);
-		//TODO: REMOVE DEBUGGING....
-		try{
-			System.in.read();
-		}catch(Exception ignored) {
-
-		}
 	}
 
 	@Override
@@ -118,9 +112,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiTransfer));
 
 			VkClearValue.Buffer clearValues = VkClearValue.mallocStack(2,stack);
-			clearValues.color().float32(0,1.0f);
-			clearValues.color().float32(1,0.0f);
-			clearValues.color().float32(2,0.0f);
+			clearValues.color().float32(0,0.2549f);
+			clearValues.color().float32(1,0.72549f);
+			clearValues.color().float32(2,1.0f);
 			clearValues.color().float32(3,1.0f);
 			clearValues.get(1).depthStencil().depth(0.0f);
 			VkRenderPassBeginInfo renderPassBegin = VkRenderPassBeginInfo.mallocStack(stack);

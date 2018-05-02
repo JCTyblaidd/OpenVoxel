@@ -285,7 +285,7 @@ public final class Renderer implements EventListener {
 		int newHeight = ClientInput.currentWindowFrameSize.y;
 		boolean changePos = oldX != newX || oldY != newY;
 		boolean changeSize = oldWidth != newWidth || oldHeight != newHeight;
-		int recursiveFalloff = (changePos || changeSize) ? 5 : 0;
+		int recursiveFalloff = (changePos || changeSize) ? 20 : 0;
 		while(changePos || changeSize || recursiveFalloff > 0) {
 			oldX = newX;
 			oldY = newY;

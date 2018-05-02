@@ -26,8 +26,8 @@ public class GUIHandler implements EventListener{
 
 	@SubscribeEvents
 	public void onMouseMove(CursorPositionChangeEvent mouseMove) {
-		final float H = ClientInput.currentWindowFrameSize.x;
-		final float W = ClientInput.currentWindowFrameSize.y;
+		final float W = ClientInput.currentWindowFrameSize.x;
+		final float H = ClientInput.currentWindowFrameSize.y;
 		GUI.handleMouseMoveEvent((float)ClientInput.mousePosition.x/W,
 				(float)ClientInput.mousePosition.y/H,
 				mouseMove.X/W,
