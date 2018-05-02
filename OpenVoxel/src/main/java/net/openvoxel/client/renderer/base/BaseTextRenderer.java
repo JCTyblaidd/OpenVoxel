@@ -54,10 +54,9 @@ public abstract class BaseTextRenderer {
 
 		int YCell = charID / numCellsX;
 		int XCell = charID % numCellsX;
-		//int XCell = charID - (YCell * FONT_SHEET_HEIGHT);
 
 		float minU = XCell * cellWidth;
-		float Width = (pixelWidths[charID] / pixelsPerCell);
+		float Width = ((float)pixelWidths[(int)c] / pixelsPerCell);
 		float maxU = minU + (Width * cellWidth);
 		float maxV = YCell * cellHeight;
 		float minV = maxV + cellHeight;
@@ -79,8 +78,7 @@ public abstract class BaseTextRenderer {
 
 	public void DrawText(BaseGuiRenderer draw,int screenWidth, int screenHeight,
 	                     float x, float y, float height, String text, int col) {
-		draw.EnableTexture(true);
-		draw.SetTexture(handle);
+		draw.Begin(handle);
 		//Draw Vertex List
 		final int SIZE = text.length();
 		float runningOffset = 0;
