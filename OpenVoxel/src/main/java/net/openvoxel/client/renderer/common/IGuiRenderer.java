@@ -6,8 +6,7 @@ import org.joml.Matrix4f;
 
 public abstract class IGuiRenderer {
 	//Abstract Methods
-	public abstract void Begin();
-	public abstract void Draw();
+	public abstract void Begin(ResourceHandle texture);
 	public abstract void SetTexture(ResourceHandle handle);
 	public abstract void EnableTexture(boolean enabled);//Reset On Begin() to true
 	public abstract void SetMatrix(Matrix4f mat);//Reset On Begin() to identity

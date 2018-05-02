@@ -38,15 +38,12 @@ public class GUIColour extends GUIObjectSizable{
 		final float Y1 = getPosY(screenHeight);
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
-		drawHandle.Begin();
-		drawHandle.EnableTexture(false);
-
+		drawHandle.Begin(null);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,Col_mm);
 		drawHandle.VertexWithColUV(X1,Y2,0,1,Col_lm);
 		drawHandle.VertexWithColUV(X1,Y1,0,0,Col_ll);
 		drawHandle.VertexWithColUV(X2,Y1,1,0,Col_ml);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,Col_mm);
 		drawHandle.VertexWithColUV(X1,Y1,0,0,Col_ll);
-		drawHandle.Draw();
 	}
 }

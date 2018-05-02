@@ -31,13 +31,8 @@ public class ResizedGUIHandleWrapper extends IGuiRenderer {
 	}
 
 	@Override
-	public void Begin() {
-		tessellator.Begin();
-	}
-
-	@Override
-	public void Draw() {
-		tessellator.Draw();
+	public void Begin(ResourceHandle handle) {
+		tessellator.Begin(handle);
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import org.lwjgl.vulkan.*;
 import java.nio.LongBuffer;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.vulkan.KHRMaintenance1.VK_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR;
 import static org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 import static org.lwjgl.vulkan.VK10.*;
 
@@ -67,7 +68,8 @@ public class VulkanRenderPass {
 	//Image Formats
 	public static boolean formatInit = false;
 	public static int formatPresent;
-	public static int formatSimpleDepth = VK_FORMAT_D32_SFLOAT;
+	public static int formatSimpleDepth;
+	public static int formatSimpleReadImage;
 
 	public static void LoadFormats(VulkanState state) {
 		VulkanUtility.LogInfo("Choosing Image Formats");
@@ -80,9 +82,19 @@ public class VulkanRenderPass {
 				VK_FORMAT_D32_SFLOAT_S8_UINT,
 				VK_FORMAT_D24_UNORM_S8_UINT
 		);
+		formatSimpleReadImage = state.findSupportedFormat(
+			VK_IMAGE_TILING_OPTIMAL,
+				(
+						VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+						VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+						VK_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR
+				),
+				VK_FORMAT_R8G8B8A8_UNORM
+		);
 		//
 		LogFormat(" - Swap Present",formatPresent);
 		LogFormat(" - Simple Depth",formatSimpleDepth);
+		LogFormat(" - Simple Sampled",formatSimpleReadImage);
 	}
 
 	private static void LogFormat(String id,int format) {

@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
@@ -11,6 +12,7 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
@@ -34,6 +36,10 @@ public final class VulkanCommandHandler {
 	private final VulkanMemory memory;
 	private final VulkanDevice device;
 	private final VulkanCache cache;
+
+	//Staging Buffer for Single Use...
+	private long StagingBuffer;
+	private long StagingBufferMemory;
 
 	//Main Draw Depth...
 	private long DepthImageMemory = VK_NULL_HANDLE;
@@ -478,6 +484,37 @@ public final class VulkanCommandHandler {
 		MainThreadPresentSemaphores.clear();
 	}
 
+	private void initStaging() {
+		try(MemoryStack stack = stackPush()) {
+			VkBufferCreateInfo bufferCreate = VkBufferCreateInfo.mallocStack(stack);
+			bufferCreate.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
+			bufferCreate.pNext(VK_NULL_HANDLE);
+			bufferCreate.flags(0);
+			bufferCreate.size(VulkanMemory.MEMORY_PAGE_SIZE);
+			bufferCreate.usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+			bufferCreate.sharingMode(VK_SHARING_MODE_EXCLUSIVE);
+			bufferCreate.pQueueFamilyIndices(null);
+
+			LongBuffer pReturn = stack.mallocLong(1);
+			int vkResult = vkCreateBuffer(device.logicalDevice,bufferCreate,null,pReturn);
+			VulkanUtility.ValidateSuccess("Failed to create single use staging buffer",vkResult);
+			StagingBuffer = pReturn.get(0);
+
+			StagingBufferMemory = memory.allocateDedicatedBuffer(StagingBuffer,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			if(StagingBufferMemory == VK_NULL_HANDLE) {
+				VulkanUtility.CrashOnBadResult("Failed to allocate staging buffer memory",-1);
+			}
+			vkResult = vkBindBufferMemory(device.logicalDevice,StagingBuffer,StagingBufferMemory,0);
+			VulkanUtility.ValidateSuccess("Failed to bind staging buffer memory",vkResult);
+		}
+	}
+
+	private void destroyStaging() {
+		vkDestroyBuffer(device.logicalDevice,StagingBuffer,null);
+		memory.freeDedicatedMemory(StagingBufferMemory);
+	}
+
 	///////////////////////
 	/// Control Methods ///
 	///////////////////////
@@ -496,6 +533,7 @@ public final class VulkanCommandHandler {
 	}
 
 	void init(int asyncCount) {
+		initStaging();
 		initResizeable();
 		initCommandBuffers(state.VulkanSwapChainSize,asyncCount);
 		initSynchronisation(state.VulkanSwapChainSize);
@@ -514,6 +552,7 @@ public final class VulkanCommandHandler {
 		destroySynchronisation();
 		destroyCommandBuffers();
 		destroyResizeable();
+		destroyStaging();;
 	}
 
 
@@ -530,15 +569,124 @@ public final class VulkanCommandHandler {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public VkCommandBuffer getSingleUseCommandBuffer() {
+	public VkCommandBuffer GetSingleUseCommandBuffer() {
 		try(MemoryStack stack = stackPush()) {
-			//TODO: IMPLEMENT!!!
-			return null;
+			vkDeviceWaitIdle(device.logicalDevice);
+
+			VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.mallocStack(stack);
+			allocateInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
+			allocateInfo.pNext(VK_NULL_HANDLE);
+			allocateInfo.commandPool(commandPoolMainThread);
+			allocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+			allocateInfo.commandBufferCount(1);
+
+			PointerBuffer pCommand = stack.mallocPointer(1);
+			int vkResult = vkAllocateCommandBuffers(device.logicalDevice,allocateInfo,pCommand);
+			VulkanUtility.ValidateSuccess("Failed to alloc single-use command buffer",vkResult);
+
+			VkCommandBuffer commandBuffer = new VkCommandBuffer(pCommand.get(0),device.logicalDevice);
+
+			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
+			beginInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+			beginInfo.pNext(VK_NULL_HANDLE);
+			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+			beginInfo.pInheritanceInfo(null);
+
+			vkResult = vkBeginCommandBuffer(commandBuffer,beginInfo);
+			VulkanUtility.ValidateSuccess("Failed to begin single-use command buffer",vkResult);
+
+			return commandBuffer;
 		}
 	}
 
-	public void SubmitSingleUseCommandBuffer() {
-		//TODO:
+	public void SubmitSingleUseCommandBuffer(VkCommandBuffer buffer) {
+		try(MemoryStack stack = stackPush()) {
+			int vkResult = vkEndCommandBuffer(buffer);
+			VulkanUtility.ValidateSuccess("Failed to end single-use command buffer",vkResult);
+
+			VkSubmitInfo submit = VkSubmitInfo.mallocStack(stack);
+			submit.sType(VK_STRUCTURE_TYPE_SUBMIT_INFO);
+			submit.pNext(VK_NULL_HANDLE);
+			submit.waitSemaphoreCount(0);
+			submit.pWaitSemaphores(null);
+			submit.pWaitDstStageMask(null);
+			submit.pCommandBuffers(stack.pointers(buffer));
+			submit.pSignalSemaphores(null);
+
+			vkQueueSubmit(device.allQueue,submit,VK_NULL_HANDLE);
+			vkQueueWaitIdle(device.allQueue);
+		}
+	}
+
+	public void SingleUseImagePopulate(long Image, STBITexture texture) {
+		try(MemoryStack stack = stackPush()) {
+			VkCommandBuffer command = GetSingleUseCommandBuffer();
+
+			VkImageMemoryBarrier.Buffer imgBarrier = VkImageMemoryBarrier.mallocStack(1, stack);
+			imgBarrier.sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER);
+			imgBarrier.pNext(VK_NULL_HANDLE);
+			imgBarrier.srcAccessMask(0);
+			imgBarrier.dstAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+			imgBarrier.oldLayout(VK_IMAGE_LAYOUT_UNDEFINED);
+			imgBarrier.newLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			imgBarrier.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+			imgBarrier.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+			imgBarrier.image(Image);
+			imgBarrier.subresourceRange().set(
+					VK_IMAGE_ASPECT_COLOR_BIT,
+					0,
+					1,
+					0,
+					1
+			);
+
+			vkCmdPipelineBarrier(command,
+					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					0,
+					null,
+					null,
+					imgBarrier);
+
+
+			PointerBuffer pMapping = stack.mallocPointer(1);
+			int vkResult = vkMapMemory(device.logicalDevice,StagingBufferMemory,0,VulkanMemory.MEMORY_PAGE_SIZE,0,pMapping);
+			VulkanUtility.ValidateSuccess("Failed to map staging buffer",vkResult);
+
+			ByteBuffer data = pMapping.getByteBuffer((int)VulkanMemory.MEMORY_PAGE_SIZE);
+			data.put(texture.pixels);
+			vkUnmapMemory(device.logicalDevice,StagingBufferMemory);
+
+			VkBufferImageCopy.Buffer regions = VkBufferImageCopy.mallocStack(1,stack);
+			regions.bufferOffset(0);
+			regions.bufferRowLength(texture.width);
+			regions.bufferImageHeight(texture.height);
+			regions.imageSubresource().set(
+					VK_IMAGE_ASPECT_COLOR_BIT,
+					0,
+					0,
+					1
+			);
+			regions.imageOffset().set(0,0,0);
+			regions.imageExtent().set(texture.width,texture.height,1);
+
+			vkCmdCopyBufferToImage(command,StagingBuffer, Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regions);
+
+			imgBarrier.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+			imgBarrier.dstAccessMask(VK_ACCESS_SHADER_READ_BIT);
+			imgBarrier.oldLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			imgBarrier.newLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			vkCmdPipelineBarrier(command,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					0,
+					null,
+					null,
+					imgBarrier);
+
+			SubmitSingleUseCommandBuffer(command);
+		}
 	}
 
 	private void WaitForFence(long fence,long timeout) {

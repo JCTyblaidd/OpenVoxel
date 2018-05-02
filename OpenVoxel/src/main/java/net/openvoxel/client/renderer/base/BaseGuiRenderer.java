@@ -43,8 +43,6 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 	// Abstract API Methods //
 	//////////////////////////
 
-	protected abstract BaseTextRenderer loadTextRenderer();
-
 	protected abstract void preDraw();
 
 	protected abstract void store(int offset,float x, float y, float u, float v, int RGB);
@@ -59,8 +57,8 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 	/// State Change Methods ///
 	////////////////////////////
 
-	public BaseGuiRenderer() {
-		textRenderer = loadTextRenderer();
+	protected BaseGuiRenderer(BaseTextRenderer textRenderer) {
+		this.textRenderer = textRenderer;
 	}
 
 	public void close() {
@@ -130,13 +128,14 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 	}
 
 	@Override
-	public final void Begin() {
+	public final void Begin(ResourceHandle handle) {
 		SetMatrix(identityMatrix);
-	}
-
-	@Override
-	public final void Draw() {
-		//NO OP TODO: REMOVE THIS FUNCTION?!?!?!?
+		if(handle == null) {
+			EnableTexture(false);
+		}else{
+			EnableTexture(true);
+			SetTexture(handle);
+		}
 	}
 
 	@Override
@@ -188,12 +187,13 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 
 	@Override
 	public final void DrawText(float x, float y, float height, String text, int col) {
-		textRenderer.DrawText(this,x,y,height,text,col);
+		textRenderer.DrawText(this,screenWidth,screenHeight
+				,x,y,height,text,col);
 	}
 
 	@Override
 	public final float GetTextWidthRatio(String text) {
-		return textRenderer.GetTextWidthRatio(text);
+		return textRenderer.GetTextWidthRatio(text,screenWidth,screenHeight);
 	}
 
 	@Override

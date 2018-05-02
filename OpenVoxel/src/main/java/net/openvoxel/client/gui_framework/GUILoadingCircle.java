@@ -57,8 +57,7 @@ public class GUILoadingCircle extends GUIObjectSizable{
 		final float Y1 = getPosY(screenHeight);
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
-		drawHandle.Begin();
-		drawHandle.EnableTexture(true);
+		drawHandle.Begin(null);
 		Matrix4f mat = new Matrix4f();
 		mat.m00(x_v);
 		mat.m11(x_v);
@@ -74,6 +73,5 @@ public class GUILoadingCircle extends GUIObjectSizable{
 		drawHandle.VertexWithColUV(X2,Y1,1,0,col);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
 		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
-		drawHandle.Draw();
 	}
 }

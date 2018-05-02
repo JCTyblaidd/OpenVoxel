@@ -123,7 +123,7 @@ public class ScreenDebugInfo extends Screen {
 		final int COL = 0x5B000000;
 		final int CPU_COL = 0xCFD39539;
 		final int GPU_COL = 0xCF168206;
-		tess.Begin();
+		tess.Begin(null);
 		tess.VertexWithCol(x2,y2,COL);
 		tess.VertexWithCol(x1,y2,COL);
 		tess.VertexWithCol(x1,y1,COL);
@@ -166,7 +166,6 @@ public class ScreenDebugInfo extends Screen {
 			tess.VertexWithCol(x_pos2,y_pos2,GPU_COL);
 			tess.VertexWithCol(x_pos1,y_pos1,GPU_COL);
 		}
-		tess.Draw();
 	}
 
 	private void draw_memory_piechart(IGuiRenderer tess, float x1, float y1, float w, float h) {

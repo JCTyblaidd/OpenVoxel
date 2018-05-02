@@ -35,15 +35,13 @@ public class GUIProgressBar extends GUIObjectSizable{
 		final float Y1 = getPosY(screenHeight);
 		final float X2 = X1 + getWidth(screenWidth);
 		final float Y2 = Y1 + getHeight(screenHeight);
-		drawHandle.Begin();
-		drawHandle.EnableTexture(false);
+		drawHandle.Begin(null);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,0xFFFFFFFF);
 		drawHandle.VertexWithColUV(X1,Y2,0,1,0xFFFFFFFF);
 		drawHandle.VertexWithColUV(X1,Y1,0,0,0xFFFFFFFF);
 		drawHandle.VertexWithColUV(X2,Y1,1,0,0xFFFFFFFF);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,0xFFFFFFFF);
 		drawHandle.VertexWithColUV(X1,Y1,0,0,0xFFFFFFFF);
-		drawHandle.Draw();
 		//Internal//
 		final float dX = 0.5F / screenWidth;
 		final float dY = 0.5F / screenHeight;
@@ -53,15 +51,12 @@ public class GUIProgressBar extends GUIObjectSizable{
 		final float XI2 = (XI1 * (1-perc)) + (XI2_max * perc);
 		final float YI1 = Y1 + dY;
 		final float YI2 = Y2 - dY;
-		drawHandle.Begin();
-		drawHandle.EnableTexture(false);
 		drawHandle.VertexWithColUV(XI2,YI2,1,1,0xFFAAAAAA);
 		drawHandle.VertexWithColUV(XI1,YI2,0,1,0xFFAAAAAA);
 		drawHandle.VertexWithColUV(XI1,YI1,0,0,0xFFAAAAAA);
 		drawHandle.VertexWithColUV(XI2,YI1,1,0,0xFFAAAAAA);
 		drawHandle.VertexWithColUV(XI2,YI2,1,1,0xFFAAAAAA);
 		drawHandle.VertexWithColUV(XI1,YI1,0,0,0xFFAAAAAA);
-		drawHandle.Draw();
 		//Text
 		String text;
 		if(displayPercent) {

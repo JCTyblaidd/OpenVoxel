@@ -1,5 +1,8 @@
 package net.openvoxel.common.resources;
 
+import com.jc.util.format.json.JSON;
+import com.jc.util.format.json.JSONObject;
+
 /**
  * Created by James on 25/08/2016.
  *
@@ -69,6 +72,16 @@ public class ResourceHandle {
 		return ID;
 	}
 
+	public JSONObject getMetadata() {
+		String realID = getID();
+		int last_idx = realID.lastIndexOf('.');
+		String meta_id = realID.substring(0,last_idx) + ".json";
+		byte[] SubData = ResourceDataHandler.getData(meta_id);
+		if(SubData == null) return null;
+		String str = new String(SubData);
+		return JSON.fromString(str);
+	}
+
 	@Override
 	public int hashCode() {
 		return ID.hashCode();
@@ -76,6 +89,6 @@ public class ResourceHandle {
 
 	@Override
 	public boolean equals(Object obj) {
-		return obj != null && obj instanceof ResourceHandle && ID.equals(((ResourceHandle) obj).ID);
+		return obj instanceof ResourceHandle && ID.equals(((ResourceHandle) obj).ID);
 	}
 }

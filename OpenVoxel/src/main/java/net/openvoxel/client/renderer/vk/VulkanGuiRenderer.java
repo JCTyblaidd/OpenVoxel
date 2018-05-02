@@ -15,10 +15,10 @@ import gnu.trove.map.hash.TObjectLongHashMap;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
-import net.openvoxel.client.renderer.base.BaseTextRenderer;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
+import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
 import net.openvoxel.common.resources.ResourceHandle;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -41,6 +41,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 	private VulkanCache cache;
 	private VulkanCommandHandler command;
 	private VulkanMemory memory;
+	private VulkanTextRenderer vulkanTextRender;
 
 	//Vertex Buffer State...
 	private long VertexBuffer;
@@ -81,14 +82,18 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 	private TObjectIntMap<ResourceHandle> resourceImageMemoryOffset = new TObjectIntHashMap<>();
 	private TObjectIntMap<ResourceHandle> resourceImageMemorySize = new TObjectIntHashMap<>();
 
-	VulkanGuiRenderer(VulkanCache cache,VulkanCommandHandler command, VulkanMemory memory) {
+	VulkanGuiRenderer(VulkanCache cache,VulkanCommandHandler command, VulkanMemory memory,VulkanTextRenderer text) {
+		super(text);
 		this.cache = cache;
 		this.command = command;
 		this.memory = memory;
+		vulkanTextRender = text;
+
 
 		try(MemoryStack stack = stackPush()) {
 			VkBufferCreateInfo bufferCreate = VkBufferCreateInfo.mallocStack(stack);
 			bufferCreate.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
+			bufferCreate.pNext(VK_NULL_HANDLE);
 			bufferCreate.flags(0);
 			bufferCreate.size(VulkanMemory.MEMORY_PAGE_SIZE);
 			bufferCreate.usage(
@@ -284,7 +289,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 	//Returns Image
 	private long allocateResourceMemory(ResourceHandle handle,VkImageMemoryBarrier initBarrier,VkBufferImageCopy copy,VkImageMemoryBarrier barrier) {
 		STBITexture texture = new STBITexture(handle.getByteData());
-		int texture_format = VK_FORMAT_R8G8B8A8_UNORM;//TODO: VALIDATE FORMAT!!
+		int texture_format = VulkanRenderPass.formatSimpleReadImage;
 		try(MemoryStack stack = stackPush()) {
 			VkImageCreateInfo imageCreateInfo = VkImageCreateInfo.mallocStack(stack);
 			imageCreateInfo.sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO);
@@ -492,12 +497,6 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 	/// Actual Rendering Code ///
 	/////////////////////////////
 
-	@Override
-	protected BaseTextRenderer loadTextRenderer() {
-
-		//TODO: REPLACE WITH REAL SOLUTION
-		return new BaseTextRenderer(null,null);//TODO: IMPL
-	}
 
 	private int currentVertexOffset = 0;
 
@@ -540,7 +539,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 		for(ResourceHandle handle : requestedHandles) {
 			if(isResourceAllocated(handle)) {
 				useResource(handle);
-			}else{
+			}else if(handle != vulkanTextRender.handle){
 				toAllocate.add(handle);
 			}
 		}
@@ -619,25 +618,30 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 			VkDescriptorImageInfo.Buffer descriptorImageInfo
 					= VkDescriptorImageInfo.mallocStack(32,stack);//TODO: CONVERT BACK FROM 32
 
-			//TODO: TEXTURE = MAPPING & 0...? = TEXT?
-			//int _uniform_offset = offsetUniformBuffers.get(command.getSwapIndex());
-			int _idx = 0;
-			ResourceHandle _debug_handle = null;
+			//Text Renderer...
+			descriptorImageInfo.position(0);
+			descriptorImageInfo.sampler(vulkanTextRender.ImageSampler);
+			descriptorImageInfo.imageView(vulkanTextRender.ImageView);
+			descriptorImageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			imageIndexMapping.put(vulkanTextRender.handle,0);
+
+			int _idx = 1;
 			for(ResourceHandle handle : requestedHandles) {
-				_debug_handle = handle;
-				imageIndexMapping.put(handle, _idx);
-				descriptorImageInfo.position(_idx);
-				descriptorImageInfo.sampler(DefaultSampler);
-				descriptorImageInfo.imageView(resourceImageViewMap.get(handle));
-				descriptorImageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				_idx++;
+				if(handle != vulkanTextRender.handle) {
+					imageIndexMapping.put(handle, _idx);
+					descriptorImageInfo.position(_idx);
+					descriptorImageInfo.sampler(DefaultSampler);
+					descriptorImageInfo.imageView(resourceImageViewMap.get(handle));
+					descriptorImageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					_idx++;
+				}
 			}
 			{
 				//TODO: REMOVE DEBUG CODE!?!?
 				while (_idx < 32) {
 					descriptorImageInfo.position(_idx);
-					descriptorImageInfo.sampler(DefaultSampler);
-					descriptorImageInfo.imageView(resourceImageViewMap.get(_debug_handle));
+					descriptorImageInfo.sampler(vulkanTextRender.ImageSampler);
+					descriptorImageInfo.imageView(vulkanTextRender.ImageView);
 					descriptorImageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 					_idx++;
 				}

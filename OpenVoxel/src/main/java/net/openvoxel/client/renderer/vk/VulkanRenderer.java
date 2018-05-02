@@ -28,6 +28,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	private final VulkanGuiRenderer guiRenderer;
 	private final VulkanCache cachedLayout;
 	private final VulkanCommandHandler commandHandler;
+	private final VulkanTextRenderer textRenderer;
 	private final int poolSize;
 
 	//100 millis...
@@ -43,12 +44,14 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		commandHandler.init(poolSize);
 
 		//Draw Handlers
-		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory);
+		textRenderer = new VulkanTextRenderer("font/font",commandHandler,state.VulkanMemory);
+		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory,textRenderer);
 	}
 
 	@Override
 	public void close() {
 		vkDeviceWaitIdle(state.getLogicalDevice());
+		textRenderer.close();
 		commandHandler.close();
 		cachedLayout.FreeSingle(state.getLogicalDevice());
 		guiRenderer.close();
