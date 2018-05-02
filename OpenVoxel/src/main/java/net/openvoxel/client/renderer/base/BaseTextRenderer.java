@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer.base;
 import com.jc.util.format.json.JSONList;
 import com.jc.util.format.json.JSONObject;
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.utility.CrashReport;
@@ -95,9 +96,10 @@ public abstract class BaseTextRenderer {
 		float runningOffset = 0;
 		for(int i = 0; i < SIZE; i++){
 			char c = text.charAt(i);
-			runningOffset += (pixelWidths[(int)c] / cellWidth) * aspect;
+			runningOffset += ((float)pixelWidths[(int)c] / cellWidth) * aspect;
 		}
-		return runningOffset;
+		//TODO: WHY DOES THIS FIX THE TEXT ISSUES???????????
+		return runningOffset / screenWidth * 4;
 	}
 
 

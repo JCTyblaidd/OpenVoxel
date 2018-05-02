@@ -33,7 +33,7 @@ layout(push_constant) uniform PushConsts {
 
 void main() {
     vec4 tmp_col = texture(texture_array[pushConsts.image_offset],frag_UV);
-    if(tmp_col.a < 0.5) {
+    if(tmp_col.r < 0.5) {
         colour =  vec4(0,0,0,0);
     }else{
         colour = tmp_col * frag_Col;

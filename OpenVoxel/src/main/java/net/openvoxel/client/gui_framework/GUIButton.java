@@ -1,5 +1,6 @@
 package net.openvoxel.client.gui_framework;
 
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
@@ -44,8 +45,8 @@ public class GUIButton extends GUIObjectSizable {
 		if(str != null) {
 			float X = getPosX(drawHandle.getScreenWidth());
 			float Y = getPosY(drawHandle.getScreenHeight());
-			float H = getHeight(drawHandle.getScreenHeight());
 			float W = getWidth(drawHandle.getScreenWidth());
+			float H = getHeight(drawHandle.getScreenHeight());
 			float TXT_RATIO = drawHandle.GetTextWidthRatio(str);
 			float TXT_W = TXT_RATIO * H;
 			if(TXT_W < W * TXT_WIDTH_LIM) {

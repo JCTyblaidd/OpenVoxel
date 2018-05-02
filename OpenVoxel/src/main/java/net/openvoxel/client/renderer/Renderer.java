@@ -16,7 +16,6 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.AsyncRunnablePool;
 import net.openvoxel.utility.CrashReport;
-import org.joml.Vector2i;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
