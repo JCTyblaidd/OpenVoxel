@@ -58,7 +58,7 @@ public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 		{
 			inputAttributes.location(2);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8B8A8_SNORM);
+			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
 			inputAttributes.offset(4+4+4+4);
 		}
 		inputAttributes.position(0);

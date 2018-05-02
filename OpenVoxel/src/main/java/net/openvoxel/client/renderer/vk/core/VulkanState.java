@@ -259,6 +259,7 @@ public final class VulkanState {
 
 		List<ByteBuffer> enabledLayers = new ArrayList<>();
 		//RenderDoc needs to be first to play nice with the debug layers...
+		/*
 		if(flag_vulkanRenderDoc) {
 			for(int i = 0; i < sizeRef.get(0); i++) {
 				layerList.position(i);
@@ -269,6 +270,7 @@ public final class VulkanState {
 				}
 			}
 		}
+		*/
 		//Normal Layer Loading...
 		for(int i = 0; i < sizeRef.get(0); i++) {
 			layerList.position(i);
@@ -286,6 +288,13 @@ public final class VulkanState {
 				if (layerList.layerNameString().equals("VK_LAYER_LUNARG_assistant_layer")) {
 					enabledLayers.add(layerList.layerName());
 					VulkanUtility.LogInfo("Enabled Layer: Assistant Layer");
+					continue;
+				}
+			}
+			if(flag_vulkanRenderDoc) {
+				if(layerList.layerNameString().equals("VK_LAYER_RENDERDOC_Capture")) {
+					enabledLayers.add(layerList.layerName());
+					VulkanUtility.LogInfo("Enabled Layer: RenderDoc Capture");
 					continue;
 				}
 			}

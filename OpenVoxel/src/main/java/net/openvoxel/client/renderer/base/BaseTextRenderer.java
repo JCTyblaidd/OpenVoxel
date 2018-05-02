@@ -13,7 +13,7 @@ public class BaseTextRenderer {
 
 	public float GetTextWidthRatio(String text) {
 		//TODO: IMPLEMENT
-		return 0;
+		return 1;
 	}
 
 

@@ -16,8 +16,6 @@ import org.lwjgl.vulkan.VkCommandBuffer;
 import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
 import org.lwjgl.vulkan.VkRenderPassBeginInfo;
 
-import java.util.Random;
-
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.KHRSurface.*;
@@ -46,6 +44,12 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 		//Draw Handlers
 		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory);
+		//TODO: REMOVE DEBUGGING....
+		try{
+			System.in.read();
+		}catch(Exception ignored) {
+
+		}
 	}
 
 	@Override

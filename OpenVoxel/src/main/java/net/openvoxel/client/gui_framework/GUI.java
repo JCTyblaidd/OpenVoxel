@@ -27,11 +27,6 @@ public abstract class GUI {
 		usesInput = false;
 	}
 
-	private static Screen asyncUpdate = null;
-	public static void addAsyncScreen(Screen screen) {
-		asyncUpdate = screen;
-	}
-
 	public static synchronized void addScreen(Screen screen) {
 		guiStack.push(screen);
 		updateUses();
@@ -66,10 +61,6 @@ public abstract class GUI {
 	}
 
 	public static Deque<Screen> getStack() {
-		if(asyncUpdate != null) {
-			guiStack.push(asyncUpdate);
-			asyncUpdate = null;
-		}
 		return guiStack;
 	}
 

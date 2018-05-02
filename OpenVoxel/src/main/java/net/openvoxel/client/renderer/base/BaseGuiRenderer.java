@@ -19,6 +19,7 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 	private final Matrix4f identityMatrix = new Matrix4f().identity();
 	private final BaseTextRenderer textRenderer;
 	protected static final int MAX_STATE_CHANGES = 1024;
+	private static final int VERTEX_SIZE = 20;
 
 	///State Changes
 	protected Set<ResourceHandle> requestedHandles = new HashSet<>(MAX_STATE_CHANGES);
@@ -84,6 +85,7 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 		useTexStateList.put(stateIndex + 1,useTexStateList.get(stateIndex));
 		stateIndex += 1;
 		offsetStateList.put(stateIndex,writeIndex);
+		stateUsed = false;
 	}
 
 	////////////////////
@@ -120,6 +122,7 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 
 	public void finishDraw(boolean isGuiDirty) {
 		if(isGuiDirty) {
+			//advanceState();
 			createNewDraw();
 		}else{
 			redrawOld();
@@ -128,7 +131,6 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 
 	@Override
 	public final void Begin() {
-		EnableTexture(false);
 		SetMatrix(identityMatrix);
 	}
 
@@ -157,7 +159,7 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 
 	@Override
 	public final void SetMatrix(Matrix4f mat) {
-		if(stateUsed && mat.equals(lastMatrix)) {
+		if(stateUsed && !mat.equals(lastMatrix)) {
 			advanceState();
 		}
 		mat.get(stateIndex * 16,matrixStateList);
@@ -178,7 +180,9 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 	@Override
 	public final void VertexWithColUV(float x, float y, float u, float v, int RGB) {
 		stateUsed = true;
-		store(writeIndex,x,y,u,v,RGB);
+		float newX = x * 2 - 1;
+		float newY = y * 2 - 1;
+		store(writeIndex * VERTEX_SIZE,newX,newY,u,v,RGB);
 		writeIndex += 1;
 	}
 

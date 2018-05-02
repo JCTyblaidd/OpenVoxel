@@ -163,7 +163,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 
 			VkDescriptorPoolSize.Buffer descriptorPoolSizes = VkDescriptorPoolSize.mallocStack(1,stack);
 			descriptorPoolSizes.type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-			descriptorPoolSizes.descriptorCount(command.getSwapSize());
+			descriptorPoolSizes.descriptorCount(32 * command.getSwapSize());
 
 			VkDescriptorPoolCreateInfo poolCreateInfo = VkDescriptorPoolCreateInfo.mallocStack(stack);
 			poolCreateInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO);
@@ -392,11 +392,14 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 			useResource(handle);
 
 			//TODO: HANDLE BETTER
-			memoryMap.position(dynamicTransferWriteIndex);
+			int storeOffset = dynamicTransferWriteIndex;
+			dynamicTransferWriteIndex = dynamicTransferWriteIndex + texture.pixels.capacity()
+					                            % ((int)VulkanMemory.MEMORY_PAGE_SIZE - transferMemoryStart);
+			memoryMap.position(storeOffset);
 			memoryMap.put(texture.pixels);
 			memoryMap.position(0);
 
-			copy.bufferOffset(dynamicTransferWriteIndex);
+			copy.bufferOffset(storeOffset);
 			copy.bufferRowLength(texture.width);
 			copy.bufferImageHeight(texture.height);
 			copy.imageSubresource().set(
@@ -496,20 +499,19 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 		return new BaseTextRenderer(null,null);//TODO: IMPL
 	}
 
-	private static final int CONST__VERTEX_SIZE = 4 + 4 + 4 + 4 + 4;
-	private int CONST_DRAW_OFFSET = 0;
+	private int currentVertexOffset = 0;
 
 	@Override
 	protected void preDraw() {
 		//Clear Unneeded Resources
 		reduceResourceTicks();
-		CONST_DRAW_OFFSET = offsetVertexBuffers.get(command.getSwapIndex());
+		currentVertexOffset = offsetVertexBuffers.get(command.getSwapIndex());
 	}
 
 	@Override
 	protected void store(int offset, float x, float y, float u, float v, int RGB) {
 		final int VERTEX_SIZE = 4 + 4 + 4 + 4 + 4;
-		int store_offset = (offset * CONST__VERTEX_SIZE) + CONST_DRAW_OFFSET;
+		int store_offset = offset + currentVertexOffset;
 		if(offset+VERTEX_SIZE >= vertexSectionLength) {
 			VulkanUtility.CrashOnBadResult("Too Many Points for GUI Draw["+offset+"]",-1);
 		}
@@ -615,18 +617,32 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 
 			TObjectIntMap<ResourceHandle> imageIndexMapping = new TObjectIntHashMap<>();
 			VkDescriptorImageInfo.Buffer descriptorImageInfo
-					= VkDescriptorImageInfo.mallocStack(requestedHandles.size(),stack);
+					= VkDescriptorImageInfo.mallocStack(32,stack);//TODO: CONVERT BACK FROM 32
 
 			//TODO: TEXTURE = MAPPING & 0...? = TEXT?
 			//int _uniform_offset = offsetUniformBuffers.get(command.getSwapIndex());
 			int _idx = 0;
+			ResourceHandle _debug_handle = null;
 			for(ResourceHandle handle : requestedHandles) {
+				_debug_handle = handle;
 				imageIndexMapping.put(handle, _idx);
+				descriptorImageInfo.position(_idx);
 				descriptorImageInfo.sampler(DefaultSampler);
 				descriptorImageInfo.imageView(resourceImageViewMap.get(handle));
 				descriptorImageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 				_idx++;
 			}
+			{
+				//TODO: REMOVE DEBUG CODE!?!?
+				while (_idx < 32) {
+					descriptorImageInfo.position(_idx);
+					descriptorImageInfo.sampler(DefaultSampler);
+					descriptorImageInfo.imageView(resourceImageViewMap.get(_debug_handle));
+					descriptorImageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					_idx++;
+				}
+			}
+			descriptorImageInfo.position(0);
 
 			long descriptorSet = DescriptorSetList.get(command.getSwapIndex());
 
@@ -641,8 +657,9 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 			pDescriptorWrites.pBufferInfo(null);
 			pDescriptorWrites.pTexelBufferView(null);
 
-			vkUpdateDescriptorSets(command.getDevice(),pDescriptorWrites,null);
-
+			if(requestedHandles.size() != 0) {
+				vkUpdateDescriptorSets(command.getDevice(), pDescriptorWrites, null);
+			}
 			///////////////////////////////////////////////////////////////////////////////////////////////////
 
 			//TODO: IMPROVE AUTO-SELECT
@@ -658,16 +675,20 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 			vkCmdBindPipeline(drawing,VK_PIPELINE_BIND_POINT_GRAPHICS,cache.PIPELINE_FORWARD_GUI.getPipeline());
 
 			vkCmdBindDescriptorSets(drawing,
-					VK_PIPELINE_BIND_POINT_GRAPHICS,
-					cache.PIPELINE_LAYOUT_GUI_STANDARD_INPUT,
-					0,
-					stack.longs(
-							descriptorSet
-					),
-					null
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				cache.PIPELINE_LAYOUT_GUI_STANDARD_INPUT,
+				0,
+				stack.longs(
+						descriptorSet
+				),
+				null
 			);
 
-			vkCmdBindVertexBuffers(drawing,0,stack.longs(VertexBuffer),stack.longs(0));
+			vkCmdBindVertexBuffers(drawing,
+				0,
+				stack.longs(VertexBuffer),
+				stack.longs(offsetVertexBuffers.get(command.getSwapIndex()))
+			);
 
 			VkViewport.Buffer pViewport = VkViewport.mallocStack(1);
 			pViewport.x(0);
@@ -682,22 +703,35 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 			VkRect2D.Buffer pScissor = VkRect2D.mallocStack(1,stack);
 			pScissor.offset().set(0,0);
 			pScissor.extent().set(screenWidth,screenHeight);
+			vkCmdSetScissor(drawing,0,pScissor);
 
 			IntBuffer pPushConstants = stack.mallocInt(2);
 			pPushConstants.put(0,0);
 			pPushConstants.put(1,0);
 
-			for(int sIdx = 0; sIdx < stateIndex; sIdx++) {
+			for(int sIdx = 0; sIdx <= stateIndex; sIdx++) {
 				int scissorIdx = sIdx * 4;
+				int scissorX = scissorStateList.get(scissorIdx);
+				int scissorY = scissorStateList.get(scissorIdx+1);
+				int scissorW = scissorStateList.get(scissorIdx+2);
+				int scissorH = scissorStateList.get(scissorIdx+3);
+				boolean changed = (
+						scissorX != pScissor.offset().x() ||
+						scissorY != pScissor.offset().y() ||
+						scissorW != pScissor.extent().width() ||
+						scissorH != pScissor.extent().height()
+				);
 				pScissor.offset().set(
-					scissorStateList.get(scissorIdx),
-					scissorStateList.get(scissorIdx+1)
+					scissorX,
+					scissorY
 				);
 				pScissor.extent().set(
-					scissorStateList.get(scissorIdx+2),
-					scissorStateList.get(scissorIdx+3)
+					scissorW,
+					scissorH
 				);
-				vkCmdSetScissor(drawing,0,pScissor);
+				if(changed) {
+					vkCmdSetScissor(drawing, 0, pScissor);
+				}
 
 				pPushConstants.put(0,imageIndexMapping.get(resourceStateList[sIdx]));
 				pPushConstants.put(1,useTexStateList.get(sIdx));
@@ -710,10 +744,12 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 				);
 
 				int vertex = offsetStateList.get(sIdx);
-				int offset = offsetStateList.get(sIdx+1);
+				int offset = sIdx == stateIndex ? writeIndex : offsetStateList.get(sIdx+1);
 				int draw_count = offset - vertex;
-				if(draw_count != 0) {
-					vkCmdDraw(drawing, draw_count, 1, offset, 0);
+				if(draw_count > 0) {
+					vkCmdDraw(drawing, draw_count, 1, vertex, 0);
+				}else{
+					Logger.getLogger("Debug").Info(draw_count);
 				}
 			}
 
