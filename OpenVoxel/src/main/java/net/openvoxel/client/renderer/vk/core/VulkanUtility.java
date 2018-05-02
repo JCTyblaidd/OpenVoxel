@@ -144,8 +144,8 @@ public final class VulkanUtility {
 		if (capabilities.currentExtent().width() != 0xFFFFFFFF) {
 			swapExtent.set(capabilities.currentExtent());
 		} else {
-			int width = ClientInput.currentWindowWidth.get();
-			int height = ClientInput.currentWindowHeight.get();
+			int width = ClientInput.currentWindowFrameSize.x;
+			int height = ClientInput.currentWindowFrameSize.y;
 			width = Math.min(Math.max(width, capabilities.minImageExtent().width()), capabilities.maxImageExtent().width());
 			height = Math.min(Math.max(height, capabilities.minImageExtent().height()), capabilities.maxImageExtent().height());
 			swapExtent.set(width, height);

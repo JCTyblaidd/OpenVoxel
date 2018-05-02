@@ -8,6 +8,7 @@ import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.AsyncRunnablePool;
+import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VkClearValue;
@@ -137,7 +138,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		}
 		boolean success = commandHandler.PresentImage();
 		if(!success) {
-			throw new RuntimeException("PANIC!!!");
+			startStateChange();
+			stopStateChange();
+			//throw new RuntimeException("PANIC!!!");
 		}
 		//TODO: REMOVE TEMPORARY HANDLE
 		vkDeviceWaitIdle(state.getLogicalDevice());
@@ -214,8 +217,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	////////////////////////////////////
 
 	private ScreenType currentScreenType = ScreenType.WINDOWED;
-	private int previousWidth = ClientInput.currentWindowWidth.get();
-	private int previousHeight = ClientInput.currentWindowHeight.get();
+	private Vector2i previousFrameSize = new Vector2i(ClientInput.currentWindowFrameSize);
 
 	@Override
 	public boolean isScreenSupported(ScreenType type) {
@@ -236,12 +238,18 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	public void setScreenType(ScreenType type) {
 		switch(type) {
 			case WINDOWED:
-				glfwSetWindowMonitor(state.GLFWWindow,0,0,0,previousWidth,previousHeight,GLFW_DONT_CARE);
+				glfwSetWindowMonitor(state.GLFWWindow,
+						0,
+						0,
+						0,
+						previousFrameSize.x,
+						previousFrameSize.y,
+						GLFW_DONT_CARE
+				);
 				currentScreenType = ScreenType.WINDOWED;
 				break;
 			case BORDERLESS:
-				previousWidth = ClientInput.currentWindowWidth.get();
-				previousHeight = ClientInput.currentWindowHeight.get();
+				previousFrameSize.set(ClientInput.currentWindowFrameSize);
 				long primaryMonitor = glfwGetPrimaryMonitor();
 				GLFWVidMode vidMode = glfwGetVideoMode(primaryMonitor);
 				if(vidMode != null) {

@@ -16,6 +16,7 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.AsyncBarrier;
 import net.openvoxel.utility.AsyncRunnablePool;
 import net.openvoxel.utility.CrashReport;
+import org.joml.Vector2i;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
@@ -275,27 +276,29 @@ public final class Renderer implements EventListener {
 		//Prevent Spam while resizing
 		int oldX = ClientInput.currentWindowLocation.x;
 		int oldY = ClientInput.currentWindowLocation.y;
-		int oldWidth = ClientInput.currentWindowWidth.get();
-		int oldHeight = ClientInput.currentWindowHeight.get();
+		int oldWidth = ClientInput.currentWindowFrameSize.x;
+		int oldHeight = ClientInput.currentWindowFrameSize.y;
 		glfwPollEvents();
 		int newX = ClientInput.currentWindowLocation.x;
 		int newY = ClientInput.currentWindowLocation.y;
-		int newWidth = ClientInput.currentWindowHeight.get();
-		int newHeight = ClientInput.currentWindowWidth.get();
+		int newWidth = ClientInput.currentWindowFrameSize.x;
+		int newHeight = ClientInput.currentWindowFrameSize.y;
 		boolean changePos = oldX != newX || oldY != newY;
 		boolean changeSize = oldWidth != newWidth || oldHeight != newHeight;
-		while(changePos || changeSize) {
+		int recursiveFalloff = (changePos || changeSize) ? 5 : 0;
+		while(changePos || changeSize || recursiveFalloff > 0) {
 			oldX = newX;
 			oldY = newY;
 			oldWidth = newWidth;
 			oldHeight = newHeight;
-			glfwWaitEventsTimeout(0.2);
+			glfwWaitEventsTimeout(0.1);
 			newX = ClientInput.currentWindowLocation.x;
 			newY = ClientInput.currentWindowLocation.y;
-			newWidth = ClientInput.currentWindowHeight.get();
-			newHeight = ClientInput.currentWindowWidth.get();
+			newWidth = ClientInput.currentWindowFrameSize.x;
+			newHeight = ClientInput.currentWindowFrameSize.y;
 			changePos = oldX != newX || oldY != newY;
 			changeSize = oldWidth != newWidth || oldHeight != newHeight;
+			recursiveFalloff -= 1;
 		}
 	}
 

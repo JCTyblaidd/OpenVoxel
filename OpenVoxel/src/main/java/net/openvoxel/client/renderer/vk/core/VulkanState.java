@@ -8,6 +8,7 @@ import net.openvoxel.client.renderer.glfw.GLFWEventHandler;
 import net.openvoxel.utility.CrashReport;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
@@ -153,13 +154,30 @@ public final class VulkanState {
 	private long createWindow() {
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API);
-		long window = glfwCreateWindow(ClientInput.currentWindowWidth.get(), ClientInput.currentWindowHeight.get(), "Open Voxel " + OpenVoxel.currentVersion.getValString(), 0, 0);
+		GLFWVidMode primaryVid = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		if(primaryVid != null) {
+			ClientInput.currentWindowFrameSize.x = primaryVid.width() - 30;
+			ClientInput.currentWindowFrameSize.y = primaryVid.height() - 30;
+		}
+		VulkanUtility.LogInfo("Creating GLFW Window: ("+
+				                      ClientInput.currentWindowFrameSize.x +
+				                      "," +
+				                      ClientInput.currentWindowFrameSize.y +
+				                      ")"
+		);
+		long window = glfwCreateWindow(
+				ClientInput.currentWindowFrameSize.x,
+				ClientInput.currentWindowFrameSize.y,
+				"Open Voxel " + OpenVoxel.currentVersion.getValString(),
+				0,
+				0
+		);
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer windowWidth = stack.mallocInt(1);
 			IntBuffer windowHeight = stack.mallocInt(1);
 			glfwGetWindowSize(window,windowWidth,windowHeight);
-			ClientInput.currentWindowWidth.set(windowWidth.get(0));
-			ClientInput.currentWindowHeight.set(windowHeight.get(0));
+			ClientInput.currentWindowFrameSize.x = windowWidth.get(0);
+			ClientInput.currentWindowFrameSize.y = windowHeight.get(0);
 		}
 		return window;
 	}
@@ -240,6 +258,18 @@ public final class VulkanState {
 		VulkanUtility.ValidateSuccess(error,vkEnumerateInstanceLayerProperties(sizeRef,layerList));
 
 		List<ByteBuffer> enabledLayers = new ArrayList<>();
+		//RenderDoc needs to be first to play nice with the debug layers...
+		if(flag_vulkanRenderDoc) {
+			for(int i = 0; i < sizeRef.get(0); i++) {
+				layerList.position(i);
+				if(layerList.layerNameString().equals("VK_LAYER_RENDERDOC_Capture")) {
+					enabledLayers.add(layerList.layerName());
+					VulkanUtility.LogInfo("Enabled Layer: RenderDoc Capture");
+					break;
+				}
+			}
+		}
+		//Normal Layer Loading...
 		for(int i = 0; i < sizeRef.get(0); i++) {
 			layerList.position(i);
 			if(flag_vulkanDebug) {
@@ -266,18 +296,12 @@ public final class VulkanState {
 					continue;
 				}
 			}
-			if(flag_vulkanRenderDoc) {
-				if(layerList.layerNameString().equals("VK_LAYER_RENDERDOC_Capture")) {
-					enabledLayers.add(layerList.layerName());
-					VulkanUtility.LogInfo("Enabled Layer: RenderDoc Capture");
-					continue;
-				}
-			}
 			if(OpenVoxel.getLaunchParameters().hasFlag("-VKLayer:"+layerList.layerNameString())) {
 				enabledLayers.add(layerList.layerName());
 				VulkanUtility.LogInfo("Enabled Layer: " + layerList.layerNameString());
 			}
 		}
+
 		return VulkanUtility.toPointerBuffer(stack,enabledLayers);
 	}
 
@@ -379,7 +403,7 @@ public final class VulkanState {
 			VulkanUtility.chooseSwapExtent(surfaceCapabilities,chosenSwapExtent);
 
 			//Skip if invalid
-			if(ClientInput.currentWindowHeight.get() == 0 || ClientInput.currentWindowWidth.get() == 0) {
+			if(ClientInput.currentWindowFrameSize.x == 0 || ClientInput.currentWindowFrameSize.y == 0) {
 				return;
 			}
 

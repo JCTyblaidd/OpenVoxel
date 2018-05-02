@@ -82,8 +82,7 @@ public class GLFWEventHandler {
 		@Override
 		public void invoke(long window, int width, int height) {
 			OpenVoxel.pushEvent(new WindowResizeEvent(width,height));
-			ClientInput.currentWindowHeight.set(height);
-			ClientInput.currentWindowWidth.set(width);
+			ClientInput.currentWindowFrameSize.set(width,height);
 		}
 	}
 

@@ -25,10 +25,10 @@ public class GUIScrollArea extends GUIObjectSizable{
 		final float ypos = getPosY(drawHandle.getScreenHeight());
 		final float height = getHeight(drawHandle.getScreenHeight());
 		final float width = getWidth(drawHandle.getScreenWidth());
-		drawHandle.pushScissor( (int)(xpos * ClientInput.currentWindowWidth.get()),
-							(int)(ypos * ClientInput.currentWindowHeight.get()),
-							(int)(width * ClientInput.currentWindowWidth.get()),
-							(int)(height * ClientInput.currentWindowHeight.get()));
+		drawHandle.pushScissor( (int)(xpos * ClientInput.currentWindowFrameSize.x),
+							(int)(ypos * ClientInput.currentWindowFrameSize.y),
+							(int)(width * ClientInput.currentWindowFrameSize.x),
+							(int)(height * ClientInput.currentWindowFrameSize.y));
 		ResizedGUIHandleWrapper resizeHandle = new ResizedGUIHandleWrapper(drawHandle);
 		resizeHandle.set(xpos,ypos,width,1);
 		for(GUIObject object : guiObjects) {

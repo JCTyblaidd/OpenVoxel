@@ -22,8 +22,8 @@ public class GuiDrawTask implements Runnable {
 	public void update(AsyncBarrier barrier,GraphicsAPI api) {
 		this.barrier = barrier;
 		guiRenderer = api.getGuiRenderer();
-		width = ClientInput.currentWindowWidth.get();
-		height = ClientInput.currentWindowHeight.get();
+		width = ClientInput.currentWindowFrameSize.x;
+		height = ClientInput.currentWindowFrameSize.y;
 	}
 
 	@Override
