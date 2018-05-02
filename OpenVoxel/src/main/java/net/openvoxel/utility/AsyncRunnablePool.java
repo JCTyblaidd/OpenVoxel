@@ -148,7 +148,9 @@ public class AsyncRunnablePool {
 							CrashReport crashReport = new CrashReport("Error in Thread: " + thread.getName());
 							crashReport.caughtException(e);
 							crashReport.getThrowable().printStackTrace();
-							OpenVoxel.reportCrash(crashReport);
+							try {
+								OpenVoxel.reportCrash(crashReport);
+							}catch(Exception ignored) {}
 						}
 						//STOP HANDLE//
 						processedSequence = true;

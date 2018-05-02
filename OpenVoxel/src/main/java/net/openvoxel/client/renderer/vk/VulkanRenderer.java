@@ -44,13 +44,12 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		commandHandler.init(poolSize);
 
 		//Draw Handlers
-		guiRenderer = new VulkanGuiRenderer();
+		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory);
 	}
 
 	@Override
 	public void close() {
 		vkDeviceWaitIdle(state.getLogicalDevice());
-
 		commandHandler.close();
 		cachedLayout.FreeSingle(state.getLogicalDevice());
 		guiRenderer.close();
@@ -88,6 +87,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier) {
+		VkCommandBuffer guiTransfer = commandHandler.getGuiDrawCommandBuffer(true);
+		VkCommandBuffer guiDrawing = commandHandler.getGuiDrawCommandBuffer(false);
+
 		VkCommandBuffer transferBuffer = commandHandler.getTransferCommandBuffer();
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
@@ -107,6 +109,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(mainBuffer,beginInfo);
+
+			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiTransfer));
+
 			VkClearValue.Buffer clearValues = VkClearValue.mallocStack(2,stack);
 			clearValues.color().float32(0,1.0f);
 			clearValues.color().float32(1,0.0f);
@@ -121,8 +126,12 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			renderPassBegin.renderArea().offset().set(0,0);
 			renderPassBegin.renderArea().extent(state.chosenSwapExtent);
 			renderPassBegin.pClearValues(clearValues);
-			vkCmdBeginRenderPass(mainBuffer,renderPassBegin,VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdBeginRenderPass(mainBuffer,renderPassBegin,VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiDrawing));
+
 			vkCmdEndRenderPass(mainBuffer);
+
 			vkEndCommandBuffer(mainBuffer);
 			commandHandler.SubmitCommandGraphics(mainBuffer);
 		}
@@ -130,6 +139,8 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		if(!success) {
 			throw new RuntimeException("PANIC!!!");
 		}
+		//TODO: REMOVE TEMPORARY HANDLE
+		vkDeviceWaitIdle(state.getLogicalDevice());
 	}
 
 	@Override
@@ -147,12 +158,15 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			//TODO: WHERE IS MAIN RENDER MODE STORED??
 			commandHandler.close();
 			commandHandler.init(poolSize);
+
+			//Reset Swap Partition
+			guiRenderer.handleSwapChainSizeChange();
 		}else {
 			//Window Resize Only...
 			commandHandler.reload();
 		}
 		//TODO: INVALIDATE EVERYTHING
-
+		guiRenderer.invalidateCommands();
 	}
 
 	/////////////////////

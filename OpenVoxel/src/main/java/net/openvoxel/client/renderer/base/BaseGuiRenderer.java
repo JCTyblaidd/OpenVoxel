@@ -34,8 +34,8 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 	private boolean stateUsed = false;
 	private final Matrix4f lastMatrix = new Matrix4f();
 	private final TIntStack scissorStack = new TIntArrayStack();
-	private int screenWidth;
-	private int screenHeight;
+	protected int screenWidth;
+	protected int screenHeight;
 	private int currScissorX, currScissorY, currScissorW, currScissorH;
 
 	//////////////////////////

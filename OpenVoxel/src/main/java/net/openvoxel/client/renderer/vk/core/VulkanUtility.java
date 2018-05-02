@@ -51,10 +51,16 @@ public final class VulkanUtility {
 	}
 
 	public static void CrashOnBadResult(String str,int res) {
-		String resString = vkResultToString(res);
-		VulkanLog.Severe(str," ",resString);
-		CrashReport report = new CrashReport(str).invalidState(resString);
-		OpenVoxel.reportCrash(report);
+		if(res != -1) {
+			String resString = vkResultToString(res);
+			VulkanLog.Severe(str, " ", resString);
+			CrashReport report = new CrashReport(str).invalidState(resString);
+			OpenVoxel.reportCrash(report);
+		}else{
+			VulkanLog.Severe(str);
+			CrashReport report = new CrashReport(str);
+			OpenVoxel.reportCrash(report);
+		}
 	}
 
 	public static void ValidateSuccess(String str,int res) {

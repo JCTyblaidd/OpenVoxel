@@ -17,6 +17,10 @@ public abstract class VulkanGraphicsPipeline {
 	private VulkanShaderModule shaders;
 	private long graphicsPipeline;
 
+	public long getPipeline() {
+		return graphicsPipeline;
+	}
+
 	public VulkanGraphicsPipeline(VulkanShaderModule module) {
 		this.shaders = module;
 		graphicsPipeline = VK_NULL_HANDLE;

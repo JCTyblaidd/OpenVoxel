@@ -2,13 +2,11 @@ package net.openvoxel.client.renderer.vk;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
-import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
-import net.openvoxel.utility.CrashReport;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
@@ -290,7 +288,7 @@ public final class VulkanCommandHandler {
 			commandAllocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 			commandAllocateInfo.commandBufferCount(swapSize);
 
-			PointerBuffer bufferResult = stack.mallocPointer(swapSize);
+			PointerBuffer bufferResult = stack.mallocPointer(swapSize * 2);
 			vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
 			if(vkResult == VK_SUCCESS) {
 				for(int i = 0; i < swapSize; i++) {
@@ -303,10 +301,11 @@ public final class VulkanCommandHandler {
 
 			commandAllocateInfo.commandPool(commandPoolGuiAsync);
 			commandAllocateInfo.level(VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+			commandAllocateInfo.commandBufferCount(swapSize * 2);
 
 			vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
 			if(vkResult == VK_SUCCESS) {
-				for(int i = 0; i < swapSize; i++) {
+				for(int i = 0; i < swapSize*2; i++) {
 					commandBuffersGuiAsync.add(new VkCommandBuffer(bufferResult.get(i),device.logicalDevice));
 				}
 			}else{
@@ -314,6 +313,7 @@ public final class VulkanCommandHandler {
 				VulkanUtility.CrashOnBadResult("Failed to allocate Command Buffers[GUI Async]",vkResult);
 			}
 
+			commandAllocateInfo.commandBufferCount(swapSize);
 			commandAllocateInfo.commandPool(commandPoolTransfer);
 			commandAllocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
@@ -510,7 +510,7 @@ public final class VulkanCommandHandler {
 	}
 
 	void close() {
-		WaitForFence(MainThreadAcquireFence,50*1000*1000);
+		//WaitForFence(MainThreadAcquireFence,50*1000*1000);
 		destroySynchronisation();
 		destroyCommandBuffers();
 		destroyResizeable();
@@ -531,7 +531,10 @@ public final class VulkanCommandHandler {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public VkCommandBuffer getSingleUseCommandBuffer() {
-		return null;
+		try(MemoryStack stack = stackPush()) {
+			//TODO: IMPLEMENT!!!
+			return null;
+		}
 	}
 
 	public void SubmitSingleUseCommandBuffer() {
@@ -616,14 +619,15 @@ public final class VulkanCommandHandler {
 	 */
 	boolean AcquireNextImage(long timeout) {
 		try(MemoryStack stack = stackPush()) {
-			WaitForFence(MainThreadAcquireFence, timeout);
+			//TODO: is this fence needed - Y / N
+			//WaitForFence(MainThreadAcquireFence, timeout);
 			IntBuffer pImageIndex = stack.mallocInt(1);
 			int vkResult = KHRSwapchain.vkAcquireNextImageKHR(
 					device.logicalDevice,
 					state.VulkanSwapChain,
 					timeout,
 					MainThreadAcquireSemaphore,
-					MainThreadAcquireFence,
+					VK_NULL_HANDLE,//MainThreadAcquireFence,
 					pImageIndex
 			);
 			currentFrameIndex = pImageIndex.get(0);
@@ -730,6 +734,21 @@ public final class VulkanCommandHandler {
 
 	////////////////////////////////////////////////////////////
 
+	public VkDevice getDevice() {
+		return device.logicalDevice;
+	}
+
+	VulkanDevice getDeviceManager() {
+		return device;
+	}
+
+	int getSwapSize() {
+		return state.VulkanSwapChainSize;
+	}
+
+	int getSwapIndex() {
+		return currentFrameIndex;
+	}
 
 	/**
 	 * @return The command buffer for the entire draw call
@@ -741,8 +760,9 @@ public final class VulkanCommandHandler {
 	/**
 	 * @return The command buffer for the async GUI Draw call
 	 */
-	public VkCommandBuffer getGuiDrawCommandBuffer() {
-		return commandBuffersGuiAsync.get(currentFrameIndex);
+	public VkCommandBuffer getGuiDrawCommandBuffer(boolean isTransfer) {
+		int offset = isTransfer ? 0 : state.VulkanSwapChainSize;
+		return commandBuffersGuiAsync.get(currentFrameIndex + offset);
 	}
 
 	/**
