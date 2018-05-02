@@ -42,6 +42,7 @@ public class GLFWEventHandler {
 		glfwSetCharCallback(window,_register(new CharacterCallback()));
 		glfwSetMouseButtonCallback(window,_register(new CursorButtonCallback()));
 		glfwSetFramebufferSizeCallback(window,_register(new FrameSizeCallback()));
+		glfwSetWindowPosCallback(window,_register(new WindowMoveCallback()));
 		glfwSetWindowCloseCallback(window,_register(new WindowCloseCallback()));
 	}
 
@@ -83,6 +84,14 @@ public class GLFWEventHandler {
 			OpenVoxel.pushEvent(new WindowResizeEvent(width,height));
 			ClientInput.currentWindowHeight.set(height);
 			ClientInput.currentWindowWidth.set(width);
+		}
+	}
+
+	private static class WindowMoveCallback extends GLFWWindowPosCallback {
+		@Override
+		public void invoke(long window, int x, int y) {
+			//TODO: PUSH EVENT
+			ClientInput.currentWindowLocation.set(x,y);
 		}
 	}
 

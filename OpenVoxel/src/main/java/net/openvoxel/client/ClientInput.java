@@ -2,6 +2,7 @@ package net.openvoxel.client;
 
 import net.openvoxel.client.gui_framework.GUI;
 import org.joml.Vector2d;
+import org.joml.Vector2i;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,6 +15,7 @@ public class ClientInput {
 	public static Vector2d unhandledMouseDelta;
 	public static Vector2d mousePosition;
 	//TODO: remove atomicity
+	public static Vector2i currentWindowLocation;
 	public static AtomicInteger currentWindowWidth;
 	public static AtomicInteger currentWindowHeight;
 
@@ -26,6 +28,7 @@ public class ClientInput {
 	static {
 		unhandledMouseDelta = new Vector2d(0,0);
 		mousePosition = new Vector2d(0,0);
+		currentWindowLocation = new Vector2i(0,0);
 		currentWindowWidth = new AtomicInteger(1980);
 		currentWindowHeight = new AtomicInteger(1080);
 		currentInputStatus = new boolean[512];

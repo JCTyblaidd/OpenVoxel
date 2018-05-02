@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
+import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.VulkanRenderer;
 import net.openvoxel.common.event.EventListener;
@@ -271,7 +272,31 @@ public final class Renderer implements EventListener {
 	}
 
 	public void pollInputs() {
+		//Prevent Spam while resizing
+		int oldX = ClientInput.currentWindowLocation.x;
+		int oldY = ClientInput.currentWindowLocation.y;
+		int oldWidth = ClientInput.currentWindowWidth.get();
+		int oldHeight = ClientInput.currentWindowHeight.get();
 		glfwPollEvents();
+		int newX = ClientInput.currentWindowLocation.x;
+		int newY = ClientInput.currentWindowLocation.y;
+		int newWidth = ClientInput.currentWindowHeight.get();
+		int newHeight = ClientInput.currentWindowWidth.get();
+		boolean changePos = oldX != newX || oldY != newY;
+		boolean changeSize = oldWidth != newWidth || oldHeight != newHeight;
+		while(changePos || changeSize) {
+			oldX = newX;
+			oldY = newY;
+			oldWidth = newWidth;
+			oldHeight = newHeight;
+			glfwWaitEventsTimeout(0.2);
+			newX = ClientInput.currentWindowLocation.x;
+			newY = ClientInput.currentWindowLocation.y;
+			newWidth = ClientInput.currentWindowHeight.get();
+			newHeight = ClientInput.currentWindowWidth.get();
+			changePos = oldX != newX || oldY != newY;
+			changeSize = oldWidth != newWidth || oldHeight != newHeight;
+		}
 	}
 
 	/**

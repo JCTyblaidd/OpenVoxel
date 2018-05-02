@@ -12,6 +12,7 @@ import gnu.trove.map.hash.TIntLongHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.map.hash.TObjectLongHashMap;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.base.BaseTextRenderer;
@@ -495,16 +496,20 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 		return new BaseTextRenderer(null,null);//TODO: IMPL
 	}
 
+	private static final int CONST__VERTEX_SIZE = 4 + 4 + 4 + 4 + 4;
+	private int CONST_DRAW_OFFSET = 0;
+
 	@Override
 	protected void preDraw() {
 		//Clear Unneeded Resources
 		reduceResourceTicks();
+		CONST_DRAW_OFFSET = offsetVertexBuffers.get(command.getSwapIndex());
 	}
 
 	@Override
 	protected void store(int offset, float x, float y, float u, float v, int RGB) {
 		final int VERTEX_SIZE = 4 + 4 + 4 + 4 + 4;
-		int store_offset = (offset * VERTEX_SIZE) + offsetVertexBuffers.get(command.getSwapIndex());
+		int store_offset = (offset * CONST__VERTEX_SIZE) + CONST_DRAW_OFFSET;
 		if(offset+VERTEX_SIZE >= vertexSectionLength) {
 			VulkanUtility.CrashOnBadResult("Too Many Points for GUI Draw["+offset+"]",-1);
 		}
@@ -623,10 +628,12 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 				_idx++;
 			}
 
+			long descriptorSet = DescriptorSetList.get(command.getSwapIndex());
+
 			VkWriteDescriptorSet.Buffer pDescriptorWrites = VkWriteDescriptorSet.mallocStack(1,stack);
 			pDescriptorWrites.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
 			pDescriptorWrites.pNext(VK_NULL_HANDLE);
-			pDescriptorWrites.dstSet(DescriptorSetList.get(command.getSwapIndex()));
+			pDescriptorWrites.dstSet(descriptorSet);
 			pDescriptorWrites.dstBinding(0);
 			pDescriptorWrites.dstArrayElement(0);
 			pDescriptorWrites.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
@@ -650,13 +657,12 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 
 			vkCmdBindPipeline(drawing,VK_PIPELINE_BIND_POINT_GRAPHICS,cache.PIPELINE_FORWARD_GUI.getPipeline());
 
-
 			vkCmdBindDescriptorSets(drawing,
 					VK_PIPELINE_BIND_POINT_GRAPHICS,
 					cache.PIPELINE_LAYOUT_GUI_STANDARD_INPUT,
 					0,
 					stack.longs(
-							DescriptorSetList.get(command.getSwapIndex())
+							descriptorSet
 					),
 					null
 			);

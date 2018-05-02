@@ -542,6 +542,7 @@ public final class VulkanCommandHandler {
 	}
 
 	private void WaitForFence(long fence,long timeout) {
+		/*
 		//TODO: REMOVE DEBUG TIMEOUT
 		long _time1 = System.currentTimeMillis();
 		int result = vkWaitForFences(device.logicalDevice, fence, true, timeout);
@@ -573,6 +574,10 @@ public final class VulkanCommandHandler {
 			//No Memory
 			VulkanUtility.CrashOnBadResult("Failed to reset fence",result);
 		}
+		*/
+		//HAXXY TODO: RETURN TO PROPER IMPLEMENTATION
+		vkDeviceWaitIdle(device.logicalDevice);
+		vkResetFences(device.logicalDevice,fence);
 	}
 
 	/*
