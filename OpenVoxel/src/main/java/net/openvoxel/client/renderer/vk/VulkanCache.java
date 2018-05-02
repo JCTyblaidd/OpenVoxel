@@ -26,6 +26,7 @@ public class VulkanCache {
 
 	//Shaders...
 	public VulkanShaderModule SHADER_GUI_STANDARD;
+	public VulkanShaderModule SHADER_GUI_TEXT;
 
 	//Descriptor Set Layouts...
 	public long DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY;
@@ -42,6 +43,7 @@ public class VulkanCache {
 
 	//Graphics Pipelines...
 	public VulkanGuiPipeline PIPELINE_FORWARD_GUI;
+	public VulkanGuiPipeline PIPELINE_FORWARD_TEXT;
 
 	public void LoadSingle(VulkanState state_handle) {
 		VulkanRenderPass.LoadFormats(state_handle);
@@ -54,6 +56,8 @@ public class VulkanCache {
 			//Load Shaders
 			SHADER_GUI_STANDARD = CreateShader("GUI_STANDARD", "gui/guiShader");
 			SHADER_GUI_STANDARD.loadModules(device_handle,new ArrayList<>());
+			SHADER_GUI_TEXT = CreateShader("GUI_TEXT","gui/textShader");
+			SHADER_GUI_TEXT.loadModules(device_handle,new ArrayList<>());
 
 			//Descriptor Set Layouts
 			DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY = CreateDescriptorLayout(device,stack,0);
@@ -68,12 +72,17 @@ public class VulkanCache {
 			RENDER_PASS_FORWARD_ONLY.generate(device);
 
 			//Graphics Pipelines
-			PIPELINE_FORWARD_GUI = new VulkanGuiPipeline(SHADER_GUI_STANDARD);
+			PIPELINE_FORWARD_GUI = new VulkanGuiPipeline(SHADER_GUI_STANDARD,false);
 			PIPELINE_FORWARD_GUI.generate(device,PIPELINE_LAYOUT_GUI_STANDARD_INPUT,
 					RENDER_PASS_FORWARD_ONLY.RenderPass,0,
 					VK_NULL_HANDLE,VK_NULL_HANDLE);
+			PIPELINE_FORWARD_TEXT = new VulkanGuiPipeline(SHADER_GUI_TEXT,true);
+			PIPELINE_FORWARD_TEXT.generate(device,PIPELINE_LAYOUT_GUI_STANDARD_INPUT,
+					RENDER_PASS_FORWARD_ONLY.RenderPass,0,
+					VK_NULL_HANDLE,PIPELINE_FORWARD_GUI.getPipeline());
 
 			//Unload Shaders
+			SHADER_GUI_TEXT.unloadModules(device);
 			SHADER_GUI_STANDARD.unloadModules(device);
 		}
 	}
@@ -86,6 +95,7 @@ public class VulkanCache {
 	public void FreeSingle(VkDevice device) {
 
 		//Graphics Pipelines
+		PIPELINE_FORWARD_TEXT.free(device);
 		PIPELINE_FORWARD_GUI.free(device);
 
 		//Render Passes

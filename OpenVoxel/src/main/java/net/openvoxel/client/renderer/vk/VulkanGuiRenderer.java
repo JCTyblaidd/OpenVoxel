@@ -677,6 +677,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 			VulkanUtility.ValidateSuccess("Failed to init Gui Draw Buffer",vkResult);
 
 			vkCmdBindPipeline(drawing,VK_PIPELINE_BIND_POINT_GRAPHICS,cache.PIPELINE_FORWARD_GUI.getPipeline());
+			boolean usingNormalPipeline = true;
 
 			vkCmdBindDescriptorSets(drawing,
 				VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -733,6 +734,15 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 					scissorW,
 					scissorH
 				);
+
+				if(resourceStateList[sIdx] == vulkanTextRender.handle && usingNormalPipeline) {
+					vkCmdBindPipeline(drawing,VK_PIPELINE_BIND_POINT_GRAPHICS,cache.PIPELINE_FORWARD_TEXT.getPipeline());
+					usingNormalPipeline = false;
+				}else if(resourceStateList[sIdx] != vulkanTextRender.handle && !usingNormalPipeline) {
+					vkCmdBindPipeline(drawing,VK_PIPELINE_BIND_POINT_GRAPHICS,cache.PIPELINE_FORWARD_GUI.getPipeline());
+					usingNormalPipeline = true;
+				}
+
 				if(changed) {
 					vkCmdSetScissor(drawing, 0, pScissor);
 				}

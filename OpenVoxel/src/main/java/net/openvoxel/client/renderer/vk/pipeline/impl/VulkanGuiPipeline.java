@@ -18,8 +18,20 @@ import static org.lwjgl.vulkan.VK10.*;
  */
 public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 
-	public VulkanGuiPipeline(VulkanShaderModule module) {
+	private boolean isDerived;
+
+	public VulkanGuiPipeline(VulkanShaderModule module,boolean isDerived) {
 		super(module);
+		this.isDerived = isDerived;
+	}
+
+	@Override
+	protected int getFlags() {
+		if(isDerived) {
+			return VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+		}else{
+			return VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
+		}
 	}
 
 	@Override
