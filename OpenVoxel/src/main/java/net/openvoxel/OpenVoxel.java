@@ -370,29 +370,75 @@ public class OpenVoxel implements EventListener{
 				//Handle server changes
 				if(lastServer != currentClientServer) {
 					if(lastServer != null) {
-						renderer.invalidateAllChunks();
-						lastServer.shutdown();
+						{
+							UsageAnalyses.StartCPUSample("render_invalidate_chunks()", 0);
+							renderer.invalidateAllChunks();
+							UsageAnalyses.StopCPUSample();
+						}
+						{
+							UsageAnalyses.StartCPUSample("server_shutdown()", 0);
+							lastServer.shutdown();
+							UsageAnalyses.StopCPUSample();
+						}
 					}
 					if(currentClientServer != null) {
+						UsageAnalyses.StartCPUSample("server_startup()",0);
 						currentClientServer.startup();
+						UsageAnalyses.StopCPUSample();
 					}
 					lastServer = currentClientServer;
 				}
 				//Main Loop//
 				if(lastServer != null) {
+					UsageAnalyses.StartCPUSample("server_tick_async_submit()",0);
 					lastServer.serverTick(updateServerBarrier);
+					UsageAnalyses.StopCPUSample();
 				}
-				renderer.pollInputs();
-				updateServerBarrier.awaitCompletion();
-				renderer.prepareFrame();
-				renderer.generateUpdatedChunks(lastServer,drawnChunksBarrier);
+				{
+					UsageAnalyses.StartCPUSample("renderer_poll_inputs()",0);
+					renderer.pollInputs();
+					UsageAnalyses.StopCPUSample();
+				}
+				{
+					UsageAnalyses.StartCPUSample("server_update_barrier_wait()",0);
+					updateServerBarrier.awaitCompletion();
+					UsageAnalyses.StopCPUSample();
+				}
+				{
+					UsageAnalyses.StartCPUSample("renderer_prepare_frame()",0);
+					renderer.prepareFrame();
+					UsageAnalyses.StopCPUSample();
+				}
+				{
+					UsageAnalyses.StartCPUSample("renderer_dispatch_gen_updated_chunks()",0);
+					renderer.generateUpdatedChunks(lastServer, drawnChunksBarrier);
+					UsageAnalyses.StopCPUSample();
+				}
 				if(lastServer != null) {
+					UsageAnalyses.StartCPUSample("server_send_io_updates()",0);
 					lastServer.sendUpdates();
+					UsageAnalyses.StopCPUSample();
 				}
-				renderer.startAsyncGUIDraw(drawnGuiBarrier);
-				drawnChunksBarrier.awaitCompletion();
-				drawnGuiBarrier.awaitCompletion();
-				renderer.submitFrame(drawCompletionBarrier);
+				{
+					UsageAnalyses.StartCPUSample("dispatch_async_gui_draw()",0);
+					renderer.startAsyncGUIDraw(drawnGuiBarrier);
+					UsageAnalyses.StopCPUSample();
+				}
+				{
+					UsageAnalyses.StartCPUSample("await_drawn_chunks_barrier()",0);
+					drawnChunksBarrier.awaitCompletion();
+					UsageAnalyses.StopCPUSample();
+				}
+				{
+					UsageAnalyses.StartCPUSample("await_drawn_gui_barrier()",0);
+					drawnGuiBarrier.awaitCompletion();
+					UsageAnalyses.StopCPUSample();
+				}
+				{
+					UsageAnalyses.StartCPUSample("renderer_submit_frame()",0);
+					renderer.submitFrame(drawCompletionBarrier);
+					UsageAnalyses.StopCPUSample();
+				}
 			}
 		}catch(Exception ex) {
 			CrashReport report = new CrashReport("Error in Main Loop");
@@ -431,18 +477,34 @@ public class OpenVoxel implements EventListener{
 				//Handle Server Changes
 				if (lastServer != currentServer) {
 					if (lastServer != null) {
+						UsageAnalyses.StartCPUSample("server_shutdown()",0);
 						lastServer.shutdown();
+						UsageAnalyses.StopCPUSample();
 					}
 					if (currentServer != null) {
+						UsageAnalyses.StartCPUSample("server_startup()",0);
 						currentServer.startup();
+						UsageAnalyses.StopCPUSample();
 					}
 					lastServer = currentServer;
 				}
 				//Update Server
 				if (lastServer != null) {
-					lastServer.serverTick(updateServerBarrier);
-					updateServerBarrier.awaitCompletion();
-					lastServer.sendUpdates();
+					{
+						UsageAnalyses.StartCPUSample("server_tick()",0);
+						lastServer.serverTick(updateServerBarrier);
+						UsageAnalyses.StopCPUSample();
+					}
+					{
+						UsageAnalyses.StartCPUSample("await_tick_complete()",0);
+						updateServerBarrier.awaitCompletion();
+						UsageAnalyses.StopCPUSample();
+					}
+					{
+						UsageAnalyses.StartCPUSample("server_send_io_updates()",0);
+						lastServer.sendUpdates();
+						UsageAnalyses.StopCPUSample();
+					}
 				}else{
 					//Prevent spinning for non-server
 					Thread.sleep(100);

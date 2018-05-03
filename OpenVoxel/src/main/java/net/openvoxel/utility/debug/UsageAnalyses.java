@@ -23,12 +23,14 @@ public class UsageAnalyses {
 	private static TObjectIntMap<String> name_offset_map;
 	private static IntBuffer hash_storage;
 
+	@Validation
 	private static void init_hash_cache() {
 		name_offset_map = new TObjectIntHashMap<>();
 		hash_storage = MemoryUtil.memAllocInt(1024);
 		hash_storage.limit(0);
 	}
 
+	@Validation
 	private static IntBuffer get_hash_pointer(String name) {
 		int val = name_offset_map.get(name);
 		if(val == name_offset_map.getNoEntryValue()) {
@@ -40,6 +42,7 @@ public class UsageAnalyses {
 		return hash_storage;
 	}
 
+	@Validation
 	private static void free_hash_cache() {
 		MemoryUtil.memFree(hash_storage);
 	}
