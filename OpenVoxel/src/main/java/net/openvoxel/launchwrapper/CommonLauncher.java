@@ -6,7 +6,6 @@ import net.openvoxel.loader.classloader.SideSpecificTweaker;
 import net.openvoxel.loader.classloader.TweakableClassLoader;
 import net.openvoxel.loader.mods.ModDataLoader;
 import net.openvoxel.loader.optimizer.Optimizer;
-import net.openvoxel.utility.debug.RenderDocAutoHook;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -33,9 +32,6 @@ class CommonLauncher {
 	}
 
 	static void defaultLaunch(String[] args, boolean isClient) {
-		if(new ArgumentParser(args).hasFlag("renderDocWait")) {
-			RenderDocAutoHook.callRenderDocInject();
-		}
 		boolean reloadRequest;
 		do {
 			Logger loaderLogger = Logger.getLogger("Initialisation");
