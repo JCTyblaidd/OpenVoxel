@@ -3,7 +3,7 @@ package net.openvoxel.server;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import net.openvoxel.common.entity.living.player.EntityPlayer;
-import net.openvoxel.utility.AsyncBarrier;
+import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.world.World;
 import net.openvoxel.world.generation.DebugWorldGenerator;
 

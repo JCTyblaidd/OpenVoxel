@@ -4,5 +4,8 @@ crash_reports/
 logs/
 save/
 stats/
+resource_packs/
+screenshots/
 
+.idea/dictionaries
 .idea/libraries

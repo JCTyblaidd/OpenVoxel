@@ -7,7 +7,7 @@ import net.openvoxel.client.gui_framework.GUI;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
-import net.openvoxel.utility.AsyncBarrier;
+import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
 
 import java.util.Iterator;

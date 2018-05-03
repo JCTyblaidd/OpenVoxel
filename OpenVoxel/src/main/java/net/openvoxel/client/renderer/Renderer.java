@@ -4,6 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.VulkanRenderer;
 import net.openvoxel.common.event.EventListener;
@@ -13,8 +14,8 @@ import net.openvoxel.common.event.input.WindowResizeEvent;
 import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import net.openvoxel.files.FolderUtils;
 import net.openvoxel.server.ClientServer;
-import net.openvoxel.utility.AsyncBarrier;
-import net.openvoxel.utility.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncBarrier;
+import net.openvoxel.utility.async.AsyncRunnablePool;
 import net.openvoxel.utility.CrashReport;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -105,10 +106,6 @@ public final class Renderer implements EventListener {
 	///////////////////////////////
 	/// Configuration Functions ///
 	///////////////////////////////
-
-	public float getFrameRate() {
-		return frameRateTimer.getPerSecond();
-	}
 
 	public int getTargetFrameRate() {
 		return targetFrameRate;
@@ -333,6 +330,7 @@ public final class Renderer implements EventListener {
 		//Prepare the Async Task
 		completeBarrier.reset(1);
 		guiDrawTask.update(completeBarrier,api);
+		ScreenDebugInfo.instance.setFrameRate(frameRateTimer.getPerSecond());
 
 		//Submit the Async Task
 		api.prepareForSubmit();

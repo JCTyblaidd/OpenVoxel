@@ -14,6 +14,8 @@ import net.openvoxel.common.util.BlockFace;
  * TODO: check the uv coordinates and the tangent and bi tangent values
  */
 public class DefaultBlockRenderer implements IBlockRenderHandler {
+
+
 	@Override
 	public void storeBlockData(IBlockRenderer renderer, IBlockAccess stateAccess, boolean opaqueDraw) {
 		Block block = stateAccess.getBlock();

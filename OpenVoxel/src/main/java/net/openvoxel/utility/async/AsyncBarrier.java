@@ -1,4 +1,4 @@
-package net.openvoxel.utility;
+package net.openvoxel.utility.async;
 
 import net.openvoxel.api.logger.Logger;
 

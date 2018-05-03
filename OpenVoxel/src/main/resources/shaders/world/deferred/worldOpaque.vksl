@@ -1,0 +1,105 @@
+/**[VK::Vertex]**/
+
+layout(location = 0) in vec3 i_position;
+layout(location = 1) in vec2 i_uv_coord;
+layout(location = 2) in vec3 i_normals;
+layout(location = 3) in vec3 i_tangents;
+layout(location = 4) in vec3 i_colour;
+layout(location = 5) in vec4 i_lighting;
+layout(location = 6) in vec2 i_animation;
+
+layout(location = 0) out vec2 f_uv;
+layout(location = 1) out mat3 f_normMat;
+layout(location = 2) out vec3 f_col;
+layout(location = 3) out vec3 f_light;
+
+out gl_PerVertex {
+    vec4 gl_Position;
+};
+
+
+layout(set = 0,binding = 0) uniform FrameConstants {
+    mat4 projMatrix;
+    mat3 viewMatrix;
+    vec3 cameraPos;
+    vec3 skyLightPos;
+    vec3 skyLightColour;
+    int  animationTick;
+} worldData;
+
+layout(push_constant) uniform SubChunkMetadata {
+    vec3 chunkOffset;
+} pushConsts;
+
+
+void main() {
+    //Calculate Animated UV
+    int animTick = (worldData.animationTick % i_animation.x);
+    f_uv = i_uv_coord + vec2(0,animTick * i_animation.y);
+
+    //Forward Colour
+    f_col = i_colour;
+
+    //Caulculate Tangent -> World Matrix
+    vec3 bi_tangent = cross(i_normals,i_tangents);
+    f_normMat = mat3(normalize(vs_normal), normalize(vs_tangent), normalize(vs_bitangent));
+
+    //Caululate Light TODO: correct sky light dropoff?
+    vec3 skyLighting = worldData.skyLightColour * i_lighting.a;
+    f_light = i_lighting.rgb + skyLighting;
+
+    //Update Position
+    vec3 relativePosition = worldData.viewMatrix * (i_position + chunkOffset);
+    gl_Position = worldData.projMatrix * vec4(relativePosition,1.0);
+}
+
+/**[VK::Fragment]**/
+
+layout(location = 0) in vec2 f_uv;
+layout(location = 1) in mat3 f_normMat;
+layout(location = 2) in vec3 f_col;
+layout(location = 3) in vec3 f_light;
+
+//RGB=diffuse A=transparency
+layout(set = 1,binding = 0) uniform sampler2D altasDiffuse;
+//RGB=normal A=emissiveness
+layout(set = 1,binding = 1) uniform sampler2D altasNormal;
+//R=smooth, G=reflect, B=occlusion, A=height
+layout(set = 1,binding = 2) uniform sampler2D altasPBR;
+
+//RGB=diffuse
+//  Blend = SET
+layout(location = 0) out vec3 g_diffuse;
+//RGB=normal{world space}
+//  Blend = SET
+layout(location = 1) out vec3 g_normal;
+//R=smooth, G=reflect
+//  Blend = SET
+layout(location = 2) out vec2 g_pbr;
+//RGB=lighting, A=emissiveness
+//  Data = {rgb * a == direct_light}, {rgb * (1 - a) == indirect_light}
+//  Blend = SET
+layout(location = 3) out vec4 g_light;
+
+void main() {
+    //Sample Maps
+    vec4 sampleDiffuse = texture(atlasDiffuse,f_uv);
+    vec4 sampleNormal = texture(atlasNormal,f_uv);
+    vec4 samplePBR = texture(atlasPBR,f_uv);
+
+    //Calculate Diffuse:
+    g_colour = sampleDiffuse.rgb * f_col;
+
+    //Calculate Normal:
+    g_normal = f_normMat * sampleNormal.rgb;
+
+    //Calculate PBR:
+    g_pbr = texture(atlasPBR,f_uv).rg;
+
+    //Calculate Light:
+    vec3 mixed_emissive = mix(f_light,g_colour.rgb,sampleNormal.a);
+    g_light = vec4(samplePBR.b * mixed_emissive, sampleNormal.a);
+}
+
+
+/**[VK::End]**/

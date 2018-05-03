@@ -2,14 +2,12 @@ package net.openvoxel.files.util;
 
 import net.openvoxel.api.PublicAPI;
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.utility.AsyncRunnablePool;
-import org.lwjgl.system.CallbackI;
+import net.openvoxel.utility.async.AsyncRunnablePool;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 

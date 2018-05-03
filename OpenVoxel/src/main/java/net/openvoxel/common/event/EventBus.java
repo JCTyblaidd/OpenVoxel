@@ -2,6 +2,8 @@ package net.openvoxel.common.event;
 
 
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.utility.CrashReport;
+import net.openvoxel.utility.debug.Validate;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -28,10 +30,11 @@ public class EventBus {
 	}
 
 	public void push(AbstractEvent event) {
-		Class<? extends AbstractEvent> clazz = event.getClass();
+		Validate.NotNull(event);
+		Class clazz = event.getClass();
 		while(AbstractEvent.class.isAssignableFrom(clazz)) {
 			_push(event,clazz);
-			clazz = (Class<? extends AbstractEvent>)clazz.getSuperclass();
+			clazz = clazz.getSuperclass();
 		}
 	}
 	private void _push(AbstractEvent event, Class<? extends AbstractEvent> clazz) {
@@ -42,6 +45,7 @@ public class EventBus {
 
 	@SuppressWarnings({"unchecked"})
 	public void register(EventListener listener) {
+		Validate.NotNull(listener);
 		Method[] methods = listener.getClass().getMethods();
 		for(Method m : methods) {
 			SubscribeEvents annotation = m.getAnnotation(SubscribeEvents.class);
@@ -74,24 +78,30 @@ public class EventBus {
 		EventListener listener;
 		Method method;
 		EventOrdering order;
+
 		private WrappedHandler(EventListener listener, Method method, EventOrdering order) {
 			this.listener = listener;
 			this.method = method;
 			this.order = order;
 			method.setAccessible(true);
 		}
+
 		void push(AbstractEvent event) {
 			try {
 				method.invoke(listener,event);
 			}catch(Exception e) {
-				//e.printStackTrace();
-				new RuntimeException("Error calling event: "+event.getClass().getSimpleName(),e).printStackTrace();
+				String eventName = event == null ? "null" : event.getClass().getSimpleName();
+				CrashReport crash = new CrashReport("Error calling event: "+eventName);
+				crash.caughtException(e);
+				crash.getThrowable().printStackTrace();
 			}
 		}
+
 		@Override
 		public int hashCode() {//TODO: double-check that the ordering is correct
 			return (order.ordinal() << 24) | (listener.hashCode() & 0xFFFFFF);
 		}
+
 		@Override
 		public boolean equals(Object obj) {
 			return listener.equals(obj);

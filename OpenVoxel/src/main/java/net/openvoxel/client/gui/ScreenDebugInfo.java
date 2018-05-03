@@ -22,6 +22,11 @@ public class ScreenDebugInfo extends Screen {
 	public static String RendererVendor = "Unknown Vendor";
 	public static String RendererDriver = "Unknown Driver";
 
+	private float frame_rate = 40.0f;
+
+	public void setFrameRate(float frame_rate) {
+		this.frame_rate = frame_rate;
+	}
 
 	private static String _limit(float f) {
 		String val = Integer.toString(Math.round(f));
@@ -79,8 +84,7 @@ public class ScreenDebugInfo extends Screen {
 			y_pos += height;
 		}
 		if(debug > 0) {//At Least Level::FPS
-			float val = 40;//TODO: IMPLEMENT RenderThread.getFrameRate();
-			String str = _limit(val);
+			String str = _limit(frame_rate);
 			tess.DrawText(x_pos,y_pos,height,str);
 			y_pos += height;
 		}

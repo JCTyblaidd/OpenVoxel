@@ -1,8 +1,9 @@
-package net.openvoxel.utility;
+package net.openvoxel.utility.async;
 
 import com.lmax.disruptor.*;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
+import net.openvoxel.utility.CrashReport;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;

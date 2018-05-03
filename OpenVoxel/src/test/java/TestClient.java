@@ -1,4 +1,5 @@
-import net.openvoxel.utility.AsyncQueue;
+import net.openvoxel.utility.async.AsyncQueue;
+import org.jetbrains.annotations.TestOnly;
 
 /**
  * Created by James on 25/08/2016.
@@ -8,7 +9,7 @@ import net.openvoxel.utility.AsyncQueue;
  * */
 public class TestClient {
 
-
+	@TestOnly
 	public static void main(String[] args) {
 		AsyncQueue<Integer> asyncQueue = new AsyncQueue<>(1024);
 		int count = 0;

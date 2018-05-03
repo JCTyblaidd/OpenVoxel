@@ -1,8 +1,8 @@
 package net.openvoxel.client.renderer.common;
 
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
-import net.openvoxel.utility.AsyncBarrier;
-import net.openvoxel.utility.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncBarrier;
+import net.openvoxel.utility.async.AsyncRunnablePool;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;

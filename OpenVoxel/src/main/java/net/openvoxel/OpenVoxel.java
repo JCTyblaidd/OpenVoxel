@@ -31,9 +31,10 @@ import net.openvoxel.server.BaseServer;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.util.CommandInputThread;
-import net.openvoxel.utility.AsyncBarrier;
+import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.debug.UsageAnalyses;
+import net.openvoxel.utility.debug.Validate;
 import org.lwjgl.system.Configuration;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -133,6 +134,7 @@ public class OpenVoxel implements EventListener{
 	 */
 	@PublicAPI
 	public void SetCurrentServer(BaseServer server) {
+		Validate.IsMainThread();
 		if(Side.isClient) {
 			setCurrentServer_client(server);
 		}else{
@@ -160,6 +162,7 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * @return the current instance
 	 */
+	@PublicAPI
 	public static OpenVoxel getInstance() {
 		return instance;
 	}
@@ -167,6 +170,7 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * @return the argument parser
 	 */
+	@PublicAPI
 	public static ArgumentParser getLaunchParameters() {
 		return args;
 	}
@@ -174,6 +178,8 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * @return the current server, NULL if it doesn't exist
 	 */
+	@PublicAPI
+	@SideOnly(side = Side.DEDICATED_SERVER)
 	public static DedicatedServer getServer() {
 		return instance.currentServer;
 	}
@@ -181,6 +187,7 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * @return the current server view from the client
 	 */
+	@PublicAPI
 	@SideOnly(side = Side.CLIENT)
 	public static ClientServer getClientServer() {
 		return instance.currentClientServer;
@@ -189,28 +196,37 @@ public class OpenVoxel implements EventListener{
 	/**
 	 * @param event call an event through the eventBus
 	 */
+	@PublicAPI
 	public static void pushEvent(AbstractEvent event) {
+		Validate.IsMainThread();
 		instance.eventBus.push(event);
 	}
 
 	/**
 	 * @param listener The Event Listener to register for events
 	 */
+	@PublicAPI
 	public static void registerEvents(EventListener listener) {
+		Validate.IsMainThread();
 		instance.eventBus.register(listener);
 	}
 
+	@PublicAPI
 	public static <T extends AbstractEvent> void unregisterEvent(EventListener listener,Class<T> event) {
+		Validate.IsMainThread();
 		instance.eventBus.unregister(listener,event);
 	}
 
+	@PublicAPI
 	public static void unregisterAllEvents(EventListener listener) {
+		Validate.IsMainThread();
 		instance.eventBus.unregisterAll(listener);
 	}
 
 	/**
 	 * @param report a crash: throws an exception to unwind the stack
 	 */
+	@PublicAPI
 	public static void reportCrash(CrashReport report) throws RuntimeException{
 		FolderUtils.storeCrashReport(report);
 		instance.AttemptShutdownSequence(true);
@@ -222,7 +238,7 @@ public class OpenVoxel implements EventListener{
 
 	private AtomicBoolean flagReload = new AtomicBoolean(false);
 	/**
-	 * Tells the wrapped loader to re-attempt the loading seqyence
+	 * Tells the wrapped loader to re-attempt the loading sequence
 	 */
 	public static void reloadMods() {
 		openVoxelLogger.getSubLogger("Reload").Info("Attempting Mod Reload");
@@ -244,7 +260,11 @@ public class OpenVoxel implements EventListener{
 		eventBus = new EventBus();
 		eventBus.register(this);
 		openVoxelLogger = Logger.getLogger("Open Voxel");
-		//Quick Config Settup//
+
+		//Setup-Validation
+		Validate.SetAsMainThread();
+
+		//Quick Config Set-up//
 		if(args.hasFlag("debugAll")) {
 			openVoxelLogger.Info("Enabling All Debug Code");
 			args.storeRuntimeFlag("debugChecks");

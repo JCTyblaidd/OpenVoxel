@@ -22,7 +22,7 @@ layout(set = 0,binding = 0) uniform FrameConstants {
     mat4 projMatrix;
     mat3 viewMatrix;
     vec3 cameraPos;
-    vec3 skyLightPos;
+    vec3 skyLightDir;
     vec3 skyLightColour;
     int  animationTick;
 } worldData;
@@ -67,19 +67,16 @@ layout(set = 1,binding = 1) uniform sampler2D altasNormal;
 //R=smooth, G=reflect, B=occlusion, A=height
 layout(set = 1,binding = 2) uniform sampler2D altasPBR;
 
-//RGB=diffuse
-//  Blend = SET
-layout(location = 0) out vec3 g_diffuse;
-//RGB=normal{world space}
-//  Blend = SET
-layout(location = 1) out vec3 g_normal;
-//R=smooth, G=reflect
-//  Blend = SET
-layout(location = 2) out vec2 g_pbr;
-//RGB=lighting, A=emissiveness
-//  Data = {rgb * a == direct_light}, {rgb * (1 - a) == indirect_light}
-//  Blend = SET
-layout(location = 3) out vec4 g_light;
+layout(set = 0,binding = 0) uniform FrameConstants {
+    mat4 projMatrix;
+    mat3 viewMatrix;
+    vec3 cameraPos;
+    vec3 skyLightDir;
+    vec3 skyLightColour;
+    int  animationTick;
+} worldData;
+
+layout(location = 0) out vec3 forward_colour;
 
 void main() {
     //Sample Maps
@@ -88,17 +85,25 @@ void main() {
     vec4 samplePBR = texture(atlasPBR,f_uv);
 
     //Calculate Diffuse:
-    g_colour = sampleDiffuse.rgb * f_col;
+    vec3 g_colour = sampleDiffuse.rgb * f_col;
 
     //Calculate Normal:
-    g_normal = f_normMat * texture(atlasNormal,f_uv).xyz;
+    vec3 g_normal = worldData.viewMatrix * f_normMat * sampleNormal.rgb;
 
     //Calculate PBR:
-    g_pbr = texture(atlasPBR,f_uv).rg;
+    vec3 g_pbr = texture(atlasPBR,f_uv).rg;
 
     //Calculate Light:
-    vec3 mixed_emissive = mix(f_light,g_colour.rgb,sampleNormal.a);
-    g_light = vec4(samplePBR.b * mixed_emissive, sampleNormal.a);
+    vec3 simple_light = samplePBR.b * (f_light + sampleNormal.a * g_colour);
+
+    float dx = dFdxFine(f_light);
+    float dy = dFdyFine(f_light);
+
+    float lighting_scalar = normalize(g_normal).y;
+    float reduced_scalar = lighting_scalar / 2.0 + 0.5f;
+
+    //Final Colour.. TODO: IMPROVE{..} {use PBR}
+    forward_colour =  reduced_scalar * (g_colour + simple_light);
 }
 
 
