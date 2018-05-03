@@ -59,7 +59,7 @@ public class GLFWLogWrapper extends GLFWErrorCallback{
 			case GLFW_NO_WINDOW_CONTEXT:
 				return "No Window Context";
 			default:
-				return "Unknown Error: " + err;
+				return "Unknown Error: #" + Integer.toHexString(err);
 		}
 	}
 

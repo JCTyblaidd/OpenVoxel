@@ -22,7 +22,11 @@ import static org.lwjgl.vulkan.VK10.*;
  */
 public class VulkanCache {
 
+	//Immutable Images...
+	public long IMAGE_BLOCK_ATLAS = 0;
+
 	//Immutable Samplers...
+	public long SAMPLER_BLOCK_ATLAS = 0;
 
 	//Shaders...
 	public VulkanShaderModule SHADER_GUI_STANDARD;
@@ -51,7 +55,10 @@ public class VulkanCache {
 		VkDevice device = device_handle.logicalDevice;
 		long pipelineCache = VK_NULL_HANDLE;
 		try(MemoryStack stack = MemoryStack.stackPush()) {
-			//Immutable Samplers
+			//Immutable Images...
+
+			//Immutable Samplers...
+			SAMPLER_BLOCK_ATLAS = CreateImmutableSampler(device_handle,stack,16);//TODO: MAX LOD (choose correct)
 
 			//Load Shaders
 			SHADER_GUI_STANDARD = CreateShader("GUI_STANDARD", "gui/guiShader");
@@ -108,6 +115,7 @@ public class VulkanCache {
 		vkDestroyDescriptorSetLayout(device,DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY,null);
 
 		//Immutable Samplers
+		vkDestroySampler(device,SAMPLER_BLOCK_ATLAS,null);
 	}
 
 	private VulkanShaderModule CreateShader(String id,String path) {
@@ -174,6 +182,44 @@ public class VulkanCache {
 				return returnVal.get(0);
 			}else{
 				VulkanUtility.CrashOnBadResult("Failed to create descriptor set layout",vkResult);
+				return VK_NULL_HANDLE;
+			}
+		}
+	}
+
+	private long CreateImmutableSampler(VulkanDevice device,MemoryStack old_stack,int mip_levels) {
+		try(MemoryStack stack = old_stack.push()) {
+			VkSamplerCreateInfo imageSampler = VkSamplerCreateInfo.mallocStack(stack);
+			imageSampler.sType(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO);
+			imageSampler.pNext(VK_NULL_HANDLE);
+			imageSampler.flags(0);
+			imageSampler.magFilter(VK_FILTER_LINEAR);
+			imageSampler.minFilter(VK_FILTER_LINEAR);
+			imageSampler.mipmapMode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
+			imageSampler.addressModeU(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+			imageSampler.addressModeV(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+			imageSampler.addressModeW(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+			imageSampler.mipLodBias(0.0f);
+			if(device.features.samplerAnisotropy()) {
+				imageSampler.anisotropyEnable(true);
+				imageSampler.maxAnisotropy(device.properties.limits().maxSamplerAnisotropy());
+			}else {
+				imageSampler.anisotropyEnable(false);
+				imageSampler.maxAnisotropy(1.0f);
+			}
+			imageSampler.compareEnable(false);
+			imageSampler.compareOp(VK_COMPARE_OP_ALWAYS);
+			imageSampler.minLod(0.0f);
+			imageSampler.maxLod((float)mip_levels);
+			imageSampler.borderColor(0);
+			imageSampler.unnormalizedCoordinates(false);
+
+			LongBuffer pSampler = stack.mallocLong(1);
+			int vkResult = vkCreateSampler(device.logicalDevice,imageSampler,null,pSampler);
+			if(vkResult == VK_SUCCESS) {
+				return pSampler.get(0);
+			}else{
+				VulkanUtility.CrashOnBadResult("Failed to create immutable sampler",vkResult);
 				return VK_NULL_HANDLE;
 			}
 		}

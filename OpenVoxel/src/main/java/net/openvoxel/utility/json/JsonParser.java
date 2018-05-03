@@ -9,13 +9,12 @@ import java.nio.ByteBuffer;
  */
 public class JsonParser {
 
-	private ByteBuffer bytes;
-	private int pos;
+	ByteBuffer bytes;
+	int pos;
 
 	@PublicAPI
 	public JsonParser(byte[] data) {
-		bytes = ByteBuffer.wrap(data);
-		reset();
+		this(ByteBuffer.wrap(data));
 	}
 
 	@PublicAPI

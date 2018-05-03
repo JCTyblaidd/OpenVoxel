@@ -155,7 +155,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 			samplerCreate.compareEnable(false);
 			samplerCreate.compareOp(VK_COMPARE_OP_ALWAYS);
 			samplerCreate.minLod(0.0f);
-			samplerCreate.maxLod(1.0f);
+			samplerCreate.maxLod(0.0f);
 			samplerCreate.borderColor(0);
 			samplerCreate.unnormalizedCoordinates(false);
 

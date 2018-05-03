@@ -1,6 +1,5 @@
 package net.openvoxel.api.logger;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
@@ -26,7 +25,7 @@ public class LoggerOutputStream extends OutputStream{
 	}
 
 	@Override
-	public void write(int b) throws IOException {
+	public void write(int b) {
 		currentLine.put((byte)b);
 		_pushIfRequired();
 	}

@@ -106,7 +106,7 @@ class VulkanTextRenderer extends BaseTextRenderer {
 			imageSampler.compareEnable(false);
 			imageSampler.compareOp(VK_COMPARE_OP_ALWAYS);
 			imageSampler.minLod(0.0f);
-			imageSampler.maxLod(1.0f);
+			imageSampler.maxLod(0.0f);
 			imageSampler.borderColor(0);
 			imageSampler.unnormalizedCoordinates(false);
 

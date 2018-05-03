@@ -1,4 +1,4 @@
-package net.openvoxel.server;
+package net.openvoxel.server.util;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
