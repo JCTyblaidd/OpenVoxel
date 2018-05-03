@@ -7,6 +7,7 @@ import com.lmax.disruptor.*;
  *
  * Asynchronous Queue from thread to thread : Single Input, Single Output
  */
+@Deprecated
 public class AsyncTriQueue<A,B,C> {
 	private class TriObjectRef {
 		A a;

@@ -2,6 +2,7 @@ package net.openvoxel.utility.async;
 
 import com.lmax.disruptor.*;
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.PublicAPI;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.utility.CrashReport;
 
@@ -29,6 +30,7 @@ public class AsyncRunnablePool {
 	 * @param fallback the fallback amount
 	 * @return the number of workers
 	 */
+	@PublicAPI
 	public static int getWorkerCount(String ID,int fallback) {
 		if(OpenVoxel.getLaunchParameters().hasFlag(ID)) {
 			return Math.max(OpenVoxel.getLaunchParameters().getIntegerMap(ID),1);
@@ -37,19 +39,20 @@ public class AsyncRunnablePool {
 		}
 	}
 
-	RingBuffer<RunnableRef> ringBuffer;
+	private RingBuffer<RunnableRef> ringBuffer;
 	private AtomicBoolean running = new AtomicBoolean(false);
 	private ConcurrentLinkedQueue<RunnableRefWorker> workerQueue = new ConcurrentLinkedQueue<>();
 	private int workerCount;
-	Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
-	SequenceBarrier barrier;
-	ThreadGroup threadGroup;
-	int ID = 0;
+	private Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
+	private SequenceBarrier barrier;
+	private ThreadGroup threadGroup;
+	private int ID = 0;
 
 	/**
 	 * @param name the name of the thread-group + prefix for worker thread names
 	 * @param workerCount the number of worker threads to create
 	 */
+	@PublicAPI
 	public AsyncRunnablePool(String name,int workerCount) {
 		ringBuffer = RingBuffer.createSingleProducer(RunnableRef::new,512,new PhasedBackoffWaitStrategy(10,100, TimeUnit.NANOSECONDS,new BlockingWaitStrategy()));
 		barrier = ringBuffer.newBarrier();
@@ -66,11 +69,13 @@ public class AsyncRunnablePool {
 	 * Register a runnable instance for the workers to call at a later time
 	 * @param runnable the work, work completed via the {@link Runnable::run}
 	 */
+	@PublicAPI
 	public void addWork(Runnable runnable) {
 		ringBuffer.publishEvent(EVENT_TRANSLATOR,runnable);
 
 	}
 
+	@PublicAPI
 	public int getWorkerCount() {
 		return workerCount;
 	}
@@ -78,6 +83,7 @@ public class AsyncRunnablePool {
 	/**
 	 * Start the thread pool, if already started does nothing
 	 */
+	@PublicAPI
 	public void start() {
 		if(!running.get()) {
 			running.set(true);
@@ -88,6 +94,7 @@ public class AsyncRunnablePool {
 	/**
 	 * Stop the thread pool, if already stopped does nothing
 	 */
+	@PublicAPI
 	public void stop() {
 		if(running.get()) {
 			running.set(false);

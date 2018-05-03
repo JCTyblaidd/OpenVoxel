@@ -1,6 +1,6 @@
 package net.openvoxel.utility.async;
 
-import net.openvoxel.api.logger.Logger;
+import net.openvoxel.utility.debug.Validate;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
@@ -18,9 +18,7 @@ public class AsyncBarrier {
 	 */
 	public void reset(int numTasks) {
 		int old = countdown.getAndSet(numTasks);
-		if(old != 0) {
-			Logger.getLogger("Synchronisation").Warning("Reset a non completed AsyncBarrier");
-		}
+		Validate.Condition(old == 0,"Reset a non complete AsyncBarrier");
 	}
 
 	/*
@@ -29,6 +27,7 @@ public class AsyncBarrier {
 	public void completeTask() {
 		lock.lock();
 		int val = countdown.decrementAndGet();
+		Validate.Condition(val >= 0,"Called complete on a completed AsyncBarrier");
 		if(val == 0) {
 			condition.signal();
 		}

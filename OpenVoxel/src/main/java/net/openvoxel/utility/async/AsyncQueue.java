@@ -1,6 +1,7 @@
 package net.openvoxel.utility.async;
 
 import com.lmax.disruptor.*;
+import net.openvoxel.api.PublicAPI;
 
 /**
  * Created by James on 15/04/2017.
@@ -19,10 +20,12 @@ public class AsyncQueue<T> {
 	/**
 	 * Initialize The Queue
 	 */
+	@PublicAPI
 	public AsyncQueue(int size) {
 		this(size,false);
 	}
 
+	@PublicAPI
 	public AsyncQueue(int size,boolean multiProducer) {
 		if(multiProducer) {
 			buffer = RingBuffer.createMultiProducer(ObjectRef::new,size,new BlockingWaitStrategy());
@@ -36,6 +39,7 @@ public class AsyncQueue<T> {
 	/**
 	 * Add an object to the asynchronous queue
 	 */
+	@PublicAPI
 	public void add(T t) {
 		buffer.publishEvent(TRANSLATE,t);
 	}
@@ -43,6 +47,7 @@ public class AsyncQueue<T> {
 	/**
 	 * @return the current size on request [no sync-guarantees]
 	 */
+	@PublicAPI
 	public long snapshotSize() {
 		long writeHead = buffer.getCursor();
 		long readHead = sequence.get();
@@ -52,6 +57,7 @@ public class AsyncQueue<T> {
 	/**
 	 * Check if the queue is currently empty
 	 */
+	@PublicAPI
 	public boolean isEmpty() {
 		long writeHead = buffer.getCursor();
 		long readHead = sequence.get();
@@ -61,31 +67,37 @@ public class AsyncQueue<T> {
 	/**
 	 * Get and Object or Null From The Queue
 	 */
+	@PublicAPI
 	public T attemptNext() {
-		long nextSequence, writeSequence;
-		nextSequence = sequence.get() + 1L;
+		long nextSequence, writeSequence, currentSequence;
+		currentSequence = sequence.get();
+		nextSequence = currentSequence + 1L;
 		writeSequence = buffer.getCursor();
 		if(nextSequence > writeSequence) return null;
-		sequence.set(nextSequence);
+		if(!sequence.compareAndSet(currentSequence,nextSequence)) return null;
 		return buffer.get(nextSequence).obj;
 	}
 
 	/**
 	 * Wait For An Object From The Queue
 	 */
-	public T awaitNext() {
-		long nextSequence;
-		nextSequence = sequence.get() + 1L;
-		sequence.set(nextSequence);
+	@PublicAPI
+	public T awaitNext() throws InterruptedException{
+		long nextSequence, writeSequence, currentSequence;
 		while(true) {
-			try {
-				barrier.waitFor(nextSequence);
-			} catch (AlertException ignored) {
+			currentSequence = sequence.get();
+			nextSequence = currentSequence + 1L;
+			writeSequence = buffer.getCursor();
+			if(nextSequence > writeSequence) {
+				try{
+					barrier.waitFor(nextSequence);
+				}catch(InterruptedException interrupt) {
+					throw interrupt;
+				}catch(Exception ignored) {
+					//NO OP
+				}
+			}else if(sequence.compareAndSet(currentSequence,nextSequence)) {
 				return buffer.get(nextSequence).obj;
-			} catch (TimeoutException ignored) {
-				return null;
-			} catch (InterruptedException ignored) {
-				//NO OP//
 			}
 		}
 	}
