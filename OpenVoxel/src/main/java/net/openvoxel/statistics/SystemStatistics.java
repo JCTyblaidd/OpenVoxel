@@ -30,6 +30,8 @@ public class SystemStatistics {
 
 	public static double[] processor_history = new double[32];
 	public static double[] graphics_history = new double[32];
+	public static double[] graphics_world_history = new double[32];
+	public static double[] graphics_gui_history = new double[32];
 	//public static long[] memory_history = new long[32];
 	public static int write_index = 0;
 

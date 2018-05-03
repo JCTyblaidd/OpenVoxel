@@ -8,7 +8,9 @@ import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
+import net.openvoxel.statistics.SystemStatistics;
 import org.lwjgl.PointerBuffer;
+import org.lwjgl.system.CallbackI;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
@@ -30,6 +32,11 @@ public final class VulkanCommandHandler {
 
 	//Current Frame Index:
 	private int currentFrameIndex = 0;
+
+	//Query Pool N x [start_graphics,start_gui,end_gui], -> 3N
+	private long queryPool;
+	private long lastTimestampGraphics = 0;
+	private long queryGetDelay = 0;
 
 	//Reference:
 	private final VulkanState state;
@@ -515,6 +522,87 @@ public final class VulkanCommandHandler {
 		memory.freeDedicatedMemory(StagingBufferMemory);
 	}
 
+	private void initQueryPool(int swapSize) {
+		try(MemoryStack stack = stackPush()) {
+			VkQueryPoolCreateInfo queryPoolCreate = VkQueryPoolCreateInfo.mallocStack(stack);
+			queryPoolCreate.sType(VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO);
+			queryPoolCreate.pNext(VK_NULL_HANDLE);
+			queryPoolCreate.flags(0);
+			queryPoolCreate.queryType(VK_QUERY_TYPE_TIMESTAMP);
+			queryPoolCreate.queryCount(3 * swapSize);
+			queryPoolCreate.pipelineStatistics(0);
+
+			LongBuffer pReturn = stack.mallocLong(1);
+			int result = vkCreateQueryPool(device.logicalDevice,queryPoolCreate,null,pReturn);
+			if(result == VK_SUCCESS) {
+				queryPool = pReturn.get(0);
+				queryGetDelay = swapSize;
+				lastTimestampGraphics = 0;
+			}else{
+				//NO Memory
+				VulkanUtility.CrashOnBadResult("Failed to create query pool",result);
+			}
+		}
+	}
+
+	private void destroyQueryPool() {
+		vkDestroyQueryPool(device.logicalDevice,queryPool,null);
+	}
+
+	void CmdResetTimstamps(VkCommandBuffer buffer) {
+		vkCmdResetQueryPool(
+				buffer,
+				queryPool,
+				3*currentFrameIndex,
+				3
+		);
+	}
+
+	void CmdWriteTimestamp(VkCommandBuffer buffer,int queryOffset,int pipelineStage) {
+		vkCmdWriteTimestamp(
+				buffer,
+				pipelineStage,
+				queryPool,
+				3*currentFrameIndex+queryOffset
+		);
+	}
+
+	void UpdateTimestamp() {
+		if(queryGetDelay > 0) {
+			queryGetDelay -= 1;
+			return;
+		}
+		try(MemoryStack stack = stackPush()) {
+			LongBuffer pData = stack.mallocLong(3);
+			vkGetQueryPoolResults(
+					device.logicalDevice,
+					queryPool,
+					3*currentFrameIndex,
+					3,
+					pData,
+					0,
+					VK_QUERY_RESULT_64_BIT
+			);
+
+
+			long start_graphics = pData.get(0);
+			long delta_world = pData.get(1) - start_graphics;
+			long delta_gui = pData.get(2) - pData.get(1);
+			long delta_all_graphics = pData.get(2) - start_graphics;
+			long delta_graphics_total = pData.get(2) - lastTimestampGraphics;
+
+			double graphics_usage = (double)delta_all_graphics / delta_graphics_total;
+			double world_usage = (double)delta_world / delta_graphics_total;
+			double gui_usage = (double)delta_gui / delta_graphics_total;
+
+			SystemStatistics.graphics_history[SystemStatistics.write_index] = graphics_usage;
+			SystemStatistics.graphics_world_history[SystemStatistics.write_index] = world_usage;
+			SystemStatistics.graphics_gui_history[SystemStatistics.write_index] = gui_usage;
+
+			lastTimestampGraphics = pData.get(2);
+		}
+	}
+
 	///////////////////////
 	/// Control Methods ///
 	///////////////////////
@@ -537,6 +625,7 @@ public final class VulkanCommandHandler {
 		initResizeable();
 		initCommandBuffers(state.VulkanSwapChainSize,asyncCount);
 		initSynchronisation(state.VulkanSwapChainSize);
+		initQueryPool(state.VulkanSwapChainSize);
 	}
 
 	void reload() {
@@ -549,6 +638,7 @@ public final class VulkanCommandHandler {
 
 	void close() {
 		//WaitForFence(MainThreadAcquireFence,50*1000*1000);
+		destroyQueryPool();
 		destroySynchronisation();
 		destroyCommandBuffers();
 		destroyResizeable();

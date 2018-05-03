@@ -92,6 +92,8 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		VkCommandBuffer guiTransfer = commandHandler.getGuiDrawCommandBuffer(true);
 		VkCommandBuffer guiDrawing = commandHandler.getGuiDrawCommandBuffer(false);
 
+		commandHandler.UpdateTimestamp();
+
 		VkCommandBuffer transferBuffer = commandHandler.getTransferCommandBuffer();
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
@@ -100,6 +102,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
+
 			vkEndCommandBuffer(transferBuffer);
 			commandHandler.SubmitCommandTransfer(transferBuffer);
 		}
@@ -111,7 +114,11 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(mainBuffer,beginInfo);
+			commandHandler.CmdResetTimstamps(mainBuffer);
+			commandHandler.CmdWriteTimestamp(mainBuffer,0,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
+
+			commandHandler.CmdWriteTimestamp(mainBuffer,1,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiTransfer));
 
 			VkClearValue.Buffer clearValues = VkClearValue.mallocStack(2,stack);
@@ -133,6 +140,8 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiDrawing));
 
 			vkCmdEndRenderPass(mainBuffer);
+
+			commandHandler.CmdWriteTimestamp(mainBuffer,2,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
 
 			vkEndCommandBuffer(mainBuffer);
 			commandHandler.SubmitCommandGraphics(mainBuffer);
