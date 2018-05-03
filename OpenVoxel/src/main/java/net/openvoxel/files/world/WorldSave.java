@@ -1,4 +1,4 @@
-package net.openvoxel.files;
+package net.openvoxel.files.world;
 
 import net.openvoxel.utility.collection.ChunkMap;
 import net.openvoxel.world.chunk.Chunk;

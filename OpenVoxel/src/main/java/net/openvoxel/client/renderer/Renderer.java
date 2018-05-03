@@ -12,7 +12,7 @@ import net.openvoxel.common.event.SubscribeEvents;
 import net.openvoxel.common.event.input.KeyStateChangeEvent;
 import net.openvoxel.common.event.input.WindowResizeEvent;
 import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
-import net.openvoxel.files.FolderUtils;
+import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncRunnablePool;

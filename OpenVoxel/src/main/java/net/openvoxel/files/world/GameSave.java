@@ -1,4 +1,4 @@
-package net.openvoxel.files;
+package net.openvoxel.files.world;
 
 import com.jc.util.filesystem.FileHandle;
 import com.jc.util.format.json.*;

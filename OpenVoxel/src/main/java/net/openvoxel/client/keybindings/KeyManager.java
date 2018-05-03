@@ -1,7 +1,7 @@
 package net.openvoxel.client.keybindings;
 
 import com.jc.util.format.json.*;
-import net.openvoxel.files.FolderUtils;
+import net.openvoxel.files.util.FolderUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;

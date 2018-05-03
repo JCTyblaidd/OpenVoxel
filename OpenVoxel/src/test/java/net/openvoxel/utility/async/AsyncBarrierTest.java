@@ -12,7 +12,7 @@ class AsyncBarrierTest {
 
 
 	@Test
-	@DisplayName("AsyncBarrier - Sync")
+	@DisplayName("AsyncBarrier - sync")
 	void testAsyncBarrier_Synchronous() {
 		assertTimeout(ofSeconds(1),() -> {
 			AsyncBarrier barrier = new AsyncBarrier();
@@ -23,7 +23,7 @@ class AsyncBarrierTest {
 	}
 
 	@Test
-	@DisplayName("AsyncBarrier - Async")
+	@DisplayName("AsyncBarrier - async")
 	void testAsyncBarrier_Asynchronous() {
 		AsyncBarrier barrier = new AsyncBarrier();
 		barrier.reset(1);
@@ -36,7 +36,7 @@ class AsyncBarrierTest {
 	}
 
 	@Test
-	@DisplayName("AsyncBarrier - Multiple")
+	@DisplayName("AsyncBarrier - multiple")
 	void testAsyncBarrier_Multiple() {
 		AsyncBarrier barrier = new AsyncBarrier();
 		barrier.reset(50);

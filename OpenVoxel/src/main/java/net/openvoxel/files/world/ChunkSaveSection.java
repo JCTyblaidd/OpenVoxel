@@ -1,4 +1,4 @@
-package net.openvoxel.files;
+package net.openvoxel.files.world;
 
 import javafx.util.Pair;
 import net.openvoxel.OpenVoxel;

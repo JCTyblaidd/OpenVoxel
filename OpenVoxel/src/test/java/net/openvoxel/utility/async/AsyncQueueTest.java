@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AsyncQueueTest {
 
 	@Test
-	@DisplayName("AsyncQueue - Sync")
+	@DisplayName("AsyncQueue - sync")
 	void testAsyncQueue_Sync() {
 		AsyncQueue<Integer> asyncQueue = new AsyncQueue<>(128,false);
 		for(int i = 0; i < 100; i++) {
@@ -26,7 +26,7 @@ class AsyncQueueTest {
 	}
 
 	@Test
-	@DisplayName("AsyncQueue - Async(1)")
+	@DisplayName("AsyncQueue - async(1)")
 	void testAsyncQueue_Async() {
 		AsyncQueue<Integer> asyncQueue = new AsyncQueue<>(128, false);
 		Thread thread = new Thread(() -> {
@@ -43,7 +43,7 @@ class AsyncQueueTest {
 		});
 	}
 	@Test
-	@DisplayName("AsyncQueue - Async(2)")
+	@DisplayName("AsyncQueue - async(2)")
 	void testAsyncQueue_Async2() {
 		AsyncQueue<Integer> asyncQueue = new AsyncQueue<>(128,false);
 		Thread thread = new Thread(() -> {

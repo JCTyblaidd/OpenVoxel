@@ -1,19 +1,14 @@
-package net.openvoxel.files;
+package net.openvoxel.files.util;
 
 import com.jc.util.filesystem.FileHandle;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
+import net.openvoxel.files.world.GameSave;
 import net.openvoxel.utility.CrashReport;
-import org.lwjgl.stb.STBImageWrite;
-import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;

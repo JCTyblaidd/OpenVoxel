@@ -23,7 +23,7 @@ import net.openvoxel.common.event.window.ProgramShutdownEvent;
 import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.registry.RegistryEntities;
 import net.openvoxel.common.registry.RegistryItems;
-import net.openvoxel.files.FolderUtils;
+import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.loader.mods.ModLoader;
 import net.openvoxel.networking.protocol.PacketRegistry;
 import net.openvoxel.server.BackgroundClientServer;
