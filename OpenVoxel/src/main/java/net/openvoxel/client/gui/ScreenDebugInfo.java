@@ -6,7 +6,6 @@ import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.statistics.SystemStatistics;
 
 import java.text.DecimalFormat;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by James on 10/09/2016.
@@ -16,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ScreenDebugInfo extends Screen {
 
 	public static final ScreenDebugInfo instance = new ScreenDebugInfo();
-	public static AtomicReference<GUIDebugLevel> debugLevel = new AtomicReference<>(GUIDebugLevel.EXTREME_DETAIL);
+	public static GUIDebugLevel debugLevel = GUIDebugLevel.EXTREME_DETAIL;
 
 	public static String RendererType   = "Unknown Renderer";
 	public static String RendererVendor = "Unknown Vendor";
@@ -72,7 +71,7 @@ public class ScreenDebugInfo extends Screen {
 	@Override
 	public void DrawScreen(IGuiRenderer tess) {
 		SystemStatistics.requestUpdate();
-		int debug = debugLevel.get().getVal();
+		int debug = debugLevel.getVal();
 		float screenHeight = tess.getScreenHeight();
 		float screenWidth = tess.getScreenWidth();
 		float height = 25.0F / screenHeight;

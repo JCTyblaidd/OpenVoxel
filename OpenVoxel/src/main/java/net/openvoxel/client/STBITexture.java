@@ -25,8 +25,8 @@ public class STBITexture {
 
 
 	public STBITexture(byte[] array) {
+		ByteBuffer buffer = MemoryUtil.memAlloc(array.length);
 		try(MemoryStack stack = MemoryStack.stackPush()) {
-			ByteBuffer buffer = MemoryUtil.memAlloc(array.length);
 			buffer.put(array);
 			buffer.position(0);
 			IntBuffer xBuffer = stack.mallocInt(1);
@@ -47,6 +47,7 @@ public class STBITexture {
 						                          .invalidState("Expected Capacity = " + (4 * width * height));
 				OpenVoxel.reportCrash(crashReport);
 			}
+		}finally {
 			MemoryUtil.memFree(buffer);
 		}
 	}
@@ -66,6 +67,7 @@ public class STBITexture {
 
 	public void Free() {
 		if(pixels != null) {
+			pixels.position(0);
 			stbi_image_free(pixels);
 			pixels = null;//Cleanup//
 		}

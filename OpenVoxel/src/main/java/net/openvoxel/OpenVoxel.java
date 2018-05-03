@@ -355,7 +355,7 @@ public class OpenVoxel implements EventListener{
 		if(!args.hasFlag("noBackgroundWorld")) {
 			SetCurrentServer(new BackgroundClientServer());
 		}
-		GUI.addScreen(new ScreenMainMenu());
+		GUI.addScreen(new ScreenMainMenu(renderer));
 
 		//Update Tick State//
 		ClientServer lastServer = null;

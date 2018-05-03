@@ -735,10 +735,12 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 					scissorH
 				);
 
+				byte usesTexture = useTexStateList.get(sIdx);
+
 				if(resourceStateList[sIdx] == vulkanTextRender.handle && usingNormalPipeline) {
 					vkCmdBindPipeline(drawing,VK_PIPELINE_BIND_POINT_GRAPHICS,cache.PIPELINE_FORWARD_TEXT.getPipeline());
 					usingNormalPipeline = false;
-				}else if(resourceStateList[sIdx] != vulkanTextRender.handle && !usingNormalPipeline) {
+				}else if((resourceStateList[sIdx] != vulkanTextRender.handle || usesTexture == 0)&& !usingNormalPipeline) {
 					vkCmdBindPipeline(drawing,VK_PIPELINE_BIND_POINT_GRAPHICS,cache.PIPELINE_FORWARD_GUI.getPipeline());
 					usingNormalPipeline = true;
 				}
@@ -748,7 +750,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 				}
 
 				pPushConstants.put(0,imageIndexMapping.get(resourceStateList[sIdx]));
-				pPushConstants.put(1,useTexStateList.get(sIdx));
+				pPushConstants.put(1,usesTexture);
 				vkCmdPushConstants(
 						drawing,
 						cache.PIPELINE_LAYOUT_GUI_STANDARD_INPUT,

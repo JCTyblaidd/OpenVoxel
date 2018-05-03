@@ -12,13 +12,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Main Input Handle
  */
 public class ClientInput {
+
 	public static Vector2d unhandledMouseDelta;
 	public static Vector2d mousePosition;
-	//TODO: remove atomicity
 	public static Vector2i currentWindowLocation;
 	public static Vector2i currentWindowFrameSize;
-	//public static AtomicInteger currentWindowWidth;
-	//public static AtomicInteger currentWindowHeight;
 
 	public static boolean[] currentInputStatus;
 
@@ -31,8 +29,6 @@ public class ClientInput {
 		mousePosition = new Vector2d(0,0);
 		currentWindowLocation = new Vector2i(0,0);
 		currentWindowFrameSize = new Vector2i(1920,1080);
-		//currentWindowWidth = new AtomicInteger(1980);
-		//currentWindowHeight = new AtomicInteger(1080);
 		currentInputStatus = new boolean[512];
 		for(int i = 0; i < 512; i++) {
 			currentInputStatus[i] = false;

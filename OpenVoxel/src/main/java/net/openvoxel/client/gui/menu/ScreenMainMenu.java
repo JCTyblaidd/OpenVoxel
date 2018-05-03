@@ -3,6 +3,7 @@ package net.openvoxel.client.gui.menu;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui.menu.settings.ScreenSettings;
 import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.renderer.Renderer;
 
 /**
  * Created by James on 01/09/2016.
@@ -11,7 +12,10 @@ import net.openvoxel.client.gui_framework.*;
  */
 public class ScreenMainMenu extends Screen {
 
-	public ScreenMainMenu() {
+	private Renderer renderer;
+
+	public ScreenMainMenu(Renderer renderer) {
+		this.renderer = renderer;
 
 		GUIButton buttonSinglePlayer = new GUIButton("Single Player");
 		GUIButton buttonMultiPlayer = new GUIButton("Multi Player");
@@ -58,7 +62,7 @@ public class ScreenMainMenu extends Screen {
 		GUI.addScreen(new ScreenMultiPlayer());
 	}
 	private void onPressSettings() {
-		GUI.addScreen(new ScreenSettings());
+		GUI.addScreen(new ScreenSettings(renderer));
 	}
 	private void onPressQuit() {
 		OpenVoxel.getInstance().AttemptShutdownSequence(false);

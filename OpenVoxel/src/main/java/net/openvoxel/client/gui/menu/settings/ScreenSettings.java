@@ -2,6 +2,7 @@ package net.openvoxel.client.gui.menu.settings;
 
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.renderer.Renderer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,8 +15,11 @@ import java.util.List;
 public class ScreenSettings extends Screen{
 
 	private static final List<String> settings_list = Arrays.asList("No Debug","FPS Only","FPS+","Extreme Debug");
+	private Renderer renderer;
 
-	public ScreenSettings() {
+	public ScreenSettings(Renderer renderer) {
+		this.renderer = renderer;
+
 		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
 		GUISlider setting_foV = new GUISlider(10, 160, 110, (fov) -> "FOV: " + fov);
 		GUIButton settings_audio = new GUIButton("Audio Settings");
@@ -73,10 +77,7 @@ public class ScreenSettings extends Screen{
 
 
 	private void gotoRendererSettings() {
-		//Screen screen = Renderer.renderer.getGUIConfigElements();
-		//if(screen != null) {
-		//	GUI.addScreen(screen);
-		//}
+		//TODO: IMPLEMENT
 	}
 
 	private void gotoTextureSettings() {
@@ -84,7 +85,7 @@ public class ScreenSettings extends Screen{
 	}
 
 	private String getDebugMode() {
-		switch (ScreenDebugInfo.debugLevel.get()) {
+		switch (ScreenDebugInfo.debugLevel) {
 			case EXTREME_DETAIL:
 				return "Extreme Debug";
 			case  FPS:
@@ -116,6 +117,6 @@ public class ScreenSettings extends Screen{
 				level = ScreenDebugInfo.GUIDebugLevel.NONE;
 				break;
 		}
-		ScreenDebugInfo.debugLevel.set(level);
+		ScreenDebugInfo.debugLevel = level;
 	}
 }

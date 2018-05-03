@@ -29,28 +29,30 @@ public class GuiDrawTask implements Runnable {
 	@Override
 	public void run() {
 		try {
-			boolean guiDirty = ScreenDebugInfo.debugLevel.get() != ScreenDebugInfo.GUIDebugLevel.NONE;
+			//Check if dirty is possible
+			boolean guiDirty = ScreenDebugInfo.debugLevel != ScreenDebugInfo.GUIDebugLevel.NONE;
 			guiDirty |= !guiRenderer.allowDrawCaching();
-			synchronized (GUI.class) {//TODO: remove sync
-				//Check if dirty
-				if(!guiDirty) {
-					for (Screen screen : GUI.getStack()) {
-						guiDirty |= screen.isDrawDirty();
-					}
-				}
-				//Update if dirty
-				if(guiDirty) {
-					guiRenderer.StartDraw(width,height);
-					Iterator<Screen> iterate = GUI.getStack().descendingIterator();
-					while(iterate.hasNext()) {
-						iterate.next().DrawScreen(guiRenderer);
-					}
+
+			//Check if dirty
+			if(!guiDirty) {
+				for (Screen screen : GUI.getStack()) {
+					guiDirty |= screen.isDrawDirty();
 				}
 			}
-			//Debug Screen Renderer//
-			if(guiDirty) {//TODO: merge after sync removed
+
+			//Update if dirty
+			if(guiDirty) {
+				guiRenderer.StartDraw(width,height);
+				Iterator<Screen> iterate = GUI.getStack().descendingIterator();
+				while(iterate.hasNext()) {
+					iterate.next().DrawScreen(guiRenderer);
+				}
+
+				//Debug Screen Renderer//
 				ScreenDebugInfo.instance.DrawScreen(guiRenderer);
 			}
+
+			//Finish Draw
 			guiRenderer.finishDraw(guiDirty);
 		}catch(Exception ex) {
 			CrashReport report = new CrashReport("Error Drawing GUI");
