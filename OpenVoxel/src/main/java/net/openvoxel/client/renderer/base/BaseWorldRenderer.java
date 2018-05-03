@@ -5,7 +5,20 @@ import net.openvoxel.client.textureatlas.Icon;
 
 import java.nio.ByteBuffer;
 
-public abstract class BaseSubChunkRenderer implements IBlockRenderer {
+/*
+ * Renderer that can be called from many threads {}
+ */
+public abstract class BaseWorldRenderer implements IBlockRenderer {
+
+
+
+
+
+
+
+	///////////////////////////////
+	/// Sub Chunk Renderer Code ///
+	///////////////////////////////
 
 	protected Icon currentIcon = null;
 
@@ -14,7 +27,9 @@ public abstract class BaseSubChunkRenderer implements IBlockRenderer {
 	private int offset;
 
 
+	protected void DrawSubChunkOnMemory() {
 
+	}
 
 
 
@@ -36,7 +51,11 @@ public abstract class BaseSubChunkRenderer implements IBlockRenderer {
 		memoryMap.putShort(offset+12,(short)(U / 65535));
 		memoryMap.putShort(offset+14,(short)(V / 65535));
 
-		// float{x,y,z} {u,v}
+		memoryMap.put(offset+16,(byte)(xNorm / 255));
+		memoryMap.put(offset+17,(byte)(yNorm / 255));
+		memoryMap.put(offset+18,(byte)(zNorm / 255));
+
+		//memoryMap.put(offset)
 	}
 
 

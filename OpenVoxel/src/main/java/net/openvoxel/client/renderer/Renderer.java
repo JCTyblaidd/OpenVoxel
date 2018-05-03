@@ -7,6 +7,7 @@ import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.VulkanRenderer;
+import net.openvoxel.client.textureatlas.BaseAtlas;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.common.event.SubscribeEvents;
 import net.openvoxel.common.event.input.KeyStateChangeEvent;
@@ -31,7 +32,11 @@ public final class Renderer implements EventListener {
 	private final GraphicsAPI api;
 	private final PerSecondTimer frameRateTimer;
 	private final GuiDrawTask guiDrawTask;
+	private final WorldDrawTask worldDrawTask;
 	private final AsyncRunnablePool renderTaskPool;
+
+	//Texture Atlas
+	private BaseAtlas blockAtlas;
 
 	//FrameRate Limiting
 	private int targetFrameRate;
@@ -48,8 +53,11 @@ public final class Renderer implements EventListener {
 		logger = Logger.getLogger("Renderer");
 		frameRateTimer = new PerSecondTimer(64);
 		guiDrawTask = new GuiDrawTask();
+		worldDrawTask = new WorldDrawTask();
 		renderTaskPool = new AsyncRunnablePool("Render Pool",AsyncRunnablePool.getWorkerCount("renderWorkerCount",4));
 		renderTaskPool.start();
+
+		blockAtlas = new BaseAtlas(false);
 
 		targetFrameRate = Integer.MAX_VALUE;
 		previousFrameTimestamp = 0L;
@@ -115,9 +123,6 @@ public final class Renderer implements EventListener {
 		targetFrameRate = target;
 	}
 
-	public void requestScreenshot() {
-		screenshotRequest = true;
-	}
 
 	public GraphicsAPI.VSyncType getVSync() {
 		return api.getCurrentVSync();
@@ -191,7 +196,7 @@ public final class Renderer implements EventListener {
 				setScreenType(GraphicsAPI.ScreenType.BORDERLESS);
 			}
 		}else if (e.GLFW_KEY == GLFW_KEY_F12 && e.GLFW_KEY_STATE == GLFW_PRESS) {
-			requestScreenshot();
+			screenshotRequest = true;
 		}else if(e.GLFW_KEY == GLFW_KEY_DELETE) {
 			//TODO: REMOVE THIS FUNCTION WHEN IT IS NO LONGER NEEDED FOR DEBUGGING
 			System.exit(0);
@@ -302,9 +307,9 @@ public final class Renderer implements EventListener {
 	 * Asynchronously generate updated chunk maps using the server data
 	 */
 	public void generateUpdatedChunks(ClientServer server, AsyncBarrier completeBarrier) {
-		//TODO: IMPLEMENT Chunk Rendering
-		completeBarrier.reset(1);
-		completeBarrier.completeTask();
+		completeBarrier.reset(0);
+		//worldDrawTask.update(renderTaskPool,server,completeBarrier,api);
+		//renderTaskPool.addWork(worldDrawTask);
 	}
 
 	/**

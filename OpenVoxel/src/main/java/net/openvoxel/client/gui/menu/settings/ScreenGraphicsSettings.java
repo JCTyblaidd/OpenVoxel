@@ -1,6 +1,8 @@
 package net.openvoxel.client.gui.menu.settings;
 
 import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.renderer.Renderer;
+import net.openvoxel.client.renderer.common.GraphicsAPI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,17 +12,19 @@ import java.util.List;
  */
 public class ScreenGraphicsSettings extends Screen {
 
-	private static final List<String> screenModeStrings = List.of("Fullscreen","Borderless Window","Windowed");
+	private Renderer renderer;
+
+	private static final List<String> renderTypeStrings = List.of("Renderer: Voxel","Renderer: Environmental","Renderer: Deferred","Renderer: Forward");
 	private static final List<String> particleStrings = List.of("Particles: ON","Particles: MINIMAL","Particles: NONE");
 	private static final List<String> shadowMapStrings = List.of("Shadows: CASCADE","Shadows: SINGLE","Shadows: NONE");
 	private static final List<String> tessellationStrings = List.of("Tessellation: PARALLAX","Tessellation: DISPLACEMENT","Tessellation: NONE");
 	private static final List<String> fogStrings = List.of("Fog: ENABLED","Fog: DISABLED");
 	private static final List<String> godRayStrings = List.of("God Rays: ENABLED","God Rays: DISABLED");
 	private static final List<String> animateStrings = List.of("Animation: ENABLED","Animation: DISABLED");
-	private static final List<String> antiAliasStrings = List.of("Anti-alias: MXAA-4","Anti-alias: MXAA-2","Anti-alias: FXAA","Anti-alias: NONE");
-	private static final List<String> reflectionStrings = List.of("Reflection: HIGH","Reflection: MEDIUM","Reflection: LOW","Reflection: NONE");
-	private static final List<String> depthOfFieldStrings = List.of("Depth of Field: ENABLED","Depth of Field: DISABLED");
-	private static final List<String> transparencyStrings = List.of("Transparency: Depth-Peel","Transparency: Weighted Average","Transparency: Simple");
+	//private static final List<String> antiAliasStrings = List.of("Anti-alias: MXAA-4","Anti-alias: MXAA-2","Anti-alias: FXAA","Anti-alias: NONE");
+	//private static final List<String> reflectionStrings = List.of("Reflection: HIGH","Reflection: MEDIUM","Reflection: LOW","Reflection: NONE");
+	//private static final List<String> depthOfFieldStrings = List.of("Depth of Field: ENABLED","Depth of Field: DISABLED");
+	//private static final List<String> transparencyStrings = List.of("Transparency: Depth-Peel","Transparency: Weighted Average","Transparency: Simple");
 
 	private int currentLeft = 10;
 	private int currentRight = 10;
@@ -40,8 +44,9 @@ public class ScreenGraphicsSettings extends Screen {
 		section.add(sizable);
 	}
 
-	public ScreenGraphicsSettings(Screen advSettings) {
-		this.advSettings = advSettings;
+	public ScreenGraphicsSettings(Renderer renderer) {
+		this.advSettings = null;
+		this.renderer = renderer;
 
 		GUIColour background = new GUIColour(0xFF464646);
 		background.setupFullscreen();
@@ -89,6 +94,7 @@ public class ScreenGraphicsSettings extends Screen {
 		GUIToggleButton animateButton = new GUIToggleButton(animateStrings,animateStrings.get(0));
 		setupConfig(animateButton);
 
+		/*
 		GUIToggleButton antiAliasButton = new GUIToggleButton(antiAliasStrings,antiAliasStrings.get(0));
 		setupConfig(antiAliasButton);
 
@@ -100,6 +106,7 @@ public class ScreenGraphicsSettings extends Screen {
 
 		GUIToggleButton transparencyButton = new GUIToggleButton(transparencyStrings,transparencyStrings.get(0));
 		setupConfig(transparencyButton);
+		*/
 
 		GUIButton advancedSettings = new GUIButton("Advanced Settings");
 		advancedSettings.setAction(this::onAdvancedSettings);
@@ -117,14 +124,14 @@ public class ScreenGraphicsSettings extends Screen {
 	}
 
 	private int getCurrentTargetFPS() {
-		return 60;//Renderer.renderer.getTargetFPS();
+		return renderer.getTargetFrameRate();
 	}
 
 	private void setTargetFPS(int targetFPS) {
 		if(targetFPS == 145) {
-			//Renderer.renderer.setTargetFPS(Integer.MAX_VALUE);
+			renderer.setTargetFrameRate(Integer.MAX_VALUE);
 		}else{
-			//Renderer.renderer.setTargetFPS(targetFPS);
+			renderer.setTargetFrameRate(targetFPS);
 		}
 	}
 
@@ -134,46 +141,46 @@ public class ScreenGraphicsSettings extends Screen {
 	}
 
 	private void setChunkRadius(int chunkRadius) {
-		//NO OP//
+		//TODO: IMPLEMENT
 	}
 
 	private void setVSyncState(String state_str) {
 		String id_state = state_str.substring("V-sync: ".length());
-		//Renderer.renderer.setVSyncState(GlobalRenderer.VSyncType.fromID(id_state));
+		renderer.setVSyncType(GraphicsAPI.VSyncType.valueOf(id_state));
 	}
 
 	private List<String> getVSyncSupport() {
 		ArrayList<String> supported = new ArrayList<>();
 		supported.add("V-SYNC: NYI");
-		//for(GlobalRenderer.VSyncType type : GlobalRenderer.VSyncType.values()) {
-		//	if(Renderer.renderer.isVSyncSupported(type)) {
-		//		supported.add("V-sync: " + type.getID());
-		//	}
-		//}
+		for(GraphicsAPI.VSyncType type : GraphicsAPI.VSyncType.values()) {
+			if(renderer.isVSyncSupported(type)) {
+				supported.add("V-sync: "+type.name());
+			}
+		}
 		return supported;
 	}
 
 	private String getVSyncState() {
-		return "V-sync: NYI";// + Renderer.renderer.getVSyncState().getID();
+		return "V-sync: "+renderer.getVSync().name();
 	}
 
 	private void setScreenState(String state_str) {
-		//Renderer.renderer.setFullscreenState(GlobalRenderer.ScreenType.fromID(state_str));
+		renderer.setScreenType(GraphicsAPI.ScreenType.valueOf(state_str));
 	}
 
 	private List<String> getScreenSupport() {
 		ArrayList<String> supported = new ArrayList<>();
 		supported.add("Screen: NYI");
-		//for(GlobalRenderer.ScreenType type : GlobalRenderer.ScreenType.values()) {
-		//	if(Renderer.renderer.isFullscreenSupported(type)) {
-		//		supported.add(type.getID());
-		//	}
-		//}
+		for(GraphicsAPI.ScreenType type : GraphicsAPI.ScreenType.values()) {
+			if(renderer.isScreenTypeSupported(type)) {
+				supported.add(type.name());
+			}
+		}
 		return supported;
 	}
 
 	private String getScreenState() {
-		return "Unknown";//Renderer.renderer.getFullscreenState().getID();
+		return renderer.getScreenType().name();
 	}
 
 	private void onAdvancedSettings() {

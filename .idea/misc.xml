@@ -39,8 +39,9 @@
     </properties>
   </component>
   <component name="EntryPointsManager">
-    <list size="1">
+    <list size="2">
       <item index="0" class="java.lang.String" itemvalue="net.openvoxel.api.PublicAPI" />
+      <item index="1" class="java.lang.String" itemvalue="net.openvoxel.common.event.SubscribeEvents" />
     </list>
   </component>
   <component name="MavenProjectsManager">

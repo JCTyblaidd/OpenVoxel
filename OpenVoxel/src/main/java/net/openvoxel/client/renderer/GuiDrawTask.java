@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.gui_framework.GUI;
@@ -43,9 +44,30 @@ public class GuiDrawTask implements Runnable {
 			//Update if dirty
 			if(guiDirty) {
 				guiRenderer.StartDraw(width,height);
+				Screen limit = null;
+
+				//Check if the screen hides
+				for(Screen screen : GUI.getStack()) {
+					if(screen.hidesPreviousScreens()) {
+						limit = screen;
+						break;
+					}
+				}
+
+				//Draw in reverse order
 				Iterator<Screen> iterate = GUI.getStack().descendingIterator();
+
 				while(iterate.hasNext()) {
-					iterate.next().DrawScreen(guiRenderer);
+					if(limit == null) {
+						Screen screen = iterate.next();
+						screen.DrawScreen(guiRenderer);
+					}else{
+						Screen screen = iterate.next();
+						if(screen == limit) {
+							limit = null;
+							screen.DrawScreen(guiRenderer);
+						}
+					}
 				}
 
 				//Debug Screen Renderer//

@@ -1,10 +1,11 @@
 package net.openvoxel.client.textureatlas;
 
-public class BaseIcon {
+public class BaseIcon implements Icon {
 
-	public float U0;
-	public float V0;
-	public float U1;
-	public float V1;
+	public float U0 = 0;
+	public float V0 = 0;
+	public float U1 = 1;
+	public float V1 = 1;
 
+	public int animationCount = 1;
 }

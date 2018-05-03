@@ -17,6 +17,11 @@ public class ScreenSettings extends Screen{
 	private static final List<String> settings_list = Arrays.asList("No Debug","FPS Only","FPS+","Extreme Debug");
 	private Renderer renderer;
 
+	@Override
+	public boolean hidesPreviousScreens() {
+		return true;
+	}
+
 	public ScreenSettings(Renderer renderer) {
 		this.renderer = renderer;
 
@@ -77,7 +82,7 @@ public class ScreenSettings extends Screen{
 
 
 	private void gotoRendererSettings() {
-		//TODO: IMPLEMENT
+		GUI.addScreen(new ScreenGraphicsSettings(renderer));
 	}
 
 	private void gotoTextureSettings() {

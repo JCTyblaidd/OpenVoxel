@@ -47,6 +47,10 @@ public class Screen {
 		return true;
 	}
 
+	public boolean hidesPreviousScreens() {
+		return false;
+	}
+
 	public boolean isDrawDirty() {
 		boolean dirty = initDraw;
 		initDraw = false;

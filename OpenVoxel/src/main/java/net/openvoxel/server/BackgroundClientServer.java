@@ -15,21 +15,13 @@ import net.openvoxel.world.generation.DebugWorldGenerator;
 public class BackgroundClientServer extends ClientServer {
 
 	public BackgroundClientServer() {
-		/**
-		thePlayer = null;
-		serverConnection = new ClientNetworkHandler();
-		//DEBUG CODE TODO: remove and update
 		thePlayer = new EntityPlayerSP();
-		World theWorld = new ClientWorld(new DebugWorldGenerator());
-		thePlayer.currentWorld = theWorld;
+		thePlayer.currentWorld = new ClientWorld(new DebugWorldGenerator());
 		thePlayer.xPos = 100;
 		thePlayer.yPos = 105;
 		thePlayer.zPos = 100;
 		thePlayer.setPitch(0);
 		thePlayer.setYaw(0);
-		dimensionMap.put(0,theWorld);
-		//END OF DEBUG CODE
-		 **/
 	}
 
 	private void debug_tick() {

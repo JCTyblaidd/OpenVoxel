@@ -14,9 +14,12 @@ class AsyncBarrierTest {
 	@Test
 	@DisplayName("AsyncBarrier - sync")
 	void testAsyncBarrier_Synchronous() {
-		assertTimeout(ofSeconds(1),() -> {
+		assertTimeoutPreemptively(ofSeconds(1),() -> {
 			AsyncBarrier barrier = new AsyncBarrier();
 			barrier.reset(1);
+			barrier.addNewTasks(2);
+			barrier.completeTask();
+			barrier.completeTask();
 			barrier.completeTask();
 			barrier.awaitCompletion();
 		});

@@ -1,5 +1,7 @@
 package net.openvoxel.utility.async;
 
+import net.openvoxel.api.PublicAPI;
+import net.openvoxel.loader.classloader.Validation;
 import net.openvoxel.utility.debug.Validate;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,14 +18,27 @@ public class AsyncBarrier {
 	/*
 	 * Reset the task number
 	 */
+	@PublicAPI
 	public void reset(int numTasks) {
 		int old = countdown.getAndSet(numTasks);
 		Validate.Condition(old == 0,"Reset a non complete AsyncBarrier");
 	}
 
 	/*
+	 * Add more tasks to be waited on
+	 *  - must be called before completing the task being called from
+	 */
+	@PublicAPI
+	public void addNewTasks(int numTasks) {
+		Validate.Condition(numTasks > 0,"Can only add tasks to AsyncBarrier");
+		int old = countdown.getAndAdd(numTasks);
+		Validate.Condition(old > 0,"Can only add tasks to busy AsyncBarrier");
+	}
+
+	/*
 	 * Complete a task being waited on
 	 */
+	@PublicAPI
 	public void completeTask() {
 		lock.lock();
 		int val = countdown.decrementAndGet();
@@ -37,6 +52,7 @@ public class AsyncBarrier {
 	/*
 	 * Wait until countdown reaches 0
 	 */
+	@PublicAPI
 	public void awaitCompletion() {
 		lock.lock();
 		while(countdown.get() != 0) {

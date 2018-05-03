@@ -5,10 +5,13 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.files.world.GameSave;
 import net.openvoxel.utility.CrashReport;
+import org.lwjgl.stb.STBIWriteCallback;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png_to_func;
 
 /**
  * Created by James on 10/09/2016.
@@ -50,9 +54,53 @@ public class FolderUtils {
 		return f;
 	}
 
-	public static void saveTextureStitch(int w, int h,ByteBuffer data,String name) {
-		File f = new File(ResourceDir,name+".png");
-		stbi_write_png(f.getAbsolutePath(),w,h,4,data,0);
+	private static void storeImageInFile(File f,int w, int h, ByteBuffer data) {
+		try {
+			FileOutputStream fileOut = new FileOutputStream(f);
+			FileChannel channel = fileOut.getChannel();
+			stbi_write_png_to_func(new STBIWriteCallback() {
+				@Override
+				public void invoke(long context, long data, int size) {
+					ByteBuffer buffer = getData(data,size);
+					try {
+						channel.write(buffer);
+					}catch(Exception ex) {
+						folderLogger.Warning("Exception caught while writing to file");
+					}
+				}
+			},0L,h,w,4,data,0);
+			channel.close();
+		}catch (Exception ex) {
+			folderLogger.Warning("Failed to store image to file");
+		}
+	}
+
+	/*
+	 * Save a stitched texture result
+	 */
+	public static void saveTextureStitch(int w, int h,ByteBuffer data,String name,int mip_levels) {
+		if(mip_levels > 1) {
+			if(w != h) {
+				folderLogger.Warning("Attempted to call mip map texture stitch on target where w != h");
+				return;
+			}
+			int size = w;
+			int offset =0 ;
+			int NUM = 0;
+			while(NUM < mip_levels && size > 0) {
+				File f = new File(ResourceDir,name+"-"+NUM+".png");
+				data.position(offset);
+				storeImageInFile(f,size,size,data);
+				//NEXT
+				offset += size * size;
+				NUM += 1;
+				size /= 2;
+			}
+			data.position(0);
+		}else {
+			File f = new File(ResourceDir,name+".png");
+			storeImageInFile(f,w,h,data);
+		}
 	}
 
 	public static void saveScreenshot(int w, int h,int[] pixels,boolean swizzle_result) {

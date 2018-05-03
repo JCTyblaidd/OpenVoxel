@@ -224,8 +224,8 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 		int swapSize = command.getSwapSize();
 
 		//Choose Memory sizes
-		vertexSectionLength = padToAlign(64 * 1024,alignment);
-		uniformSectionLength = padToAlign(1024,alignment);
+		vertexSectionLength = padToAlign(256 * 1024,alignment);
+		uniformSectionLength = padToAlign(256,alignment);
 
 		//Choose Offsets
 		int _runningOffset = 0;
