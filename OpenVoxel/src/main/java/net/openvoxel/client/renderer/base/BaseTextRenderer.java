@@ -92,14 +92,14 @@ public abstract class BaseTextRenderer {
 
 	public float GetTextWidthRatio(String text,int screenWidth,int screenHeight) {
 		final int SIZE = text.length();
-		final float aspect = (float)screenHeight / screenWidth;
+		final float aspect = (float)screenHeight / (float)screenWidth;
 		float runningOffset = 0;
 		for(int i = 0; i < SIZE; i++){
-			char c = text.charAt(i);
-			runningOffset += ((float)pixelWidths[(int)c] / cellWidth) * aspect;
+			int c = text.charAt(i);
+			float width = pixelWidths[c];
+			runningOffset += (width / pixelsPerCell) * aspect;
 		}
-		//TODO: WHY DOES THIS FIX THE TEXT ISSUES???????????
-		return runningOffset / screenWidth * 4;
+		return runningOffset;
 	}
 
 
