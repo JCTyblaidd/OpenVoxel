@@ -12,7 +12,6 @@ import gnu.trove.map.hash.TIntLongHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.map.hash.TObjectLongHashMap;
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.STBITexture;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
@@ -288,7 +287,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 
 	//Returns Image
 	private long allocateResourceMemory(ResourceHandle handle,VkImageMemoryBarrier initBarrier,VkBufferImageCopy copy,VkImageMemoryBarrier barrier) {
-		STBITexture texture = new STBITexture(handle.getByteData());
+		STBITexture texture = new STBITexture(handle);
 		int texture_format = VulkanRenderPass.formatSimpleReadImage;
 		try(MemoryStack stack = stackPush()) {
 			VkImageCreateInfo imageCreateInfo = VkImageCreateInfo.mallocStack(stack);

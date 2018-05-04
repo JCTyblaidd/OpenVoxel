@@ -34,7 +34,7 @@ class VulkanTextRenderer extends BaseTextRenderer {
 
 	void load() {
 		int format = VulkanRenderPass.formatSimpleReadImage;
-		STBITexture texture = new STBITexture(handle.getByteData());
+		STBITexture texture = new STBITexture(handle);
 		try(MemoryStack stack = stackPush()) {
 			VkImageCreateInfo imageCreate = VkImageCreateInfo.mallocStack(stack);
 			imageCreate.sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO);
@@ -118,7 +118,6 @@ class VulkanTextRenderer extends BaseTextRenderer {
 			commandHandler.SingleUseImagePopulate(Image,texture);
 		}finally {
 			texture.Free();
-			handle.unloadData();
 		}
 	}
 

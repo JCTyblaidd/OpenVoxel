@@ -1,6 +1,7 @@
 package net.openvoxel.client;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
@@ -23,7 +24,35 @@ public class STBITexture {
 	public int componentCount;
 	public ByteBuffer pixels;
 
+	public STBITexture(ResourceHandle handle) {
+		this(handle.getByteBufferData());
+		handle.unloadData();
+	}
 
+	public STBITexture(ByteBuffer buffer) {
+		try(MemoryStack stack = MemoryStack.stackPush()) {
+			IntBuffer xBuffer = stack.mallocInt(1);
+			IntBuffer yBuffer = stack.mallocInt(1);
+			IntBuffer compBuffer = stack.mallocInt(1);
+			pixels = stbi_load_from_memory(buffer, xBuffer, yBuffer, compBuffer, STBImage.STBI_rgb_alpha);
+			xBuffer.position(0);
+			yBuffer.position(0);
+			compBuffer.position(0);
+			width = xBuffer.get();
+			height = yBuffer.get();
+			componentCount = compBuffer.get();
+			pixels.position(0);
+			if (pixels.capacity() != 4 * width * height) {
+				CrashReport crashReport = new CrashReport("Image Load Error")
+						                          .invalidState("componentCount != 4")
+						                          .invalidState("Capacity = " + pixels.capacity())
+						                          .invalidState("Expected Capacity = " + (4 * width * height));
+				OpenVoxel.reportCrash(crashReport);
+			}
+		}
+	}
+
+	@Deprecated
 	public STBITexture(byte[] array) {
 		ByteBuffer buffer = MemoryUtil.memAlloc(array.length);
 		try(MemoryStack stack = MemoryStack.stackPush()) {

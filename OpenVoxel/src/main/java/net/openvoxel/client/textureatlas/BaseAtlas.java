@@ -90,9 +90,9 @@ public class BaseAtlas {
 			int min_size = Integer.MAX_VALUE;
 
 			for (BaseIcon icon : iconList) {
-				STBITexture diff = new STBITexture(refIconDiff.get(icon).getByteData());
-				STBITexture norm = isSingleTexture ? null : new STBITexture(refIconNorm.get(icon).getByteData());
-				STBITexture pbr = isSingleTexture ? null : new STBITexture(refIconPBR.get(icon).getByteData());
+				STBITexture diff = new STBITexture(refIconDiff.get(icon));
+				STBITexture norm = isSingleTexture ? null : new STBITexture(refIconNorm.get(icon));
+				STBITexture pbr = isSingleTexture ? null : new STBITexture(refIconPBR.get(icon));
 				texDiff.put(icon, diff);
 				texNorm.put(icon, norm);
 				texPBR.put(icon, pbr);

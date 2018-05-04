@@ -2,6 +2,10 @@ package net.openvoxel.common.resources;
 
 import com.jc.util.format.json.JSON;
 import com.jc.util.format.json.JSONObject;
+import net.openvoxel.api.PublicAPI;
+import org.lwjgl.system.MemoryUtil;
+
+import java.nio.ByteBuffer;
 
 /**
  * Created by James on 25/08/2016.
@@ -14,14 +18,15 @@ public class ResourceHandle {
 	private String ID;
 
 	private boolean reload;
-	private byte[] Data;
+	private ByteBuffer Data;
 
-	public ResourceHandle(ResourceType type, String ID) {
+	ResourceHandle(ResourceType type, String ID) {
 		this.type = type;
 		this.ID = ID;
 		markAsDirty();
 	}
 
+	@PublicAPI
 	public void markAsDirty() {
 		reload = true;
 	}
@@ -30,6 +35,7 @@ public class ResourceHandle {
 	 *
 	 * @return If The Resource Should Be Reloaded
 	 */
+	@PublicAPI
 	public boolean checkIfChanged() {
 		return reload;
 	}
@@ -48,30 +54,53 @@ public class ResourceHandle {
 		throw new RuntimeException("Error Parsing Resource Type: " + type);
 	}
 
+	@PublicAPI
 	public void reloadData() {
-		Data = ResourceDataHandler.getData(getID());
+		unloadData();
+		Data = ResourceDataHandler.getAllocData(getID());
 		reload = false;
 	}
 
+	@PublicAPI
 	public void unloadData() {
-		Data = null;
+		if(Data != null) {
+			Data.position(0);
+			MemoryUtil.memFree(Data);
+			Data = null;
+		}
 	}
 
+	@PublicAPI
 	public byte[] getByteData() {
+		ByteBuffer buf = getByteBufferData();
+		if(buf == null) return null;
+		byte[] bytes = new byte[buf.capacity()];
+		buf.position(0);
+		buf.get(bytes);
+		buf.position(0);
+		return bytes;
+	}
+
+	@PublicAPI
+	public ByteBuffer getByteBufferData() {
 		if(Data == null) {
 			reloadData();
 		}
+		if(Data != null) Data.position(0);
 		return Data;
 	}
 
+	@PublicAPI
 	public String getStringData() {
 		return new String(getByteData());
 	}
 
+	@PublicAPI
 	public String getResourceID() {
 		return ID;
 	}
 
+	@PublicAPI
 	public JSONObject getMetadata() {
 		String realID = getID();
 		int last_idx = realID.lastIndexOf('.');

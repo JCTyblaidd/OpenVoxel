@@ -45,4 +45,12 @@ public class ResourceManager {
 			});
 		});
 	}
+
+	public static void unloadAll() {
+		ResourceData.forEach((t,v) -> {
+			v.forEach((n,h) -> {
+				h.unloadData();
+			});
+		});
+	}
 }

@@ -23,6 +23,7 @@ import net.openvoxel.common.event.window.ProgramShutdownEvent;
 import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.registry.RegistryEntities;
 import net.openvoxel.common.registry.RegistryItems;
+import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.loader.mods.ModLoader;
 import net.openvoxel.networking.protocol.PacketRegistry;
@@ -329,6 +330,9 @@ public class OpenVoxel implements EventListener{
 
 		//Stop Usage Analysis
 		UsageAnalyses.Shutdown();
+
+		//Free up Resources
+		ResourceManager.unloadAll();
 
 		//Finish Shutdown
 		AttemptShutdownSequenceInternal(shutdownIsCrash.get());

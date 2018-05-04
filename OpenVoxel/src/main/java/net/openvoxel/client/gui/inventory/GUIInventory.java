@@ -10,17 +10,20 @@ import net.openvoxel.common.resources.ResourceHandle;
  */
 public abstract class GUIInventory extends Screen{
 
-	protected final int img_w;
-	protected final int img_h;
+	//protected final int img_w;
+	//protected final int img_h;
 
 	public GUIInventory(ResourceHandle image) {
+		/*
 		GUIObjectImage img = new GUIObjectImage(image);
-		STBITexture tex = new STBITexture(image.getByteData());
+		//TODO: REWORK!
+		STBITexture tex = new STBITexture(image.getByteBufferData());
 		img_w = tex.getWidth();
 		img_h = tex.getHeight();
 		tex.Free();
 		img.setCentered(img_w,img_h);
 		guiObjects.add(img);
+		*/
 	}
 
 	protected void addSlot(int X, int Y,int slotID) {
