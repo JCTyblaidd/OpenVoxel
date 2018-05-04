@@ -13,8 +13,8 @@ public abstract class IGuiRenderer {
 
 	public abstract void VertexWithColUV(float x, float y, float u, float v, int RGB);
 
-	public abstract void DrawText(float x, float y, float height,String text, int col);
-	public abstract float GetTextWidthRatio(String text);
+	public abstract void DrawText(float x, float y, float height,CharSequence text, int col);
+	public abstract float GetTextWidthRatio(CharSequence text);
 
 	//TODO: DRAW ITEM & BLOCKS IN GUI
 	public void DrawItem(ItemStack stack, float x, float y, float z, float scale) {}
@@ -39,7 +39,7 @@ public abstract class IGuiRenderer {
 		VertexWithColUV(x,y,0,0,RGB);
 	}
 
-	public final void DrawText(float x, float y, float height,String text) {
+	public final void DrawText(float x, float y, float height,CharSequence text) {
 		DrawText(x,y,height,text,0xFFFFFFFF);
 	}
 }

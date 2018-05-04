@@ -57,7 +57,7 @@ public class ResizedGUIHandleWrapper extends IGuiRenderer {
 	}
 
 	@Override
-	public void DrawText(float x, float y, float height, String text, int col) {
+	public void DrawText(float x, float y, float height, CharSequence text, int col) {
 		tessellator.DrawText(x * x_scale + x_offset,y * y_scale + y_offset,height * y_scale,text,col);
 	}
 
@@ -68,7 +68,7 @@ public class ResizedGUIHandleWrapper extends IGuiRenderer {
 	}*/
 
 	@Override
-	public float GetTextWidthRatio(String text) {
+	public float GetTextWidthRatio(CharSequence text) {
 		return tessellator.GetTextWidthRatio(text) * y_scale / x_scale;
 	}
 

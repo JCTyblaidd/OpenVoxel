@@ -186,13 +186,13 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 	}
 
 	@Override
-	public final void DrawText(float x, float y, float height, String text, int col) {
+	public final void DrawText(float x, float y, float height, CharSequence text, int col) {
 		textRenderer.DrawText(this,screenWidth,screenHeight
 				,x,y,height,text,col);
 	}
 
 	@Override
-	public final float GetTextWidthRatio(String text) {
+	public final float GetTextWidthRatio(CharSequence text) {
 		return textRenderer.GetTextWidthRatio(text,screenWidth,screenHeight);
 	}
 

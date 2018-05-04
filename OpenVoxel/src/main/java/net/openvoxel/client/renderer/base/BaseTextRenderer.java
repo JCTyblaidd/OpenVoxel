@@ -78,7 +78,7 @@ public abstract class BaseTextRenderer {
 	}
 
 	public void DrawText(BaseGuiRenderer draw,int screenWidth, int screenHeight,
-	                     float x, float y, float height, String text, int col) {
+	                     float x, float y, float height, CharSequence text, int col) {
 		draw.Begin(handle);
 		//Draw Vertex List
 		final int SIZE = text.length();
@@ -90,7 +90,7 @@ public abstract class BaseTextRenderer {
 		}
 	}
 
-	public float GetTextWidthRatio(String text,int screenWidth,int screenHeight) {
+	public float GetTextWidthRatio(CharSequence text,int screenWidth,int screenHeight) {
 		final int SIZE = text.length();
 		final float aspect = (float)screenHeight / (float)screenWidth;
 		float runningOffset = 0;

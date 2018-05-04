@@ -1,6 +1,7 @@
 package net.openvoxel.client.gui;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.gui_framework.Screen;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.statistics.SystemStatistics;
@@ -22,12 +23,27 @@ public class ScreenDebugInfo extends Screen {
 	public static String RendererDriver = "Unknown Driver";
 
 	private float frame_rate = 40.0f;
+	private StringBuffer text_builder = new StringBuffer(128);
 
 	public void setFrameRate(float frame_rate) {
 		this.frame_rate = frame_rate;
 	}
 
-	private static String _limit(float f) {
+	private void clear_text() {
+		text_builder.delete(0,text_builder.length());
+	}
+
+	private StringBuffer _limit(float f) {
+		clear_text();
+		int frame_val = Math.round(f);
+		if(frame_val < 100) text_builder.append(' ');
+		if(frame_val < 10) text_builder.append(' ');
+		text_builder.append(frame_val);
+		text_builder.append(" fps");
+
+		//text_builder.append(Math.round(f));
+
+		/*
 		String val = Integer.toString(Math.round(f));
 		int res = val.length();
 		StringBuilder build = new StringBuilder();
@@ -37,35 +53,74 @@ public class ScreenDebugInfo extends Screen {
 		}
 		build.append(val);
 		build.append(" fps");
-		return build.toString();
+		Logger.getLogger("DEBUG").Info("|",build.toString(),"||",text_builder.toString(),"|");
+		*/
+
+		return text_builder;
 	}
 
-	private static String _memory(long value) {
+	private StringBuffer _memory(String prefix,long value) {
+		clear_text();
+		text_builder.append(prefix);
 		if(value >= 1073741824) {
 			long div = value / 1073741824;
 			long rem = value - (div * 1073741824);
 			float FV = div + (rem / 1073741824.0F);
-			return Float.toString(Math.round(FV * 10.0F) / 10.0F) + "GB";
+			float VAL = Math.round(FV * 10.0F) / 10.0F;
+			text_builder.append(VAL);
+			text_builder.append("GB");
+			//val =  Float.toString(Math.round(FV * 10.0F) / 10.0F) + "GB";
 		}else if(value >= (1048576)) {
 			long div = value / 1048576;
 			long rem = value - (div * 1048576);
 			float FV = div + (rem / 1048576.0F);
-			return Float.toString(Math.round(FV * 10.0F) / 10.0F) + "MB";
+			float VAL = Math.round(FV * 10.0F) / 10.0F;
+			text_builder.append(VAL);
+			text_builder.append("MB");
+			//val =  Float.toString(Math.round(FV * 10.0F) / 10.0F) + "MB";
 		}else if(value >= (1024)) {
 			long div = value / 1024;
 			long rem = value - (div * 1024);
 			float FV = div + (rem / 1024.0F);
-			return Float.toString(Math.round(FV * 10.0F) / 10.0F) + "KB";
+			float VAL = Math.round(FV * 10.0F) / 10.0F;
+			text_builder.append(VAL);
+			text_builder.append("KB");
+			//val =  Float.toString(Math.round(FV * 10.0F) / 10.0F) + "KB";
 		}else {
-			return Long.toString(value)+"B";
+			text_builder.append(value);
+			text_builder.append("B");
+			//val =  Long.toString(value)+"B";
 		}
+		return text_builder;
 	}
 
-	private static String _percent(double percent) {
+	private StringBuffer _percent(String prefix,double percent) {
+		clear_text();
+		text_builder.append(prefix);
+		int value = (int)Math.floor(percent * 100);
+		int remainder = (int)Math.round(percent * 10000) % 100;
+		text_builder.append(value);
+		text_builder.append('.');
+		if(remainder < 10) text_builder.append('0');
+		text_builder.append(remainder);
+		text_builder.append('%');
+
+/*
 		DecimalFormat decimalFormat = new DecimalFormat();
 		decimalFormat.setMaximumFractionDigits(2);
 		decimalFormat.setMinimumFractionDigits(2);
-		return decimalFormat.format(percent*100) + '%';
+		String cmp =  prefix + decimalFormat.format(percent*100) + '%';
+		Logger.getLogger("debug").Info(percent,"::",cmp," :: ",text_builder.toString());
+*/
+		return text_builder;
+	}
+
+	private StringBuffer _count(String prefix,int value) {
+		clear_text();
+		text_builder.append(prefix);
+		text_builder.append(value);
+		return text_builder;
+		//return prefix + value;
 	}
 
 	@Override
@@ -83,17 +138,17 @@ public class ScreenDebugInfo extends Screen {
 			y_pos += height;
 		}
 		if(debug > 0) {//At Least Level::FPS
-			String str = _limit(frame_rate);
+			CharSequence str = _limit(frame_rate);
 			tess.DrawText(x_pos,y_pos,height,str);
 			y_pos += height;
 		}
 		if(debug > 1) {//At Least Level::FPS_BONUS
 			//RUNTIME INFO//
-			tess.DrawText(x_pos,y_pos,height,"Process memory: " + _memory(SystemStatistics.getProcessMemoryUsage()));
+			tess.DrawText(x_pos,y_pos,height,_memory("Process memory: ",SystemStatistics.getProcessMemoryUsage()));
 			y_pos += height;
-			tess.DrawText(x_pos,y_pos,height,"JVM memory: " + _memory(SystemStatistics.getJVMMemoryUsage()));
+			tess.DrawText(x_pos,y_pos,height,_memory("JVM memory: ",SystemStatistics.getJVMMemoryUsage()));
 			y_pos += height;
-			tess.DrawText(x_pos,y_pos,height,"Processor Count: " + SystemStatistics.getProcessorCount());
+			tess.DrawText(x_pos,y_pos,height,_count("Processor Count: ",SystemStatistics.getProcessorCount()));
 			y_pos += height;
 			//RENDERER INFO//
 			float width1 = tess.GetTextWidthRatio(RendererType) * height;
@@ -106,15 +161,15 @@ public class ScreenDebugInfo extends Screen {
 			tess.DrawText(1.0F-width3,y_pos2,height,RendererDriver);
 		}
 		if(debug > 2) {//Contains Extreme Detail
-			tess.DrawText(x_pos,y_pos,height,"Processor Usage: " + _percent(SystemStatistics.getProcessingUsage()));
+			tess.DrawText(x_pos,y_pos,height,_percent("Processor Usage: ",SystemStatistics.getProcessingUsage()));
 			y_pos += height;
-			tess.DrawText(x_pos,y_pos,height,"Thread Count: " + SystemStatistics.getThreadCount());
+			tess.DrawText(x_pos,y_pos,height,_count("Thread Count: ",SystemStatistics.getThreadCount()));
 			y_pos += height;
-			tess.DrawText(x_pos,y_pos,height,"GPU Usage: " + _percent(SystemStatistics.getGraphicsProcessingUsage()));
+			tess.DrawText(x_pos,y_pos,height,_percent("GPU Usage: ",SystemStatistics.getGraphicsProcessingUsage()));
 			y_pos += height;
-			tess.DrawText(x_pos,y_pos,height,"GPU Memory Usage: " + _memory(SystemStatistics.getGraphicsGpuMemoryUsage()));
+			tess.DrawText(x_pos,y_pos,height,_memory("GPU Memory Usage: ",SystemStatistics.getGraphicsGpuMemoryUsage()));
 			y_pos += height;
-			tess.DrawText(x_pos,y_pos,height,"GPU-Shared Memory Usage: " + _memory(SystemStatistics.getGraphicsLocalMemoryUsage()));
+			tess.DrawText(x_pos,y_pos,height,_memory("GPU-Shared Memory Usage: ",SystemStatistics.getGraphicsLocalMemoryUsage()));
 			final float histogram_w = 250.0F;
 			final float histogram_h = 150.0F;
 			draw_processor_histogram(tess,1.0F-((histogram_w+5)/screenWidth),y_pos2 + (height/4),
