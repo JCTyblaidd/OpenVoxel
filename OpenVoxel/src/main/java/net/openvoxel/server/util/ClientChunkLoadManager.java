@@ -16,6 +16,7 @@ import java.util.List;
  *
  * Handles the loading and unloading of various chunks on the clients side
  */
+@Deprecated
 @SideOnly(side = Side.CLIENT)
 public class ClientChunkLoadManager {
 

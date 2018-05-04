@@ -18,6 +18,7 @@ import net.openvoxel.networking.protocol.AbstractPacket;
  *
  * Server Player Connection
  */
+@Deprecated
 public class ServerPlayerConnection extends SimpleChannelInboundHandler<AbstractPacket> {
 	@Override
 	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {

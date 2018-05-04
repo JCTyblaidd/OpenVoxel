@@ -32,10 +32,11 @@ import net.openvoxel.server.BaseServer;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.server.DedicatedServer;
 import net.openvoxel.server.util.CommandInputThread;
-import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.CrashReport;
+import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.debug.UsageAnalyses;
 import net.openvoxel.utility.debug.Validate;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.Configuration;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -73,16 +74,9 @@ public class OpenVoxel implements EventListener{
 	private static OpenVoxel instance;
 
 	/**
-	 * Currently Running Standard Server
+	 * Currently Running Server {Client is Side.isClient, Standard otherwise}
 	 */
-	@SideOnly(side = Side.DEDICATED_SERVER)
-	private DedicatedServer currentServer = null;
-
-	/**
-	 * Currently Running Client Server
-	 */
-	@SideOnly(side = Side.CLIENT)
-	private ClientServer currentClientServer = null;
+	private BaseServer currentServer;
 
 	/**
 	 * The ID <-> Name <-> Packet Registry,
@@ -134,30 +128,14 @@ public class OpenVoxel implements EventListener{
 	 * @param server the server instance
 	 */
 	@PublicAPI
-	public void SetCurrentServer(BaseServer server) {
+	public void SetCurrentServer(@Nullable BaseServer server) {
 		Validate.IsMainThread();
 		if(Side.isClient) {
-			setCurrentServer_client(server);
+			Validate.Condition(server instanceof ClientServer,"Must be ClientServer if Side.isClient");
 		}else{
-			setCurrentServer_dedicated(server);
+			Validate.Condition(server instanceof DedicatedServer,"Must be DedicatedServer id !Side.isClient");
 		}
-	}
-
-	@SideOnly(side=Side.CLIENT,operation = SideOnly.SideOperation.REMOVE_CODE)
-	private void setCurrentServer_client(BaseServer server) {
-		ClientServer newServer = (ClientServer)server;
-		if(currentClientServer != null) {
-			openVoxelLogger.Info("Changing current Server: Client");
-		}
-	}
-
-	@SideOnly(side=Side.DEDICATED_SERVER,operation = SideOnly.SideOperation.REMOVE_CODE)
-	private void setCurrentServer_dedicated(BaseServer server) {
-		DedicatedServer newServer = (DedicatedServer)server;
-		if(currentServer != null) {
-			openVoxelLogger.Info("Changing current Server: Dedicated");
-		}
-		currentServer = newServer;
+		currentServer = server;
 	}
 
 	/**
@@ -176,13 +154,21 @@ public class OpenVoxel implements EventListener{
 		return args;
 	}
 
+	/*
+	 * Side agnostic version of getServer()
+	 */
+	@PublicAPI
+	public static BaseServer getServer() {
+		return instance.currentServer;
+	}
+
 	/**
 	 * @return the current server, NULL if it doesn't exist
 	 */
 	@PublicAPI
 	@SideOnly(side = Side.DEDICATED_SERVER)
-	public static DedicatedServer getServer() {
-		return instance.currentServer;
+	public static DedicatedServer getDedicatedServer() {
+		return (DedicatedServer)getServer();
 	}
 
 	/**
@@ -191,7 +177,7 @@ public class OpenVoxel implements EventListener{
 	@PublicAPI
 	@SideOnly(side = Side.CLIENT)
 	public static ClientServer getClientServer() {
-		return instance.currentClientServer;
+		return (ClientServer)getServer();
 	}
 
 	/**
@@ -372,7 +358,7 @@ public class OpenVoxel implements EventListener{
 			UsageAnalyses.StartCPUSample("while(isRunning)",0);
 			while (isRunning.get()) {
 				//Handle server changes
-				if(lastServer != currentClientServer) {
+				if(lastServer != currentServer) {
 					if(lastServer != null) {
 						{
 							UsageAnalyses.StartCPUSample("render_invalidate_chunks()", 0);
@@ -385,12 +371,12 @@ public class OpenVoxel implements EventListener{
 							UsageAnalyses.StopCPUSample();
 						}
 					}
-					if(currentClientServer != null) {
+					if(currentServer != null) {
 						UsageAnalyses.StartCPUSample("server_startup()",0);
-						currentClientServer.startup();
+						currentServer.startup();
 						UsageAnalyses.StopCPUSample();
 					}
-					lastServer = currentClientServer;
+					lastServer = (ClientServer)currentServer;
 				}
 				//Main Loop//
 				if(lastServer != null) {
@@ -451,11 +437,11 @@ public class OpenVoxel implements EventListener{
 			shutdownIsCrash.set(true);
 		}finally {
 			UsageAnalyses.StopCPUSample();
-			if(lastServer != currentClientServer && lastServer != null) {
+			if(lastServer != currentServer && lastServer != null) {
 				lastServer.shutdown();
 			}
-			if(currentClientServer != null) {
-				currentClientServer.shutdown();
+			if(currentServer != null) {
+				currentServer.shutdown();
 			}
 			renderer.invalidateAllChunks();
 			renderer.close();
@@ -490,7 +476,7 @@ public class OpenVoxel implements EventListener{
 						currentServer.startup();
 						UsageAnalyses.StopCPUSample();
 					}
-					lastServer = currentServer;
+					lastServer = (DedicatedServer)currentServer;
 				}
 				//Update Server
 				if (lastServer != null) {
@@ -570,7 +556,7 @@ public class OpenVoxel implements EventListener{
 	 * Stop Memory Leak Reports Cluttering up the system information pane on crashes
 	 */
 	private void preCrash() {
-		if(Configuration.DEBUG_MEMORY_ALLOCATOR.get(false)) {
+		if (Configuration.DEBUG_MEMORY_ALLOCATOR.get(false)) {
 			openVoxelLogger.Info("Hiding Memory Leak Info From Crash Report");
 			Object debugAllocator = Reflect.byName("org.lwjgl.system.MemoryUtil$LazyInit").getField("ALLOCATOR").getStatic();
 			Object allocationMap = Reflect.on(debugAllocator).get("ALLOCATIONS");
