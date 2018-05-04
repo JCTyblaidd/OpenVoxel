@@ -44,6 +44,7 @@ public class GLFWEventHandler {
 		glfwSetFramebufferSizeCallback(window,_register(new FrameSizeCallback()));
 		glfwSetWindowPosCallback(window,_register(new WindowMoveCallback()));
 		glfwSetWindowCloseCallback(window,_register(new WindowCloseCallback()));
+		glfwSetWindowRefreshCallback(window,_register(new WindowRefreshCallback()));
 	}
 
 	private static class CursorPosCallback extends GLFWCursorPosCallback {
@@ -98,6 +99,13 @@ public class GLFWEventHandler {
 		@Override
 		public void invoke(long window) {
 			OpenVoxel.pushEvent(new WindowCloseRequestedEvent());
+		}
+	}
+
+	private static class WindowRefreshCallback extends GLFWWindowRefreshCallback {
+		@Override
+		public void invoke(long window) {
+			OpenVoxel.pushEvent(new WindowRefreshEvent());
 		}
 	}
 }

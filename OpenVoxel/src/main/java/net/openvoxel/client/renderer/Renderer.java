@@ -3,7 +3,6 @@ package net.openvoxel.client.renderer;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
-import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.gui.ScreenDebugInfo;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.VulkanRenderer;
@@ -11,13 +10,13 @@ import net.openvoxel.client.textureatlas.BaseAtlas;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.common.event.SubscribeEvents;
 import net.openvoxel.common.event.input.KeyStateChangeEvent;
-import net.openvoxel.common.event.input.WindowResizeEvent;
+import net.openvoxel.common.event.input.WindowRefreshEvent;
 import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.server.ClientServer;
+import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncRunnablePool;
-import net.openvoxel.utility.CrashReport;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
@@ -59,7 +58,7 @@ public final class Renderer implements EventListener {
 
 		blockAtlas = new BaseAtlas(false);
 
-		targetFrameRate = Integer.MAX_VALUE;
+		targetFrameRate = 60;//TODO: CHANGE BACK LATER: Integer.MAX_VALUE;
 		previousFrameTimestamp = 0L;
 
 		screenshotRequest = false;
@@ -179,8 +178,15 @@ public final class Renderer implements EventListener {
 		}
 	}
 
+	/*
 	@SubscribeEvents
 	public void onResizeEvent(WindowResizeEvent e) {
+		//changeStateRequest = true;
+	}
+	*/
+
+	@SubscribeEvents
+	public void onRefreshEvent(WindowRefreshEvent e) {
 		changeStateRequest = true;
 	}
 
@@ -254,6 +260,7 @@ public final class Renderer implements EventListener {
 		api.stopStateChange();
 	}
 
+
 	/**
 	 * Prepare GPU for Streaming of data
 	 *
@@ -267,40 +274,20 @@ public final class Renderer implements EventListener {
 		}
 		//Handle resize & vSync & window changes
 		if(changeStateRequest) {
+			logger.Info("Standard State Change");
 			handleStateChange();
 		}
-		api.acquireNextFrame();
+		boolean success = api.acquireNextFrame();
+		while (!success) {
+			handleStateChange();
+			logger.Info("Adv State Change");
+			success = api.acquireNextFrame();
+		}
 		frameRateTimer.notifyEvent();
 	}
 
 	public void pollInputs() {
-		//Prevent Spam while resizing
-		int oldX = ClientInput.currentWindowLocation.x;
-		int oldY = ClientInput.currentWindowLocation.y;
-		int oldWidth = ClientInput.currentWindowFrameSize.x;
-		int oldHeight = ClientInput.currentWindowFrameSize.y;
 		glfwPollEvents();
-		int newX = ClientInput.currentWindowLocation.x;
-		int newY = ClientInput.currentWindowLocation.y;
-		int newWidth = ClientInput.currentWindowFrameSize.x;
-		int newHeight = ClientInput.currentWindowFrameSize.y;
-		boolean changePos = oldX != newX || oldY != newY;
-		boolean changeSize = oldWidth != newWidth || oldHeight != newHeight;
-		int recursiveFalloff = (changePos || changeSize) ? 20 : 0;
-		while(changePos || changeSize || recursiveFalloff > 0) {
-			oldX = newX;
-			oldY = newY;
-			oldWidth = newWidth;
-			oldHeight = newHeight;
-			glfwWaitEventsTimeout(0.1);
-			newX = ClientInput.currentWindowLocation.x;
-			newY = ClientInput.currentWindowLocation.y;
-			newWidth = ClientInput.currentWindowFrameSize.x;
-			newHeight = ClientInput.currentWindowFrameSize.y;
-			changePos = oldX != newX || oldY != newY;
-			changeSize = oldWidth != newWidth || oldHeight != newHeight;
-			recursiveFalloff -= 1;
-		}
 	}
 
 	/**
@@ -347,7 +334,10 @@ public final class Renderer implements EventListener {
 	 *  & then submit the frames to the GPU to present
 	 */
 	public void submitFrame(AsyncBarrier barrier) {
-		api.submitNextFrame(renderTaskPool,barrier);
+		boolean success = api.submitNextFrame(renderTaskPool,barrier);
+		if(!success) {
+			changeStateRequest = true;
+		}
 		barrier.awaitCompletion();
 	}
 

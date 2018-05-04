@@ -51,7 +51,9 @@ public class SystemStatistics {
 		try {
 			processorUsage = (Double)ManagementFactory.getPlatformMBeanServer().
                            getAttribute(ObjectName.getInstance("java.lang:type=OperatingSystem"),"ProcessCpuLoad");
-		}catch (Exception ignored) {ignored.printStackTrace();}
+		}catch (Exception ignored) {
+			//ignored.printStackTrace();
+		}
 
 		write_index = (write_index + 1) % 32;
 		//memory_history[write_index] = processMemUsage;
@@ -79,6 +81,11 @@ public class SystemStatistics {
 
 	public static int getThreadCount() {
 		return threadCount;
+	}
+
+	public static double getGraphicsProcessingUsage() {
+		int read_index = (write_index + 31) % 32;
+		return graphics_history[read_index];
 	}
 
 	public static long getGraphicsGpuMemoryUsage() {

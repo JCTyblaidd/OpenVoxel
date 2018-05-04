@@ -74,12 +74,12 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 
 	@Override
-	public void acquireNextFrame() {
+	public boolean acquireNextFrame() {
 		boolean success = commandHandler.AcquireNextImage(TIME_OUT_LENGTH);
-		if(!success) {
-			throw new RuntimeException("PANIC!!");
+		if(success) {
+			commandHandler.AwaitTransferFence(TIME_OUT_LENGTH);
 		}
-		commandHandler.AwaitTransferFence(TIME_OUT_LENGTH);
+		return success;
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	}
 
 	@Override
-	public void submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier) {
+	public boolean submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier) {
 		VkCommandBuffer guiTransfer = commandHandler.getGuiDrawCommandBuffer(true);
 		VkCommandBuffer guiDrawing = commandHandler.getGuiDrawCommandBuffer(false);
 
@@ -147,13 +147,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			commandHandler.SubmitCommandGraphics(mainBuffer);
 		}
 		boolean success = commandHandler.PresentImage();
-		if(!success) {
-			startStateChange();
-			stopStateChange();
-			//throw new RuntimeException("PANIC!!!");
-		}
 		//TODO: REMOVE TEMPORARY HANDLE
 		vkDeviceWaitIdle(state.getLogicalDevice());
+		return success;
 	}
 
 	@Override

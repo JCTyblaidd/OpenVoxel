@@ -13,9 +13,9 @@ public interface GraphicsAPI {
 	/// State Change Methods ///
 	////////////////////////////
 
-	void acquireNextFrame();
+	boolean acquireNextFrame();
 	void prepareForSubmit();
-	void submitNextFrame(AsyncRunnablePool pool,AsyncBarrier barrier);
+	boolean submitNextFrame(AsyncRunnablePool pool,AsyncBarrier barrier);
 	void close();
 
 	void startStateChange();

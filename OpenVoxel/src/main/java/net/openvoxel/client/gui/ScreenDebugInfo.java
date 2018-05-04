@@ -110,6 +110,8 @@ public class ScreenDebugInfo extends Screen {
 			y_pos += height;
 			tess.DrawText(x_pos,y_pos,height,"Thread Count: " + SystemStatistics.getThreadCount());
 			y_pos += height;
+			tess.DrawText(x_pos,y_pos,height,"GPU Usage: " + _percent(SystemStatistics.getGraphicsProcessingUsage()));
+			y_pos += height;
 			tess.DrawText(x_pos,y_pos,height,"GPU Memory Usage: " + _memory(SystemStatistics.getGraphicsGpuMemoryUsage()));
 			y_pos += height;
 			tess.DrawText(x_pos,y_pos,height,"GPU-Shared Memory Usage: " + _memory(SystemStatistics.getGraphicsLocalMemoryUsage()));
@@ -123,9 +125,9 @@ public class ScreenDebugInfo extends Screen {
 	private void draw_processor_histogram(IGuiRenderer tess, float x1, float y1, float w, float h) {
 		float x2 = x1 + w;
 		float y2 = y1 + h;
-		final int COL = 0x5B000000;
-		final int CPU_COL = 0xCFD39539;
-		final int GPU_COL = 0xCF168206;
+		final int COL = 0x9B000000;    // = 0x5B000000;
+		final int CPU_COL = 0xEFD39539;// = 0xCFD39539
+		final int GPU_COL = 0xEF168206;// = 0xCF168206;
 		tess.Begin(null);
 		tess.VertexWithCol(x2,y2,COL);
 		tess.VertexWithCol(x1,y2,COL);
@@ -134,8 +136,8 @@ public class ScreenDebugInfo extends Screen {
 		tess.VertexWithCol(x2,y2,COL);
 		tess.VertexWithCol(x1,y1,COL);
 		//Draw Histogram//
-		float diff = w / 31;
-		for(int i = 1; i < 32; i++) {
+		float diff = w / 30;
+		for(int i = 1; i < 31; i++) {
 			int j1 = (i + SystemStatistics.write_index) % 32;
 			int j2 = (i + 1 + SystemStatistics.write_index) % 32;
 			float y_val1 = (float)(SystemStatistics.processor_history[j1] * h);
@@ -152,7 +154,7 @@ public class ScreenDebugInfo extends Screen {
 			tess.VertexWithCol(x_pos2,y_pos2,CPU_COL);
 			tess.VertexWithCol(x_pos1,y_pos1,CPU_COL);
 		}
-		for(int i = 1; i < 32; i++) {
+		for(int i = 1; i < 31; i++) {
 			int j1 = (i + SystemStatistics.write_index) % 32;
 			int j2 = (i + 1 + SystemStatistics.write_index) % 32;
 			float y_val1 = (float)(SystemStatistics.graphics_history[j1] * h);

@@ -103,6 +103,11 @@ public final class VulkanUtility {
 			LogInfo("Chosen Present Mode: Mailbox");
 			return VK_PRESENT_MODE_MAILBOX_KHR;
 		}
+		//TODO: REMOVE THIS AFTER FIFO ISSUE FIXED ON LINUX?
+		if(validPresentModes.contains(VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+			LogInfo("Chosen Present Mode: Immediate");
+			return VK_PRESENT_MODE_IMMEDIATE_KHR;
+		}
 		LogInfo("Chosen Present Mode: FIFO");
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
