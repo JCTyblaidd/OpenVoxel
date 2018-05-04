@@ -10,11 +10,15 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
+import net.openvoxel.utility.debug.Validate;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VkBufferCreateInfo;
 import org.lwjgl.vulkan.VkMemoryRequirements;
 
+import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
@@ -82,6 +86,12 @@ final class VulkanWorldMemoryPage {
 	}
 
 	void close() {
+		for(int i = 0; i < allocatedPages.size(); i++) {
+			vkDestroyBuffer(device.logicalDevice,allocatedBuffers.get(i),null);
+			memory.freeDedicatedMemory(allocatedPages.get(i));
+		}
+		allocatedPages.clear();
+		allocatedBuffers.clear();
 		bufferCreate.free();
 	}
 
@@ -230,22 +240,54 @@ final class VulkanWorldMemoryPage {
 	}
 
 	void shrinkMemoryToSize(int page_idx, long size) {
+		long page = allocatedPages.get(page_idx / SUB_PAGE_COUNT);
 		int new_page_count = (int)roundToPageCount(size);
-		//TODO: IMPLEMENT
+		TIntList list = subPageUsage.get(page);
+		int sub_idx = page_idx % SUB_PAGE_COUNT;
+		int val = list.get(sub_idx);
+		int old_page_count =  getAllocateData(val);
+		Validate.Condition(new_page_count <= old_page_count,"New size must be smaller than old");
+
+		int update_data = getUpdateData(val);
+		list.set(sub_idx,packData(new_page_count,update_data));
+		for(int i = new_page_count; i < old_page_count; i++) {
+			list.set(sub_idx + i,0);
+		}
 	}
 
-	void startMemoryCountdown(int page_idx) {
-		//TODO: IMPLEMENT
+	void startMemoryCountdown(int page_idx,int count_down) {
+		long page = allocatedPages.get(page_idx / SUB_PAGE_COUNT);
+		TIntList list = subPageUsage.get(page);
+		int sub_idx = page_idx % SUB_PAGE_COUNT;
+		int val = list.get(sub_idx);
+		int page_count =  getAllocateData(val);
+		for(int i = 0; i < page_count; i++) {
+			int data = list.get(sub_idx+i);
+			int _alloc = getAllocateData(data);
+			int _new  = packData(_alloc,count_down);
+			list.set(sub_idx+i,_new);
+		}
 	}
 
 	void tickAllMemory() {
 		for(int alloc_idx = 0; alloc_idx < allocatedPages.size(); alloc_idx++) {
-			//TODO: IMPLEMENT
+			long page = allocatedPages.get(alloc_idx);
+			TIntList list = subPageUsage.get(page);
+			for(int i = 0; i < list.size(); i++) {
+				int data = list.get(i);
+				int _alloc = getAllocateData(data);
+				int _update = getUpdateData(data);
+				if(_update > 0) {
+					int _new_update = _update - 1;
+					if(_new_update == 0) list.set(i,0);
+					else list.set(i,packData(_alloc,_new_update));
+				}
+			}
 		}
 	}
 
 	void freeMemory(int page_idx) {
-		long page = allocatedPages.get(page_idx);
+		long page = allocatedPages.get(page_idx / SUB_PAGE_COUNT);
 		TIntList list = subPageUsage.get(page);
 		int sub_idx = page_idx % SUB_PAGE_COUNT;
 		int val = list.get(sub_idx);
@@ -260,15 +302,15 @@ final class VulkanWorldMemoryPage {
 	///////////////////////
 
 	long getVulkanMemoryFor(int page_idx) {
-		return allocatedPages.get(page_idx);
+		return allocatedPages.get(page_idx / SUB_PAGE_COUNT);
 	}
 
 	long getBufferFor(int page_idx) {
-		return allocatedBuffers.get(page_idx);
+		return allocatedBuffers.get(page_idx / SUB_PAGE_COUNT);
 	}
 
 	long getSizeBytesFor(int page_idx) {
-		long page = allocatedPages.get(page_idx);
+		long page = allocatedPages.get(page_idx / SUB_PAGE_COUNT);
 		TIntList list = subPageUsage.get(page);
 		int sub_idx = page_idx % SUB_PAGE_COUNT;
 		int val = list.get(sub_idx);
@@ -279,6 +321,5 @@ final class VulkanWorldMemoryPage {
 		long sub_page = page_idx % SUB_PAGE_COUNT;
 		return sub_page * SUB_PAGE_SIZE;
 	}
-
 
 }

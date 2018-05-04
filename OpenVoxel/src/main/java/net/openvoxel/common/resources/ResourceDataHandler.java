@@ -4,6 +4,7 @@ import net.openvoxel.api.logger.Logger;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 
 /**
@@ -37,7 +38,6 @@ class ResourceDataHandler {
 				resourceLog.Severe("Failed to load resource: "+loc);
 				return null;
 			}else{
-				//TODO: IMPLEMENT PROPERLY!!!!
 				byte[] data = stream.readAllBytes();
 				stream.close();
 				ByteBuffer buffer = MemoryUtil.memAlloc(data.length);

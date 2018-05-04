@@ -23,7 +23,7 @@ public class ScreenDebugInfo extends Screen {
 	public static String RendererDriver = "Unknown Driver";
 
 	private float frame_rate = 40.0f;
-	private StringBuffer text_builder = new StringBuffer(128);
+	private StringBuilder text_builder = new StringBuilder(128);
 	private String open_voxel_version_str = "Open Voxel " + OpenVoxel.currentVersion.getValString();
 
 	public void setFrameRate(float frame_rate) {
@@ -34,7 +34,7 @@ public class ScreenDebugInfo extends Screen {
 		text_builder.delete(0,text_builder.length());
 	}
 
-	private StringBuffer _limit(float f) {
+	private StringBuilder _limit(float f) {
 		clear_text();
 		int frame_val = Math.round(f);
 		//if(frame_val < 100) text_builder.append(' ');
@@ -44,7 +44,7 @@ public class ScreenDebugInfo extends Screen {
 		return text_builder;
 	}
 
-	private StringBuffer _memory(String prefix,long value) {
+	private StringBuilder _memory(String prefix,long value) {
 		clear_text();
 		text_builder.append(prefix);
 		if(value >= 1073741824) {
@@ -75,7 +75,7 @@ public class ScreenDebugInfo extends Screen {
 		return text_builder;
 	}
 
-	private StringBuffer _percent(String prefix,double percent) {
+	private StringBuilder _percent(String prefix,double percent) {
 		clear_text();
 		text_builder.append(prefix);
 		int value = (int)Math.floor(percent * 100);
@@ -88,7 +88,7 @@ public class ScreenDebugInfo extends Screen {
 		return text_builder;
 	}
 
-	private StringBuffer _count(String prefix,int value) {
+	private StringBuilder _count(String prefix,int value) {
 		clear_text();
 		text_builder.append(prefix);
 		text_builder.append(value);
