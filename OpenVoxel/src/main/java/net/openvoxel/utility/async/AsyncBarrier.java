@@ -40,13 +40,13 @@ public class AsyncBarrier {
 	 */
 	@PublicAPI
 	public void completeTask() {
-		lock.lock();
 		int val = countdown.decrementAndGet();
 		Validate.Condition(val >= 0,"Called complete on a completed AsyncBarrier");
 		if(val == 0) {
+			lock.lock();
 			condition.signal();
+			lock.unlock();
 		}
-		lock.unlock();
 	}
 
 	/*
@@ -63,6 +63,11 @@ public class AsyncBarrier {
 			}
 		}
 		lock.unlock();
+	}
+
+	@PublicAPI
+	public boolean isComplete() {
+		return countdown.get() == 0;
 	}
 
 }

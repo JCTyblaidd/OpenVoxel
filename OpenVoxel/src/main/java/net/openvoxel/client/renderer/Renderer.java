@@ -51,9 +51,13 @@ public final class Renderer implements EventListener {
 	public Renderer() {
 		logger = Logger.getLogger("Renderer");
 		frameRateTimer = new PerSecondTimer(64);
-		guiDrawTask = new GuiDrawTask();
-		worldDrawTask = new WorldDrawTask();
-		renderTaskPool = new AsyncRunnablePool("Render Pool",AsyncRunnablePool.getWorkerCount("renderWorkerCount",4));
+		renderTaskPool = new AsyncRunnablePool(
+				"Render Pool",
+				AsyncRunnablePool.getWorkerCount(
+						"renderWorkerCount",
+						Runtime.getRuntime().availableProcessors()
+				)
+		);
 		renderTaskPool.start();
 
 		blockAtlas = new BaseAtlas(false);
@@ -95,12 +99,15 @@ public final class Renderer implements EventListener {
 		}
 		if(vulkan_supported && !flag_gl){
 			logger.Info("Loading: Vulkan Renderer");
-			api = new VulkanRenderer(renderTaskPool.getWorkerCount());
+			api = new VulkanRenderer(renderTaskPool.getWorkerCount() / 2);
 		}else {
 			logger.Info("Loading: OGL3 Renderer");
-			api = new VulkanRenderer(renderTaskPool.getWorkerCount());//TODO: IMPLEMENT OPENGL RENDERER!!!
+			api = null;//TODO: IMPLEMENT OpenGL Renderer...
 			System.exit(0);//TODO: IMPLEMENT OpenGL Renderer
 		}
+
+		guiDrawTask = new GuiDrawTask(api);
+		worldDrawTask = new WorldDrawTask(api,renderTaskPool.getWorkerCount() / 2);
 	}
 
 	public void close() {
@@ -294,17 +301,20 @@ public final class Renderer implements EventListener {
 	 * Asynchronously generate updated chunk maps using the server data
 	 */
 	public void generateUpdatedChunks(ClientServer server, AsyncBarrier completeBarrier) {
-		completeBarrier.reset(0);
-		//worldDrawTask.update(renderTaskPool,server,completeBarrier,api);
-		//renderTaskPool.addWork(worldDrawTask);
+		if(server != null) {
+			completeBarrier.reset(1);
+			worldDrawTask.update(renderTaskPool,server,completeBarrier);
+			worldDrawTask.run();
+		}else{
+			completeBarrier.reset(0);
+		}
 	}
 
 	/**
 	 * Invalidate all of the chunks
 	 */
 	public void invalidateAllChunks() {
-		//TODO: IMPLEMENT Chunk Rendering
-		logger.Warning("Invalidating all chunks is NYI!!!");
+		worldDrawTask.freeAllData();
 	}
 
 	/**
@@ -321,7 +331,7 @@ public final class Renderer implements EventListener {
 	public void startAsyncGUIDraw(AsyncBarrier completeBarrier) {
 		//Prepare the Async Task
 		completeBarrier.reset(1);
-		guiDrawTask.update(completeBarrier,api);
+		guiDrawTask.update(completeBarrier);
 		ScreenDebugInfo.instance.setFrameRate(frameRateTimer.getPerSecond());
 
 		//Submit the Async Task

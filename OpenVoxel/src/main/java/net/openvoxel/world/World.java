@@ -27,11 +27,11 @@ public class World {
 			chunkMap.remove(x,z);
 		}
 	}
-	public Chunk requestChunk(int x, int z) {
-		Chunk res = chunkMap.get(x,z);
-		if(res == null) {
-			res = generator.generateChunk(x,z);
-			chunkMap.set(x,z,res);
+	public Chunk requestChunk(long x, long z,boolean generate) {
+		Chunk res = chunkMap.get((int)x,(int)z);//TODO: IMPLEMENT PROPERLY
+		if(res == null && generate) {
+			res = generator.generateChunk((int)x,(int)z);
+			chunkMap.set((int)x,(int)z,res);
 		}//TODO: improve
 		return res;
 	}

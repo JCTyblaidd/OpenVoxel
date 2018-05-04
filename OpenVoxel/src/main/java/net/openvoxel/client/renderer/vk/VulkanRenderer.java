@@ -3,8 +3,10 @@ package net.openvoxel.client.renderer.vk;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
+import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
+import net.openvoxel.client.renderer.vk.world.VulkanWorldRenderer;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncRunnablePool;
@@ -26,6 +28,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	public final VulkanState state;
 	private final Logger logger;
 	private final VulkanGuiRenderer guiRenderer;
+	private final VulkanWorldRenderer worldRenderer;
 	private final VulkanCache cachedLayout;
 	private final VulkanCommandHandler commandHandler;
 	private final VulkanTextRenderer textRenderer;
@@ -46,6 +49,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		//Draw Handlers
 		textRenderer = new VulkanTextRenderer("font/font",commandHandler,state.VulkanMemory);
 		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory,textRenderer);
+		worldRenderer = new VulkanWorldRenderer();
 	}
 
 	@Override
@@ -67,6 +71,10 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		return guiRenderer;
 	}
 
+	@Override
+	public BaseWorldRenderer getWorldRenderer() {
+		return worldRenderer;
+	}
 
 	///////////////////////////////
 	/// Main Loop Functionality ///

@@ -18,11 +18,11 @@ public class ClientWorld extends World {
 	}
 
 	@Override
-	public ClientChunk requestChunk(int x, int z) {
-		ClientChunk res = (ClientChunk)chunkMap.get(x,z);
-		if(res == null) {
-			res = (ClientChunk) generator.generateChunk(x,z);
-			chunkMap.set(x,z,res);
+	public ClientChunk requestChunk(long x, long z,boolean generate) {
+		ClientChunk res = (ClientChunk)chunkMap.get((int)x,(int)z);
+		if(res == null && generate) {
+			res = (ClientChunk) generator.generateChunk((int)x,(int)z);
+			chunkMap.set((int)x,(int)z,res);
 		}//TODO: improve
 		return res;
 	}

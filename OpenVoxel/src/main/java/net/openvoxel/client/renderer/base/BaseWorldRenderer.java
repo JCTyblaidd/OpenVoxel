@@ -1,7 +1,10 @@
 package net.openvoxel.client.renderer.base;
 
 import net.openvoxel.client.renderer.common.IBlockRenderer;
+import net.openvoxel.client.textureatlas.BaseIcon;
 import net.openvoxel.client.textureatlas.Icon;
+import net.openvoxel.world.client.ClientChunkSection;
+import net.openvoxel.world.client.ClientWorld;
 
 import java.nio.ByteBuffer;
 
@@ -11,16 +14,46 @@ import java.nio.ByteBuffer;
 public abstract class BaseWorldRenderer implements IBlockRenderer {
 
 
+	///////////////////////////
+	/// World Draw Task API ///
+	///////////////////////////
 
+	public void StartAsyncGenerate(int asyncID) {
 
+	}
 
+	/*
+	 * The chunk has been updated - generate and update it
+	 *  NB: This function may be called asynchronously
+	 *
+	 */
+	public void AsyncGenerate(ClientWorld world, ClientChunkSection chunkSection,int asyncID,boolean transfer) {
+
+	}
+
+	public void AsyncDraw(ClientWorld world, ClientChunkSection chunkSection,int asyncID) {
+
+	}
+
+	public void StopAsyncGenerate(int asyncID) {
+
+	}
+
+	/*
+	 * The chunk has been unloaded - forget about it
+	 *  NB: This function may be called asynchronously
+	 */
+	public void InvalidateChunkSection(ClientChunkSection section) {
+
+	}
 
 
 	///////////////////////////////
 	/// Sub Chunk Renderer Code ///
 	///////////////////////////////
 
-	protected Icon currentIcon = null;
+	private BaseIcon nullIcon = new BaseIcon();
+	protected Icon currentIcon = nullIcon;
 
 	private ByteBuffer memoryMap;
 	private int capacity;
@@ -47,6 +80,7 @@ public abstract class BaseWorldRenderer implements IBlockRenderer {
 		memoryMap.putFloat(offset,X);
 		memoryMap.putFloat(offset+4,Y);
 		memoryMap.putFloat(offset+8,Z);
+
 
 		memoryMap.putShort(offset+12,(short)(U / 65535));
 		memoryMap.putShort(offset+14,(short)(V / 65535));

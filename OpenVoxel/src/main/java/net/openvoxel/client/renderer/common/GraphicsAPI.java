@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer.common;
 
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
+import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncRunnablePool;
 import org.lwjgl.system.MemoryUtil;
@@ -27,6 +28,7 @@ public interface GraphicsAPI {
 
 	BaseGuiRenderer getGuiRenderer();
 
+	BaseWorldRenderer getWorldRenderer();
 
 	///////////////////////
 	/// Utility Methods ///

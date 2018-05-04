@@ -8,6 +8,7 @@ import net.openvoxel.client.STBITexture;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.utility.CrashReport;
+import net.openvoxel.utility.MathUtilities;
 import net.openvoxel.utility.debug.Validate;
 import org.lwjgl.stb.*;
 import org.lwjgl.system.MemoryStack;
@@ -64,17 +65,6 @@ public class BaseAtlas {
 		return ref;
 	}
 
-	private static int roundUpToPowerOf2(int x) {
-		x = x - 1;
-		x |= x >> 1;
-		x |= x >> 2;
-		x |= x >> 4;
-		x |= x >> 8;
-		x |= x >> 16;
-		return x + 1;
-	}
-
-
 	public void stitchAndGenerateAtlas(String id) {
 		long totalArea = 0;
 		Map<BaseIcon,STBITexture> texDiff = new HashMap<>();
@@ -125,7 +115,7 @@ public class BaseAtlas {
 			STBRPContext context = STBRPContext.mallocStack(stack);
 
 			int minDim = (int) Math.sqrt((double) totalArea);
-			int startingPower = roundUpToPowerOf2(minDim);
+			int startingPower = MathUtilities.roundUpToNearestPowerOf2(minDim);
 			while (startingPower > 0) {
 				//Attempt with size = startingPower...
 				//TODO: FIX PROPERLY

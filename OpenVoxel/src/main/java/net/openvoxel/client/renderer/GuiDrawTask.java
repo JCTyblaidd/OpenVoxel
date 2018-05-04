@@ -15,14 +15,17 @@ import java.util.Iterator;
 
 public class GuiDrawTask implements Runnable {
 
+	private final BaseGuiRenderer guiRenderer;
 	private AsyncBarrier barrier;
-	private BaseGuiRenderer guiRenderer;
 	private int width;
 	private int height;
 
-	public void update(AsyncBarrier barrier,GraphicsAPI api) {
-		this.barrier = barrier;
+	GuiDrawTask(GraphicsAPI api) {
 		guiRenderer = api.getGuiRenderer();
+	}
+
+	public void update(AsyncBarrier barrier) {
+		this.barrier = barrier;
 		width = ClientInput.currentWindowFrameSize.x;
 		height = ClientInput.currentWindowFrameSize.y;
 	}

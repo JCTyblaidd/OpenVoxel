@@ -82,14 +82,14 @@ public class AsyncQueue<T> {
 	 * Wait For An Object From The Queue
 	 */
 	@PublicAPI
-	public T awaitNext() throws InterruptedException{
+	public T awaitNext() throws InterruptedException {
 		long nextSequence, writeSequence, currentSequence;
 		while(true) {
 			currentSequence = sequence.get();
 			nextSequence = currentSequence + 1L;
 			writeSequence = buffer.getCursor();
 			if(nextSequence > writeSequence) {
-				try{
+				try{barrier.alert();
 					barrier.waitFor(nextSequence);
 				}catch(InterruptedException interrupt) {
 					throw interrupt;

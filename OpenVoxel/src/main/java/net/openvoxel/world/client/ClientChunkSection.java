@@ -19,10 +19,14 @@ import java.util.concurrent.atomic.AtomicReference;
 @SideOnly(side = Side.CLIENT)
 public class ClientChunkSection extends ChunkSection {
 
-	/**
-	 * Renderer Draw Information Cache
-	 */
-	public AtomicReference<IRenderDataCache> renderCache = new AtomicReference<>(null);
+	///
+	/// Renderer Information
+	///
+	private boolean isDrawDirty = true;
+	public int Renderer_Info_Opaque = 0;
+	public int Renderer_Size_Opaque = 0;
+	public int Renderer_Info_Transparent = 0;
+	public int Renderer_Size_Transparent = 0;
 
 	private byte metaVal;
 
@@ -60,10 +64,14 @@ public class ClientChunkSection extends ChunkSection {
 	*/
 
 	public boolean isDirty() {
-		return false;
+		return isDrawDirty;
 	}
 
 	public void markClean() {
-		//TODO: implement clean and dirty client side properly
+		isDrawDirty = false;
+	}
+
+	public boolean isEmpty() {
+		return false;
 	}
 }

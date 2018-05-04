@@ -3,6 +3,7 @@ package net.openvoxel.server;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.networking.protocol.AbstractPacket;
 import net.openvoxel.world.World;
+import net.openvoxel.world.client.ClientWorld;
 
 import java.util.function.Consumer;
 
@@ -24,8 +25,8 @@ public class ClientServer extends BaseServer implements Consumer<AbstractPacket>
 		return thePlayer;
 	}
 
-	public World getTheWorld() {
-		return thePlayer.currentWorld;
+	public ClientWorld getTheWorld() {
+		return (ClientWorld)thePlayer.currentWorld;
 	}
 
 	@Override
