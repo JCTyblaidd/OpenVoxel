@@ -24,6 +24,7 @@ public class ScreenDebugInfo extends Screen {
 
 	private float frame_rate = 40.0f;
 	private StringBuffer text_builder = new StringBuffer(128);
+	private String open_voxel_version_str = "Open Voxel " + OpenVoxel.currentVersion.getValString();
 
 	public void setFrameRate(float frame_rate) {
 		this.frame_rate = frame_rate;
@@ -40,22 +41,6 @@ public class ScreenDebugInfo extends Screen {
 		if(frame_val < 10) text_builder.append(' ');
 		text_builder.append(frame_val);
 		text_builder.append(" fps");
-
-		//text_builder.append(Math.round(f));
-
-		/*
-		String val = Integer.toString(Math.round(f));
-		int res = val.length();
-		StringBuilder build = new StringBuilder();
-		res = 3 - res;
-		for(int i = 0; i < res; i++) {
-			build.append(' ');
-		}
-		build.append(val);
-		build.append(" fps");
-		Logger.getLogger("DEBUG").Info("|",build.toString(),"||",text_builder.toString(),"|");
-		*/
-
 		return text_builder;
 	}
 
@@ -69,7 +54,6 @@ public class ScreenDebugInfo extends Screen {
 			float VAL = Math.round(FV * 10.0F) / 10.0F;
 			text_builder.append(VAL);
 			text_builder.append("GB");
-			//val =  Float.toString(Math.round(FV * 10.0F) / 10.0F) + "GB";
 		}else if(value >= (1048576)) {
 			long div = value / 1048576;
 			long rem = value - (div * 1048576);
@@ -77,7 +61,6 @@ public class ScreenDebugInfo extends Screen {
 			float VAL = Math.round(FV * 10.0F) / 10.0F;
 			text_builder.append(VAL);
 			text_builder.append("MB");
-			//val =  Float.toString(Math.round(FV * 10.0F) / 10.0F) + "MB";
 		}else if(value >= (1024)) {
 			long div = value / 1024;
 			long rem = value - (div * 1024);
@@ -85,11 +68,9 @@ public class ScreenDebugInfo extends Screen {
 			float VAL = Math.round(FV * 10.0F) / 10.0F;
 			text_builder.append(VAL);
 			text_builder.append("KB");
-			//val =  Float.toString(Math.round(FV * 10.0F) / 10.0F) + "KB";
 		}else {
 			text_builder.append(value);
 			text_builder.append("B");
-			//val =  Long.toString(value)+"B";
 		}
 		return text_builder;
 	}
@@ -104,14 +85,6 @@ public class ScreenDebugInfo extends Screen {
 		if(remainder < 10) text_builder.append('0');
 		text_builder.append(remainder);
 		text_builder.append('%');
-
-/*
-		DecimalFormat decimalFormat = new DecimalFormat();
-		decimalFormat.setMaximumFractionDigits(2);
-		decimalFormat.setMinimumFractionDigits(2);
-		String cmp =  prefix + decimalFormat.format(percent*100) + '%';
-		Logger.getLogger("debug").Info(percent,"::",cmp," :: ",text_builder.toString());
-*/
 		return text_builder;
 	}
 
@@ -120,7 +93,6 @@ public class ScreenDebugInfo extends Screen {
 		text_builder.append(prefix);
 		text_builder.append(value);
 		return text_builder;
-		//return prefix + value;
 	}
 
 	@Override
@@ -134,7 +106,7 @@ public class ScreenDebugInfo extends Screen {
 		float y_pos = height;
 		float y_pos2 = height;
 		if(debug > 1) {
-			tess.DrawText(x_pos,y_pos,height,"Open Voxel " + OpenVoxel.currentVersion.getValString());
+			tess.DrawText(x_pos,y_pos,height,open_voxel_version_str);
 			y_pos += height;
 		}
 		if(debug > 0) {//At Least Level::FPS
