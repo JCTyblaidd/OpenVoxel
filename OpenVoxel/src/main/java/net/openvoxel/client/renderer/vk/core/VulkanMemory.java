@@ -4,6 +4,7 @@ import gnu.trove.map.TLongByteMap;
 import gnu.trove.map.TLongLongMap;
 import gnu.trove.map.hash.TLongByteHashMap;
 import gnu.trove.map.hash.TLongLongHashMap;
+import net.openvoxel.statistics.SystemStatistics;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VkMemoryAllocateInfo;
 import org.lwjgl.vulkan.VkMemoryHeap;
@@ -15,6 +16,8 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
 public final class VulkanMemory {
+
+	//TODO: DECIDE SYNCHRONISATION
 
 	//Constant State
 	private final VulkanDevice device;
@@ -79,6 +82,11 @@ public final class VulkanMemory {
 				}
 			}
 		}
+	}
+
+	public void updateSystemStatistics() {
+		SystemStatistics.updateGraphicsGPUMemUsage.set(usedDevice);
+		SystemStatistics.updateGraphicsLocalMemUsage.set(usedHost);
 	}
 
 	/////////////////////////

@@ -37,8 +37,8 @@ public class ScreenDebugInfo extends Screen {
 	private StringBuffer _limit(float f) {
 		clear_text();
 		int frame_val = Math.round(f);
-		if(frame_val < 100) text_builder.append(' ');
-		if(frame_val < 10) text_builder.append(' ');
+		//if(frame_val < 100) text_builder.append(' ');
+		if(frame_val < 10) text_builder.append('0');
 		text_builder.append(frame_val);
 		text_builder.append(" fps");
 		return text_builder;
@@ -102,7 +102,7 @@ public class ScreenDebugInfo extends Screen {
 		float screenHeight = tess.getScreenHeight();
 		float screenWidth = tess.getScreenWidth();
 		float height = 25.0F / screenHeight;
-		final float x_pos = 0.0f;
+		final float x_pos = 5.F / screenWidth;
 		float y_pos = height;
 		float y_pos2 = height;
 		if(debug > 1) {

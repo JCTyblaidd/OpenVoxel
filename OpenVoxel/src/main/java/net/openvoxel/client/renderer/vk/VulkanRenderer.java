@@ -75,6 +75,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public boolean acquireNextFrame() {
+		state.VulkanMemory.updateSystemStatistics();
 		boolean success = commandHandler.AcquireNextImage(TIME_OUT_LENGTH);
 		if(success) {
 			commandHandler.AwaitTransferFence(TIME_OUT_LENGTH);

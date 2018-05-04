@@ -86,7 +86,7 @@ public final class VulkanUtility {
 	}
 
 	static PointerBuffer toPointerBuffer(MemoryStack stack, List<ByteBuffer> entryList) {
-		PointerBuffer output = stack.callocPointer(entryList.size());
+		PointerBuffer output = stack.mallocPointer(entryList.size());
 		for(ByteBuffer buffer : entryList) {
 			output.put(buffer);
 		}

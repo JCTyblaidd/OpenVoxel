@@ -118,6 +118,7 @@ class VulkanTextRenderer extends BaseTextRenderer {
 			commandHandler.SingleUseImagePopulate(Image,texture);
 		}finally {
 			texture.Free();
+			handle.unloadData();
 		}
 	}
 

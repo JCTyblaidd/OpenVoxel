@@ -122,7 +122,7 @@ public abstract class VulkanGraphicsPipeline {
 		fallbackViewport.get(0).set(0,0,
 				100,100,0,1);
 
-		VkRect2D.Buffer fallbackScissor = VkRect2D.callocStack(1,stack);
+		VkRect2D.Buffer fallbackScissor = VkRect2D.mallocStack(1,stack);
 		fallbackScissor.extent().set(100,100);
 		fallbackScissor.offset().set(0,0);
 

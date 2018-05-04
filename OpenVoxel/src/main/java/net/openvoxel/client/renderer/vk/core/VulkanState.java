@@ -202,11 +202,11 @@ public final class VulkanState {
 	}
 
 	private PointerBuffer chooseEnabledExtensions(MemoryStack stack) {
-		IntBuffer sizeRef = stack.callocInt(1);
+		IntBuffer sizeRef = stack.mallocInt(1);
 		final String error = "Error Enumerating Instance Extensions";
 		VulkanUtility.ValidateSuccess(error,
 				vkEnumerateInstanceExtensionProperties((ByteBuffer)null,sizeRef,null));
-		VkExtensionProperties.Buffer extensionList = VkExtensionProperties.callocStack(sizeRef.get(0),stack);
+		VkExtensionProperties.Buffer extensionList = VkExtensionProperties.mallocStack(sizeRef.get(0),stack);
 		VulkanUtility.ValidateSuccess(error,
 				vkEnumerateInstanceExtensionProperties((ByteBuffer)null,sizeRef,extensionList));
 
@@ -251,7 +251,7 @@ public final class VulkanState {
 	}
 
 	private PointerBuffer chooseEnabledLayers(MemoryStack stack) {
-		IntBuffer sizeRef = stack.callocInt(1);
+		IntBuffer sizeRef = stack.mallocInt(1);
 		final String error = "Error Enumerating Instance Layers";
 		VulkanUtility.ValidateSuccess(error,vkEnumerateInstanceLayerProperties(sizeRef,null));
 		VkLayerProperties.Buffer layerList = VkLayerProperties.mallocStack(sizeRef.get(0),stack);
@@ -551,9 +551,10 @@ public final class VulkanState {
 				};
 				createInfoEXT.pfnCallback(DebugReportCallbackFunc);
 				createInfoEXT.pUserData(VK_NULL_HANDLE);
-				LongBuffer lb = stack.callocLong(1);
+				LongBuffer lb = stack.mallocLong(1);
 				if(vkCreateDebugReportCallbackEXT(VulkanInstance,createInfoEXT,null,lb) != VK_SUCCESS) {
 					VulkanUtility.LogWarn("Debug Report: Error on Initialization");
+					DebugReportCallback = VK_NULL_HANDLE;
 				}else{
 					DebugReportCallback = lb.get(0);
 				}
@@ -562,7 +563,7 @@ public final class VulkanState {
 	}
 
 	private void destroyDebugReport() {
-		if(DebugReportCallback != 0) {
+		if(DebugReportCallback != VK_NULL_HANDLE) {
 			vkDestroyDebugReportCallbackEXT(VulkanInstance,DebugReportCallback,null);
 		}
 		if(DebugReportCallbackFunc != null) {

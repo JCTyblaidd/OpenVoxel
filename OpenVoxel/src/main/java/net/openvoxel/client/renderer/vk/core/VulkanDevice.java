@@ -267,8 +267,8 @@ public final class VulkanDevice {
 	@NotNull
 	private VkDevice createLogicalDevice(VkInstance instance, VkPhysicalDevice device) {
 		try(MemoryStack stack = stackPush()) {
-			PointerBuffer pointer = stack.callocPointer(1);
-			VkDeviceCreateInfo createInfo = VkDeviceCreateInfo.callocStack(stack);
+			PointerBuffer pointer = stack.mallocPointer(1);
+			VkDeviceCreateInfo createInfo = VkDeviceCreateInfo.mallocStack(stack);
 			VkPhysicalDeviceFeatures deviceFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
 			vkGetPhysicalDeviceFeatures(device,deviceFeatures);
 			createInfo.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
@@ -331,7 +331,7 @@ public final class VulkanDevice {
 			indexTransfer = 0;
 		}
 		//Create//
-		VkDeviceQueueCreateInfo.Buffer queueInfo = VkDeviceQueueCreateInfo.callocStack(dualQueue ? 1 : 2, stack);
+		VkDeviceQueueCreateInfo.Buffer queueInfo = VkDeviceQueueCreateInfo.mallocStack(dualQueue ? 1 : 2, stack);
 		{
 			queueInfo.position(0);
 			queueInfo.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
@@ -357,10 +357,10 @@ public final class VulkanDevice {
 	}
 
 	private PointerBuffer chooseEnabledLayers(@NotNull MemoryStack stack) {
-		IntBuffer sizeRef = stack.callocInt(1);
+		IntBuffer sizeRef = stack.mallocInt(1);
 		final String err = "Error Enumerating Device Layers";
 		VulkanUtility.ValidateSuccess(err,vkEnumerateDeviceLayerProperties(physicalDevice,sizeRef,null));
-		VkLayerProperties.Buffer layerList = VkLayerProperties.callocStack(sizeRef.get(0),stack);
+		VkLayerProperties.Buffer layerList = VkLayerProperties.mallocStack(sizeRef.get(0),stack);
 		VulkanUtility.ValidateSuccess(err,vkEnumerateDeviceLayerProperties(physicalDevice,sizeRef,layerList));
 		List<ByteBuffer> enabledLayers = new ArrayList<>();
 		for(int i = 0; i < sizeRef.get(0); i++) {
@@ -391,10 +391,10 @@ public final class VulkanDevice {
 	}
 
 	private PointerBuffer chooseEnabledExtensions(@NotNull MemoryStack stack) {
-		IntBuffer sizeRef = stack.callocInt(1);
+		IntBuffer sizeRef = stack.mallocInt(1);
 		final String err = "Error Enumerating Device Extensions";
 		VulkanUtility.ValidateSuccess(err,vkEnumerateDeviceExtensionProperties(physicalDevice,(ByteBuffer)null,sizeRef,null));
-		VkExtensionProperties.Buffer extensionList = VkExtensionProperties.callocStack(sizeRef.get(0),stack);
+		VkExtensionProperties.Buffer extensionList = VkExtensionProperties.mallocStack(sizeRef.get(0),stack);
 		VulkanUtility.ValidateSuccess(err,vkEnumerateDeviceExtensionProperties(physicalDevice,(ByteBuffer)null,sizeRef,extensionList));
 		List<ByteBuffer> enabledExtensions = new ArrayList<>();
 		enabledExtensions.add(stack.UTF8("VK_KHR_swapchain"));

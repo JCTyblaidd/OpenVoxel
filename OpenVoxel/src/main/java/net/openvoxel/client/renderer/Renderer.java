@@ -174,7 +174,7 @@ public final class Renderer implements EventListener {
 				} catch (Exception ignored) {
 				}
 			}
-			previousFrameTimestamp = currentTimestamp;
+			previousFrameTimestamp = System.nanoTime();
 		}
 	}
 

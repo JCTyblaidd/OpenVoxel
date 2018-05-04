@@ -764,8 +764,6 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 				int draw_count = offset - vertex;
 				if(draw_count > 0) {
 					vkCmdDraw(drawing, draw_count, 1, vertex, 0);
-				}else{
-					Logger.getLogger("Debug").Info(draw_count);
 				}
 			}
 
