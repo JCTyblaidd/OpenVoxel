@@ -7,6 +7,7 @@ import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.world.VulkanWorldRenderer;
+import net.openvoxel.client.textureatlas.BaseAtlas;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncRunnablePool;
@@ -61,6 +62,16 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		cachedLayout.FreeSingle(state.getLogicalDevice());
 		guiRenderer.close();
 		state.close();
+	}
+
+	@Override
+	public void loadAtlas(BaseAtlas blockAtlas) {
+		cachedLayout.LoadAtlas(state.getLogicalDevice(),state.VulkanMemory,blockAtlas);
+	}
+
+	@Override
+	public void freeAtlas() {
+		cachedLayout.DestroyAtlas(state.getLogicalDevice(),state.VulkanMemory);
 	}
 
 	//////////////////////////////////////

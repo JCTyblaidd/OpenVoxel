@@ -111,6 +111,7 @@ public final class Renderer implements EventListener {
 	}
 
 	public void close() {
+		api.freeAtlas();
 		blockAtlas.freeAtlas();
 		renderTaskPool.stop();
 		api.close();
@@ -327,7 +328,10 @@ public final class Renderer implements EventListener {
 	 */
 	public void stitchAtlas() {
 		blockAtlas.performStitch();
+		api.loadAtlas(blockAtlas);
+		blockAtlas.freeAtlas();
 	}
+
 
 	/**
 	 * Asynchronously Draw the GUI in another thread

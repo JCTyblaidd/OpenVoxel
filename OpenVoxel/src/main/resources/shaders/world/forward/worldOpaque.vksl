@@ -13,9 +13,9 @@ out gl_PerVertex {
 };
 
 layout(location = 0) out vec2 f_uv;
-layout(location = 1) out mat3 f_normMat;
-layout(location = 2) out vec3 f_col;
-layout(location = 3) out vec3 f_light;
+layout(location = 1) out vec3 f_col;
+layout(location = 2) out vec3 f_light;
+layout(location = 3) out mat3 f_normMat;
 
 
 layout(set = 0,binding = 0) uniform FrameConstants {
@@ -57,9 +57,9 @@ void main() {
 /**[VK::Fragment]**/
 
 layout(location = 0) in vec2 f_uv;
-layout(location = 1) in mat3 f_normMat;
-layout(location = 2) in vec3 f_col;
-layout(location = 3) in vec3 f_light;
+layout(location = 1) in vec3 f_col;
+layout(location = 2) in vec3 f_light;
+layout(location = 3) in mat3 f_normMat;
 
 layout(set = 0,binding = 0) uniform FrameConstants {
     mat4 projMatrix;
@@ -71,40 +71,41 @@ layout(set = 0,binding = 0) uniform FrameConstants {
 } worldData;
 
 //RGB=diffuse A=transparency
-layout(set = 1,binding = 0) uniform sampler2D altasDiffuse;
+layout(set = 1,binding = 0) uniform sampler2D atlasDiffuse;
 //RGB=normal A=emissiveness
-layout(set = 1,binding = 1) uniform sampler2D altasNormal;
+layout(set = 1,binding = 1) uniform sampler2D atlasNormal;
 //R=smooth, G=reflect, B=occlusion, A=height
-layout(set = 1,binding = 2) uniform sampler2D altasPBR;
+layout(set = 1,binding = 2) uniform sampler2D atlasPBR;
 
 layout(location = 0) out vec4 forward_colour;
 
 void main() {
     //Sample Maps
     vec4 sampleDiffuse = texture(atlasDiffuse,f_uv);
-    vec4 sampleNormal = texture(atlasNormal,f_uv);
-    vec4 samplePBR = texture(atlasPBR,f_uv);
+    //vec4 sampleNormal = texture(atlasNormal,f_uv);
+    //vec4 samplePBR = texture(atlasPBR,f_uv);
 
     //Calculate Diffuse:
-    vec3 g_colour = sampleDiffuse.rgb * f_col;
+   // vec3 g_colour = sampleDiffuse.rgb * f_col;
 
     //Calculate Normal:
-    vec3 g_normal = worldData.viewMatrix * f_normMat * sampleNormal.rgb;
+    //vec3 g_normal = worldData.viewMatrix * f_normMat * sampleNormal.rgb;
 
     //Calculate PBR:
-    vec3 g_pbr = texture(atlasPBR,f_uv).rg;
+    //vec2 g_pbr = samplePBR.tg;
 
     //Calculate Light:
-    vec3 simple_light = samplePBR.b * (f_light + sampleNormal.a * g_colour);
+    //vec3 simple_light = samplePBR.b * (f_light + sampleNormal.a * g_colour);
 
-    float dx = dFdxFine(f_light);
-    float dy = dFdyFine(f_light);
+    //vec3 dx = dFdxFine(f_light);
+    //vec3 dy = dFdyFine(f_light);
 
-    float lighting_scalar = normalize(g_normal).y;
-    float reduced_scalar = lighting_scalar / 2.0 + 0.5f;
+    //float lighting_scalar = normalize(g_normal).y;
+    //float reduced_scalar = lighting_scalar / 2.0 + 0.5f;
 
     //Final Colour.. TODO: IMPROVE{..} {use PBR}
-    forward_colour = vec4(reduced_scalar * (g_colour + simple_light),1.0);
+    //forward_colour = vec4(reduced_scalar * (g_colour + simple_light),1.0);
+    forward_colour = vec4(sampleDiffuse.rgb,1.0);
 }
 
 

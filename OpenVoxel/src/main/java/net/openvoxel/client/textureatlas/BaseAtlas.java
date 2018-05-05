@@ -33,12 +33,12 @@ public class BaseAtlas implements IconAtlas {
 	private Map<BaseIcon,ResourceHandle> refIconNorm;
 	private Map<BaseIcon,ResourceHandle> refIconPBR;
 
-	private int AtlasWidth;
-	private int AtlasHeight;
-	private int AtlasMipLevels;
-	private ByteBuffer DataDiff;
-	private ByteBuffer DataNorm;
-	private ByteBuffer DataPBR;
+	public int AtlasWidth;
+	public int AtlasHeight;
+	public int AtlasMipLevels;
+	public ByteBuffer DataDiff;
+	public ByteBuffer DataNorm;
+	public ByteBuffer DataPBR;
 
 	public BaseAtlas(boolean isSingleTexture) {
 		this.isSingleTexture = isSingleTexture;
