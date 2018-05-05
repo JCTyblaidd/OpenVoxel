@@ -2,18 +2,13 @@ package net.openvoxel.client.renderer;
 
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
-import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
-import net.openvoxel.client.utility.FrustumCuller;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.loader.classloader.Validation;
 import net.openvoxel.server.ClientServer;
-import net.openvoxel.utility.MatrixUtils;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncQueue;
 import net.openvoxel.utility.async.AsyncRunnablePool;
-import net.openvoxel.utility.debug.Validate;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
@@ -24,7 +19,6 @@ import org.joml.Vector2f;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class WorldDrawTask implements Runnable {
 
@@ -75,7 +69,7 @@ public class WorldDrawTask implements Runnable {
 		worldRenderer = api.getWorldRenderer();
 	}
 
-	public void update(AsyncRunnablePool pool,ClientServer server, AsyncBarrier barrier) {
+	void update(AsyncRunnablePool pool,ClientServer server, AsyncBarrier barrier) {
 		this.pool = pool;
 		this.barrier = barrier;
 		width = ClientInput.currentWindowFrameSize.x;
@@ -98,6 +92,10 @@ public class WorldDrawTask implements Runnable {
 		frustumIntersect.set(frustumMatrix);
 	}
 
+	void ignore() {
+		worldRenderer.Setup(0,0,null);
+	}
+
 	@Override
 	public void run() {
 		//Reset all the barriers to initial state
@@ -112,7 +110,6 @@ public class WorldDrawTask implements Runnable {
 		barrierCulling.awaitCompletion();
 		barrierUpdates.completeTask();
 		barrierUpdates.awaitCompletion();
-
 
 		//Finish Self
 		barrier.completeTask();
@@ -202,7 +199,6 @@ public class WorldDrawTask implements Runnable {
 						if (section.isEmpty()) {
 							if(section.isDirty()) {
 								worldRenderer.InvalidateChunkSection(section);
-								barrierUpdates.addNewTasks(1);
 							}
 						}else {
 							if (section.isDirty()) updateCalls.add(section);

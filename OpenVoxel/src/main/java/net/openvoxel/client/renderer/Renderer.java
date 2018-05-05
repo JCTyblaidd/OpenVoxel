@@ -312,6 +312,7 @@ public final class Renderer implements EventListener {
 			worldDrawTask.update(renderTaskPool,server,completeBarrier);
 			worldDrawTask.run();
 		}else{
+			worldDrawTask.ignore();
 			completeBarrier.reset(0);
 		}
 	}

@@ -31,6 +31,10 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		this.memory = new VulkanWorldMemoryManager(device,memory);
 	}
 
+	public boolean hasWorld() {
+		return this.theWorld != null;
+	}
+
 	public void close() {
 		memory.close();
 	}

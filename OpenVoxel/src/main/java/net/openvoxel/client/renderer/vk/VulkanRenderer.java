@@ -124,10 +124,12 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
-			/*for(int i = 0; i < state.VulkanSwapChainSize; i++) {
-				VkCommandBuffer buffer = commandHandler.getAsyncTransferCommandBuffer(i);
-				vkCmdExecuteCommands(transferBuffer,buffer);
-			}*/
+			if(worldRenderer.hasWorld()) {
+				for(int i = 0; i < state.VulkanSwapChainSize; i++) {
+					VkCommandBuffer buffer = commandHandler.getAsyncTransferCommandBuffer(i);
+					vkCmdExecuteCommands(transferBuffer,buffer);
+				}
+			}
 
 			vkEndCommandBuffer(transferBuffer);
 			commandHandler.SubmitCommandTransfer(transferBuffer);
@@ -143,7 +145,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			commandHandler.CmdResetTimstamps(mainBuffer);
 			commandHandler.CmdWriteTimestamp(mainBuffer,0,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
-			//TODO: IMPLEMENT PROPERLY!!!.... {Graphics Draw in wrong render pass}
+			//TODO: IMPLEMENT WORLD DRAW FUNCTION....
 
 			commandHandler.CmdWriteTimestamp(mainBuffer,1,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiTransfer));
