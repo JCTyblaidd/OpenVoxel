@@ -131,11 +131,13 @@ public class BaseAtlas implements IconAtlas {
 
 				stbrp_setup_heuristic(context, STBRP_HEURISTIC_Skyline_default);
 
-				if (stbrp_pack_rects(context, rect_list) != 0) {
+				int result = stbrp_pack_rects(context,rect_list);
+				node_buffer.free();
+
+				//Success...
+				if (result != 0) {
 					break;
 				}
-
-				node_buffer.free();
 
 				//Fail...
 				startingPower *= 2;

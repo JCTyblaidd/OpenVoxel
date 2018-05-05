@@ -6,6 +6,7 @@ import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.files.world.GameSave;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.stb.STBIWriteCallback;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
@@ -58,7 +59,7 @@ public class FolderUtils {
 		try {
 			FileOutputStream fileOut = new FileOutputStream(f);
 			FileChannel channel = fileOut.getChannel();
-			stbi_write_png_to_func(new STBIWriteCallback() {
+			STBIWriteCallback _callback_ = new STBIWriteCallback() {
 				@Override
 				public void invoke(long context, long data, int size) {
 					ByteBuffer buffer = getData(data,size);
@@ -68,7 +69,9 @@ public class FolderUtils {
 						folderLogger.Warning("Exception caught while writing to file");
 					}
 				}
-			},0L,h,w,4,data,0);
+			};
+			stbi_write_png_to_func(_callback_,0L,h,w,4,data,0);
+			_callback_.close();
 			channel.close();
 		}catch (Exception ex) {
 			folderLogger.Warning("Failed to store image to file");
