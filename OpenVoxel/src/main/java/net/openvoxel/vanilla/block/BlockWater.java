@@ -6,20 +6,28 @@ import net.openvoxel.common.block.Block;
 import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.util.BlockFace;
 
-/**
- * Created by James on 01/09/2016.
- */
-public class BlockDirt extends Block{
+public class BlockWater extends Block {
 
 	private Icon blockTex;
 
 	@Override
 	public void loadTextureAtlasData(IconAtlas texAtlas) {
-		blockTex = texAtlas.register("block/dirt/dirt.diff","block/dirt/dirt.normals","block/dirt/dirt.pbr");
+		blockTex = texAtlas.register("block/water/water.diff","block/water/water.normals","block/water/water.pbr");
 	}
 
 	@Override
 	public Icon getIconAtSide(IBlockAccess blockAccess, BlockFace face) {
 		return blockTex;
 	}
+
+	@Override
+	public boolean isOpaque(BlockFace face) {
+		return false;
+	}
+
+	@Override
+	public boolean isCompleteOpaque() {
+		return false;
+	}
+
 }

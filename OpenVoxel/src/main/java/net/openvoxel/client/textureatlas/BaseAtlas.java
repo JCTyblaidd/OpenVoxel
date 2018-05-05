@@ -1,6 +1,5 @@
 package net.openvoxel.client.textureatlas;
 
-import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import net.openvoxel.OpenVoxel;
@@ -10,12 +9,13 @@ import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.MathUtilities;
-import net.openvoxel.utility.debug.Validate;
-import org.lwjgl.stb.*;
+import org.lwjgl.stb.STBImageResize;
+import org.lwjgl.stb.STBRPContext;
+import org.lwjgl.stb.STBRPNode;
+import org.lwjgl.stb.STBRPRect;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -163,11 +163,14 @@ public class BaseAtlas implements IconAtlas {
 				rect_list.position(key);
 				BaseIcon icon = idMap.get(key);
 
+				logAtlas.Debug("Stored icon at (",rect_list.x(),",",rect_list.y(),")"
+				,", size = (",rect_list.w(),",",rect_list.h(),")");
 				//Update Icon
 				icon.U0 = rect_list.x() * scale_factor;
 				icon.V0 = rect_list.y() * scale_factor;
 				icon.U1 = icon.U0 + (rect_list.w() * scale_factor);
 				icon.V1 = icon.V0 + (rect_list.h() * scale_factor);
+				icon.animationCount = Math.floorDiv(rect_list.h(),rect_list.w());
 
 				//Store Image Source
 				STBITexture diff = texDiff.remove(icon);
@@ -178,7 +181,7 @@ public class BaseAtlas implements IconAtlas {
 					int target_off = (rect_list.y() + y_off) * AtlasWidth;
 					for (int x_off = 0; x_off < rect_list.w(); x_off++) {
 						int loc = 4 * (offset + x_off);
-						int target_loc = 4 * (target_off + x_off);
+						int target_loc = 4 * (rect_list.x() + target_off + x_off);
 						DataDiff.putInt(target_loc, diff.pixels.getInt(loc));
 						if(!isSingleTexture) {
 							DataNorm.putInt(target_loc, norm.pixels.getInt(loc));
