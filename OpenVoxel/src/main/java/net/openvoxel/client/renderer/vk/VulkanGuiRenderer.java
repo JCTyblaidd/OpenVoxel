@@ -19,6 +19,7 @@ import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
 import net.openvoxel.common.resources.ResourceHandle;
+import net.openvoxel.utility.MathUtilities;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
@@ -206,14 +207,6 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 		}
 	}
 
-	private int padToAlign(int size, int align) {
-		int mod = size % align;
-		int pad = 0;
-		if(mod != 0) {
-			pad = align - mod;
-		}
-		return size + pad;
-	}
 
 	private void partitionBuffer() {
 		VulkanDevice device = command.getDeviceManager();
@@ -223,8 +216,8 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 		int swapSize = command.getSwapSize();
 
 		//Choose Memory sizes
-		vertexSectionLength = padToAlign(256 * 1024,alignment);
-		uniformSectionLength = padToAlign(256,alignment);
+		vertexSectionLength = MathUtilities.padToAlign(256 * 1024,alignment);
+		uniformSectionLength = MathUtilities.padToAlign(256,alignment);
 
 		//Choose Offsets
 		int _runningOffset = 0;
@@ -326,8 +319,8 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 				pageUsage.put(memoryType,new boolean[PAGE_COUNT]);
 			}
 
-			int align_size = padToAlign((int)requirements.size(),(int)requirements.alignment());
-			int page_size = padToAlign(align_size,PAGE_SIZE);
+			int align_size = MathUtilities.padToAlign((int)requirements.size(),(int)requirements.alignment());
+			int page_size = MathUtilities.padToAlign(align_size,PAGE_SIZE);
 			int page_count = page_size / PAGE_SIZE;
 
 			boolean[] pageInfo = pageUsage.get(memoryType);

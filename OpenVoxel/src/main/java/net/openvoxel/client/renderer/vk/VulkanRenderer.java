@@ -2,6 +2,7 @@ package net.openvoxel.client.renderer.vk;
 
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.renderer.WorldDrawTask;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
@@ -109,7 +110,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	}
 
 	@Override
-	public boolean submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier) {
+	public boolean submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier, WorldDrawTask task) {
 		VkCommandBuffer guiTransfer = commandHandler.getGuiDrawCommandBuffer(true);
 		VkCommandBuffer guiDrawing = commandHandler.getGuiDrawCommandBuffer(false);
 
@@ -145,11 +146,16 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			commandHandler.CmdResetTimstamps(mainBuffer);
 			commandHandler.CmdWriteTimestamp(mainBuffer,0,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
-			//TODO: IMPLEMENT WORLD DRAW FUNCTION....
+			//Transfer & Update World Uniforms
+			worldRenderer.CmdTransferBufferData(mainBuffer,task);
+
+			//Draw World
+			//TODO: IMPLEMENT PROPERLY!!!!
 
 			commandHandler.CmdWriteTimestamp(mainBuffer,1,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiTransfer));
 
+			//Start GUI Render Pass
 			VkClearValue.Buffer clearValues = VkClearValue.mallocStack(2,stack);
 			clearValues.color().float32(0,0.2549f);
 			clearValues.color().float32(1,0.72549f);
@@ -166,12 +172,20 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			renderPassBegin.pClearValues(clearValues);
 			vkCmdBeginRenderPass(mainBuffer,renderPassBegin,VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiDrawing));
+			//TODO: IMPLEMENT PROPERLY [THIS IS DEBUG IMPLEMENTATION]
+			if(worldRenderer.hasWorld()) {
+				for (int i = 0; i < state.VulkanSwapChainSize; i++) {
+					VkCommandBuffer cmdDrawWorld = commandHandler.getAsyncMainCommandBuffer(i);
+					vkCmdExecuteCommands(mainBuffer,cmdDrawWorld);
+				}
+			}
 
+			//Execute GUI Draw
+			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiDrawing));
 			vkCmdEndRenderPass(mainBuffer);
 
+			//Finish Main Command Buffer
 			commandHandler.CmdWriteTimestamp(mainBuffer,2,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-
 			vkEndCommandBuffer(mainBuffer);
 			commandHandler.SubmitCommandGraphics(mainBuffer);
 		}

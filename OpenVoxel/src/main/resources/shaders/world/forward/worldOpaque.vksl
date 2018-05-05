@@ -20,7 +20,7 @@ layout(location = 3) out mat3 f_normMat;
 
 layout(set = 0,binding = 0) uniform FrameConstants {
     mat4 projMatrix;
-    mat3 viewMatrix;
+    mat4 viewMatrix;
     vec3 cameraPos;
     vec3 skyLightDir;
     vec3 skyLightColour;
@@ -50,8 +50,8 @@ void main() {
     f_light = i_lighting.rgb + skyLighting;
 
     //Update Position
-    vec3 relativePosition = worldData.viewMatrix * (i_position + pushConsts.chunkOffset);
-    gl_Position = worldData.projMatrix * vec4(relativePosition,1.0);
+    vec4 relativePosition = worldData.viewMatrix * vec4(i_position + pushConsts.chunkOffset,1);
+    gl_Position = worldData.projMatrix * relativePosition;
 }
 
 /**[VK::Fragment]**/
@@ -63,7 +63,7 @@ layout(location = 3) in mat3 f_normMat;
 
 layout(set = 0,binding = 0) uniform FrameConstants {
     mat4 projMatrix;
-    mat3 viewMatrix;
+    mat4 viewMatrix;
     vec3 cameraPos;
     vec3 skyLightDir;
     vec3 skyLightColour;

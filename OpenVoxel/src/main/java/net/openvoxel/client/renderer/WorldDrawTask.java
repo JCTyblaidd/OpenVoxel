@@ -41,19 +41,19 @@ public class WorldDrawTask implements Runnable {
 	private List<GenerateTask> generateTasks = new ArrayList<>();
 	private long chunkOriginX = 0;
 	private long chunkOriginZ = 0;
-	private float playerX = 0;
-	private float playerY = 0;
-	private float playerZ = 0;
+	public float playerX = 0;
+	public float playerY = 0;
+	public float playerZ = 0;
 	private int viewDistance = 16;
 
 	//World State..
 	private EntityPlayerSP thePlayer;
 	private ClientWorld theWorld;
 	private Vector2f zLimitVector = new Vector2f(0.1F,1000.0F);
-	private Matrix3f normalMatrix = new Matrix3f().identity();
-	private Matrix4f cameraMatrix = new Matrix4f().identity();
-	private Matrix4f perspectiveMatrix = new Matrix4f().identity();
-	private Matrix4f frustumMatrix = new Matrix4f().identity();
+	public Matrix3f normalMatrix = new Matrix3f().identity();
+	public Matrix4f cameraMatrix = new Matrix4f().identity();
+	public Matrix4f perspectiveMatrix = new Matrix4f().identity();
+	public Matrix4f frustumMatrix = new Matrix4f().identity();
 	private FrustumIntersection frustumIntersect = new FrustumIntersection();
 
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {

@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.common;
 
+import net.openvoxel.client.renderer.WorldDrawTask;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.textureatlas.BaseAtlas;
@@ -17,7 +18,7 @@ public interface GraphicsAPI {
 
 	boolean acquireNextFrame();
 	void prepareForSubmit();
-	boolean submitNextFrame(AsyncRunnablePool pool,AsyncBarrier barrier);
+	boolean submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier, WorldDrawTask task);
 	void close();
 
 	void startStateChange();

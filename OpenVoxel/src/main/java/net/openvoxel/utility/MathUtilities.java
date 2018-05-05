@@ -12,4 +12,13 @@ public class MathUtilities {
 		return x + 1;
 	}
 
+	public static int padToAlign(int size, int align) {
+		int mod = size % align;
+		int pad = 0;
+		if(mod != 0) {
+			pad = align - mod;
+		}
+		return size + pad;
+	}
+
 }

@@ -353,7 +353,7 @@ public final class Renderer implements EventListener {
 	 *  & then submit the frames to the GPU to present
 	 */
 	public void submitFrame(AsyncBarrier barrier) {
-		boolean success = api.submitNextFrame(renderTaskPool,barrier);
+		boolean success = api.submitNextFrame(renderTaskPool,barrier,worldDrawTask);
 		if(!success) {
 			changeStateRequest = true;
 		}
