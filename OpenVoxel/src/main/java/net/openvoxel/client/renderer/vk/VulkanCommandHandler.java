@@ -985,7 +985,7 @@ public final class VulkanCommandHandler {
 		return device;
 	}
 
-	int getSwapSize() {
+	public int getSwapSize() {
 		return state.VulkanSwapChainSize;
 	}
 

@@ -49,12 +49,13 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		//Draw Handlers
 		textRenderer = new VulkanTextRenderer("font/font",commandHandler,state.VulkanMemory);
 		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory,textRenderer);
-		worldRenderer = new VulkanWorldRenderer();
+		worldRenderer = new VulkanWorldRenderer(commandHandler,cachedLayout,state.VulkanDevice,state.VulkanMemory);
 	}
 
 	@Override
 	public void close() {
 		vkDeviceWaitIdle(state.getLogicalDevice());
+		worldRenderer.close();
 		textRenderer.close();
 		commandHandler.close();
 		cachedLayout.FreeSingle(state.getLogicalDevice());
@@ -112,6 +113,10 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
+			for(int i = 0; i < state.VulkanSwapChainSize; i++) {
+				VkCommandBuffer buffer = commandHandler.getAsyncTransferCommandBuffer(i);
+				vkCmdExecuteCommands(transferBuffer,buffer);
+			}
 			vkEndCommandBuffer(transferBuffer);
 			commandHandler.SubmitCommandTransfer(transferBuffer);
 		}
@@ -126,6 +131,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			commandHandler.CmdResetTimstamps(mainBuffer);
 			commandHandler.CmdWriteTimestamp(mainBuffer,0,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
+			//TODO: IMPLEMENT PROPERLY!!!.... {Graphics Draw in wrong render pass}
 
 			commandHandler.CmdWriteTimestamp(mainBuffer,1,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiTransfer));

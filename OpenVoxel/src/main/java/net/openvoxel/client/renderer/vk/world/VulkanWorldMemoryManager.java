@@ -116,6 +116,18 @@ public class VulkanWorldMemoryManager {
 		}
 	}
 
+	public synchronized long GetHostBuffer(int memory) {
+		return pageHostVisible.getBufferFor(memory);
+	}
+
+	public synchronized void FreeHostMemory(int memory,int swap_size) {
+		pageHostVisible.startMemoryCountdown(memory,swap_size);
+	}
+
+	public synchronized void InvalidateHostMemory(int memory) {
+		pageHostVisible.freeMemory(memory);
+	}
+
 	///
 	/// Device Memory Management
 	///

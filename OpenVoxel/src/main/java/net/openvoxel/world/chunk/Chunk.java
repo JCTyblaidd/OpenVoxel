@@ -47,7 +47,7 @@ public class Chunk {
 		this.chunkX = x;
 		this.chunkZ = z;
 		for(int i = 0; i < 16; i++) {
-			chunkSections[i] = new ChunkSection(i);
+			chunkSections[i] = new ChunkSection(this,i);
 		}
 	}
 

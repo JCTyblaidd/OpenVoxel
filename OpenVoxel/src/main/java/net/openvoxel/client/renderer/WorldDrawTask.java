@@ -84,6 +84,7 @@ public class WorldDrawTask implements Runnable {
 		theWorld = server.getTheWorld();
 		chunkOriginX = (long)Math.floor(thePlayer.xPos / 16.0);
 		chunkOriginZ = (long)Math.floor(thePlayer.zPos / 16.0);
+		worldRenderer.Setup(chunkOriginX,chunkOriginZ,theWorld);
 		playerX = (float)(thePlayer.xPos - 16.0 * chunkOriginX);
 		playerY = (float)thePlayer.yPos;
 		playerZ = (float)(thePlayer.zPos - 16.0 * chunkOriginZ);
@@ -131,20 +132,21 @@ public class WorldDrawTask implements Runnable {
 
 		@Override
 		public void run() {
-			worldRenderer.StartAsyncGenerate(AsyncID);
+			BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(AsyncID);
+			handler.Start();
 			while(!barrierUpdates.isComplete()) {
 				ClientChunkSection section = updateCalls.attemptNext();
 				if(section != null) {
-					worldRenderer.AsyncGenerate(theWorld,section,AsyncID,true);
+					handler.AsyncGenerate(section);
 					barrierUpdates.completeTask();
 				}
 				section = drawOnlyCalls.attemptNext();
 				if(section != null) {
-					worldRenderer.AsyncDraw(theWorld,section,AsyncID);
+					handler.AsyncDraw(section);
 					barrierUpdates.completeTask();
 				}
 			}
-			worldRenderer.StopAsyncGenerate(AsyncID);
+			handler.Finish();
 		}
 	}
 
@@ -163,7 +165,7 @@ public class WorldDrawTask implements Runnable {
 
 		@Override
 		public void run() {
-			//Init
+			//Init	protected
 			int cullSize = viewDistance / divide;
 			int minX = cullX * cullSize;
 			int maxX = minX + cullSize;

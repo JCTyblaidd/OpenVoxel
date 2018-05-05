@@ -36,7 +36,7 @@ final class VulkanWorldMemoryPage {
 
 	private static final long PAGE_SIZE = VulkanMemory.MEMORY_PAGE_SIZE;
 	private static final int SUB_PAGE_COUNT = 512;
-	private static final int SUB_PAGE_SIZE = (int)(PAGE_SIZE / SUB_PAGE_COUNT);
+	public static final int SUB_PAGE_SIZE = (int)(PAGE_SIZE / SUB_PAGE_COUNT);
 
 	// Data:
 	//  int = subPageUsage[...]

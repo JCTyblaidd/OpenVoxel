@@ -27,13 +27,20 @@ public class ChunkSection {
 	 */
 	protected ByteBuffer chunkSideInfo = MemoryUtil.memCalloc(6);
 
+	protected Chunk refChunk;
+
 	private static final long DIFF = (4*16*16*16) + (2*16*16*16)+6;
 
 	public final int yIndex;
 
-	public ChunkSection(int idx) {
+	public ChunkSection(Chunk ref,int idx) {
+		this.refChunk = ref;
 		MemoryStatistics.trackChunk(DIFF);
 		yIndex = idx;
+	}
+
+	public Chunk getChunk() {
+		return refChunk;
 	}
 
 	/**

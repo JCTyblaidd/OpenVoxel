@@ -4,7 +4,7 @@ layout(location = 0) in vec3 i_position;
 layout(location = 1) in vec2 i_uv_coord;
 layout(location = 2) in vec3 i_normals;
 layout(location = 3) in vec3 i_tangents;
-layout(location = 4) in vec3 i_colour;
+layout(location = 4) in vec4 i_colour;
 layout(location = 5) in vec4 i_lighting;
 layout(location = 6) in vec2 i_animation;
 
@@ -34,11 +34,12 @@ layout(push_constant) uniform SubChunkMetadata {
 
 void main() {
     //Calculate Animated UV
-    int animTick = (worldData.animationTick % i_animation.x);
+    int animLimit = int(i_animation.x) * 255;
+    int animTick = (worldData.animationTick % animLimit);
     f_uv = i_uv_coord + vec2(0,animTick * i_animation.y);
 
     //Forward Colour
-    f_col = i_colour;
+    f_col = i_colour.rgb;
 
     //Caulculate Tangent -> World Matrix
     vec3 bi_tangent = cross(i_normals,i_tangents);

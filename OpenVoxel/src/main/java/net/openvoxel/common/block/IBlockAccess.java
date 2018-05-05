@@ -15,9 +15,9 @@ public interface IBlockAccess {
 
 	boolean blockLoaded();
 
-	int getX();
-	int getY();
-	int getZ();
+	long getX();
+	long getY();
+	long getZ();
 
 	IBlockAccess getOffsetBlockData(BlockFace face);
 
