@@ -14,9 +14,11 @@ import net.openvoxel.common.resources.ResourceType;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
+import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
 
+import static org.lwjgl.system.MemoryStack.create;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.KHRMaintenance1.VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT_KHR;
 import static org.lwjgl.vulkan.VK10.*;
@@ -39,6 +41,10 @@ public class VulkanCache {
 	//Immutable Samplers...
 	public long SAMPLER_BLOCK_ATLAS;
 
+	//Immutable Descriptor Pools...
+	public long DESCRIPTOR_POOL_ATLAS;
+	public long DESCRIPTOR_SET_ATLAS;
+
 	//Shaders...
 	public VulkanShaderModule SHADER_GUI_STANDARD;
 	public VulkanShaderModule SHADER_GUI_TEXT;
@@ -46,8 +52,8 @@ public class VulkanCache {
 
 	//Descriptor Set Layouts...
 	public long DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY;
-	public long DESCRIPTOR_SET_WORLD_ATLAS;
-	public long DESCRIPTOR_SET_WORLD_CONSTANTS;
+	public long DESCRIPTOR_SET_LAYOUT_WORLD_ATLAS;
+	public long DESCRIPTOR_SET_LAYOUT_WORLD_CONSTANTS;
 
 	//Pipeline Layouts...
 	public long PIPELINE_LAYOUT_GUI_STANDARD_INPUT;
@@ -73,6 +79,9 @@ public class VulkanCache {
 			//Immutable Samplers...
 			SAMPLER_BLOCK_ATLAS = CreateImmutableSampler(device_handle,stack,8);
 
+			//Immutable Descriptor Pool...
+			DESCRIPTOR_POOL_ATLAS = CreateDescriptorPool(device,stack);
+
 			//Load Shaders
 			SHADER_GUI_STANDARD = CreateShader("GUI_STANDARD", "gui/guiShader");
 			SHADER_GUI_STANDARD.loadModules(device_handle,new ArrayList<>());
@@ -83,8 +92,12 @@ public class VulkanCache {
 
 			//Descriptor Set Layouts
 			DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY = CreateDescriptorLayout(device,stack,0);
-			DESCRIPTOR_SET_WORLD_ATLAS = CreateDescriptorLayout(device,stack,1);
-			DESCRIPTOR_SET_WORLD_CONSTANTS = CreateDescriptorLayout(device,stack,2);
+			DESCRIPTOR_SET_LAYOUT_WORLD_ATLAS = CreateDescriptorLayout(device,stack,1);
+			DESCRIPTOR_SET_LAYOUT_WORLD_CONSTANTS = CreateDescriptorLayout(device,stack,2);
+
+
+			//Immutable Descriptor Set....
+			DESCRIPTOR_SET_ATLAS = CreateDescriptorSet(device,stack);
 
 			//Pipeline Layouts
 			PIPELINE_LAYOUT_GUI_STANDARD_INPUT =
@@ -92,7 +105,8 @@ public class VulkanCache {
 							DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY);
 			PIPELINE_LAYOUT_WORLD_STANDARD_INPUT =
 					CreatePipelineLayout(device,stack,2,
-							DESCRIPTOR_SET_WORLD_CONSTANTS,DESCRIPTOR_SET_WORLD_ATLAS);
+							DESCRIPTOR_SET_LAYOUT_WORLD_CONSTANTS,
+							DESCRIPTOR_SET_LAYOUT_WORLD_ATLAS);
 
 			//Render Passes
 			RENDER_PASS_FORWARD_ONLY = new VulkanRenderPass(VulkanRenderPass.RENDER_PASS_TYPE_FORWARD);
@@ -137,9 +151,12 @@ public class VulkanCache {
 		vkDestroyPipelineLayout(device, PIPELINE_LAYOUT_GUI_STANDARD_INPUT, null);
 
 		//Descriptor Set Layouts
-		vkDestroyDescriptorSetLayout(device, DESCRIPTOR_SET_WORLD_CONSTANTS, null);
-		vkDestroyDescriptorSetLayout(device, DESCRIPTOR_SET_WORLD_ATLAS, null);
+		vkDestroyDescriptorSetLayout(device, DESCRIPTOR_SET_LAYOUT_WORLD_CONSTANTS, null);
+		vkDestroyDescriptorSetLayout(device, DESCRIPTOR_SET_LAYOUT_WORLD_ATLAS, null);
 		vkDestroyDescriptorSetLayout(device, DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY, null);
+
+		//Immutable Descriptor Pool
+		vkDestroyDescriptorPool(device,DESCRIPTOR_POOL_ATLAS,null);
 
 		//Immutable Samplers
 		vkDestroySampler(device, SAMPLER_BLOCK_ATLAS, null);
@@ -155,7 +172,7 @@ public class VulkanCache {
 		memory.freeDedicatedMemory(IMAGE_MEMORY_ATLAS_ARRAY);
 	}
 
-	public void LoadAtlas(VkDevice device, VulkanMemory memory, BaseAtlas baseAtlas) {
+	public void LoadAtlas(VkDevice device, VulkanMemory memory, BaseAtlas baseAtlas,VulkanCommandHandler command) {
 		try(MemoryStack stack = stackPush()) {
 			VkImageCreateInfo imageCreate = VkImageCreateInfo.mallocStack(stack);
 			imageCreate.sType(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO);
@@ -211,9 +228,88 @@ public class VulkanCache {
 			vkResult = vkCreateImageView(device,viewCreate,null,pReturn);
 			VulkanUtility.ValidateSuccess("Failed to create atlas view",vkResult);
 			IMAGE_VIEW_BLOCK_ATLAS = pReturn.get(0);
+
+			VkDescriptorImageInfo.Buffer imageInfo = VkDescriptorImageInfo.mallocStack(1,stack);
+			imageInfo.sampler(VK_NULL_HANDLE);
+			imageInfo.imageView(IMAGE_VIEW_BLOCK_ATLAS);
+			imageInfo.imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			VkWriteDescriptorSet.Buffer pDescriptorWrite = VkWriteDescriptorSet.mallocStack(1,stack);
+			pDescriptorWrite.sType(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
+			pDescriptorWrite.pNext(VK_NULL_HANDLE);
+			pDescriptorWrite.dstSet(DESCRIPTOR_SET_ATLAS);
+			pDescriptorWrite.dstBinding(0);
+			pDescriptorWrite.dstArrayElement(0);
+			pDescriptorWrite.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+			pDescriptorWrite.pImageInfo(imageInfo);
+
+			vkUpdateDescriptorSets(device,pDescriptorWrite,null);
+
+			int mip_offset = 0;
+			int atlas_size = baseAtlas.AtlasWidth;
+			for (int mip = 0; mip < baseAtlas.AtlasMipLevels; mip++) {
+				baseAtlas.DataDiff.position(mip_offset);
+				baseAtlas.DataNorm.position(mip_offset);
+				baseAtlas.DataPBR.position(mip_offset);
+
+				command.SingleUseImagePopulate(
+						IMAGE_BLOCK_ATLAS_ARRAY,baseAtlas.DataDiff,
+						atlas_size,atlas_size,0,mip
+				);
+				command.SingleUseImagePopulate(
+						IMAGE_BLOCK_ATLAS_ARRAY,baseAtlas.DataNorm,
+						atlas_size,atlas_size,1,mip
+				);
+				command.SingleUseImagePopulate(
+						IMAGE_BLOCK_ATLAS_ARRAY,baseAtlas.DataPBR,
+						atlas_size,atlas_size,2,mip
+				);
+
+				//Next...
+				mip_offset += atlas_size * atlas_size;
+				atlas_size /= 2;
+			}
+			baseAtlas.DataDiff.position(0);
+			baseAtlas.DataNorm.position(0);
+			baseAtlas.DataPBR.position(0);
 		}
 	}
 
+	private long CreateDescriptorPool(VkDevice device,MemoryStack old_stack) {
+		try(MemoryStack stack = old_stack.push()) {
+			VkDescriptorPoolSize.Buffer poolSizes = VkDescriptorPoolSize.mallocStack(1,stack);
+			poolSizes.position(0);
+			poolSizes.type(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+			poolSizes.descriptorCount(1);
+
+			VkDescriptorPoolCreateInfo createPool = VkDescriptorPoolCreateInfo.mallocStack(stack);
+			createPool.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO);
+			createPool.pNext(VK_NULL_HANDLE);
+			createPool.flags(0);
+			createPool.maxSets(1);
+			createPool.pPoolSizes(poolSizes);
+
+			LongBuffer pReturn = stack.mallocLong(1);
+			int vkResult = vkCreateDescriptorPool(device,createPool,null,pReturn);
+			VulkanUtility.ValidateSuccess("Failed to create descriptor pool",vkResult);
+			return pReturn.get(0);
+		}
+	}
+
+	private long CreateDescriptorSet(VkDevice device,MemoryStack old_stack) {
+		try(MemoryStack stack = old_stack.push()) {
+			VkDescriptorSetAllocateInfo allocateInfo = VkDescriptorSetAllocateInfo.mallocStack(stack);
+			allocateInfo.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO);
+			allocateInfo.pNext(VK_NULL_HANDLE);
+			allocateInfo.descriptorPool(DESCRIPTOR_POOL_ATLAS);
+			allocateInfo.pSetLayouts(stack.longs(DESCRIPTOR_SET_LAYOUT_WORLD_ATLAS));
+
+			LongBuffer pReturn = stack.mallocLong(1);
+			int vkResult = vkAllocateDescriptorSets(device,allocateInfo,pReturn);
+			VulkanUtility.ValidateSuccess("Failed to allocate texture descriptor set",vkResult);
+			return pReturn.get(0);
+		}
+	}
 
 	private VulkanShaderModule CreateShader(String id,String path) {
 		return new VulkanShaderModule(id,ResourceManager.getResource(ResourceType.SHADER,path));
@@ -285,7 +381,7 @@ public class VulkanCache {
 				{
 					bindings.binding(0);
 					bindings.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-					bindings.descriptorCount(3);
+					bindings.descriptorCount(1);
 					bindings.stageFlags(VK_SHADER_STAGE_ALL_GRAPHICS);
 					bindings.pImmutableSamplers(stack.longs(SAMPLER_BLOCK_ATLAS));
 				}

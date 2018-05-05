@@ -709,6 +709,10 @@ public final class VulkanCommandHandler {
 	}
 
 	public void SingleUseImagePopulate(long Image, STBITexture texture) {
+		SingleUseImagePopulate(Image,texture.pixels,texture.width,texture.height,0,0);
+	}
+
+	public void SingleUseImagePopulate(long Image, ByteBuffer pixels, int width, int height,int baseArrayLayer, int mipLevel) {
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBuffer command = GetSingleUseCommandBuffer();
 
@@ -724,9 +728,9 @@ public final class VulkanCommandHandler {
 			imgBarrier.image(Image);
 			imgBarrier.subresourceRange().set(
 					VK_IMAGE_ASPECT_COLOR_BIT,
-					0,
+					mipLevel,
 					1,
-					0,
+					baseArrayLayer,
 					1
 			);
 
@@ -744,21 +748,21 @@ public final class VulkanCommandHandler {
 			VulkanUtility.ValidateSuccess("Failed to map staging buffer",vkResult);
 
 			ByteBuffer data = pMapping.getByteBuffer((int)VulkanMemory.MEMORY_PAGE_SIZE);
-			data.put(texture.pixels);
+			data.put(pixels);
 			vkUnmapMemory(device.logicalDevice,StagingBufferMemory);
 
 			VkBufferImageCopy.Buffer regions = VkBufferImageCopy.mallocStack(1,stack);
 			regions.bufferOffset(0);
-			regions.bufferRowLength(texture.width);
-			regions.bufferImageHeight(texture.height);
+			regions.bufferRowLength(width);
+			regions.bufferImageHeight(height);
 			regions.imageSubresource().set(
 					VK_IMAGE_ASPECT_COLOR_BIT,
-					0,
-					0,
+					mipLevel,
+					baseArrayLayer,
 					1
 			);
 			regions.imageOffset().set(0,0,0);
-			regions.imageExtent().set(texture.width,texture.height,1);
+			regions.imageExtent().set(width,height,1);
 
 			vkCmdCopyBufferToImage(command,StagingBuffer, Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regions);
 

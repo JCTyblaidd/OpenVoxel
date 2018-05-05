@@ -71,17 +71,19 @@ layout(set = 0,binding = 0) uniform FrameConstants {
 } worldData;
 
 //RGB=diffuse A=transparency
-layout(set = 1,binding = 0) uniform sampler2D atlasDiffuse;
+//layout(set = 1,binding = 0) uniform sampler2D atlasDiffuse;
 //RGB=normal A=emissiveness
-layout(set = 1,binding = 1) uniform sampler2D atlasNormal;
+//layout(set = 1,binding = 1) uniform sampler2D atlasNormal;
 //R=smooth, G=reflect, B=occlusion, A=height
-layout(set = 1,binding = 2) uniform sampler2D atlasPBR;
+//layout(set = 1,binding = 2) uniform sampler2D atlasPBR;
+
+layout(set = 1, binding = 0) uniform sampler2DArray atlasBlock;
 
 layout(location = 0) out vec4 forward_colour;
 
 void main() {
     //Sample Maps
-    vec4 sampleDiffuse = texture(atlasDiffuse,f_uv);
+    vec4 sampleDiffuse = texture(atlasBlock,vec3(f_uv,0));
     //vec4 sampleNormal = texture(atlasNormal,f_uv);
     //vec4 samplePBR = texture(atlasPBR,f_uv);
 

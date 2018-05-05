@@ -66,7 +66,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 	@Override
 	public void loadAtlas(BaseAtlas blockAtlas) {
-		cachedLayout.LoadAtlas(state.getLogicalDevice(),state.VulkanMemory,blockAtlas);
+		cachedLayout.LoadAtlas(state.getLogicalDevice(),state.VulkanMemory,blockAtlas,commandHandler);
 	}
 
 	@Override
@@ -124,10 +124,11 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
-			for(int i = 0; i < state.VulkanSwapChainSize; i++) {
+			/*for(int i = 0; i < state.VulkanSwapChainSize; i++) {
 				VkCommandBuffer buffer = commandHandler.getAsyncTransferCommandBuffer(i);
 				vkCmdExecuteCommands(transferBuffer,buffer);
-			}
+			}*/
+
 			vkEndCommandBuffer(transferBuffer);
 			commandHandler.SubmitCommandTransfer(transferBuffer);
 		}
