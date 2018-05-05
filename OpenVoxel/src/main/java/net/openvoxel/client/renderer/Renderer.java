@@ -111,6 +111,7 @@ public final class Renderer implements EventListener {
 	}
 
 	public void close() {
+		blockAtlas.freeAtlas();
 		renderTaskPool.stop();
 		api.close();
 		OpenVoxel.unregisterAllEvents(this);
@@ -162,6 +163,10 @@ public final class Renderer implements EventListener {
 		}else{
 			logger.Warning("Requested change to invalid ScreenType: " + type);
 		}
+	}
+
+	public BaseAtlas getBlockAtlas() {
+		return blockAtlas;
 	}
 
 	/////////////////////////
@@ -321,8 +326,7 @@ public final class Renderer implements EventListener {
 	 * Stitch the atlas together
 	 */
 	public void stitchAtlas() {
-		//TODO: IMPLEMENT Chunk Rendering
-		logger.Warning("Stitching the World Atlas is NYI!!");
+		blockAtlas.performStitch();
 	}
 
 	/**

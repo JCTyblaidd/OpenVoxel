@@ -4,6 +4,7 @@ import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.STBITexture;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.files.util.FolderUtils;
@@ -24,7 +25,7 @@ import java.util.Map;
 import static org.lwjgl.stb.STBRectPack.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
-public class BaseAtlas {
+public class BaseAtlas implements IconAtlas {
 
 	private boolean isSingleTexture;
 	private List<BaseIcon> iconList;
@@ -56,13 +57,18 @@ public class BaseAtlas {
 		return ref;
 	}
 
-	public BaseIcon registerAll(ResourceHandle diff,ResourceHandle norm,ResourceHandle pbr) {
+	public BaseIcon register(ResourceHandle diff,ResourceHandle norm,ResourceHandle pbr) {
 		BaseIcon ref = new BaseIcon();
 		iconList.add(ref);
 		refIconDiff.put(ref,diff);
 		refIconNorm.put(ref,norm);
 		refIconPBR.put(ref,pbr);
 		return ref;
+	}
+
+	@Override
+	public void performStitch() {
+		stitchAndGenerateAtlas("block");
 	}
 
 	public void stitchAndGenerateAtlas(String id) {
@@ -72,7 +78,7 @@ public class BaseAtlas {
 		Map<BaseIcon,STBITexture> texPBR = new HashMap<>();
 		TIntObjectMap<BaseIcon> idMap = new TIntObjectHashMap<>();
 
-		STBRPRect.Buffer rect_list = STBRPRect.malloc(texDiff.size());
+		STBRPRect.Buffer rect_list = STBRPRect.malloc(iconList.size());
 		try(MemoryStack stack = stackPush()) {
 
 			int idx = 0;
@@ -139,7 +145,7 @@ public class BaseAtlas {
 
 			AtlasWidth = startingPower;
 			AtlasHeight = startingPower;
-			int AllocationSize = ((4 * AtlasHeight * AtlasHeight) - 1) / 3;
+			int AllocationSize = 4 * ( ((4 * AtlasHeight * AtlasWidth) - 1) / 3  );
 
 			DataDiff = MemoryUtil.memAlloc(AllocationSize);
 			if(!isSingleTexture) {
@@ -147,12 +153,13 @@ public class BaseAtlas {
 				DataPBR = MemoryUtil.memAlloc(AllocationSize);
 			}
 
+			Logger logAtlas = Logger.getLogger("Atlas Stitching");
+			logAtlas.Info("Creating with size (",AtlasWidth,",",AtlasHeight,")");
+
 			float scale_factor = 1.0f / startingPower;
-			TIntObjectIterator<BaseIcon> icon_iter = idMap.iterator();
-			while (icon_iter.hasNext()) {
-				int key = icon_iter.key();
+			for(int key = 0; key < idx; key++){
 				rect_list.position(key);
-				BaseIcon icon = icon_iter.value();
+				BaseIcon icon = idMap.get(key);
 
 				//Update Icon
 				icon.U0 = rect_list.x() * scale_factor;
@@ -192,23 +199,23 @@ public class BaseAtlas {
 		int mip_offset = AtlasHeight * AtlasWidth;
 		int mip_size = AtlasWidth / 2;
 		while(mip_size > 0) {
-			long ptr_input = MemoryUtil.memAddress(DataDiff, old_mip_offset);
-			long ptr_output = MemoryUtil.memAddress(DataDiff, mip_offset);
+			long ptr_input = MemoryUtil.memAddress(DataDiff,4 * old_mip_offset);
+			long ptr_output = MemoryUtil.memAddress(DataDiff, 4 * mip_offset);
 			STBImageResize.nstbir_resize_uint8(
 					ptr_input, old_mip_size, old_mip_size, 0,
 					ptr_output, mip_size, mip_size, 0,
 					4
 			);
 			if(!isSingleTexture) {
-				ptr_input = MemoryUtil.memAddress(DataNorm, old_mip_offset);
-				ptr_output = MemoryUtil.memAddress(DataNorm, mip_offset);
+				ptr_input = MemoryUtil.memAddress(DataNorm, 4 * old_mip_offset);
+				ptr_output = MemoryUtil.memAddress(DataNorm, 4 * mip_offset);
 				STBImageResize.nstbir_resize_uint8(
 						ptr_input, old_mip_size, old_mip_size, 0,
 						ptr_output, mip_size, mip_size, 0,
 						4
 				);
-				ptr_input = MemoryUtil.memAddress(DataPBR, old_mip_offset);
-				ptr_output = MemoryUtil.memAddress(DataPBR, mip_offset);
+				ptr_input = MemoryUtil.memAddress(DataPBR, 4 * old_mip_offset);
+				ptr_output = MemoryUtil.memAddress(DataPBR, 4 * mip_offset);
 				STBImageResize.nstbir_resize_uint8(
 						ptr_input, old_mip_size, old_mip_size, 0,
 						ptr_output, mip_size, mip_size, 0,

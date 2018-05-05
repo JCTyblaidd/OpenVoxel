@@ -1,5 +1,6 @@
 package net.openvoxel.common;
 
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
@@ -43,11 +44,11 @@ public class GameLoader {
 		ModLoader.getInstance().propagateInitEvent(new ModFinalizeInitialisationEvent(), "Final Init", "Sending Final-Initialisation Event to ", loadingScreen);
 		gameLogger.Info("===Load Textures===");
 		loadingScreen.startSection("Texture Loading");
-		gameLogger.Info("TODO: FIX BLOCK TEXTURE ATLAS LOADING");
-		//OpenVoxel.getInstance().blockRegistry.clientRegisterAll(Renderer.getBlockTextureAtlas());
+		OpenVoxel.getInstance().blockRegistry.clientRegisterAll(renderer.getBlockAtlas());
 		gameLogger.Info("Finished Initializing Game State");
 		GUI.removeAllScreens();
 	}
+
 	@SideOnly(side=Side.DEDICATED_SERVER)
 	public static void LoadGameStateServer() {
 		Logger gameLogger = Logger.getLogger("Game Loader");

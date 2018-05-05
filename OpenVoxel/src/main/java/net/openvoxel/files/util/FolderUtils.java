@@ -89,7 +89,7 @@ public class FolderUtils {
 			int NUM = 0;
 			while(NUM < mip_levels && size > 0) {
 				File f = new File(ResourceDir,name+"-"+NUM+".png");
-				data.position(offset);
+				data.position(4 * offset);
 				storeImageInFile(f,size,size,data);
 				//NEXT
 				offset += size * size;
