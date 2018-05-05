@@ -42,6 +42,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	@Override
 	public void StartAsyncGenerate(AsyncWorldHandler handler,int asyncID) {
 		try(MemoryStack stack = stackPush()) {
+			System.out.println("Starting async generate: "+command.getSwapIndex());
 			VkCommandBuffer transfer = command.getAsyncTransferCommandBuffer(asyncID);
 			VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
 

@@ -55,7 +55,7 @@ public class AsyncBarrier {
 	@PublicAPI
 	public void awaitCompletion() {
 		lock.lock();
-		while(countdown.get() != 0) {
+		while(countdown.get() > 0) {
 			try{
 				condition.awaitNanos(100000);
 			}catch (Exception ignored) {
@@ -70,4 +70,9 @@ public class AsyncBarrier {
 		return countdown.get() == 0;
 	}
 
+
+	@Override
+	public String toString() {
+		return "AsyncBarrier[count="+countdown.get()+"]";
+	}
 }

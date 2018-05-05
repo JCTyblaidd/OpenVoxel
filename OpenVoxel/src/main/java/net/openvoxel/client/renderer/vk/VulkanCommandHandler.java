@@ -993,7 +993,7 @@ public final class VulkanCommandHandler {
 		return state.VulkanSwapChainSize;
 	}
 
-	int getSwapIndex() {
+	public int getSwapIndex() {
 		return currentFrameIndex;
 	}
 

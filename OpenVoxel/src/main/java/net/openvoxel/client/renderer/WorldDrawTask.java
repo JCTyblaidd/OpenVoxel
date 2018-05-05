@@ -32,6 +32,7 @@ public class WorldDrawTask implements Runnable {
 	//Dispatch barriers...
 	private AsyncBarrier barrierCulling = new AsyncBarrier();
 	private AsyncBarrier barrierUpdates = new AsyncBarrier();
+	private AsyncBarrier barrierGenerate = new AsyncBarrier();
 	private AsyncQueue<ClientChunkSection> updateCalls = new AsyncQueue<>(2048,true);
 	private AsyncQueue<ClientChunkSection> drawOnlyCalls = new AsyncQueue<>(2048,true);
 
@@ -100,19 +101,29 @@ public class WorldDrawTask implements Runnable {
 	public void run() {
 		//Reset all the barriers to initial state
 		barrierCulling.reset(cullingTasks.size());
+		barrierGenerate.reset(generateTasks.size());
 		barrierUpdates.reset(1);
+
 
 		//Start all of the tasks...
 		generateTasks.forEach(pool::addWork);
 		cullingTasks.forEach(pool::addWork);
 
-		//Wait for cull then draw to finish
-		barrierCulling.awaitCompletion();
-		barrierUpdates.completeTask();
-		barrierUpdates.awaitCompletion();
+		//Asynchronously wait till completion...
+		pool.addWork(() -> {
 
-		//Finish Self
-		barrier.completeTask();
+			//Wait for cull then draw to finish
+			barrierCulling.awaitCompletion();
+
+			barrierUpdates.completeTask();
+			barrierUpdates.awaitCompletion();
+
+			//Wait for generation to finish...
+			barrierGenerate.awaitCompletion();
+
+			//Finish Self
+			barrier.completeTask();
+		});
 	}
 
 	void freeAllData() {
@@ -144,6 +155,7 @@ public class WorldDrawTask implements Runnable {
 				}
 			}
 			handler.Finish();
+			barrierGenerate.completeTask();
 		}
 	}
 
