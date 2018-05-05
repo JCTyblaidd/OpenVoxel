@@ -149,10 +149,10 @@ public class BaseAtlas implements IconAtlas {
 			AtlasHeight = startingPower;
 			int AllocationSize = 4 * ( ((4 * AtlasHeight * AtlasWidth) - 1) / 3  );
 
-			DataDiff = MemoryUtil.memAlloc(AllocationSize);
+			DataDiff = MemoryUtil.memCalloc(AllocationSize);
 			if(!isSingleTexture) {
-				DataNorm = MemoryUtil.memAlloc(AllocationSize);
-				DataPBR = MemoryUtil.memAlloc(AllocationSize);
+				DataNorm = MemoryUtil.memCalloc(AllocationSize);
+				DataPBR = MemoryUtil.memCalloc(AllocationSize);
 			}
 
 			Logger logAtlas = Logger.getLogger("Atlas Stitching");
