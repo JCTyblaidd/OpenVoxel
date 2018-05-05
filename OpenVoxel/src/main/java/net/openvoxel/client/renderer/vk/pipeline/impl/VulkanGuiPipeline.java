@@ -123,8 +123,8 @@ public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 		depthStencilState.depthCompareOp(VK_COMPARE_OP_LESS);
 		depthStencilState.depthBoundsTestEnable(false);
 		depthStencilState.stencilTestEnable(false);
-		//depthStencilState.front();
-		//depthStencilState.back();
+		depthStencilState.front().set(0,0,0,0,0,0,0);
+		depthStencilState.back().set(0,0,0,0,0,0,0);
 		depthStencilState.minDepthBounds(0.0F);
 		depthStencilState.maxDepthBounds(1.0F);
 		return depthStencilState;

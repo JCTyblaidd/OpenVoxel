@@ -25,6 +25,7 @@ public class VulkanWorldForwardPipeline extends VulkanGraphicsPipeline {
 		super(module);
 	}
 
+
 	@Override
 	protected VkPipelineVertexInputStateCreateInfo getVertexState(MemoryStack stack) {
 		VkPipelineVertexInputStateCreateInfo vertexInputState = VkPipelineVertexInputStateCreateInfo.mallocStack(stack);
@@ -36,33 +37,61 @@ public class VulkanWorldForwardPipeline extends VulkanGraphicsPipeline {
 		inputBinding.position(0);
 		{
 			inputBinding.binding(0);
-			inputBinding.stride(4 + 4 + 4 + 4 + 4);
+			inputBinding.stride(32);
 			inputBinding.inputRate(VK_VERTEX_INPUT_RATE_VERTEX);
 		}
 		inputBinding.position(0);
 		vertexInputState.pVertexBindingDescriptions(inputBinding);
 
-		VkVertexInputAttributeDescription.Buffer inputAttributes = VkVertexInputAttributeDescription.mallocStack(3,stack);
+		VkVertexInputAttributeDescription.Buffer inputAttributes = VkVertexInputAttributeDescription.mallocStack(7,stack);
 		inputAttributes.position(0);
 		{
 			inputAttributes.location(0);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R32G32_SFLOAT);
+			inputAttributes.format(VK_FORMAT_R32G32B32_SFLOAT);
 			inputAttributes.offset(0);
 		}
 		inputAttributes.position(1);
 		{
 			inputAttributes.location(1);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R32G32_SFLOAT);
-			inputAttributes.offset(4+4);
+			inputAttributes.format(VK_FORMAT_R16G16_UNORM);
+			inputAttributes.offset(12);
 		}
 		inputAttributes.position(2);
 		{
 			inputAttributes.location(2);
 			inputAttributes.binding(0);
+			inputAttributes.format(VK_FORMAT_R8G8B8_UNORM);
+			inputAttributes.offset(16);
+		}
+		inputAttributes.position(3);
+		{
+			inputAttributes.location(3);
+			inputAttributes.binding(0);
+			inputAttributes.format(VK_FORMAT_R8G8B8_UNORM);
+			inputAttributes.offset(19);
+		}
+		inputAttributes.position(4);
+		{
+			inputAttributes.location(4);
+			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
-			inputAttributes.offset(4+4+4+4);
+			inputAttributes.offset(22);
+		}
+		inputAttributes.position(5);
+		{
+			inputAttributes.location(5);
+			inputAttributes.binding(0);
+			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
+			inputAttributes.offset(26);
+		}
+		inputAttributes.position(6);
+		{
+			inputAttributes.location(6);
+			inputAttributes.binding(0);
+			inputAttributes.format(VK_FORMAT_R8G8_UNORM);
+			inputAttributes.offset(30);
 		}
 		inputAttributes.position(0);
 		vertexInputState.pVertexAttributeDescriptions(inputAttributes);

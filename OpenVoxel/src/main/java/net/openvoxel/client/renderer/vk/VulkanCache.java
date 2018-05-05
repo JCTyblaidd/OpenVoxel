@@ -6,6 +6,7 @@ import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanShaderModule;
 import net.openvoxel.client.renderer.vk.pipeline.impl.VulkanGuiPipeline;
+import net.openvoxel.client.renderer.vk.pipeline.impl.VulkanWorldForwardPipeline;
 import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.common.resources.ResourceType;
 import org.lwjgl.system.MemoryStack;
@@ -31,13 +32,15 @@ public class VulkanCache {
 	//Shaders...
 	public VulkanShaderModule SHADER_GUI_STANDARD;
 	public VulkanShaderModule SHADER_GUI_TEXT;
+	public VulkanShaderModule SHADER_WORLD_FORWARD;
 
 	//Descriptor Set Layouts...
 	public long DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY;
-	//DESCRIPTOR_SET_LAYOUT_WORLD_CONSTANTS
+	public long DESCRIPTOR_SET_WORLD_CONSTANTS;
 
 	//Pipeline Layouts...
 	public long PIPELINE_LAYOUT_GUI_STANDARD_INPUT;
+	public long PIPELINE_LAYOUT_WORLD_STANDARD_INPUT;
 
 	//Render Passes...
 	//public VulkanRenderPass RENDER_PASS_VOXEL_GENERATE;
@@ -48,6 +51,7 @@ public class VulkanCache {
 	//Graphics Pipelines...
 	public VulkanGuiPipeline PIPELINE_FORWARD_GUI;
 	public VulkanGuiPipeline PIPELINE_FORWARD_TEXT;
+	public VulkanWorldForwardPipeline PIPELINE_FORWARD_WORLD;
 
 	public void LoadSingle(VulkanState state_handle) {
 		VulkanRenderPass.LoadFormats(state_handle);
@@ -65,14 +69,20 @@ public class VulkanCache {
 			SHADER_GUI_STANDARD.loadModules(device_handle,new ArrayList<>());
 			SHADER_GUI_TEXT = CreateShader("GUI_TEXT","gui/textShader");
 			SHADER_GUI_TEXT.loadModules(device_handle,new ArrayList<>());
+			SHADER_WORLD_FORWARD = CreateShader("WORLD_FORWARD","world/forward/worldOpaque");
+			SHADER_WORLD_FORWARD.loadModules(device_handle,new ArrayList<>());
 
 			//Descriptor Set Layouts
 			DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY = CreateDescriptorLayout(device,stack,0);
+			DESCRIPTOR_SET_WORLD_CONSTANTS = CreateDescriptorLayout(device,stack,1);
 
 			//Pipeline Layouts
 			PIPELINE_LAYOUT_GUI_STANDARD_INPUT =
 					CreatePipelineLayout(device,stack, 1,
 							DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY);
+			PIPELINE_LAYOUT_WORLD_STANDARD_INPUT =
+					CreatePipelineLayout(device,stack,2,
+							DESCRIPTOR_SET_WORLD_CONSTANTS);
 
 			//Render Passes
 			RENDER_PASS_FORWARD_ONLY = new VulkanRenderPass(VulkanRenderPass.RENDER_PASS_TYPE_FORWARD);
@@ -87,8 +97,13 @@ public class VulkanCache {
 			PIPELINE_FORWARD_TEXT.generate(device,PIPELINE_LAYOUT_GUI_STANDARD_INPUT,
 					RENDER_PASS_FORWARD_ONLY.RenderPass,0,
 					VK_NULL_HANDLE,PIPELINE_FORWARD_GUI.getPipeline());
+			PIPELINE_FORWARD_WORLD = new VulkanWorldForwardPipeline(SHADER_WORLD_FORWARD);
+			//PIPELINE_FORWARD_WORLD.generate(device,PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
+			//		RENDER_PASS_FORWARD_ONLY.RenderPass,0,
+			//		VK_NULL_HANDLE,VK_NULL_HANDLE);
 
 			//Unload Shaders
+			SHADER_WORLD_FORWARD.unloadModules(device);
 			SHADER_GUI_TEXT.unloadModules(device);
 			SHADER_GUI_STANDARD.unloadModules(device);
 		}
@@ -102,6 +117,7 @@ public class VulkanCache {
 	public void FreeSingle(VkDevice device) {
 
 		//Graphics Pipelines
+		//PIPELINE_FORWARD_WORLD.free(device);
 		PIPELINE_FORWARD_TEXT.free(device);
 		PIPELINE_FORWARD_GUI.free(device);
 
@@ -109,9 +125,11 @@ public class VulkanCache {
 		RENDER_PASS_FORWARD_ONLY.free(device);
 
 		//Pipeline Layouts
+		vkDestroyPipelineLayout(device,PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,null);
 		vkDestroyPipelineLayout(device,PIPELINE_LAYOUT_GUI_STANDARD_INPUT,null);
 
 		//Descriptor Set Layouts
+		vkDestroyDescriptorSetLayout(device,DESCRIPTOR_SET_WORLD_CONSTANTS,null);
 		vkDestroyDescriptorSetLayout(device,DESCRIPTOR_SET_LAYOUT_GUI_TEXTURE_ARRAY,null);
 
 		//Immutable Samplers
@@ -137,6 +155,14 @@ public class VulkanCache {
 				VkPushConstantRange.Buffer pushConstants = VkPushConstantRange.mallocStack(1,stack);
 				pushConstants.position(0);
 				pushConstants.stageFlags(VK_SHADER_STAGE_FRAGMENT_BIT);
+				pushConstants.offset(0);
+				pushConstants.size(2 * 4);
+				createInfo.pPushConstantRanges(pushConstants);
+			}else if(layoutID == 2) {
+				//World Chunk Renderer...
+				VkPushConstantRange.Buffer pushConstants = VkPushConstantRange.mallocStack(1,stack);
+				pushConstants.position(0);
+				pushConstants.stageFlags(VK_SHADER_STAGE_VERTEX_BIT);
 				pushConstants.offset(0);
 				pushConstants.size(2 * 4);
 				createInfo.pPushConstantRanges(pushConstants);
@@ -169,6 +195,27 @@ public class VulkanCache {
 					bindings.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 					bindings.descriptorCount(32);
 					bindings.stageFlags(VK_SHADER_STAGE_FRAGMENT_BIT);
+					bindings.pImmutableSamplers(null);
+				}
+				bindings.position(0);
+				createInfo.pBindings(bindings);
+			}else if(layoutID == 1) {
+				//World Constant Array
+				VkDescriptorSetLayoutBinding.Buffer bindings = VkDescriptorSetLayoutBinding.mallocStack(2,stack);
+				bindings.position(0);
+				{
+					bindings.binding(0);
+					bindings.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+					bindings.descriptorCount(3);
+					bindings.stageFlags(VK_SHADER_STAGE_ALL_GRAPHICS);
+					bindings.pImmutableSamplers(stack.longs(SAMPLER_BLOCK_ATLAS));
+				}
+				bindings.position(1);
+				{
+					bindings.binding(1);
+					bindings.descriptorType(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+					bindings.descriptorCount(1);
+					bindings.stageFlags(VK_SHADER_STAGE_ALL_GRAPHICS);
 					bindings.pImmutableSamplers(null);
 				}
 				bindings.position(0);

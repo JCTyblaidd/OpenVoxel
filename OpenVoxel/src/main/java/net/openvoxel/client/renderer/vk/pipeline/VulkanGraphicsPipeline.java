@@ -175,9 +175,8 @@ public abstract class VulkanGraphicsPipeline {
 		depthStencilState.depthCompareOp(VK_COMPARE_OP_LESS);
 		depthStencilState.depthBoundsTestEnable(true);
 		depthStencilState.stencilTestEnable(false);
-		//depthStencilState.front()
-		//depthStencilState.front();
-		//depthStencilState.back();
+		depthStencilState.front().set(0,0,0,0,0,0,0);
+		depthStencilState.back().set(0,0,0,0,0,0,0);
 		depthStencilState.minDepthBounds(0.0F);
 		depthStencilState.maxDepthBounds(1.0F);
 		return depthStencilState;

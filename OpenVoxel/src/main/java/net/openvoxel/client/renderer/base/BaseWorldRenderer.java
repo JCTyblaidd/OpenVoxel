@@ -187,7 +187,9 @@ public abstract class BaseWorldRenderer {
 			memoryMap.put(write_offset + 21, (byte) (zTangent / 255));
 
 			memoryMap.putInt(write_offset + 22, Colour);
+
 			memoryMap.putInt(write_offset + 26, 0xFFFFFFFF);//Lighting TODO: IMPLEMENT
+
 			memoryMap.put(write_offset + 30,(byte)(currentIcon.animationCount));
 			memoryMap.put(write_offset + 31,(byte)(delta_v / currentIcon.animationCount));
 

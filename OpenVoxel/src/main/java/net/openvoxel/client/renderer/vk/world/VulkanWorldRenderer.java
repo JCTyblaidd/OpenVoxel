@@ -107,6 +107,13 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 						stack.longs(memory.GetDeviceBuffer(chunkSection.Renderer_Info_Opaque)),
 						stack.longs(memory.GetDeviceOffset(chunkSection.Renderer_Info_Opaque))
 				);
+				vkCmdPushConstants(
+						graphics,
+						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
+						VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+						0,
+						stack.floats(originX,16.F * chunkSection.yIndex,originZ)
+				);
 				vkCmdDraw(
 						graphics,
 						chunkSection.Renderer_Size_Opaque / 32,
