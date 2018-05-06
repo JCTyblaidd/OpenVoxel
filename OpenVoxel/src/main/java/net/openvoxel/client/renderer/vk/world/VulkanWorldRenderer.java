@@ -202,7 +202,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			vkCmdBindDescriptorSets(
 					buffer,
 					VK_PIPELINE_BIND_POINT_GRAPHICS,
-					cache.DESCRIPTOR_SET_LAYOUT_WORLD_CONSTANTS,
+					cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
 					0,
 					stack.longs(UniformDescriptorSetList.get(command.getSwapIndex())),
 					null
@@ -267,6 +267,26 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 			vkResult = vkBeginCommandBuffer(graphics,beginInfo);
 			VulkanUtility.ValidateSuccess("Failed to begin async graphics buffer",vkResult);
+
+			vkCmdBindPipeline(graphics,VK_PIPELINE_BIND_POINT_GRAPHICS, cache.PIPELINE_FORWARD_WORLD.getPipeline());
+
+			VkViewport.Buffer pViewport = VkViewport.mallocStack(1,stack);
+			pViewport.x(0);
+			pViewport.y(0);
+			pViewport.width(screenWidth);
+			pViewport.height(screenHeight);
+			pViewport.minDepth(0.0f);
+			pViewport.maxDepth(1.0f);
+
+			vkCmdSetViewport(graphics,0,pViewport);
+
+			VkRect2D.Buffer pScissor = VkRect2D.mallocStack(1,stack);
+			pScissor.offset().set(0,0);
+			pScissor.extent().set(screenWidth,screenHeight);
+
+			vkCmdSetScissor(graphics,0,pScissor);
+
+			CmdBindDescriptorSet(graphics);
 		}
 	}
 
@@ -304,13 +324,14 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 						stack.longs(memory.GetDeviceBuffer(chunkSection.Renderer_Info_Opaque)),
 						stack.longs(memory.GetDeviceOffset(chunkSection.Renderer_Info_Opaque))
 				);
+				/*
 				vkCmdPushConstants(
 						graphics,
 						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
-						VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+						VK_SHADER_STAGE_VERTEX_BIT,
 						0,
 						stack.floats(originX,16.F * chunkSection.yIndex,originZ)
-				);
+				);*/
 				vkCmdDraw(
 						graphics,
 						chunkSection.Renderer_Size_Opaque / 32,
@@ -371,34 +392,43 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		if(actual_size == 0) {
 			memory.unMapHostMemory(handle.memory_id);
 			memory.InvalidateHostMemory(handle.memory_id);
-		}
-		memory.shrinkHostMemory(handle.memory_id,actual_size);
-		memory.unMapHostMemory(handle.memory_id);
-		if(isOpaque) {
-			if(section.Renderer_Size_Opaque != -1) {
-				memory.FreeMemoryFromDevice(section.Renderer_Info_Opaque,command.getSwapSize());
+			if(isOpaque) {
 				section.Renderer_Size_Opaque = -1;
-			}
-			//TRANSFER & UPDATE MEMORY
-			int device_memory = memory.GetDeviceMemory(handle.memory_id);
-			CmdDeviceTransfer(asyncID,handle.memory_id,device_memory,actual_size);
-			memory.FreeHostMemory(handle.memory_id,command.getSwapSize());
-			section.Renderer_Info_Opaque = device_memory;
-			section.Renderer_Size_Opaque = actual_size;
-		}else{
-			if(section.Renderer_Size_Transparent != -1) {
-				memory.FreeMemoryFromDevice(section.Renderer_Info_Transparent,command.getSwapSize());
+				section.Renderer_Info_Opaque = 0;
+			}else{
 				section.Renderer_Size_Transparent = -1;
+				section.Renderer_Info_Transparent = 0;
 			}
-			int device_memory = memory.GetDeviceMemory(handle.memory_id);
-			CmdDeviceTransfer(asyncID,handle.memory_id,device_memory,actual_size);
-			memory.FreeHostMemory(handle.memory_id,command.getSwapSize());
-			section.Renderer_Info_Transparent = device_memory;
-			section.Renderer_Size_Transparent = actual_size;
+		}else {
+			memory.shrinkHostMemory(handle.memory_id, actual_size);
+			memory.unMapHostMemory(handle.memory_id);
+			if (isOpaque) {
+				if (section.Renderer_Size_Opaque != -1) {
+					memory.FreeMemoryFromDevice(section.Renderer_Info_Opaque, command.getSwapSize());
+					section.Renderer_Size_Opaque = -1;
+				}
+				//TRANSFER & UPDATE MEMORY
+				int device_memory = memory.GetDeviceMemory(handle.memory_id);
+				CmdDeviceTransfer(asyncID, handle.memory_id, device_memory, actual_size);
+				memory.FreeHostMemory(handle.memory_id, command.getSwapSize());
+				section.Renderer_Info_Opaque = device_memory;
+				section.Renderer_Size_Opaque = actual_size;
+			} else {
+				if (section.Renderer_Size_Transparent != -1) {
+					memory.FreeMemoryFromDevice(section.Renderer_Info_Transparent, command.getSwapSize());
+					section.Renderer_Size_Transparent = -1;
+				}
+				int device_memory = memory.GetDeviceMemory(handle.memory_id);
+				CmdDeviceTransfer(asyncID, handle.memory_id, device_memory, actual_size);
+				memory.FreeHostMemory(handle.memory_id, command.getSwapSize());
+				section.Renderer_Info_Transparent = device_memory;
+				section.Renderer_Size_Transparent = actual_size;
+			}
 		}
 		//Clean-up
 		handle.memory_id = 0;
 		handle.memoryMap = null;
+		section.markClean();
 	}
 
 

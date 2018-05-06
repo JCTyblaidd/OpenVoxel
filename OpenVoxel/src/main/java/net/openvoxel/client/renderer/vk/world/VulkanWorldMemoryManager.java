@@ -138,7 +138,7 @@ public class VulkanWorldMemoryManager {
 	}
 
 	public synchronized long GetDeviceBuffer(int device_memory) {
-		return pageDeviceLocal.getVulkanMemoryFor(device_memory);
+		return pageDeviceLocal.getBufferFor(device_memory);
 	}
 
 	public synchronized long GetDeviceOffset(int device_memory) {

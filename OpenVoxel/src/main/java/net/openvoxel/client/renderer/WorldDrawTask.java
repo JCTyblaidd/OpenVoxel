@@ -58,7 +58,7 @@ public class WorldDrawTask implements Runnable {
 
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {
 		for(int x = -1; x < 1; x++) {
-			for(int y = -1; y < 1; y++) {
+			for(int y = 0; y <= 1; y++) {
 				for(int z = -1; z < 1; z++) {
 					cullingTasks.add(new CullingTask(x,y,z,1));
 				}
@@ -142,10 +142,12 @@ public class WorldDrawTask implements Runnable {
 		public void run() {
 			BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(AsyncID);
 			handler.Start();
+			ClientChunkSection section;
 			while(!barrierUpdates.isComplete()) {
-				ClientChunkSection section = updateCalls.attemptNext();
+				section = updateCalls.attemptNext();
 				if(section != null) {
 					handler.AsyncGenerate(section);
+					handler.AsyncDraw(section);
 					barrierUpdates.completeTask();
 				}
 				section = drawOnlyCalls.attemptNext();
@@ -184,6 +186,7 @@ public class WorldDrawTask implements Runnable {
 			int maxY = minY + 8;
 
 			//Run the culling code
+			//System.out.println(minX+","+maxX+","+minY+","+maxY+","+minZ+","+maxZ);
 			runCull(minX,maxX,minY,maxY,minZ,maxZ);
 
 			//Finish...
@@ -191,14 +194,17 @@ public class WorldDrawTask implements Runnable {
 		}
 
 		private void runCull(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+			//System.out.println(minX+"<"+maxX+","+minY+"<"+maxX+","+minZ+"<"+maxZ);
 			boolean success = frustumIntersect.testAab(
-					minX,
-					minY,
-					minZ,
-					maxX,
-					maxY,
-					maxZ
+					minX * 16.0F,
+					minY * 16.0F,
+					minZ * 16.0F,
+					maxX * 16.0F,
+					maxY * 16.0F,
+					maxZ * 16.0F
 			);
+			//TODO: REMOVE & FIX
+			success = true;
 			if(success) {
 				if(minX + 1 == maxX && minY + 1 == maxY && minZ + 1 == maxZ) {
 					ClientChunk chunk = theWorld.requestChunk(
@@ -206,16 +212,17 @@ public class WorldDrawTask implements Runnable {
 							minZ + chunkOriginZ,
 							false
 					);
+					//System.out.println("REQUST: "+(minX +chunkOriginX)+","+(minZ+chunkOriginZ));
 					if(chunk != null) {
 						ClientChunkSection section = chunk.getSectionAt(minY);
 						if (section.isEmpty()) {
-							if(section.isDirty()) {
+							if (section.isDirty()) {
 								worldRenderer.InvalidateChunkSection(section);
 							}
-						}else {
+						} else {
+							barrierUpdates.addNewTasks(1);
 							if (section.isDirty()) updateCalls.add(section);
 							else drawOnlyCalls.add(section);
-							barrierUpdates.addNewTasks(1);
 						}
 					}
 				}else{

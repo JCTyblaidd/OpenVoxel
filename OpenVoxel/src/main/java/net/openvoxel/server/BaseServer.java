@@ -17,9 +17,9 @@ import java.util.List;
  */
 public abstract class BaseServer {
 
-	private TIntObjectMap<World> dimensionMap;
+	protected TIntObjectMap<World> dimensionMap;
 
-	private List<EntityPlayer> connectedPlayers;
+	protected List<EntityPlayer> connectedPlayers;
 
 	public World loadDimension(int index) {
 		World world = dimensionMap.get(index);
@@ -53,7 +53,10 @@ public abstract class BaseServer {
 	}
 
 	public void shutdown() {
-
+		dimensionMap.forEachValue(world -> {
+			world.releaseAllChunkData();
+			return true;
+		});
 	}
 
 	public void serverTick(AsyncBarrier barrier) {

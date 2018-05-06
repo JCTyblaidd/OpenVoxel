@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer.base;
 import gnu.trove.impl.sync.TSynchronizedIntObjectMap;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.common.IBlockRenderer;
 import net.openvoxel.client.textureatlas.BaseIcon;
 import net.openvoxel.client.textureatlas.Icon;
@@ -21,6 +22,8 @@ public abstract class BaseWorldRenderer {
 	protected ClientWorld theWorld;
 	protected long originX;
 	protected long originZ;
+	protected int screenWidth;
+	protected int screenHeight;
 
 	///////////////////////////
 	/// World Draw Task API ///
@@ -31,6 +34,8 @@ public abstract class BaseWorldRenderer {
 		theWorld = _world;
 		originX = _originX;
 		originZ = _originZ;
+		screenWidth = ClientInput.currentWindowFrameSize.x;
+		screenHeight = ClientInput.currentWindowFrameSize.y;
 	}
 
 	private TIntObjectMap<AsyncWorldHandler> objectMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>());

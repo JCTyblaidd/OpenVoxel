@@ -33,7 +33,7 @@ public class BaseBlockAccess implements IBlockAccess {
 			for(int dz = -1; dz <= 1; dz++) {
 				ClientChunk _chunk = theWorld.requestChunk(chunkX+dx,chunkZ+dz,false);
 				for(int dy = -1; dy <= -1; dy++) {
-					int _index = dx * 9 + dy * 3 + dz;
+					int _index = (dx+1) * 9 + (dy+1) * 3 + (dz+1);
 					int _ycoord = (int)(chunkY+dy);
 					boolean _valid = _chunk != null && _ycoord >= 0 && _ycoord < 16;
 					nearbySections[_index] = _valid ? _chunk.getSectionAt(_ycoord) : null;
@@ -104,9 +104,9 @@ public class BaseBlockAccess implements IBlockAccess {
 		}
 
 		private int getBlockValue() {
-			int deltaChunkX = ((offsetX + 16) / 16) - 1;
-			int deltaChunkY = ((offsetY + 16) / 16) - 1;
-			int deltaChunkZ = ((offsetZ + 16) / 16) - 1;
+			int deltaChunkX = ((offsetX + 16) / 16);// - 1;
+			int deltaChunkY = ((offsetY + 16) / 16);// - 1;
+			int deltaChunkZ = ((offsetZ + 16) / 16);// - 1;
 			int chunkIndex = deltaChunkX * 9 + deltaChunkY * 3 + deltaChunkZ;
 			ClientChunkSection section = nearbySections[chunkIndex];
 			int subOffsetX = offsetX + (deltaChunkX * -16);
