@@ -19,6 +19,7 @@ import org.joml.Vector2f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorldDrawTask implements Runnable {
 
@@ -35,6 +36,7 @@ public class WorldDrawTask implements Runnable {
 	private AsyncBarrier barrierGenerate = new AsyncBarrier();
 	private AsyncQueue<ClientChunkSection> updateCalls = new AsyncQueue<>(2048,true);
 	private AsyncQueue<ClientChunkSection> drawOnlyCalls = new AsyncQueue<>(2048,true);
+	private AtomicInteger numUpdates = new AtomicInteger(0);
 
 	//Draw Target State...
 	private List<CullingTask> cullingTasks = new ArrayList<>();
@@ -103,7 +105,7 @@ public class WorldDrawTask implements Runnable {
 		barrierCulling.reset(cullingTasks.size());
 		barrierGenerate.reset(generateTasks.size());
 		barrierUpdates.reset(1);
-
+		numUpdates.set(0);
 
 		//Start all of the tasks...
 		generateTasks.forEach(pool::addWork);
@@ -114,10 +116,8 @@ public class WorldDrawTask implements Runnable {
 
 			//Wait for cull then draw to finish
 			barrierCulling.awaitCompletion();
-
 			barrierUpdates.completeTask();
 			barrierUpdates.awaitCompletion();
-
 			//Wait for generation to finish...
 			barrierGenerate.awaitCompletion();
 
@@ -155,6 +155,9 @@ public class WorldDrawTask implements Runnable {
 					handler.AsyncDraw(section);
 					barrierUpdates.completeTask();
 				}
+				try{//TODO: FIND SYNC ISSUE (AsyncQueue Broken??!)
+					Thread.sleep(1);
+				}catch(Exception ignore) {}
 			}
 			handler.Finish();
 			barrierGenerate.completeTask();
@@ -186,7 +189,6 @@ public class WorldDrawTask implements Runnable {
 			int maxY = minY + 8;
 
 			//Run the culling code
-			//System.out.println(minX+","+maxX+","+minY+","+maxY+","+minZ+","+maxZ);
 			runCull(minX,maxX,minY,maxY,minZ,maxZ);
 
 			//Finish...
@@ -194,7 +196,6 @@ public class WorldDrawTask implements Runnable {
 		}
 
 		private void runCull(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-			//System.out.println(minX+"<"+maxX+","+minY+"<"+maxX+","+minZ+"<"+maxZ);
 			boolean success = frustumIntersect.testAab(
 					minX * 16.0F,
 					minY * 16.0F,
@@ -212,7 +213,6 @@ public class WorldDrawTask implements Runnable {
 							minZ + chunkOriginZ,
 							false
 					);
-					//System.out.println("REQUST: "+(minX +chunkOriginX)+","+(minZ+chunkOriginZ));
 					if(chunk != null) {
 						ClientChunkSection section = chunk.getSectionAt(minY);
 						if (section.isEmpty()) {
@@ -220,9 +220,13 @@ public class WorldDrawTask implements Runnable {
 								worldRenderer.InvalidateChunkSection(section);
 							}
 						} else {
-							barrierUpdates.addNewTasks(1);
-							if (section.isDirty()) updateCalls.add(section);
-							else drawOnlyCalls.add(section);
+							if (!section.isDirty()) {
+								barrierUpdates.addNewTasks(1);
+								drawOnlyCalls.add(section);
+							} else if(numUpdates.getAndIncrement() < 10) {
+								barrierUpdates.addNewTasks(1);
+								updateCalls.add(section);
+							}
 						}
 					}
 				}else{

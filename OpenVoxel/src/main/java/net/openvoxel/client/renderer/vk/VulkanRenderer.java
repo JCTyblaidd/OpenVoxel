@@ -15,10 +15,7 @@ import net.openvoxel.utility.async.AsyncRunnablePool;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VkClearValue;
-import org.lwjgl.vulkan.VkCommandBuffer;
-import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
-import org.lwjgl.vulkan.VkRenderPassBeginInfo;
+import org.lwjgl.vulkan.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
@@ -148,6 +145,25 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 			//Transfer & Update World Uniforms
 			worldRenderer.CmdTransferBufferData(mainBuffer,task);
+
+			VkMemoryBarrier.Buffer memBarrier = VkMemoryBarrier.mallocStack(1,stack);
+			memBarrier.sType(VK_STRUCTURE_TYPE_MEMORY_BARRIER);
+			memBarrier.pNext(VK_NULL_HANDLE);
+			memBarrier.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+			memBarrier.dstAccessMask(
+					VK_ACCESS_UNIFORM_READ_BIT |
+					VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT
+			);
+
+			vkCmdPipelineBarrier(
+					mainBuffer,
+					VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+					0,
+					memBarrier,
+					null,
+					null
+			);
 
 			//Draw World
 			//TODO: IMPLEMENT PROPERLY!!!!

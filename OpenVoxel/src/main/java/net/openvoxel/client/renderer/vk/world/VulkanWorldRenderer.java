@@ -317,6 +317,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	protected void AsyncDraw(AsyncWorldHandler handle, ClientChunkSection chunkSection, int asyncID) {
 		try(MemoryStack stack = stackPush()) {
 			if(chunkSection.Renderer_Size_Opaque != -1) {
+				System.out.println("DRAW!!!");
 				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
 				vkCmdBindVertexBuffers(
 						graphics,
@@ -324,14 +325,14 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 						stack.longs(memory.GetDeviceBuffer(chunkSection.Renderer_Info_Opaque)),
 						stack.longs(memory.GetDeviceOffset(chunkSection.Renderer_Info_Opaque))
 				);
-				/*
+
 				vkCmdPushConstants(
 						graphics,
 						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
 						VK_SHADER_STAGE_VERTEX_BIT,
 						0,
 						stack.floats(originX,16.F * chunkSection.yIndex,originZ)
-				);*/
+				);
 				vkCmdDraw(
 						graphics,
 						chunkSection.Renderer_Size_Opaque / 32,
@@ -345,11 +346,11 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 	@Override
 	public void InvalidateChunkSection(ClientChunkSection section) {
-		if(section.Renderer_Info_Opaque != -1) {
-			memory.FreeMemoryFromDevice(section.Renderer_Info_Opaque, command.getSwapSize());
+		if(section.Renderer_Size_Transparent != -1) {
+			memory.FreeMemoryFromDevice(section.Renderer_Info_Transparent, command.getSwapSize());
 		}
 		if(section.Renderer_Size_Opaque != -1) {
-			memory.FreeMemoryFromDevice(section.Renderer_Info_Transparent, command.getSwapSize());
+			memory.FreeMemoryFromDevice(section.Renderer_Info_Opaque, command.getSwapSize());
 		}
 		section.Renderer_Size_Opaque = -1;
 		section.Renderer_Size_Transparent = -1;
@@ -363,6 +364,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		handle.memory_id = memory.allocHostMemory(DEFAULT_MEMORY_SIZE);
 		handle.memoryMap = memory.mapHostMemory(handle.memory_id);
 		handle.start_offset = (int)memory.getOffsetForHost(handle.memory_id);
+		handle.write_offset = handle.start_offset;
 		handle.end_offset = handle.start_offset + DEFAULT_MEMORY_SIZE;
 	}
 
@@ -383,6 +385,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		handle.memory_id = new_memory;
 		handle.memoryMap = new_mapping;
 		handle.start_offset = new_offset;
+		handle.write_offset = handle.start_offset + current_size;
 		handle.end_offset = handle.start_offset + new_size;
 	}
 
@@ -428,7 +431,6 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		//Clean-up
 		handle.memory_id = 0;
 		handle.memoryMap = null;
-		section.markClean();
 	}
 
 

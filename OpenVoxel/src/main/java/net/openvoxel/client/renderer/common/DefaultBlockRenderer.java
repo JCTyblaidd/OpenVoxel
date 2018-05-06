@@ -22,9 +22,10 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		//Skip Draw if not applicable//
 		if(block.isCompleteOpaque() != opaqueDraw) return;
 		AABB bounds = block.getBlockBounds();
-		if(block.isOpaque(BlockFace.UP) && !stateAccess.getOffsetBlockData(BlockFace.UP).getBlock().isOpaque(BlockFace.DOWN)) {
+		//TODO: CHANGE BACK!!!
+		//if(block.isOpaque(BlockFace.UP) && !stateAccess.getOffsetBlockData(BlockFace.UP).getBlock().isOpaque(BlockFace.DOWN)) {
 			renderUp(block,renderer,stateAccess,bounds);
-		}
+		//}
 		if(block.isOpaque(BlockFace.DOWN) && !stateAccess.getOffsetBlockData(BlockFace.DOWN).getBlock().isOpaque(BlockFace.UP)) {
 			renderDown(block,renderer,stateAccess,bounds);
 		}

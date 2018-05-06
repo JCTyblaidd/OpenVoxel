@@ -24,6 +24,11 @@ public class AsyncBarrier {
 		Validate.Condition(old == 0,"Reset a non complete AsyncBarrier");
 	}
 
+	@PublicAPI
+	public int getNumTasks() {
+		return countdown.get();
+	}
+
 	/*
 	 * Add more tasks to be waited on
 	 *  - must be called before completing the task being called from

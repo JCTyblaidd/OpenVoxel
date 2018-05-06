@@ -22,8 +22,8 @@ public class BackgroundClientServer extends ClientServer {
 		thePlayer.zPos = 100;
 		thePlayer.setPitch(0);
 		thePlayer.setYaw(0);
-		for(int x = 0; x < 16; x++) {
-			for(int z = 0; z < 16; z++) {
+		for(int x = 7; x < 9; x++) {
+			for(int z = 7; z < 9; z++) {
 				thePlayer.currentWorld.requestChunk(x,z,true);
 			}
 		}

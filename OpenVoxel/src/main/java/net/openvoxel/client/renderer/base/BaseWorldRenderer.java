@@ -128,6 +128,8 @@ public abstract class BaseWorldRenderer {
 				}
 			}
 			FinalizeChunkMemory(this,asyncID,chunkSection,false);
+			chunkSection.markClean();
+			//Draw....
 			this.AsyncDraw(chunkSection);
 		}
 
@@ -204,7 +206,7 @@ public abstract class BaseWorldRenderer {
 
 		@Override
 		public void setCurrentIcon(Icon icon) {
-			currentIcon = (BaseIcon)icon;
+			currentIcon = icon == null ? nullIcon : (BaseIcon)icon;
 		}
 	}
 }
