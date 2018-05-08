@@ -331,7 +331,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
 						VK_SHADER_STAGE_VERTEX_BIT,
 						0,
-						stack.floats(originX,16.F * chunkSection.yIndex,originZ)
+						stack.floats(16.F * originX,16.F * chunkSection.yIndex,16.F * originZ)
 				);
 				vkCmdDraw(
 						graphics,

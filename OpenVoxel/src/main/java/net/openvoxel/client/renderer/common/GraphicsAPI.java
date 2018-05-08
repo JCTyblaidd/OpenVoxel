@@ -5,7 +5,7 @@ import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.textureatlas.BaseAtlas;
 import net.openvoxel.utility.async.AsyncBarrier;
-import net.openvoxel.utility.async.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncTaskPool;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -18,7 +18,7 @@ public interface GraphicsAPI {
 
 	boolean acquireNextFrame();
 	void prepareForSubmit();
-	boolean submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier, WorldDrawTask task);
+	boolean submitNextFrame(AsyncTaskPool pool, AsyncBarrier barrier, WorldDrawTask task);
 	void close();
 
 	void startStateChange();

@@ -1,5 +1,6 @@
 package net.openvoxel.utility.debug;
 
+import com.jc.util.utils.ArgumentParser;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import net.openvoxel.OpenVoxel;
@@ -17,11 +18,18 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class UsageAnalyses {
 
-	private static final boolean REMOTERY_ENABLED = OpenVoxel.getLaunchParameters().hasFlag("-enableRemotery");
+	private static final boolean REMOTERY_ENABLED;
 	private static final Logger logger = Logger.getLogger("Remotery");
 	private static long instance = 0;
 	private static TObjectIntMap<String> name_offset_map;
 	private static IntBuffer hash_storage;
+
+	static {
+		//Required to allow for testing
+		ArgumentParser parser = OpenVoxel.getLaunchParameters();
+		if(parser != null) REMOTERY_ENABLED = parser.hasFlag("-enableRemotery");
+		else REMOTERY_ENABLED =false;
+	}
 
 	@Validation
 	private static void init_hash_cache() {

@@ -8,7 +8,7 @@ import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncQueue;
-import net.openvoxel.utility.async.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncTaskPool;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WorldDrawTask implements Runnable {
 
 	//Renderer State...
-	private AsyncRunnablePool pool;
+	private AsyncTaskPool pool;
 	private AsyncBarrier barrier;
 	private final BaseWorldRenderer worldRenderer;
 	private int width;
@@ -72,7 +72,7 @@ public class WorldDrawTask implements Runnable {
 		worldRenderer = api.getWorldRenderer();
 	}
 
-	void update(AsyncRunnablePool pool,ClientServer server, AsyncBarrier barrier) {
+	void update(AsyncTaskPool pool,ClientServer server, AsyncBarrier barrier) {
 		this.pool = pool;
 		this.barrier = barrier;
 		width = ClientInput.currentWindowFrameSize.x;
@@ -130,7 +130,7 @@ public class WorldDrawTask implements Runnable {
 		Logger.INSTANCE.Info("Invalidating Chunk Data is Not Yet Implemented");
 	}
 
-	private class GenerateTask implements Runnable{
+	private class GenerateTask implements Runnable {
 
 		private final int AsyncID;
 

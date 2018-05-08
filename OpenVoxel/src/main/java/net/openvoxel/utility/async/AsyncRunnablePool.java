@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Asynchronous Worker Pool, Only Callable From ONE THREAD
  */
-public class AsyncRunnablePool {
+public class AsyncRunnablePool implements AsyncTaskPool{
 
 	/**
 	 * Runnable Reference Instance For The RingBuffer
@@ -69,13 +69,13 @@ public class AsyncRunnablePool {
 	 * Register a runnable instance for the workers to call at a later time
 	 * @param runnable the work, work completed via the {@link Runnable::run}
 	 */
-	@PublicAPI
+	@Override
 	public void addWork(Runnable runnable) {
 		ringBuffer.publishEvent(EVENT_TRANSLATOR,runnable);
 
 	}
 
-	@PublicAPI
+	@Override
 	public int getWorkerCount() {
 		return workerCount;
 	}
@@ -83,7 +83,7 @@ public class AsyncRunnablePool {
 	/**
 	 * Start the thread pool, if already started does nothing
 	 */
-	@PublicAPI
+	@Override
 	public void start() {
 		if(!running.get()) {
 			running.set(true);
@@ -94,7 +94,7 @@ public class AsyncRunnablePool {
 	/**
 	 * Stop the thread pool, if already stopped does nothing
 	 */
-	@PublicAPI
+	@Override
 	public void stop() {
 		if(running.get()) {
 			running.set(false);

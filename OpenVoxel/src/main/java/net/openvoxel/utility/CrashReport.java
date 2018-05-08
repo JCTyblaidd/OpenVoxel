@@ -36,7 +36,7 @@ public class CrashReport {
 	}
 
 	@PublicAPI
-	public CrashReport caughtException(Exception e) {
+	public CrashReport caughtException(Throwable e) {
 		if(e instanceof CrashReportException) {
 			CrashReportException reportEx = (CrashReportException)e;
 			return withReport(reportEx.report);
@@ -90,8 +90,8 @@ public class CrashReport {
 				CrashReport subCrash = (CrashReport)stateObj;
 				String subCrashString = subCrash.toStringInternal(prelim2);
 				builder.append(subCrashString);
-			}else if(stateObj instanceof Exception) {
-				Exception except = (Exception)stateObj;
+			}else if(stateObj instanceof Throwable) {
+				Throwable except = (Throwable) stateObj;
 				builder.append(prelim2).append(except.toString()).append('\n');
 				for(StackTraceElement element : except.getStackTrace()) {
 					builder.append(prelim2).append(" at ").append(element.toString()).append('\n');

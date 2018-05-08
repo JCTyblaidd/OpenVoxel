@@ -17,6 +17,7 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncTaskPool;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
@@ -32,7 +33,7 @@ public final class Renderer implements EventListener {
 	private final PerSecondTimer frameRateTimer;
 	private final GuiDrawTask guiDrawTask;
 	private final WorldDrawTask worldDrawTask;
-	private final AsyncRunnablePool renderTaskPool;
+	private final AsyncTaskPool renderTaskPool;
 
 	//Texture Atlas
 	private BaseAtlas blockAtlas;
@@ -53,9 +54,10 @@ public final class Renderer implements EventListener {
 		frameRateTimer = new PerSecondTimer(64);
 		renderTaskPool = new AsyncRunnablePool(
 				"Render Pool",
-				AsyncRunnablePool.getWorkerCount(
+				AsyncTaskPool.getWorkerCount(
 						"renderWorkerCount",
-						Runtime.getRuntime().availableProcessors()
+						Runtime.getRuntime().availableProcessors(),
+						2
 				)
 		);
 		renderTaskPool.start();

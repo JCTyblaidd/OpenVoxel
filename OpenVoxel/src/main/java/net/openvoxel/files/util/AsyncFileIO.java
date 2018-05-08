@@ -3,6 +3,7 @@ package net.openvoxel.files.util;
 import net.openvoxel.api.PublicAPI;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.utility.async.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncTaskPool;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
  */
 public class AsyncFileIO {
 
-	private static final AsyncRunnablePool fileIOPool;
+	private static final AsyncTaskPool fileIOPool;
 	private static final Logger ioLogger;
 	static {
 		fileIOPool = new AsyncRunnablePool("File-IO",AsyncRunnablePool.getWorkerCount("IOThreadCount",2));

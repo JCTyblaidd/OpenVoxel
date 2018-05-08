@@ -129,8 +129,6 @@ public abstract class BaseWorldRenderer {
 			}
 			FinalizeChunkMemory(this,asyncID,chunkSection,false);
 			chunkSection.markClean();
-			//Draw....
-			this.AsyncDraw(chunkSection);
 		}
 
 		///////////////////////////////

@@ -11,7 +11,7 @@ import net.openvoxel.client.renderer.vk.world.VulkanWorldRenderer;
 import net.openvoxel.client.textureatlas.BaseAtlas;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.utility.async.AsyncBarrier;
-import net.openvoxel.utility.async.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncTaskPool;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
@@ -107,7 +107,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	}
 
 	@Override
-	public boolean submitNextFrame(AsyncRunnablePool pool, AsyncBarrier barrier, WorldDrawTask task) {
+	public boolean submitNextFrame(AsyncTaskPool pool, AsyncBarrier barrier, WorldDrawTask task) {
 		VkCommandBuffer guiTransfer = commandHandler.getGuiDrawCommandBuffer(true);
 		VkCommandBuffer guiDrawing = commandHandler.getGuiDrawCommandBuffer(false);
 
