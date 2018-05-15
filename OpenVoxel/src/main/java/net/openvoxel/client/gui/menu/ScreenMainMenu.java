@@ -43,19 +43,6 @@ public class ScreenMainMenu extends Screen {
 		buttonReloadMods.setupOffsetTo(background,5,230,150,30);
 		buttonQuit.setupOffsetTo(background,5,270,150,30);
 
-		//mainText.setupAbsSizeTargeted(0.25F,0.4F,0,70);//140
-
-
-		//buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
-		//buttonMultiPlayer.setupOffsetTo(mainText,-125,10,150,30);
-		//buttonSettings.setupOffsetTo(mainText,-125,50,150,30);
-		//buttonListMods.setupOffsetTo(mainText,-125,90,150,30);
-		//buttonReloadMods.setupOffsetTo(mainText,-125,130,150,30);
-		//buttonQuit.setupOffsetTo(mainText,-125,170,150,30);
-
-
-		//background.setupOffsetTo(mainText,-130,-100,260,500);//300);
-
 		guiObjects.add(background);
 		guiObjects.add(mainText);
 		guiObjects.add(buttonSinglePlayer);

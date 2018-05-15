@@ -208,6 +208,12 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 
 	@Override
 	public final void pushScissor(int x, int y, int w, int h) {
+		//Clamp Results
+		x = Math.max(0,x);
+		y = Math.max(0,y);
+		w = Math.max(0,w);
+		h = Math.max(0,h);
+		//Set State
 		SetScissor(x,y,w,h);
 		scissorStack.push(currScissorX);
 		scissorStack.push(currScissorY);
@@ -221,10 +227,10 @@ public abstract class BaseGuiRenderer extends IGuiRenderer {
 
 	@Override
 	public final void popScissor() {
-		currScissorX = scissorStack.pop();
-		currScissorY = scissorStack.pop();
-		currScissorW = scissorStack.pop();
 		currScissorH = scissorStack.pop();
+		currScissorW = scissorStack.pop();
+		currScissorY = scissorStack.pop();
+		currScissorX = scissorStack.pop();
 		SetScissor(
 				currScissorX,
 				currScissorY,

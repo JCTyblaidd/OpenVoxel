@@ -55,13 +55,13 @@ public class ScreenGraphicsSettings extends Screen {
 		this.advSettings = null;
 		this.renderer = renderer;
 
-		GUIColour background = new GUIColour(0xFF464646);
-		background.setupFullscreen();
-		guiObjects.add(background);
+		//GUIColour background = new GUIColour(0xFF464646);
+		//background.setupFullscreen();
+		//guiObjects.add(background);
 
 		section = new GUIVScrollArea();
-		section.setPosition(0.4f,0.2f,-50,-100);
-		section.setSize(0.5f,0.6f,-100,200);
+		section.setPosition(0.35f,0.2f,-75,-100);
+		section.setSize(0.3f,0.6f,150,200);
 		guiObjects.add(section);
 
 		GUISlider targetFPS = new GUISlider(10,145,getCurrentTargetFPS(),(e) -> {
@@ -158,7 +158,6 @@ public class ScreenGraphicsSettings extends Screen {
 
 	private List<String> getVSyncSupport() {
 		ArrayList<String> supported = new ArrayList<>();
-		supported.add("V-SYNC: NYI");
 		for(GraphicsAPI.VSyncType type : GraphicsAPI.VSyncType.values()) {
 			if(renderer.isVSyncSupported(type)) {
 				supported.add("V-sync: "+type.name());
@@ -177,7 +176,6 @@ public class ScreenGraphicsSettings extends Screen {
 
 	private List<String> getScreenSupport() {
 		ArrayList<String> supported = new ArrayList<>();
-		supported.add("Screen: NYI");
 		for(GraphicsAPI.ScreenType type : GraphicsAPI.ScreenType.values()) {
 			if(renderer.isScreenTypeSupported(type)) {
 				supported.add(type.name());
