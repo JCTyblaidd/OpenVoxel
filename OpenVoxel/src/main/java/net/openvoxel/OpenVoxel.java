@@ -13,7 +13,7 @@ import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.audio.ClientAudio;
 import net.openvoxel.client.gui.menu.ScreenMainMenu;
-import net.openvoxel.client.gui_framework.GUI;
+import net.openvoxel.client.gui.framework.GUI;
 import net.openvoxel.client.renderer.Renderer;
 import net.openvoxel.common.GameLoader;
 import net.openvoxel.common.event.AbstractEvent;
@@ -39,7 +39,6 @@ import net.openvoxel.utility.debug.Validate;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.Configuration;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -472,7 +471,15 @@ public class OpenVoxel implements EventListener{
 	@SideOnly(side = Side.CLIENT,operation = SideOnly.SideOperation.REMOVE_CODE)
 	private void serverMain() {
 		CommandInputThread.Start();
-		GameLoader.LoadGameStateServer();
+		try {
+			GameLoader.LoadGameStateServer();
+		}catch(Exception ex) {
+			CrashReport report = new CrashReport("Failed to Init Server Game State");
+			report.caughtException(ex);
+			report.getThrowable().printStackTrace();
+			return;
+		}
+
 		Logger dedicatedLogger = Logger.getLogger("Server");
 		dedicatedLogger.Info("Starting Server...");
 

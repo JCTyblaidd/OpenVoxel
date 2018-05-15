@@ -1,8 +1,12 @@
 package net.openvoxel.client.gui.menu;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.client.gui.framework.GUI;
+import net.openvoxel.client.gui.framework.Screen;
 import net.openvoxel.client.gui.menu.settings.ScreenSettings;
-import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.gui.widgets.GUIButton;
+import net.openvoxel.client.gui.widgets.GUIColour;
+import net.openvoxel.client.gui.widgets.GUIText;
 import net.openvoxel.client.renderer.Renderer;
 
 /**

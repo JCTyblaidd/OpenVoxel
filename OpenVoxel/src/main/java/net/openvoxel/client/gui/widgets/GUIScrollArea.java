@@ -1,6 +1,9 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
 import net.openvoxel.client.ClientInput;
+import net.openvoxel.client.gui.framework.GUIObject;
+import net.openvoxel.client.gui.framework.ResizedGuiRenderer;
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 import java.util.ArrayList;
@@ -9,7 +12,7 @@ import java.util.List;
 /**
  * Created by James on 14/09/2016.
  */
-public class GUIScrollArea extends GUIObjectSizable{
+public class GUIScrollArea extends GUIObjectSizable {
 
 	public final List<GUIObject> guiObjects;
 	public float scrollPercent;
@@ -29,7 +32,7 @@ public class GUIScrollArea extends GUIObjectSizable{
 							(int)(ypos * ClientInput.currentWindowFrameSize.y),
 							(int)(width * ClientInput.currentWindowFrameSize.x),
 							(int)(height * ClientInput.currentWindowFrameSize.y));
-		ResizedGUIHandleWrapper resizeHandle = new ResizedGUIHandleWrapper(drawHandle);
+		ResizedGuiRenderer resizeHandle = new ResizedGuiRenderer(drawHandle);
 		resizeHandle.set(xpos,ypos,width,1);
 		for(GUIObject object : guiObjects) {
 			object.Draw(resizeHandle);

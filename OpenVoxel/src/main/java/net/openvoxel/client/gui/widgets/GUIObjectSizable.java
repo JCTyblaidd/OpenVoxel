@@ -1,12 +1,13 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
+import net.openvoxel.client.gui.framework.GUIObject;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 
 /**
  * Created by James on 01/09/2016.
  */
-public abstract class GUIObjectSizable extends GUIObject{
+public abstract class GUIObjectSizable extends GUIObject {
 
 	public float pos_x_rel = 0;
 	public float pos_y_rel = 0;

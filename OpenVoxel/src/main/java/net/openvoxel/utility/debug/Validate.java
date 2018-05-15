@@ -10,6 +10,9 @@ import net.openvoxel.loader.classloader.Validation;
  */
 public class Validate {
 
+	/*
+	 * Stores the main Thread for validation statements...
+	 */
 	private static Thread _mainThread;
 
 	@PublicAPI
@@ -19,12 +22,14 @@ public class Validate {
 		_mainThread = Thread.currentThread();
 	}
 
+	private static void _throw(String err) {
+		throw new RuntimeException("Validate - " + err);
+	}
+
 	@PublicAPI
 	@Validation
 	private static void _validate(boolean param,String err) {
-		if(!param) {
-			throw new RuntimeException("Validate - " + err);
-		}
+		if(!param) _throw(err);
 	}
 
 	@PublicAPI
@@ -67,6 +72,6 @@ public class Validate {
 	@PublicAPI
 	@Validation
 	public static void Unreachable() {
-		_validate(false,"Unreachable");
+		_throw("Unreachable statement reached");
 	}
 }

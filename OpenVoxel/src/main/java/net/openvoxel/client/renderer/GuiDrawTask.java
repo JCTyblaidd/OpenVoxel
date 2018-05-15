@@ -1,11 +1,10 @@
 package net.openvoxel.client.renderer;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.gui.ScreenDebugInfo;
-import net.openvoxel.client.gui_framework.GUI;
-import net.openvoxel.client.gui_framework.Screen;
+import net.openvoxel.client.gui.framework.GUI;
+import net.openvoxel.client.gui.framework.Screen;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.utility.async.AsyncBarrier;

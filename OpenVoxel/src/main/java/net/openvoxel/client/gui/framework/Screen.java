@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.framework;
 
 import net.openvoxel.api.PublicAPI;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
@@ -14,7 +14,7 @@ import java.util.List;
 public class Screen {
 
 	@PublicAPI
-	public List<GUIObject> guiObjects;
+	public final List<GUIObject> guiObjects;
 
 	private boolean initDraw = true;
 

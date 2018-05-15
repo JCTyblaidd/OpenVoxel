@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.framework;
 
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 

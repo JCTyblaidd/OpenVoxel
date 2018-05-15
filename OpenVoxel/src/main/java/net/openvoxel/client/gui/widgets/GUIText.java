@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 
@@ -7,7 +7,7 @@ import net.openvoxel.client.renderer.common.IGuiRenderer;
  *
  * IMPORTANT: only height plays are role regarding sizing
  */
-public class GUIText extends GUIObjectSizable{
+public class GUIText extends GUIObjectSizable {
 
 	private String text;
 

@@ -1,5 +1,8 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
+import net.openvoxel.client.gui.framework.GUIObject;
+import net.openvoxel.client.gui.framework.ResizedGuiRenderer;
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 import java.util.ArrayList;
@@ -16,7 +19,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 	private List<GUIObject> subObjects;
 	private float absOffset = 0;
 	private float maxOffset = 0;
-	private AtomicBoolean isDirty = new AtomicBoolean(false);
+	private boolean isDirty = false;
 
 	public GUIVScrollArea() {
 		subObjects = new ArrayList<>();
@@ -43,7 +46,7 @@ public class GUIVScrollArea extends GUIObjectSizable {
 		drawHandle.VertexWithColUV(X2,Y1,1,0,col);
 		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
 		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
-		ResizedGUIHandleWrapper resizedTess = new ResizedGUIHandleWrapper(drawHandle);
+		ResizedGuiRenderer resizedTess = new ResizedGuiRenderer(drawHandle);
 		resizedTess.set(X1,Y1,X2-X1,Y2-Y1);
 		drawHandle.pushScissor(
 				(int)(X1*screenWidth),
@@ -100,7 +103,8 @@ public class GUIVScrollArea extends GUIObjectSizable {
 
 	@Override
 	public boolean isDrawDirty() {
-		boolean is_dirty = isDirty.getAndSet(false);
+		boolean is_dirty = isDirty;
+		isDirty = false;
 		for(GUIObject object : subObjects) {
 			is_dirty |= object.isDrawDirty();
 		}

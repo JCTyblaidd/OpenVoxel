@@ -1,10 +1,9 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -14,7 +13,7 @@ import java.util.function.Function;
  *
  * Slide Bar
  */
-public class GUISlider extends GUIObjectSizable{
+public class GUISlider extends GUIObjectSizable {
 
 	private int minVal;
 	private int maxVal;
@@ -24,7 +23,7 @@ public class GUISlider extends GUIObjectSizable{
 	private static ResourceHandle texBackground = ResourceManager.getImage("gui/scrollbg0");
 	private static ResourceHandle texBar = ResourceManager.getImage("gui/scrollbar0");
 	private float scrollbarSizePerc = 10.0F;
-	private AtomicBoolean drawDirtyFlag = new AtomicBoolean(false);
+	private boolean drawDirtyFlag = false;
 
 	private BiConsumer<GUISlider,Integer> updateSliderFunc;
 
@@ -117,7 +116,7 @@ public class GUISlider extends GUIObjectSizable{
 			if(updateSliderFunc != null) {
 				updateSliderFunc.accept(this,currentVal);
 			}
-			drawDirtyFlag.set(true);
+			drawDirtyFlag = true;
 		}
 	}
 
@@ -140,17 +139,19 @@ public class GUISlider extends GUIObjectSizable{
 	@Override
 	public void onMouseClicked() {
 		sliderSelected = true;
-		drawDirtyFlag.set(true);
+		drawDirtyFlag = true;
 	}
 
 	@Override
 	public void onMouseReleased() {
 		sliderSelected = false;
-		drawDirtyFlag.set(true);
+		drawDirtyFlag = true;
 	}
 
 	@Override
 	public boolean isDrawDirty() {
-		return drawDirtyFlag.getAndSet(false);
+		boolean tmp = drawDirtyFlag;
+		drawDirtyFlag = false;
+		return tmp;
 	}
 }

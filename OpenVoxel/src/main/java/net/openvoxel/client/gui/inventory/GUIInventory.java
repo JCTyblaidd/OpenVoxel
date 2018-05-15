@@ -1,8 +1,6 @@
 package net.openvoxel.client.gui.inventory;
 
-import net.openvoxel.client.STBITexture;
-import net.openvoxel.client.gui_framework.GUIObjectImage;
-import net.openvoxel.client.gui_framework.Screen;
+import net.openvoxel.client.gui.framework.Screen;
 import net.openvoxel.common.resources.ResourceHandle;
 
 /**

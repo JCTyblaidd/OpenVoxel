@@ -1,12 +1,9 @@
 package net.openvoxel.client.gui;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.logger.Logger;
-import net.openvoxel.client.gui_framework.Screen;
+import net.openvoxel.client.gui.framework.Screen;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.statistics.SystemStatistics;
-
-import java.text.DecimalFormat;
 
 /**
  * Created by James on 10/09/2016.

@@ -1,6 +1,5 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
-import net.openvoxel.api.logger.Logger;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
@@ -19,7 +18,7 @@ public class GUIButton extends GUIObjectSizable {
 	private static ResourceHandle texButton = ResourceManager.getImage("gui/button0");
 	private static final float TXT_WIDTH_LIM = 0.90F;
 	private boolean inButton = false;
-	private AtomicBoolean drawDirtyFlag = new AtomicBoolean(false);
+	private boolean drawDirtyFlag = false;
 
 	private Consumer<GUIButton> onButtonPressFunc = null;
 
@@ -73,17 +72,19 @@ public class GUIButton extends GUIObjectSizable {
 	@Override
 	public void onMouseEnter() {
 		inButton = true;
-		drawDirtyFlag.set(true);
+		drawDirtyFlag = true;
 	}
 
 	@Override
 	public void onMouseLeave() {
 		inButton = false;
-		drawDirtyFlag.set(true);
+		drawDirtyFlag = true;
 	}
 
 	@Override
 	public boolean isDrawDirty() {
-		return drawDirtyFlag.getAndSet(false);
+		boolean tmp = drawDirtyFlag;
+		drawDirtyFlag = false;
+		return tmp;
 	}
 }

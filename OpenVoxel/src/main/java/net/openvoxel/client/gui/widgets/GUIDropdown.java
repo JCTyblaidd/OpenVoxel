@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 
@@ -9,7 +9,7 @@ import java.util.List;
  *
  * Drop Down Selection Box
  */
-public class GUIDropdown extends GUIObjectSizable{
+public class GUIDropdown extends GUIObjectSizable {
 
 	private List<String> Options;
 	private String selected;

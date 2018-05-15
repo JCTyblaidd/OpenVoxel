@@ -6,6 +6,7 @@ import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.api.util.Version;
 import net.openvoxel.client.gui.menu.ScreenLoading;
+import net.openvoxel.common.GameLoader;
 import net.openvoxel.common.event.init.ModInitEvent;
 
 import java.util.*;
@@ -208,7 +209,7 @@ public class ModLoader {
 	}
 
 	@SideOnly(side = Side.CLIENT)
-	public void propagateInitEvent(ModInitEvent e, String ID, String Pre, ScreenLoading loading) {
+	public void propagateInitEvent(ModInitEvent e, String ID, String Pre, GameLoader loading) {
 		Logger log = Logger.getLogger("Mod Loader").getSubLogger(ID);
 		for(ModHandle h : initialisationOrder) {
 			log.Info(Pre + h.getInformation().name());

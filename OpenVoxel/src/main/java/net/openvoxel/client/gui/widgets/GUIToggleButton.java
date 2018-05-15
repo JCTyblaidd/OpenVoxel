@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
 import java.util.List;
 import java.util.function.BiConsumer;

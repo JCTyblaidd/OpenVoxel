@@ -1,7 +1,12 @@
 package net.openvoxel.client.gui.menu.settings;
 
 import net.openvoxel.client.gui.ScreenDebugInfo;
-import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.gui.framework.GUI;
+import net.openvoxel.client.gui.framework.Screen;
+import net.openvoxel.client.gui.widgets.GUIButton;
+import net.openvoxel.client.gui.widgets.GUIColour;
+import net.openvoxel.client.gui.widgets.GUISlider;
+import net.openvoxel.client.gui.widgets.GUIToggleButton;
 import net.openvoxel.client.renderer.Renderer;
 
 import java.util.Arrays;
@@ -12,7 +17,7 @@ import java.util.List;
  *
  * Current Settings
  */
-public class ScreenSettings extends Screen{
+public class ScreenSettings extends Screen {
 
 	private static final List<String> settings_list = Arrays.asList("No Debug","FPS Only","FPS+","Extreme Debug");
 	private Renderer renderer;

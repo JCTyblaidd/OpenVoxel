@@ -1,5 +1,6 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 /**
@@ -7,7 +8,7 @@ import net.openvoxel.client.renderer.common.IGuiRenderer;
  *
  * Progress Bar
  */
-public class GUIProgressBar extends GUIObjectSizable{
+public class GUIProgressBar extends GUIObjectSizable {
 
 	private int maxVal;
 	private int progressVal;

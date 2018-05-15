@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
@@ -7,7 +7,7 @@ import net.openvoxel.common.resources.ResourceManager;
 /**
  * Created by James on 01/09/2016.
  */
-public class GUIObjectImage extends GUIObjectSizable{
+public class GUIObjectImage extends GUIObjectSizable {
 
 	private ResourceHandle handle;
 

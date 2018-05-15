@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui.game;
 
-import net.openvoxel.client.gui_framework.Screen;
+import net.openvoxel.client.gui.framework.Screen;
 
 /**
  * Created by James on 11/09/2016.

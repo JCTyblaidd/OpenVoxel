@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.framework;
 
 import net.openvoxel.api.PublicAPI;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
@@ -10,7 +10,7 @@ import org.joml.Matrix4f;
 /**
  * Created by James on 01/09/2016.
  */
-public class ResizedGUIHandleWrapper extends IGuiRenderer {
+public class ResizedGuiRenderer extends IGuiRenderer {
 
 	private IGuiRenderer tessellator;
 	private float x_offset = 0;
@@ -19,7 +19,7 @@ public class ResizedGUIHandleWrapper extends IGuiRenderer {
 	private float y_scale = 1;
 
 	@PublicAPI
-	public ResizedGUIHandleWrapper(IGuiRenderer wrap) {
+	public ResizedGuiRenderer(IGuiRenderer wrap) {
 		tessellator = wrap;
 	}
 

@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
@@ -9,7 +9,7 @@ import org.joml.Matrix4f;
 /**
  * Created by James on 14/09/2016.
  */
-public class GUILoadingCircle extends GUIObjectSizable{
+public class GUILoadingCircle extends GUIObjectSizable {
 
 	public static ResourceHandle loadCircle = ResourceManager.getImage("gui/load_circle");
 
@@ -39,7 +39,7 @@ public class GUILoadingCircle extends GUIObjectSizable{
 
 	private void _rotate() {
 		float n_x = (r_x_v * x_v) - (r_y_v * y_v);
-			y_v = (r_x_v * y_v) + (r_y_v * x_v);
+		y_v = (r_x_v * y_v) + (r_y_v * x_v);
 		x_v = n_x;
 	}
 

@@ -1,11 +1,12 @@
-package net.openvoxel.client.gui_framework;
+package net.openvoxel.client.gui.widgets;
 
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 /**
  * Created by James on 11/09/2016.
  */
-public class GUIColour extends GUIObjectSizable{
+public class GUIColour extends GUIObjectSizable {
 
 	private int Col_ll;
 	private int Col_lm;

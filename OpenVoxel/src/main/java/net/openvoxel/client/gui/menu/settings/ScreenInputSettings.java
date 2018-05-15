@@ -1,6 +1,10 @@
 package net.openvoxel.client.gui.menu.settings;
 
-import net.openvoxel.client.gui_framework.*;
+import net.openvoxel.client.gui.framework.GUI;
+import net.openvoxel.client.gui.framework.Screen;
+import net.openvoxel.client.gui.widgets.GUIButton;
+import net.openvoxel.client.gui.widgets.GUIColour;
+import net.openvoxel.client.gui.widgets.GUIObjectImage;
 
 /**
  * Created by James on 20/09/2016.

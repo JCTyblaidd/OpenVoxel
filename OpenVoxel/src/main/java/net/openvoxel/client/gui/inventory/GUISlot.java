@@ -1,6 +1,6 @@
 package net.openvoxel.client.gui.inventory;
 
-import net.openvoxel.client.gui_framework.GUIObjectSizable;
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 
