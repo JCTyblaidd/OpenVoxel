@@ -3,7 +3,7 @@ package net.openvoxel.client.renderer;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.util.PerSecondTimer;
-import net.openvoxel.client.gui.ScreenDebugInfo;
+import net.openvoxel.client.gui.util.ScreenDebugInfo;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.VulkanRenderer;
 import net.openvoxel.client.textureatlas.BaseAtlas;

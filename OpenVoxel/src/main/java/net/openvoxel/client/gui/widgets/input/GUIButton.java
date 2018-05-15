@@ -1,10 +1,10 @@
-package net.openvoxel.client.gui.widgets;
+package net.openvoxel.client.gui.widgets.input;
 
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -37,30 +37,11 @@ public class GUIButton extends GUIObjectSizable {
 	@Override
 	public void Draw(IGuiRenderer drawHandle) {
 		if(inButton) {
-			DrawSquare(drawHandle, texButton, 0xFFFFDD55);
+			DrawSquareWithText(drawHandle,texButton,0xFFFFDD55,str,TXT_WIDTH_LIM);
 		}else{
-			DrawSquare(drawHandle, texButton);
-		}
-		if(str != null) {
-			float X = getPosX(drawHandle.getScreenWidth());
-			float Y = getPosY(drawHandle.getScreenHeight());
-			float W = getWidth(drawHandle.getScreenWidth());
-			float H = getHeight(drawHandle.getScreenHeight());
-			float TXT_RATIO = drawHandle.GetTextWidthRatio(str);
-			float TXT_W = TXT_RATIO * H;
-			if(TXT_W < W * TXT_WIDTH_LIM) {
-				X += (W / 2) - (TXT_W / 2);
-				Y += H;
-				drawHandle.DrawText(X, Y, H, str);
-			}else{
-				X += W * (1-TXT_WIDTH_LIM)/2;
-				float TXT_H = W / TXT_RATIO * TXT_WIDTH_LIM;
-				Y += TXT_H + (H - TXT_H)/2;
-				drawHandle.DrawText(X,Y,TXT_H,str);
-			}
+			DrawSquareWithText(drawHandle,texButton,0xFFFFFFFF,str,TXT_WIDTH_LIM);
 		}
 	}
-
 
 	@Override
 	public void onMouseClicked() {

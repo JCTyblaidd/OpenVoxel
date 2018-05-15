@@ -1,7 +1,7 @@
 package net.openvoxel.client.renderer.vk.core;
 
 import net.openvoxel.OpenVoxel;
-import net.openvoxel.client.gui.ScreenDebugInfo;
+import net.openvoxel.client.gui.util.ScreenDebugInfo;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVulkan;

@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui;
+package net.openvoxel.client.gui.util;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui.framework.Screen;

@@ -1,10 +1,7 @@
-package net.openvoxel.client.gui.menu;
+package net.openvoxel.client.gui.util;
 
-import net.openvoxel.client.gui.widgets.GUIObjectImage;
-import net.openvoxel.client.gui.widgets.GUIProgressBar;
-import net.openvoxel.client.gui.widgets.GUIText;
+import net.openvoxel.client.gui.widgets.display.*;
 import net.openvoxel.client.gui.framework.Screen;
-import net.openvoxel.client.renderer.Renderer;
 
 /**
  * Created by James on 14/09/2016.
@@ -13,7 +10,9 @@ import net.openvoxel.client.renderer.Renderer;
  */
 public class ScreenLoading extends Screen {
 
-	private GUIObjectImage background;
+	//private GUIObjectImage background;
+	private GuiGearBG background;
+	private GUIColour progressArea;
 	private GUIProgressBar sectionProgress;
 	private GUIProgressBar totalProgress;
 	private GUIText currentTask;
@@ -22,8 +21,8 @@ public class ScreenLoading extends Screen {
 	private int sectionID = -1;
 
 	public ScreenLoading(int sectionCount,int modCount) {
-		background = new GUIObjectImage("gui/BG");
-		background.setupFullscreen();
+		background = new GuiGearBG(0xFF252525);
+		progressArea = new GUIColour(0xAAAAAAFF);
 		sectionProgress = new GUIProgressBar(false);
 		totalProgress = new GUIProgressBar(false);
 		currentTask = new GUIText("--initial--");
@@ -31,12 +30,23 @@ public class ScreenLoading extends Screen {
 		sectionProgress.setMaxVal(modCount);
 		totalProgress.setMaxVal(sectionCount);
 
-		totalProgress.setCentered(200,40);
-		sectionProgress.setupOffsetTo(totalProgress,0,-50,200,40);
-		currentTask.setupOffsetTo(totalProgress,280,0,80,40);
+		progressArea.setPosition(0.4F,0.4F,-100,-100);
+		progressArea.setSize(0.2F,0.2F,200,200);
+
+		totalProgress.setPosition(0.4F,0.6F,-50,0);
+		totalProgress.setSize(0.2F,0,100,50);
+
+		sectionProgress.setPosition(0.4F,0.4F,-50,25);
+		sectionProgress.setSize(0.2F,0,100,50);
+
+		currentTask.setPosition(0.4F,0.6F,-50,-100);
+		currentTask.setSize(0.2F,0,100,50);
+
+		//currentTask.setupOffsetTo(totalProgress,280,0,80,40);
 		currentMod.setupOffsetTo(sectionProgress,280,0,80,40);
 
 		guiObjects.add(background);
+		guiObjects.add(progressArea);
 		guiObjects.add(sectionProgress);
 		guiObjects.add(totalProgress);
 		guiObjects.add(currentTask);

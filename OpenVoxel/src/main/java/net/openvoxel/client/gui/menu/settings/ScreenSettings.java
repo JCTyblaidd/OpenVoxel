@@ -1,12 +1,12 @@
 package net.openvoxel.client.gui.menu.settings;
 
-import net.openvoxel.client.gui.ScreenDebugInfo;
+import net.openvoxel.client.gui.util.ScreenDebugInfo;
 import net.openvoxel.client.gui.framework.GUI;
 import net.openvoxel.client.gui.framework.Screen;
-import net.openvoxel.client.gui.widgets.GUIButton;
-import net.openvoxel.client.gui.widgets.GUIColour;
-import net.openvoxel.client.gui.widgets.GUISlider;
-import net.openvoxel.client.gui.widgets.GUIToggleButton;
+import net.openvoxel.client.gui.widgets.input.GUIButton;
+import net.openvoxel.client.gui.widgets.display.GUIColour;
+import net.openvoxel.client.gui.widgets.input.GUISlider;
+import net.openvoxel.client.gui.widgets.input.GUIToggleButton;
 import net.openvoxel.client.renderer.Renderer;
 
 import java.util.Arrays;

@@ -5,7 +5,7 @@ import net.openvoxel.api.logger.Logger;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.client.gui.framework.GUI;
-import net.openvoxel.client.gui.menu.ScreenLoading;
+import net.openvoxel.client.gui.util.ScreenLoading;
 import net.openvoxel.client.renderer.Renderer;
 import net.openvoxel.common.event.init.*;
 import net.openvoxel.loader.mods.ModLoader;

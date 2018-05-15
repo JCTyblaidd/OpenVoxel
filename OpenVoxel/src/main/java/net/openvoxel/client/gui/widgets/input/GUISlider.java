@@ -1,5 +1,6 @@
-package net.openvoxel.client.gui.widgets;
+package net.openvoxel.client.gui.widgets.input;
 
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.common.resources.ResourceManager;

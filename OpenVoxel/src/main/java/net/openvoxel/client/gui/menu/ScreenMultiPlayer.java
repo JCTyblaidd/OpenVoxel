@@ -1,7 +1,7 @@
 package net.openvoxel.client.gui.menu;
 
-import net.openvoxel.client.gui.widgets.GUIButton;
-import net.openvoxel.client.gui.widgets.GUIObjectImage;
+import net.openvoxel.client.gui.widgets.input.GUIButton;
+import net.openvoxel.client.gui.widgets.display.GUIObjectImage;
 import net.openvoxel.client.gui.framework.Screen;
 
 /**

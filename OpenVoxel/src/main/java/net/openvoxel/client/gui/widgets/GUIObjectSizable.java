@@ -37,21 +37,69 @@ public abstract class GUIObjectSizable extends GUIObject {
 	}
 
 	public void DrawSquare(IGuiRenderer drawHandle, ResourceHandle Image, int col) {
+		DrawSquareColoured(drawHandle,Image,col,col,col,col);
+	}
+
+	public void DrawSquareColoured(IGuiRenderer drawHandle, ResourceHandle Image, int mm, int lm, int ll, int ml) {
+		DrawSquareColouredScaled(drawHandle,Image,mm,lm,ll,ml,1.F,1.F);
+	}
+
+	public void DrawSquareScaled(IGuiRenderer drawHandle, ResourceHandle Image,int col, float ws, float hs) {
+		DrawSquareColouredScaled(drawHandle,Image,col,col,col,col,ws,hs);
+	}
+
+	public void DrawSquareColouredScaled(IGuiRenderer drawHandle, ResourceHandle Image, int mm, int lm, int ll, int ml, float ws, float hs) {
 		final float screenWidth = drawHandle.getScreenWidth();
 		final float screenHeight = drawHandle.getScreenHeight();
 		final float X1 = getPosX(screenWidth);
 		final float Y1 = getPosY(screenHeight);
-		final float X2 = X1 + getWidth(screenWidth);
-		final float Y2 = Y1 + getHeight(screenHeight);
+		final float X2 = X1 + getWidth(screenWidth) * ws;
+		final float Y2 = Y1 + getHeight(screenHeight) * hs;
 		drawHandle.Begin(Image);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
-		drawHandle.VertexWithColUV(X1,Y2,0,1,col);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
-		drawHandle.VertexWithColUV(X2,Y1,1,0,col);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
+		drawHandle.VertexWithColUV(X2,Y2,1,1,mm);
+		drawHandle.VertexWithColUV(X1,Y2,0,1,lm);
+		drawHandle.VertexWithColUV(X1,Y1,0,0,ll);
+		drawHandle.VertexWithColUV(X2,Y1,1,0,ml);
+		drawHandle.VertexWithColUV(X2,Y2,1,1,mm);
+		drawHandle.VertexWithColUV(X1,Y1,0,0,ll);
 	}
 
+	public void DrawSquareWithText(IGuiRenderer drawHandle, ResourceHandle Image, int col, CharSequence text,float widthLimit) {
+		final float screenWidth = drawHandle.getScreenWidth();
+		final float screenHeight = drawHandle.getScreenHeight();
+		final float X1 = getPosX(screenWidth);
+		final float Y1 = getPosY(screenHeight);
+		final float W = getWidth(screenWidth);
+		final float H = getHeight(screenHeight);
+		final float X2 = X1 + W;
+		final float Y2 = Y1 + H;
+		if(col != 0x00000000) {
+			drawHandle.Begin(Image);
+			drawHandle.VertexWithColUV(X2, Y2, 1, 1, col);
+			drawHandle.VertexWithColUV(X1, Y2, 0, 1, col);
+			drawHandle.VertexWithColUV(X1, Y1, 0, 0, col);
+			drawHandle.VertexWithColUV(X2, Y1, 1, 0, col);
+			drawHandle.VertexWithColUV(X2, Y2, 1, 1, col);
+			drawHandle.VertexWithColUV(X1, Y1, 0, 0, col);
+		}
+		if(text != null) {
+			float TXT_RATIO = drawHandle.GetTextWidthRatio(text);
+			float TXT_W = TXT_RATIO * H;
+			if (TXT_W < W * widthLimit) {
+				float X = X1 + (W / 2) - (TXT_W / 2);
+				drawHandle.DrawText(X, Y2, H, text);
+			} else {
+				float X = X1 + W * (1 - widthLimit) / 2;
+				float TXT_H = W / TXT_RATIO * widthLimit;
+				float Y = Y1 + TXT_H + (H - TXT_H) / 2;
+				drawHandle.DrawText(X, Y, TXT_H, text);
+			}
+		}
+	}
+
+	//
+	// Location & Position API
+	//
 
 	public void setupFullscreen() {
 		setPosition(0,0,0,0);
@@ -85,6 +133,11 @@ public abstract class GUIObjectSizable extends GUIObject {
 		size_w_abs = widthAbs;
 		size_w_rel = widthRel;
 	}
+
+	//
+	// Enter & Exit API
+	//
+
 
 	protected boolean previousIn = false;
 	@Override

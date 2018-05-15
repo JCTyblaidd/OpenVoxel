@@ -5,7 +5,6 @@ import net.openvoxel.api.mods.ASMHandler;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.api.util.Version;
-import net.openvoxel.client.gui.menu.ScreenLoading;
 import net.openvoxel.common.GameLoader;
 import net.openvoxel.common.event.init.ModInitEvent;
 

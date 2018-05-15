@@ -1,5 +1,6 @@
-package net.openvoxel.client.gui.widgets;
+package net.openvoxel.client.gui.widgets.display;
 
+import net.openvoxel.client.gui.widgets.GUIObjectSizable;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 /**
@@ -21,13 +22,16 @@ public class GUIText extends GUIObjectSizable {
 
 	@Override
 	public synchronized void Draw(IGuiRenderer drawHandle) {
+
 		float X = getPosX(drawHandle.getScreenWidth());
 		float Y = getPosY(drawHandle.getScreenHeight());
 		float H = getHeight(drawHandle.getScreenHeight());
 		float diff = drawHandle.GetTextWidthRatio(text);
 		Y -= (H / 2);
 		X -= (H * diff / 2);
+		//DrawSquare(drawHandle,null,0xFF00FFFF);
 		drawHandle.DrawText(X,Y,H,text);
+		//DrawSquareWithText(drawHandle,null,0,text,1.0F);
 	}
 
 }

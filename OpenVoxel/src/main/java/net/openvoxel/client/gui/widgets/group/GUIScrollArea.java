@@ -1,4 +1,4 @@
-package net.openvoxel.client.gui.widgets;
+package net.openvoxel.client.gui.widgets.group;
 
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.gui.framework.GUIObject;

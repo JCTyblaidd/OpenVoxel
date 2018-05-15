@@ -4,9 +4,10 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui.framework.GUI;
 import net.openvoxel.client.gui.framework.Screen;
 import net.openvoxel.client.gui.menu.settings.ScreenSettings;
-import net.openvoxel.client.gui.widgets.GUIButton;
-import net.openvoxel.client.gui.widgets.GUIColour;
-import net.openvoxel.client.gui.widgets.GUIText;
+import net.openvoxel.client.gui.widgets.display.GUIGears;
+import net.openvoxel.client.gui.widgets.input.GUIButton;
+import net.openvoxel.client.gui.widgets.display.GUIColour;
+import net.openvoxel.client.gui.widgets.display.GUIText;
 import net.openvoxel.client.renderer.Renderer;
 
 /**
@@ -31,7 +32,7 @@ public class ScreenMainMenu extends Screen {
 
 		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
 
-		mainText.setupAbsSizeTargeted(0.25F,0.4F,0,70);//140
+		mainText.setupAbsSizeTargeted(0.25F,0.4F,150,70);//140
 		buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
 		buttonMultiPlayer.setupOffsetTo(mainText,-125,10,150,30);
 		buttonSettings.setupOffsetTo(mainText,-125,50,150,30);
@@ -50,6 +51,7 @@ public class ScreenMainMenu extends Screen {
 		guiObjects.add(buttonListMods);
 		guiObjects.add(buttonReloadMods);
 		guiObjects.add(buttonQuit);
+
 
 		buttonSinglePlayer.setAction(this::onPressSinglePlayer);
 		buttonMultiPlayer.setAction(this::onPressMultiPlayer);
