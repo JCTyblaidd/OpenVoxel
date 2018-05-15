@@ -31,17 +31,30 @@ public class ScreenMainMenu extends Screen {
 		GUIText mainText = new GUIText("OpenVoxel");
 
 		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
+		background.setPosition(0.25F,0.4F,-130,-135);
+		background.setSize(0,0,260,500);
 
-		mainText.setupAbsSizeTargeted(0.25F,0.4F,150,70);//140
-		buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
-		buttonMultiPlayer.setupOffsetTo(mainText,-125,10,150,30);
-		buttonSettings.setupOffsetTo(mainText,-125,50,150,30);
-		buttonListMods.setupOffsetTo(mainText,-125,90,150,30);
-		buttonReloadMods.setupOffsetTo(mainText,-125,130,150,30);
-		buttonQuit.setupOffsetTo(mainText,-125,170,150,30);
+		mainText.setupOffsetTo(background,0,0,260,70);
+
+		buttonSinglePlayer.setupOffsetTo(background,5,70,150,30);
+		buttonMultiPlayer.setupOffsetTo(background,5,110,150,30);
+		buttonSettings.setupOffsetTo(background,5,150,150,30);
+		buttonListMods.setupOffsetTo(background,5,190,150,30);
+		buttonReloadMods.setupOffsetTo(background,5,230,150,30);
+		buttonQuit.setupOffsetTo(background,5,270,150,30);
+
+		//mainText.setupAbsSizeTargeted(0.25F,0.4F,0,70);//140
 
 
-		background.setupOffsetTo(mainText,-130,-100,260,500);//300);
+		//buttonSinglePlayer.setupOffsetTo(mainText,-125,-30,150,30);
+		//buttonMultiPlayer.setupOffsetTo(mainText,-125,10,150,30);
+		//buttonSettings.setupOffsetTo(mainText,-125,50,150,30);
+		//buttonListMods.setupOffsetTo(mainText,-125,90,150,30);
+		//buttonReloadMods.setupOffsetTo(mainText,-125,130,150,30);
+		//buttonQuit.setupOffsetTo(mainText,-125,170,150,30);
+
+
+		//background.setupOffsetTo(mainText,-130,-100,260,500);//300);
 
 		guiObjects.add(background);
 		guiObjects.add(mainText);

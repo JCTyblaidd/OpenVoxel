@@ -16,22 +16,22 @@ public class GUIText extends GUIObjectSizable {
 		text = str;
 	}
 
-	public synchronized void updateText(String text) {
+	public void updateText(String text) {
 		this.text = text;
 	}
 
 	@Override
-	public synchronized void Draw(IGuiRenderer drawHandle) {
+	public void Draw(IGuiRenderer drawHandle) {
 
-		float X = getPosX(drawHandle.getScreenWidth());
-		float Y = getPosY(drawHandle.getScreenHeight());
-		float H = getHeight(drawHandle.getScreenHeight());
-		float diff = drawHandle.GetTextWidthRatio(text);
-		Y -= (H / 2);
-		X -= (H * diff / 2);
+		//float X = getPosX(drawHandle.getScreenWidth());
+		//float Y = getPosY(drawHandle.getScreenHeight());
+		//float H = getHeight(drawHandle.getScreenHeight());
+		//float diff = drawHandle.GetTextWidthRatio(text);
+		//Y -= (H / 2);
+		//X -= (H * diff / 2);
 		//DrawSquare(drawHandle,null,0xFF00FFFF);
-		drawHandle.DrawText(X,Y,H,text);
-		//DrawSquareWithText(drawHandle,null,0,text,1.0F);
+		//drawHandle.DrawText(X,Y,H,text);
+		DrawSquareWithText(drawHandle,null,0,text,1.0F);
 	}
 
 }

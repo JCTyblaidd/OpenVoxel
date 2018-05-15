@@ -22,7 +22,7 @@ public class ScreenLoading extends Screen {
 
 	public ScreenLoading(int sectionCount,int modCount) {
 		background = new GuiGearBG(0xFF252525);
-		progressArea = new GUIColour(0xAAAAAAFF);
+		progressArea = new GUIColour(0xFF2e335e);
 		sectionProgress = new GUIProgressBar(false);
 		totalProgress = new GUIProgressBar(false);
 		currentTask = new GUIText("--initial--");
@@ -39,11 +39,11 @@ public class ScreenLoading extends Screen {
 		sectionProgress.setPosition(0.4F,0.4F,-50,25);
 		sectionProgress.setSize(0.2F,0,100,50);
 
-		currentTask.setPosition(0.4F,0.6F,-50,-100);
+		currentTask.setPosition(0.4F,0.6F,-50,-75);
 		currentTask.setSize(0.2F,0,100,50);
 
-		//currentTask.setupOffsetTo(totalProgress,280,0,80,40);
-		currentMod.setupOffsetTo(sectionProgress,280,0,80,40);
+		currentMod.setPosition(0.4F,0.4F,-50,-50);
+		currentMod.setSize(0.2F,0,100,50);
 
 		guiObjects.add(background);
 		guiObjects.add(progressArea);
