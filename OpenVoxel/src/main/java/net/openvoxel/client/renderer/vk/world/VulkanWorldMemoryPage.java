@@ -11,11 +11,14 @@ import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.utility.debug.Validate;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkBufferCreateInfo;
 import org.lwjgl.vulkan.VkMemoryRequirements;
 
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,9 +83,19 @@ final class VulkanWorldMemoryPage {
 					VK_BUFFER_USAGE_TRANSFER_DST_BIT
 			);
 		}
-		//TODO: EXCLUSIVE? (swap via pipeline barriers!)
-		bufferCreate.sharingMode(VK_SHARING_MODE_EXCLUSIVE);
-		bufferCreate.pQueueFamilyIndices(null);
+		//TODO: EXCLUSIVE ONLY!? (swap via pipeline barriers!)???
+		//bufferCreate.sharingMode(VK_SHARING_MODE_EXCLUSIVE);
+		//bufferCreate.pQueueFamilyIndices(null);
+		if(device.familyQueue != device.familyTransfer) {
+			bufferCreate.sharingMode(VK_SHARING_MODE_CONCURRENT);
+			IntBuffer sharingBuffer = BufferUtils.createIntBuffer(2);
+			sharingBuffer.put(0, device.familyQueue);
+			sharingBuffer.put(1, device.familyTransfer);
+			bufferCreate.pQueueFamilyIndices(sharingBuffer);
+		}else{
+			bufferCreate.sharingMode(VK_SHARING_MODE_EXCLUSIVE);
+			bufferCreate.pQueueFamilyIndices(null);
+		}
 	}
 
 	void close() {

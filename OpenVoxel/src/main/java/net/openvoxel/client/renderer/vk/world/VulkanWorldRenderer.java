@@ -204,7 +204,10 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 					VK_PIPELINE_BIND_POINT_GRAPHICS,
 					cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
 					0,
-					stack.longs(UniformDescriptorSetList.get(command.getSwapIndex())),
+					stack.longs(
+							UniformDescriptorSetList.get(command.getSwapIndex()),
+							cache.DESCRIPTOR_SET_ATLAS
+					),
 					null
 			);
 		}
@@ -317,7 +320,6 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	protected void AsyncDraw(AsyncWorldHandler handle, ClientChunkSection chunkSection, int asyncID) {
 		try(MemoryStack stack = stackPush()) {
 			if(chunkSection.Renderer_Size_Opaque != -1) {
-				System.out.println("DRAW!!!");
 				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
 				vkCmdBindVertexBuffers(
 						graphics,
@@ -336,6 +338,30 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 				vkCmdDraw(
 						graphics,
 						chunkSection.Renderer_Size_Opaque / 32,
+						1,
+						0,
+						0
+				);
+			}
+			if(chunkSection.Renderer_Size_Transparent != -1) {
+				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
+				vkCmdBindVertexBuffers(
+						graphics,
+						0,
+						stack.longs(memory.GetDeviceBuffer(chunkSection.Renderer_Info_Transparent)),
+						stack.longs(memory.GetDeviceOffset(chunkSection.Renderer_Info_Transparent))
+				);
+
+				vkCmdPushConstants(
+						graphics,
+						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
+						VK_SHADER_STAGE_VERTEX_BIT,
+						0,
+						stack.floats(16.F * originX,16.F * chunkSection.yIndex,16.F * originZ)
+				);
+				vkCmdDraw(
+						graphics,
+						chunkSection.Renderer_Size_Transparent / 32,
 						1,
 						0,
 						0
@@ -392,6 +418,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	@Override
 	protected void FinalizeChunkMemory(AsyncWorldHandler handle,int asyncID,ClientChunkSection section, boolean isOpaque) {
 		int actual_size = handle.write_offset - handle.start_offset;
+		System.out.println(isOpaque + "->"+actual_size);
 		if(actual_size == 0) {
 			memory.unMapHostMemory(handle.memory_id);
 			memory.InvalidateHostMemory(handle.memory_id);
@@ -428,6 +455,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 				section.Renderer_Size_Transparent = actual_size;
 			}
 		}
+		System.out.println("NOW ==>"+section.Renderer_Size_Opaque);
 		//Clean-up
 		handle.memory_id = 0;
 		handle.memoryMap = null;

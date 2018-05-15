@@ -24,8 +24,6 @@ public abstract class BaseTextRenderer {
 		loadMetadata();
 	}
 
-
-
 	protected void loadMetadata() {
 		JSONObject json = handle.getMetadata();
 		if(json == null) {
@@ -102,5 +100,14 @@ public abstract class BaseTextRenderer {
 		return runningOffset;
 	}
 
-
+	//TODO: CONVERT TO RICHER DISTANCE FIELD FONT IMPLEMENTATION!
+	private static class FontGlyph {
+		private float xPosition;
+		private float yPosition;
+		private float width;
+		private float height;
+		private float xOffset;
+		private float yOffset;
+		private float xAdvance;
+	}
 }

@@ -315,6 +315,7 @@ public class VulkanCache {
 		return new VulkanShaderModule(id,ResourceManager.getResource(ResourceType.SHADER,path));
 	}
 
+	@SuppressWarnings("Duplicates")
 	private long CreatePipelineLayout(VkDevice device, MemoryStack old_stack,int layoutID,long... descriptorSets) {
 		try(MemoryStack stack = old_stack.push()) {
 			VkPipelineLayoutCreateInfo createInfo = VkPipelineLayoutCreateInfo.mallocStack(stack);
@@ -339,7 +340,7 @@ public class VulkanCache {
 				pushConstants.position(0);
 				pushConstants.stageFlags(VK_SHADER_STAGE_VERTEX_BIT);
 				pushConstants.offset(0);
-				pushConstants.size(2 * 4);
+				pushConstants.size(3 * 4);
 				createInfo.pPushConstantRanges(pushConstants);
 			}else{
 				throw new RuntimeException("Unknown ID");

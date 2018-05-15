@@ -39,6 +39,7 @@ import net.openvoxel.utility.debug.Validate;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.Configuration;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -131,9 +132,9 @@ public class OpenVoxel implements EventListener{
 	public void SetCurrentServer(@Nullable BaseServer server) {
 		Validate.IsMainThread();
 		if(Side.isClient) {
-			Validate.Condition(server instanceof ClientServer,"Must be ClientServer if Side.isClient");
+			Validate.Condition(server == null || server instanceof ClientServer,"Must be ClientServer if Side.isClient");
 		}else{
-			Validate.Condition(server instanceof DedicatedServer,"Must be DedicatedServer id !Side.isClient");
+			Validate.Condition(server == null || server instanceof DedicatedServer,"Must be DedicatedServer id !Side.isClient");
 		}
 		currentServer = server;
 	}
@@ -333,16 +334,35 @@ public class OpenVoxel implements EventListener{
 	@SideOnly(side = Side.CLIENT,operation = SideOnly.SideOperation.REMOVE_CODE)
 	private void clientMain() {
 		//Init generic handling code
-		Renderer renderer = new Renderer();
-		ClientAudio.Load();
-		GameLoader.LoadGameStateClient(renderer);
+		final Renderer renderer;
+		try {
+			renderer = new Renderer();
+		}catch(Exception ex) {
+			CrashReport report = new CrashReport("Failed to Load Renderer");
+			report.caughtException(ex);
+			report.getThrowable().printStackTrace();
+			return;
+		}
+
+		try {
+			ClientAudio.Load();
+			GameLoader.LoadGameStateClient(renderer);
+		}catch(Exception ex) {
+			CrashReport report = new CrashReport("Failed to Init Client Game State");
+			report.caughtException(ex);
+			report.getThrowable().printStackTrace();
+			renderer.close();
+			return;
+		}
 
 		//Run initial generic setup code
 		renderer.stitchAtlas();
 		blockRegistry.generateMappingsFromRaw();
 
 		//Set Default Conditions//
-		if(!args.hasFlag("noBackgroundWorld")) {
+		if(args.hasFlag("noBackgroundWorld")) {
+			SetCurrentServer(null);
+		}else{
 			SetCurrentServer(new BackgroundClientServer());
 		}
 		GUI.addScreen(new ScreenMainMenu(renderer));

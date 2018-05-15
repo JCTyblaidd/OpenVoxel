@@ -146,6 +146,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			//Transfer & Update World Uniforms
 			worldRenderer.CmdTransferBufferData(mainBuffer,task);
 
+			//Create a transfer barrier for the uniforms & updated world state
 			VkMemoryBarrier.Buffer memBarrier = VkMemoryBarrier.mallocStack(1,stack);
 			memBarrier.sType(VK_STRUCTURE_TYPE_MEMORY_BARRIER);
 			memBarrier.pNext(VK_NULL_HANDLE);

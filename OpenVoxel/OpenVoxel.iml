@@ -7,7 +7,14 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/config" />
+      <excludeFolder url="file://$MODULE_DIR$/crash_reports" />
+      <excludeFolder url="file://$MODULE_DIR$/logs" />
+      <excludeFolder url="file://$MODULE_DIR$/resource_packs" />
+      <excludeFolder url="file://$MODULE_DIR$/save" />
+      <excludeFolder url="file://$MODULE_DIR$/screenshots" />
       <excludeFolder url="file://$MODULE_DIR$/src/main/java/net/openvoxel/client/old_renderer" />
+      <excludeFolder url="file://$MODULE_DIR$/stats" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

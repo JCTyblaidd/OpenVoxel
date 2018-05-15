@@ -30,8 +30,10 @@ public class WorldDrawTask implements Runnable {
 	private int width;
 	private int height;
 
+	//Utility Classes....
+	private final WorldCullManager culler;
+
 	//Dispatch barriers...
-	private AsyncBarrier barrierCulling = new AsyncBarrier();
 	private AsyncBarrier barrierUpdates = new AsyncBarrier();
 	private AsyncBarrier barrierGenerate = new AsyncBarrier();
 	private AsyncQueue<ClientChunkSection> updateCalls = new AsyncQueue<>(2048,true);
@@ -39,10 +41,9 @@ public class WorldDrawTask implements Runnable {
 	private AtomicInteger numUpdates = new AtomicInteger(0);
 
 	//Draw Target State...
-	private List<CullingTask> cullingTasks = new ArrayList<>();
 	private List<GenerateTask> generateTasks = new ArrayList<>();
-	private long chunkOriginX = 0;
-	private long chunkOriginZ = 0;
+	long chunkOriginX = 0;
+	long chunkOriginZ = 0;
 	public float playerX = 0;
 	public float playerY = 0;
 	public float playerZ = 0;
@@ -50,22 +51,16 @@ public class WorldDrawTask implements Runnable {
 
 	//World State..
 	private EntityPlayerSP thePlayer;
-	private ClientWorld theWorld;
+	ClientWorld theWorld;
 	private Vector2f zLimitVector = new Vector2f(0.1F,1000.0F);
 	public Matrix3f normalMatrix = new Matrix3f().identity();
 	public Matrix4f cameraMatrix = new Matrix4f().identity();
 	public Matrix4f perspectiveMatrix = new Matrix4f().identity();
 	public Matrix4f frustumMatrix = new Matrix4f().identity();
-	private FrustumIntersection frustumIntersect = new FrustumIntersection();
+	FrustumIntersection frustumIntersect = new FrustumIntersection();
 
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {
-		for(int x = -1; x < 1; x++) {
-			for(int y = 0; y <= 1; y++) {
-				for(int z = -1; z < 1; z++) {
-					cullingTasks.add(new CullingTask(x,y,z,1));
-				}
-			}
-		}
+		culler = new WorldCullManager(-1,0,-1,1);
 		for(int i = 0; i < asyncCount; i++) {
 			generateTasks.add(new GenerateTask(i));
 		}
@@ -101,21 +96,45 @@ public class WorldDrawTask implements Runnable {
 
 	@Override
 	public void run() {
+
+		//TODO: MOVE AWAY FROM SYNCHRONOUS TESTING CODE!!!
+
+		for(int i = 0; i < generateTasks.size(); i++) {
+			worldRenderer.getWorldHandlerFor(i).Start();
+		}
+
+		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
+
+		ClientChunk _chunk = theWorld.requestChunk(8,8,false);
+		if(_chunk == null) throw new RuntimeException("Failed miserably!");
+		for(int y = 0; y < 16; y++) {
+			ClientChunkSection section = _chunk.getSectionAt(y);
+			if(section.isDirty()) {
+				handler.AsyncGenerate(section);
+			}
+			//System.out.println("DATA["+y+"] -> "+section.Renderer_Size_Opaque);
+			handler.AsyncDraw(section);
+		}
+
+		for(int i = 0; i < generateTasks.size(); i++) {
+			worldRenderer.getWorldHandlerFor(i).Finish();
+		}
+
+		barrier.completeTask();
+
+		/*
 		//Reset all the barriers to initial state
-		barrierCulling.reset(cullingTasks.size());
 		barrierGenerate.reset(generateTasks.size());
 		barrierUpdates.reset(1);
 		numUpdates.set(0);
 
 		//Start all of the tasks...
 		generateTasks.forEach(pool::addWork);
-		cullingTasks.forEach(pool::addWork);
 
 		//Asynchronously wait till completion...
 		pool.addWork(() -> {
 
 			//Wait for cull then draw to finish
-			barrierCulling.awaitCompletion();
 			barrierUpdates.completeTask();
 			barrierUpdates.awaitCompletion();
 			//Wait for generation to finish...
@@ -124,6 +143,7 @@ public class WorldDrawTask implements Runnable {
 			//Finish Self
 			barrier.completeTask();
 		});
+		*/
 	}
 
 	void freeAllData() {
@@ -163,98 +183,4 @@ public class WorldDrawTask implements Runnable {
 			barrierGenerate.completeTask();
 		}
 	}
-
-	private class CullingTask implements Runnable{
-		private final int cullX;
-		private final int cullY;
-		private final int cullZ;
-		private final int divide;
-
-		private CullingTask(int x,int y,int z,int d) {
-			cullX = x;
-			cullY = y;
-			cullZ = z;
-			divide = d;
-		}
-
-		@Override
-		public void run() {
-			//Init	protected
-			int cullSize = viewDistance / divide;
-			int minX = cullX * cullSize;
-			int maxX = minX + cullSize;
-			int minZ = cullZ * cullSize;
-			int maxZ = minZ + cullSize;
-			int minY = cullY * 8;
-			int maxY = minY + 8;
-
-			//Run the culling code
-			runCull(minX,maxX,minY,maxY,minZ,maxZ);
-
-			//Finish...
-			barrierCulling.completeTask();
-		}
-
-		private void runCull(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-			boolean success = frustumIntersect.testAab(
-					minX * 16.0F,
-					minY * 16.0F,
-					minZ * 16.0F,
-					maxX * 16.0F,
-					maxY * 16.0F,
-					maxZ * 16.0F
-			);
-			//TODO: REMOVE & FIX
-			success = true;
-			if(success) {
-				if(minX + 1 == maxX && minY + 1 == maxY && minZ + 1 == maxZ) {
-					ClientChunk chunk = theWorld.requestChunk(
-							minX + chunkOriginX,
-							minZ + chunkOriginZ,
-							false
-					);
-					if(chunk != null) {
-						ClientChunkSection section = chunk.getSectionAt(minY);
-						if (section.isEmpty()) {
-							if (section.isDirty()) {
-								worldRenderer.InvalidateChunkSection(section);
-							}
-						} else {
-							if (!section.isDirty()) {
-								barrierUpdates.addNewTasks(1);
-								drawOnlyCalls.add(section);
-							} else if(numUpdates.getAndIncrement() < 10) {
-								barrierUpdates.addNewTasks(1);
-								updateCalls.add(section);
-							}
-						}
-					}
-				}else{
-					int splitX = ((maxX - minX) / 2) + minX;
-					int splitY = ((maxY - minY) / 2) + minY;
-					int splitZ = ((maxZ - minZ) / 2) + minZ;
-					int[] xSplit = new int[]{minX,splitX,maxX};
-					int[] ySplit = new int[]{minY,splitY,maxY};
-					int[] zSplit = new int[]{minZ,splitZ,maxZ};
-					int x_start = splitX != minX ? 0 : 1;
-					int y_start = splitY != minY ? 0 : 1;
-					int z_start = splitZ != minZ ? 0 : 1;
-					for(int xi = x_start; xi < 2; xi++) {
-						int min_x = xSplit[xi];
-						int max_x = xSplit[xi+1];
-						for(int yi = y_start; yi < 2; yi++) {
-							int min_y = ySplit[yi];
-							int max_y = ySplit[yi+1];
-							for(int zi = z_start; zi < 2; zi++) {
-								int min_z = zSplit[zi];
-								int max_z = zSplit[zi+1];
-								runCull(min_x,max_x,min_y,max_y,min_z,max_z);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
 }
