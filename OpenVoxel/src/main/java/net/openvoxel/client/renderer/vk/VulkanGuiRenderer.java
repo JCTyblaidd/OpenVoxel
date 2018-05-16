@@ -45,7 +45,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 
 	//Vertex Buffer State...
 	private long VertexBuffer;
-	private boolean VertexMemoryCoherent;
+	private boolean VertexMemoryCoherent;//TODO: ADD CONDITION FOR NON-COHERENT MEMORY
 	private long VertexMemory;
 
 	//Descriptor Pool...
@@ -63,7 +63,7 @@ public class VulkanGuiRenderer extends BaseGuiRenderer {
 
 	//Memory Partition...
 	private int vertexSectionLength;
-	private int uniformSectionLength;
+	private int uniformSectionLength;//TODO: IS UNIFORM BUFFER NEEDED?? (if so setup...) (else remove...)
 	private TIntList offsetVertexBuffers = new TIntArrayList();
 	private TIntList offsetUniformBuffers = new TIntArrayList();
 	//Memory Transfer Partition...

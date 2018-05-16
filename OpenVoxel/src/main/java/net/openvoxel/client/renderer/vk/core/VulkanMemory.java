@@ -61,10 +61,10 @@ public final class VulkanMemory {
 	public void close() {
 		//Cleanup//
 		if(usedHost != 0L) {
-			VulkanUtility.LogSevere("Cleaning vulkan memory w/ usedHost != 0");
+			VulkanUtility.LogSevere("Cleaning vulkan memory w/ usedHost = " + usedHost);
 		}
 		if(usedDevice != 0L) {
-			VulkanUtility.LogSevere("Cleaning vulkan memory w/ usedDevice != 0");
+			VulkanUtility.LogSevere("Cleaning vulkan memory w/ usedDevice = " + usedDevice);
 		}
 		if(usedHost != 0L || usedDevice != 0L) {
 			VulkanUtility.LogSevere("Listing Bad Memory Pages");

@@ -114,8 +114,8 @@ final class VulkanWorldMemoryPage {
 
 	private long allocateNewPage() {
 		long buffer;
-		int memoryType;
-		long size_required;
+		//int memoryType;
+		//long size_required;
 		try(MemoryStack stack = stackPush()) {
 			LongBuffer pReturn = stack.mallocLong(1);
 			int vkResult = vkCreateBuffer(device.logicalDevice,bufferCreate,null,pReturn);
@@ -124,6 +124,7 @@ final class VulkanWorldMemoryPage {
 				return VK_NULL_HANDLE;
 			}
 			buffer = pReturn.get(0);
+			/*
 			VkMemoryRequirements requirements = VkMemoryRequirements.mallocStack(stack);
 			vkGetBufferMemoryRequirements(device.logicalDevice,buffer,requirements);
 			size_required = requirements.size();
@@ -148,12 +149,13 @@ final class VulkanWorldMemoryPage {
 					);
 				}
 			}
+			*/
 		}
 		long page;
-		if(size_required <= VulkanMemory.MEMORY_PAGE_SIZE) {
-			page = memory.allocateMemoryPage(memoryType);
-		}else{
-			VulkanUtility.LogWarn("World Memory: Vulkan Page Size < Buffer Size");
+		//if(size_required <= VulkanMemory.MEMORY_PAGE_SIZE && false) {//TODO: DISABLE COMPLETELY!!!
+			//page = memory.allocateMemoryPage(memoryType);
+		//}else{
+			//VulkanUtility.LogWarn("World Memory: Vulkan Page Size < Buffer Size");
 			if(isDeviceLocal) {
 				page = memory.allocateDedicatedBuffer(buffer,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 			}else{
@@ -169,7 +171,7 @@ final class VulkanWorldMemoryPage {
 					);
 				}
 			}
-		}
+		//}
 		if(page == VK_NULL_HANDLE) {
 			throw new RuntimeException("Failed to allocate memory page");
 		}
