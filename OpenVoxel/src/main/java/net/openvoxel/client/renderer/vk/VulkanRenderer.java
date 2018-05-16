@@ -123,7 +123,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
 			if(worldRenderer.hasWorld()) {
-				for(int i = 0; i < state.VulkanSwapChainSize; i++) {
+				for(int i = 0; i < poolSize; i++) {
 					VkCommandBuffer buffer = commandHandler.getAsyncTransferCommandBuffer(i);
 					vkCmdExecuteCommands(transferBuffer,buffer);
 				}
@@ -191,7 +191,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 			//TODO: IMPLEMENT PROPERLY [THIS IS DEBUG IMPLEMENTATION]
 			if(worldRenderer.hasWorld()) {
-				for (int i = 0; i < state.VulkanSwapChainSize; i++) {
+				for (int i = 0; i < poolSize; i++) {
 					VkCommandBuffer cmdDrawWorld = commandHandler.getAsyncMainCommandBuffer(i);
 					vkCmdExecuteCommands(mainBuffer,cmdDrawWorld);
 				}

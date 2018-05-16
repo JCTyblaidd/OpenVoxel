@@ -11,17 +11,13 @@ import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.utility.debug.Validate;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkBufferCreateInfo;
 import org.lwjgl.vulkan.VkMemoryRequirements;
 
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
@@ -88,7 +84,7 @@ final class VulkanWorldMemoryPage {
 		//bufferCreate.pQueueFamilyIndices(null);
 		if(device.familyQueue != device.familyTransfer) {
 			bufferCreate.sharingMode(VK_SHARING_MODE_CONCURRENT);
-			IntBuffer sharingBuffer = BufferUtils.createIntBuffer(2);
+			IntBuffer sharingBuffer = MemoryUtil.memAllocInt(2);
 			sharingBuffer.put(0, device.familyQueue);
 			sharingBuffer.put(1, device.familyTransfer);
 			bufferCreate.pQueueFamilyIndices(sharingBuffer);
@@ -105,6 +101,10 @@ final class VulkanWorldMemoryPage {
 		}
 		allocatedPages.clear();
 		allocatedBuffers.clear();
+
+		if(bufferCreate.pQueueFamilyIndices() != null) {
+			MemoryUtil.memFree(bufferCreate.pQueueFamilyIndices());
+		}
 		bufferCreate.free();
 	}
 

@@ -308,6 +308,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBuffer transfer = command.getAsyncTransferCommandBuffer(asyncID);
 			VkBufferCopy.Buffer pRegions = VkBufferCopy.mallocStack(1,stack);
+			pRegions.position(0);
 			pRegions.srcOffset(memory.getOffsetForHost(from));
 			pRegions.dstOffset(memory.GetDeviceOffset(to));
 			pRegions.size(size);
