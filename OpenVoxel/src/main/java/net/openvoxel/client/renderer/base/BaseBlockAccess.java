@@ -24,9 +24,9 @@ public class BaseBlockAccess implements IBlockAccess {
 	}
 
 	public void bindChunkSection(ClientChunkSection section) {
-		chunkX = section.getChunk().chunkX * 16;
-		chunkY = section.yIndex;
-		chunkZ = section.getChunk().chunkZ * 16;
+		chunkX = section.getChunkX() * 16L;
+		chunkY = section.getChunkY();
+		chunkZ = section.getChunkZ() * 16L;
 		originAccess.setOffset(0,0,0);
 		//Load nearby sections
 		for(int dx = -1; dx <= 1; dx++) {

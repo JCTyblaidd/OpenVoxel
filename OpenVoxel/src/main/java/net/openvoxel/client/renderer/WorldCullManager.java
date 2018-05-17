@@ -1,91 +1,129 @@
 package net.openvoxel.client.renderer;
 
+import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.function.Consumer;
 
 public class WorldCullManager {
 
-	private final int cullX;
-	private final int cullY;
-	private final int cullZ;
-	private final int divide;
-	private WorldDrawTask drawTask;
-	private Consumer<ClientChunkSection> consumer;
 
-	WorldCullManager(int x, int y, int z, int d) {
-		cullX = x;
-		cullY = y;
-		cullZ = z;
-		divide = d;
-	}
+	private final WorldDrawTask drawTask;
 
-	public void runCull(int viewDistance, WorldDrawTask drawTask, Consumer<ClientChunkSection> consumer) {
-		//Init	protected
+	WorldCullManager(WorldDrawTask drawTask) {
 		this.drawTask = drawTask;
-		this.consumer = consumer;
-
-		//Calculate Initial State
-		int cullSize = (viewDistance * 2)/ divide;
-		int minX = cullX * cullSize;
-		int maxX = minX + cullSize;
-		int minZ = cullZ * cullSize;
-		int maxZ = minZ + cullSize;
-		int minY = cullY * 8;
-		int maxY = minY + 8;
-
-		//Run the culling code
-		runCull(minX,maxX,minY,maxY,minZ,maxZ);
 	}
 
-	private void runCull(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-		boolean success = drawTask.frustumIntersect.testAab(
-				minX * 16.0F,
-				minY * 16.0F,
-				minZ * 16.0F,
-				maxX * 16.0F,
-				maxY * 16.0F,
-				maxZ * 16.0F
+	/*
+	 * Return if the chunk is in the view frustum
+	 */
+	private boolean cullChunkFrustum(float sectionX, float sectionY, float sectionZ) {
+		return drawTask.frustumIntersect.testAab(
+				sectionX,
+				sectionY,
+				sectionZ,
+				sectionX + 16.F,
+				sectionY + 16.F,
+				sectionZ + 16.F
 		);
-		//TODO: REMOVE & FIX
-		success = true;
-		if(success) {
-			if(minX + 1 == maxX && minY + 1 == maxY && minZ + 1 == maxZ) {
-				ClientChunk chunk = drawTask.theWorld.requestChunk(
-						minX + drawTask.chunkOriginX,
-						minZ + drawTask.chunkOriginZ,
-						false
-				);
-				if(chunk != null) {
-					ClientChunkSection section = chunk.getSectionAt(minY);
-					consumer.accept(section);
+	}
+
+	public void runFrustumCuller(Consumer<ClientChunkSection> consumer) {
+		Deque<CullSection> sectionQueue = new ArrayDeque<>();
+
+		//Find Starting Chunk offset Position
+		int startOffsetX = (int)Math.floor(drawTask.thePlayer.xPos / 16.0);
+		int startOffsetY = (int)Math.floor(drawTask.thePlayer.yPos / 16.0);//TODO: ADD CAMERA OFFSET!!!!!!!!
+		int startOffsetZ = (int)Math.floor(drawTask.thePlayer.zPos / 16.0);
+
+		//Add Starting Chunk
+		sectionQueue.add(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
+
+		//Constants
+		final int[] xOffsets = BlockFace.array_xOffsets;
+		final int[] yOffsets = BlockFace.array_yOffsets;
+		final int[] zOffsets = BlockFace.array_zOffsets;
+		final int[] opposite = BlockFace.array_opposite;
+
+		//Breath First Search
+		while(!sectionQueue.isEmpty()) {
+			CullSection section = sectionQueue.getFirst();
+
+			//Find Client Chunk Section if Applicable...
+			if(section.offsetPosY >= 0 && section.offsetPosY < 16) {
+				if(section.sectionRef == null) {
+					ClientChunk clientChunk = drawTask.theWorld.requestChunk(
+							section.offsetPosX,
+							section.offsetPosZ,false
+					);
+					if(clientChunk != null) section.sectionRef = clientChunk.getSectionAt(section.offsetPosY);
 				}
-			}else{
-				int splitX = ((maxX - minX) / 2) + minX;
-				int splitY = ((maxY - minY) / 2) + minY;
-				int splitZ = ((maxZ - minZ) / 2) + minZ;
-				int[] xSplit = new int[]{minX,splitX,maxX};
-				int[] ySplit = new int[]{minY,splitY,maxY};
-				int[] zSplit = new int[]{minZ,splitZ,maxZ};
-				int x_start = splitX != minX ? 0 : 1;
-				int y_start = splitY != minY ? 0 : 1;
-				int z_start = splitZ != minZ ? 0 : 1;
-				for(int xi = x_start; xi < 2; xi++) {
-					int min_x = xSplit[xi];
-					int max_x = xSplit[xi+1];
-					for(int yi = y_start; yi < 2; yi++) {
-						int min_y = ySplit[yi];
-						int max_y = ySplit[yi+1];
-						for(int zi = z_start; zi < 2; zi++) {
-							int min_z = zSplit[zi];
-							int max_z = zSplit[zi+1];
-							runCull(min_x,max_x,min_y,max_y,min_z,max_z);
-						}
+			}
+
+			//Update & Queue Draw
+			if(section.sectionRef != null) {
+				if(section.sectionRef.visibilityNeedsRegen()) {
+					section.sectionRef.generateVisibilityMap();
+				}
+				consumer.accept(section.sectionRef);
+			}
+
+			//Search all of the nearby directions
+			for(int direction = 0; direction < BlockFace.face_count; direction++) {
+				int dirX = xOffsets[direction];
+				int dirY = yOffsets[direction];
+				int dirZ = zOffsets[direction];
+
+				//Check not backwards
+				float dotProduct = drawTask.cameraVector.dot(dirX,dirY,dirZ);
+				if(dotProduct > 0.0F) {
+					continue;
+				}
+
+				//Check not out of bounds
+				int newX = section.offsetPosX + dirX;
+				int newY = section.offsetPosY + dirY;
+				int newZ = section.offsetPosZ + dirZ;
+				if(Math.abs(newX) > drawTask.viewDistance || Math.abs(newZ) > drawTask.viewDistance) {
+					continue;
+				}
+
+				//Check Visibility Test
+				if(section.previousFace != -1 && section.sectionRef != null) {
+					if(!section.sectionRef.isVisible(section.previousFace,direction)) {
+						continue;
 					}
 				}
+
+				//Check Frustum Culling
+				if(!cullChunkFrustum(newX * 1.6F, newY * 16.F, newZ * 16.F)) {
+					continue;
+				}
+
+				//Queue for visitation
+				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction]);
+				if(dirY != 0 && section.sectionRef != null) {
+					cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
+				}
+				sectionQueue.add(cullSection);
 			}
 		}
 	}
 
+	private static class CullSection {
+		private ClientChunkSection sectionRef;
+		private int offsetPosX;
+		private int offsetPosY;
+		private int offsetPosZ;
+		private int previousFace;
+		private CullSection(int offsetPosX, int offsetPosY, int offsetPosZ, int previousFace) {
+			this.offsetPosX = offsetPosX;
+			this.offsetPosY = offsetPosY;
+			this.offsetPosZ = offsetPosZ;
+			this.previousFace = previousFace;
+		}
+	}
 }

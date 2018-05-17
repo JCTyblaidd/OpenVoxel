@@ -61,6 +61,7 @@ public abstract class Block {
 		return false;
 	}
 
+	//TODO: CHANGE isOpaque & isCompleteOpaque and other to accept metadata!!!
 
 	//Client Side Rendering State
 	public boolean isOpaque(BlockFace face) {

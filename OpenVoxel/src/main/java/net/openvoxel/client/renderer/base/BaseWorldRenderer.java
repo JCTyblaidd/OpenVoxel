@@ -128,7 +128,7 @@ public abstract class BaseWorldRenderer {
 				}
 			}
 			FinalizeChunkMemory(this,asyncID,chunkSection,false);
-			chunkSection.markClean();
+			chunkSection.markDrawUpdated();
 		}
 
 		///////////////////////////////

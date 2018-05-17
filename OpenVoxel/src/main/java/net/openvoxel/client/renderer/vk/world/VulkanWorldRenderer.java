@@ -319,6 +319,9 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 	@Override
 	protected void AsyncDraw(AsyncWorldHandler handle, ClientChunkSection chunkSection, int asyncID) {
+		float chunkOffsetX = 1.6F * (chunkSection.getChunkX() - originX);
+		float chunkOffsetY = 16.F * (chunkSection.getChunkY());
+		float chunkOffsetZ = 16.F * (chunkSection.getChunkZ() - originZ);
 		try(MemoryStack stack = stackPush()) {
 			if(chunkSection.Renderer_Size_Opaque != -1) {
 				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
@@ -334,7 +337,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
 						VK_SHADER_STAGE_VERTEX_BIT,
 						0,
-						stack.floats(16.F * originX,16.F * chunkSection.yIndex,16.F * originZ)
+						stack.floats(chunkOffsetX,chunkOffsetY,chunkOffsetZ)
 				);
 				vkCmdDraw(
 						graphics,
@@ -358,7 +361,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
 						VK_SHADER_STAGE_VERTEX_BIT,
 						0,
-						stack.floats(16.F * originX,16.F * chunkSection.yIndex,16.F * originZ)
+						stack.floats(chunkOffsetX,chunkOffsetY,chunkOffsetZ)
 				);
 				vkCmdDraw(
 						graphics,

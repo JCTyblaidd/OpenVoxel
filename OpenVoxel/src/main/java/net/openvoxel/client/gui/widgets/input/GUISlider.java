@@ -57,26 +57,21 @@ public class GUISlider extends GUIObjectSizable {
 		}else{
 			DrawBar(drawHandle, 0xFFFFFFFF);
 		}
+
 		//Draw Text//
 		if(txtFunc != null) {
 			String val = txtFunc.apply(currentVal);
-			float X = getPosX(drawHandle.getScreenWidth());
-			float Y = getPosY(drawHandle.getScreenHeight());
-			float H = getHeight(drawHandle.getScreenHeight());
-			float W = getWidth(drawHandle.getScreenWidth());
-			float TXT_W = drawHandle.GetTextWidthRatio(val) * H;
-			X += (W / 2) - (TXT_W/2);
-			Y += H;
-			drawHandle.DrawText(X,Y,H,val);
+			DrawSquareWithText(drawHandle,null,0,val,0.95F);
+			//TODO: MAKE TEXT SIZE MORE STABLE!!!
 		}
 	}
 
 	private float getScrollbarX(float width) {
-		float Perc = (float)(currentVal - minVal) / (float)(maxVal - minVal);
+		float percent = (float)(currentVal - minVal) / (float)(maxVal - minVal);
 		float x = getPosX(width);
 		float w = getWidth(width);
 		float scrollbarWidth = w / scrollbarSizePerc;
-		float offset = Perc * (w - scrollbarWidth);
+		float offset = percent * (w - scrollbarWidth);
 		return x + offset;
 	}
 	private float getScrollbarWidth(float width) {

@@ -12,11 +12,9 @@ import net.openvoxel.utility.async.AsyncTaskPool;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
-import org.joml.FrustumIntersection;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
-import org.joml.Vector2f;
+import org.joml.*;
 
+import java.lang.Math;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,20 +45,21 @@ public class WorldDrawTask implements Runnable {
 	public float playerX = 0;
 	public float playerY = 0;
 	public float playerZ = 0;
-	private int viewDistance = 16;
+	public int viewDistance = 16;
 
 	//World State..
-	private EntityPlayerSP thePlayer;
-	ClientWorld theWorld;
-	private Vector2f zLimitVector = new Vector2f(0.1F,1000.0F);
+	public ClientWorld theWorld;
+	public EntityPlayerSP thePlayer;
+	public Vector3f cameraVector = new Vector3f();
+	public Vector2f zLimitVector = new Vector2f(0.1F,1000.0F);
 	public Matrix3f normalMatrix = new Matrix3f().identity();
 	public Matrix4f cameraMatrix = new Matrix4f().identity();
 	public Matrix4f perspectiveMatrix = new Matrix4f().identity();
 	public Matrix4f frustumMatrix = new Matrix4f().identity();
-	FrustumIntersection frustumIntersect = new FrustumIntersection();
+	public FrustumIntersection frustumIntersect = new FrustumIntersection();
 
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {
-		culler = new WorldCullManager(-1,0,-1,1);
+		culler = new WorldCullManager(this);
 		for(int i = 0; i < asyncCount; i++) {
 			generateTasks.add(new GenerateTask(i));
 		}
@@ -78,12 +77,13 @@ public class WorldDrawTask implements Runnable {
 		chunkOriginZ = (long)Math.floor(thePlayer.zPos / 16.0);
 		worldRenderer.Setup(chunkOriginX,chunkOriginZ,theWorld);
 		playerX = (float)(thePlayer.xPos - 16.0 * chunkOriginX);
-		playerY = (float)thePlayer.yPos;
+		playerY = (float)thePlayer.yPos;//TODO: ADD CAMERA OFFSET
 		playerZ = (float)(thePlayer.zPos - 16.0 * chunkOriginZ);
 		viewDistance = 16;//TODO: UPDATE THESE CONSTANTS
 		float FoV = 90.F;
 		float aspectRatio = (float)width / (float)height;
 		normalMatrix.identity().rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
+		cameraVector.set(0,0,1).rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
 		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,true);
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
@@ -109,7 +109,7 @@ public class WorldDrawTask implements Runnable {
 		if(_chunk == null) throw new RuntimeException("Failed miserably!");
 		for(int y = 0; y < 16; y++) {
 			ClientChunkSection section = _chunk.getSectionAt(y);
-			if(section.isDirty()) {
+			if(section.isDrawDirty()) {
 				handler.AsyncGenerate(section);
 			}
 			//System.out.println("DATA["+y+"] -> "+section.Renderer_Size_Opaque);

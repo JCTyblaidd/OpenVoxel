@@ -31,23 +31,44 @@ public class ChunkSection {
 
 	private static final long DIFF = (4*16*16*16) + (2*16*16*16)+6;
 
-	public final int yIndex;
+	private final int xIndex;
+	private final int yIndex;
+	private final int zIndex;
 
 	public ChunkSection(Chunk ref,int idx) {
 		this.refChunk = ref;
 		MemoryStatistics.trackChunk(DIFF);
+		xIndex = ref.chunkX;
 		yIndex = idx;
+		zIndex = ref.chunkZ;
 	}
 
 	public Chunk getChunk() {
 		return refChunk;
 	}
 
+
+	public long getChunkX() {
+		return xIndex;
+	}
+
+	public long getChunkY() {
+		return yIndex;
+	}
+
+	public long getChunkZ() {
+		return zIndex;
+	}
+
+	public boolean isChunkEmpty() {
+		return nonAirBlockRefCount == 0;
+	}
+
 	/**
 	 * 6x side dirty information
 	 * each side [z+,z-,x+,x-,y+,y-,any] used to determine if other
 	 * sections need updating due to possible next block changes
-	 * and rendering
+	 * and rendering TODO: USE AND IMPLEMENT PROPERLY!!!
 	 */
 	protected byte chunkDirtyInfo = (byte)0xFF;
 

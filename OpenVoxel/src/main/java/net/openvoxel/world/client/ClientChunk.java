@@ -18,8 +18,8 @@ public class ClientChunk extends Chunk {
 		}
 	}
 
-	public ClientChunkSection getSectionAt(int y) {
-		return (ClientChunkSection)chunkSections[y];
+	public ClientChunkSection getSectionAt(long y) {
+		return (ClientChunkSection)chunkSections[(int)y];
 	}
 
 }
