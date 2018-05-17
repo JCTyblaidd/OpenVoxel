@@ -28,6 +28,9 @@ public class WorldDrawTask implements Runnable {
 	private int width;
 	private int height;
 
+	//Configuration
+	public static final int MAX_TRANSFER_CALLS_PER_FRAME = 64;
+
 	//Utility Classes....
 	private final WorldCullManager culler;
 

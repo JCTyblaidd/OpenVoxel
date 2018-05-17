@@ -98,6 +98,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		if(success) {
 			commandHandler.AwaitTransferFence(TIME_OUT_LENGTH);
 		}
+		worldRenderer.ResetForFrame();
 		return success;
 	}
 
@@ -146,29 +147,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			//Transfer & Update World Uniforms
 			worldRenderer.CmdTransferBufferData(mainBuffer,task);
 
-			//Create a transfer barrier for the uniforms & updated world state
-			VkMemoryBarrier.Buffer memBarrier = VkMemoryBarrier.mallocStack(1,stack);
-			memBarrier.sType(VK_STRUCTURE_TYPE_MEMORY_BARRIER);
-			memBarrier.pNext(VK_NULL_HANDLE);
-			memBarrier.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
-			memBarrier.dstAccessMask(
-					VK_ACCESS_UNIFORM_READ_BIT |
-					VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT
-			);
-
-			vkCmdPipelineBarrier(
-					mainBuffer,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					(
-						VK_PIPELINE_STAGE_VERTEX_INPUT_BIT |
-						VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
-						VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
-					),
-					0,
-					memBarrier,
-					null,
-					null
-			);
+			//Call required memory barriers
+			worldRenderer.CmdUniformMemoryBarrier(mainBuffer,stack);
+			worldRenderer.CmdTransferDataBarrier(mainBuffer);
 
 			//Draw World
 			//TODO: IMPLEMENT PROPERLY!!!!

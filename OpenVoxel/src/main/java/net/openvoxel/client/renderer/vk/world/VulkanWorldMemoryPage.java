@@ -165,12 +165,14 @@ final class VulkanWorldMemoryPage {
 								VK_MEMORY_PROPERTY_HOST_CACHED_BIT |
 								VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 				);
+				/*
 				if(page == VK_NULL_HANDLE) {
 					page = memory.allocateDedicatedBuffer(buffer,
 							VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 									VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 					);
 				}
+				*/
 			}
 		//}
 		if(page == VK_NULL_HANDLE) {

@@ -16,8 +16,11 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.*;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
@@ -44,6 +47,10 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	private static final int WORLD_UNIFORM_BUFFER_SIZE = 176;
 	private static final int DEFAULT_MEMORY_SIZE = VulkanWorldMemoryPage.SUB_PAGE_SIZE;
 
+	private final int MAX_TRANSFERS_PER_FRAME = WorldDrawTask.MAX_TRANSFER_CALLS_PER_FRAME;
+	private final VkBufferMemoryBarrier.Buffer BufferTransferBarriers = VkBufferMemoryBarrier.malloc(MAX_TRANSFERS_PER_FRAME);
+	private int bufferCopyCount = 0;
+	private Lock bufferCopyLock = new ReentrantLock();
 
 	public VulkanWorldRenderer(VulkanCommandHandler command,VulkanCache cache, VulkanDevice device, VulkanMemory memory) {
 		this.command = command;
@@ -158,6 +165,12 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		}
 	}
 
+	public void ResetForFrame() {
+		bufferCopyCount = 0;
+		//TODO: MOVE ELSEWHERE {CAN RUN ASYNC AFTER MEMORY HAS BEEN MANAGED!}
+		memory.tick();
+	}
+
 	public void CmdTransferBufferData(VkCommandBuffer buffer, WorldDrawTask worldDrawInfo) {
 		try(MemoryStack stack = stackPush()) {
 			int offset = command.getSwapIndex() * UniformAlignedSize;
@@ -197,6 +210,49 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		}
 	}
 
+	public void CmdUniformMemoryBarrier(VkCommandBuffer buffer,MemoryStack stack) {
+		VkBufferMemoryBarrier.Buffer uniformBarrier = VkBufferMemoryBarrier.mallocStack(1,stack);
+		uniformBarrier.sType(VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER);
+		uniformBarrier.pNext(VK_NULL_HANDLE);
+		uniformBarrier.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+		uniformBarrier.dstAccessMask(VK_ACCESS_UNIFORM_READ_BIT);
+		uniformBarrier.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+		uniformBarrier.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+		uniformBarrier.buffer(UniformBuffer);
+		uniformBarrier.offset(command.getSwapIndex() * UniformAlignedSize);
+		uniformBarrier.size(UniformAlignedSize);
+
+		vkCmdPipelineBarrier(
+			buffer,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			(
+				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+			),
+			0,
+			null,
+			uniformBarrier,
+			null
+		);
+	}
+
+	public void CmdTransferDataBarrier(VkCommandBuffer buffer) {
+		if(bufferCopyCount != 0) {
+			BufferTransferBarriers.position(0);
+			BufferTransferBarriers.limit(bufferCopyCount);
+			vkCmdPipelineBarrier(
+				buffer,
+				VK_PIPELINE_STAGE_TRANSFER_BIT,
+				VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+				0,
+				null,
+				BufferTransferBarriers,
+				null
+			);
+			BufferTransferBarriers.limit(BufferTransferBarriers.capacity());
+		}
+	}
+
 	public void CmdBindDescriptorSet(VkCommandBuffer buffer) {
 		try(MemoryStack stack = stackPush()){
 			vkCmdBindDescriptorSets(
@@ -229,6 +285,8 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		raw_memory.freeDedicatedMemory(UniformStagingMemory);
 
 		memory.close();
+
+		BufferTransferBarriers.free();
 	}
 
 	@Override
@@ -307,13 +365,41 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	private void CmdDeviceTransfer(int asyncID,int from, int to, int size) {
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBuffer transfer = command.getAsyncTransferCommandBuffer(asyncID);
+
+			long hostOffset = memory.getOffsetForHost(from);
+			long hostBuffer = memory.GetHostBuffer(from);
+
+			long deviceOffset = memory.GetDeviceOffset(to);
+			long deviceBuffer = memory.GetDeviceBuffer(to);
+
 			VkBufferCopy.Buffer pRegions = VkBufferCopy.mallocStack(1,stack);
 			pRegions.position(0);
-			pRegions.srcOffset(memory.getOffsetForHost(from));
-			pRegions.dstOffset(memory.GetDeviceOffset(to));
+			pRegions.srcOffset(hostOffset);
+			pRegions.dstOffset(deviceOffset);
 			pRegions.size(size);
+
 			System.out.println("srcOffset="+pRegions.srcOffset()+", dstOffset="+pRegions.dstOffset()+", size="+pRegions.size());
-			vkCmdCopyBuffer(transfer,memory.GetHostBuffer(from),memory.GetDeviceBuffer(to),pRegions);
+			vkCmdCopyBuffer(transfer,hostBuffer,deviceBuffer,pRegions);
+
+			//Create A Buffer Copy Barrier {...}
+			bufferCopyLock.lock();
+			int idx = bufferCopyCount;
+
+			//TODO: PRE_GEN MORE OF THE VALUES SO THAT LESS OPERATIONS HAPPEN IN THE LOCK
+			BufferTransferBarriers.position(idx);
+			BufferTransferBarriers.sType(VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER);
+			BufferTransferBarriers.pNext(VK_NULL_HANDLE);
+			BufferTransferBarriers.srcAccessMask(VK_ACCESS_TRANSFER_WRITE_BIT);
+			BufferTransferBarriers.dstAccessMask(VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+			BufferTransferBarriers.srcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+			BufferTransferBarriers.dstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+			BufferTransferBarriers.buffer(deviceBuffer);
+			BufferTransferBarriers.offset(deviceOffset);
+			BufferTransferBarriers.size(size);
+			BufferTransferBarriers.position(0);
+
+			bufferCopyCount++;
+			bufferCopyLock.unlock();
 		}
 	}
 
@@ -403,16 +489,24 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	protected void ExpandChunkMemory(AsyncWorldHandler handle, boolean isOpaque) {
 		int current_size = handle.write_offset - handle.start_offset;
 		int new_size = current_size  + DEFAULT_MEMORY_SIZE;
+
+		//Allocate New Memory
 		int new_memory = memory.allocHostMemory(new_size);
 		ByteBuffer new_mapping = memory.mapHostMemory(new_memory);
 		int new_offset = (int)memory.getOffsetForHost(new_memory);
+
+		//Copy Memory
 		MemoryUtil.memCopy(
-				MemoryUtil.memAddress(handle.memoryMap,handle.write_offset),
+				MemoryUtil.memAddress(handle.memoryMap,handle.start_offset),
 				MemoryUtil.memAddress(new_mapping,new_offset),
 				current_size
 		);
+
+		//Invalidate Old Memory
 		memory.unMapHostMemory(handle.memory_id);
 		memory.InvalidateHostMemory(handle.memory_id);
+
+		//Update Values
 		handle.memory_id = new_memory;
 		handle.memoryMap = new_mapping;
 		handle.start_offset = new_offset;
@@ -423,7 +517,21 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	@Override
 	protected void FinalizeChunkMemory(AsyncWorldHandler handle,int asyncID,ClientChunkSection section, boolean isOpaque) {
 		int actual_size = handle.write_offset - handle.start_offset;
-		System.out.println(isOpaque + "->"+actual_size);
+		int invalidate_countdown = command.getSwapSize()+1;
+		//Free Old Data
+		if(isOpaque) {
+			if (section.Renderer_Size_Opaque != -1) {
+				memory.FreeMemoryFromDevice(section.Renderer_Info_Opaque, invalidate_countdown);
+				section.Renderer_Size_Opaque = -1;
+			}
+		}else{
+			if (section.Renderer_Size_Transparent != -1) {
+				memory.FreeMemoryFromDevice(section.Renderer_Info_Transparent, invalidate_countdown);
+				section.Renderer_Size_Transparent = -1;
+			}
+		}
+
+		//Store New Data
 		if(actual_size == 0) {
 			memory.unMapHostMemory(handle.memory_id);
 			memory.InvalidateHostMemory(handle.memory_id);
@@ -438,29 +546,19 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			memory.shrinkHostMemory(handle.memory_id, actual_size);
 			memory.unMapHostMemory(handle.memory_id);
 			if (isOpaque) {
-				if (section.Renderer_Size_Opaque != -1) {
-					memory.FreeMemoryFromDevice(section.Renderer_Info_Opaque, command.getSwapSize());
-					section.Renderer_Size_Opaque = -1;
-				}
-				//TRANSFER & UPDATE MEMORY
 				int device_memory = memory.GetDeviceMemory(handle.memory_id);
 				CmdDeviceTransfer(asyncID, handle.memory_id, device_memory, actual_size);
-				memory.FreeHostMemory(handle.memory_id, command.getSwapSize()+1);
+				memory.FreeHostMemory(handle.memory_id, invalidate_countdown);
 				section.Renderer_Info_Opaque = device_memory;
 				section.Renderer_Size_Opaque = actual_size;
 			} else {
-				if (section.Renderer_Size_Transparent != -1) {
-					memory.FreeMemoryFromDevice(section.Renderer_Info_Transparent, command.getSwapSize());
-					section.Renderer_Size_Transparent = -1;
-				}
 				int device_memory = memory.GetDeviceMemory(handle.memory_id);
 				CmdDeviceTransfer(asyncID, handle.memory_id, device_memory, actual_size);
-				memory.FreeHostMemory(handle.memory_id, command.getSwapSize()+1);
+				memory.FreeHostMemory(handle.memory_id, invalidate_countdown);
 				section.Renderer_Info_Transparent = device_memory;
 				section.Renderer_Size_Transparent = actual_size;
 			}
 		}
-		System.out.println("NOW ==>"+section.Renderer_Size_Opaque);
 		//Clean-up
 		handle.memory_id = 0;
 		handle.memoryMap = null;
