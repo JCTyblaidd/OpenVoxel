@@ -198,7 +198,7 @@ public abstract class BaseWorldRenderer {
 			memoryMap.put(write_offset + 30,(byte)(currentIcon.animationCount));
 			memoryMap.put(write_offset + 31,(byte)(delta_v / currentIcon.animationCount));
 
-			write_offset += 32;
+			write_offset += SIZE_OF_ENTRY;
 		}
 
 

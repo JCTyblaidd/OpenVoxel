@@ -2,28 +2,18 @@ package net.openvoxel.client.renderer.vk.world;
 
 import gnu.trove.map.TLongIntMap;
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.TObjectLongMap;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
-import gnu.trove.map.hash.TObjectLongHashMap;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
-import net.openvoxel.utility.collection.SubChunkMap;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VK10;
-import org.lwjgl.vulkan.VkBufferCopy;
-import org.lwjgl.vulkan.VkCommandBuffer;
 import org.lwjgl.vulkan.VkDevice;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
-import static org.lwjgl.vulkan.VK10.vkCmdCopyBuffer;
 import static org.lwjgl.vulkan.VK10.vkMapMemory;
 import static org.lwjgl.vulkan.VK10.vkUnmapMemory;
 
@@ -45,7 +35,7 @@ public class VulkanWorldMemoryManager {
 	private TLongIntMap memoryUsageMap;
 	private VkDevice device;
 
-	public VulkanWorldMemoryManager(VulkanDevice device, VulkanMemory memory) {
+	VulkanWorldMemoryManager(VulkanDevice device, VulkanMemory memory) {
 		this.device = device.logicalDevice;
 		pageDeviceLocal = new VulkanWorldMemoryPage(device,memory,true);
 		pageHostVisible = new VulkanWorldMemoryPage(device,memory,false);
@@ -58,7 +48,7 @@ public class VulkanWorldMemoryManager {
 		pageDeviceLocal.close();
 	}
 
-	public void tick() {
+	public void tick() {//TODO: CALL THE TICK METHOD
 		pageHostVisible.tickAllMemory();
 		pageDeviceLocal.tickAllMemory();
 	}

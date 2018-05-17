@@ -45,16 +45,23 @@ public class SystemStatistics {
 		}
 	}
 
+	private static final ObjectName OS_OBJECT_NAME;
+	private static final String CPU_LOAD_STR = "ProcessCpuLoad";
+	static {
+		ObjectName _name = null;
+		try{
+			_name = ObjectName.getInstance("java.lang:type=OperatingSystem");
+		}catch(Exception ignored) {}
+		OS_OBJECT_NAME = _name;
+	}
 	private static void update() {
 		processMemUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + MemoryStatistics.getChunkMemory();
 		jvmMemUsage = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed();
 		threadCount = ManagementFactory.getThreadMXBean().getThreadCount();
 		try {
 			processorUsage = (Double)ManagementFactory.getPlatformMBeanServer().
-                           getAttribute(ObjectName.getInstance("java.lang:type=OperatingSystem"),"ProcessCpuLoad");
-		}catch (Exception ignored) {
-			//ignored.printStackTrace();
-		}
+                           getAttribute(OS_OBJECT_NAME,CPU_LOAD_STR);
+		}catch (Exception ignored) {}
 
 		write_index = (write_index + 1) % 32;
 		//memory_history[write_index] = processMemUsage;

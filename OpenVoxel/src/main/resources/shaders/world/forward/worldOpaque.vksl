@@ -2,8 +2,10 @@
 
 layout(location = 0) in vec3 i_position;
 layout(location = 1) in vec2 i_uv_coord;
-layout(location = 2) in vec3 i_normals;
-layout(location = 3) in vec3 i_tangents;
+//TODO: CHANGE BACK RENDERDOC SHODDY FIX
+layout(location = 2) in vec4 i_normals_ish;
+layout(location = 3) in vec2 i_tangents_ish;
+
 layout(location = 4) in vec4 i_colour;
 layout(location = 5) in vec4 i_lighting;
 layout(location = 6) in vec2 i_animation;
@@ -33,6 +35,10 @@ layout(push_constant) uniform SubChunkMetadata {
 
 
 void main() {
+    //TODO: REMOVE SHODDY FIX FOR RENDERDOC
+    vec3 i_normals = i_normals_ish.xyz;
+    vec3 i_tangents = vec3(i_normals_ish.w,i_tangents_ish.xy);
+
     //Calculate Animated UV
     int animLimit = int(i_animation.x) * 255;
     int animTick = (worldData.animationTick % animLimit);

@@ -113,6 +113,7 @@ final class VulkanWorldMemoryPage {
 	//////////////////////////
 
 	private long allocateNewPage() {
+		System.out.println("ALLOCATING NEW PAGE: device="+isDeviceLocal);
 		long buffer;
 		//int memoryType;
 		//long size_required;

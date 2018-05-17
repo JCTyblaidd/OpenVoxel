@@ -159,7 +159,11 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			vkCmdPipelineBarrier(
 					mainBuffer,
 					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+					(
+						VK_PIPELINE_STAGE_VERTEX_INPUT_BIT |
+						VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+						VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+					),
 					0,
 					memBarrier,
 					null,

@@ -9,6 +9,7 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncQueue;
 import net.openvoxel.utility.async.AsyncTaskPool;
+import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
 import org.joml.*;
@@ -106,6 +107,7 @@ public class WorldDrawTask implements Runnable {
 		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
 
 		//System.out.println("START OF DRAW");
+/*
 		culler.runFrustumCull(section -> {
 			System.out.println("DRAW @ (" + section.getChunkX()+","+section.getChunkY()+","+section.getChunkZ()+")");
 			if(section.isDrawDirty()) {
@@ -113,19 +115,26 @@ public class WorldDrawTask implements Runnable {
 			}
 			handler.AsyncDraw(section);
 		});
+*/
 		//System.out.println("END OF DRAW");
-/*
+		//boolean _DELAY = false;
 		ClientChunk _chunk = theWorld.requestChunk(8,8,false);
 		if(_chunk == null) throw new RuntimeException("Failed miserably!");
 		for(int y = 0; y < 16; y++) {
 			ClientChunkSection section = _chunk.getSectionAt(y);
 			if(section.isDrawDirty()) {
 				handler.AsyncGenerate(section);
+			//	_DELAY = true;
 			}
 			//System.out.println("DATA["+y+"] -> "+section.Renderer_Size_Opaque);
 			handler.AsyncDraw(section);
 		}
-*/
+		//if(_DELAY) {
+		//	try{
+		//		System.in.read();//TODO: REMOVE {DEBUG WAIT!!}
+		//	}catch(Exception ignore){}
+		//}
+
 		for(int i = 0; i < generateTasks.size(); i++) {
 			worldRenderer.getWorldHandlerFor(i).Finish();
 		}

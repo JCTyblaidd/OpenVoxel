@@ -60,17 +60,17 @@ public class VulkanWorldForwardPipeline extends VulkanGraphicsPipeline {
 		}
 		inputAttributes.position(2);
 		{
-			inputAttributes.location(2);
+			inputAttributes.location(2);//TODO: CHANGE SHODDY RENDER_DOC FIX BACK AFTERWARDS
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8B8_UNORM);
+			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);//VK_FORMAT_R8G8B8_UNORM);
 			inputAttributes.offset(16);
 		}
 		inputAttributes.position(3);
 		{
 			inputAttributes.location(3);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8B8_UNORM);
-			inputAttributes.offset(19);
+			inputAttributes.format(VK_FORMAT_R8G8_UNORM);//VK_FORMAT_R8G8B8_UNORM);
+			inputAttributes.offset(20);//19);
 		}
 		inputAttributes.position(4);
 		{

@@ -42,7 +42,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	private ByteBuffer UniformStagingMappedMemory;
 
 	private static final int WORLD_UNIFORM_BUFFER_SIZE = 176;
-	private static final int DEFAULT_MEMORY_SIZE = VulkanWorldMemoryPage.SUB_PAGE_SIZE * 4;
+	private static final int DEFAULT_MEMORY_SIZE = VulkanWorldMemoryPage.SUB_PAGE_SIZE;
 
 
 	public VulkanWorldRenderer(VulkanCommandHandler command,VulkanCache cache, VulkanDevice device, VulkanMemory memory) {
@@ -312,6 +312,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			pRegions.srcOffset(memory.getOffsetForHost(from));
 			pRegions.dstOffset(memory.GetDeviceOffset(to));
 			pRegions.size(size);
+			System.out.println("srcOffset="+pRegions.srcOffset()+", dstOffset="+pRegions.dstOffset()+", size="+pRegions.size());
 			vkCmdCopyBuffer(transfer,memory.GetHostBuffer(from),memory.GetDeviceBuffer(to),pRegions);
 		}
 	}
@@ -444,7 +445,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 				//TRANSFER & UPDATE MEMORY
 				int device_memory = memory.GetDeviceMemory(handle.memory_id);
 				CmdDeviceTransfer(asyncID, handle.memory_id, device_memory, actual_size);
-				memory.FreeHostMemory(handle.memory_id, command.getSwapSize());
+				memory.FreeHostMemory(handle.memory_id, command.getSwapSize()+1);
 				section.Renderer_Info_Opaque = device_memory;
 				section.Renderer_Size_Opaque = actual_size;
 			} else {
@@ -454,7 +455,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 				}
 				int device_memory = memory.GetDeviceMemory(handle.memory_id);
 				CmdDeviceTransfer(asyncID, handle.memory_id, device_memory, actual_size);
-				memory.FreeHostMemory(handle.memory_id, command.getSwapSize());
+				memory.FreeHostMemory(handle.memory_id, command.getSwapSize()+1);
 				section.Renderer_Info_Transparent = device_memory;
 				section.Renderer_Size_Transparent = actual_size;
 			}
