@@ -156,8 +156,8 @@ public final class VulkanState {
 		glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API);
 		GLFWVidMode primaryVid = glfwGetVideoMode(glfwGetPrimaryMonitor());
 		if(primaryVid != null) {
-			ClientInput.currentWindowFrameSize.x = primaryVid.width() - 30;
-			ClientInput.currentWindowFrameSize.y = primaryVid.height() - 30;
+			ClientInput.currentWindowFrameSize.x = primaryVid.width()-1;
+			ClientInput.currentWindowFrameSize.y = primaryVid.height()-1;
 		}
 		VulkanUtility.LogInfo("Creating GLFW Window: ("+
 				                      ClientInput.currentWindowFrameSize.x +
@@ -172,6 +172,7 @@ public final class VulkanState {
 				0,
 				0
 		);
+		glfwMaximizeWindow(window);
 		try(MemoryStack stack = stackPush()) {
 			IntBuffer windowWidth = stack.mallocInt(1);
 			IntBuffer windowHeight = stack.mallocInt(1);

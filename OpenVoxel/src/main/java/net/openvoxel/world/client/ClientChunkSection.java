@@ -161,8 +161,11 @@ public class ClientChunkSection extends ChunkSection {
 						intSet.add(face.faceID);
 					}else{
 						int new_position = new_x * 256 + new_y * 16 + new_z;
-						floodQueue[endPos] = new_position;
-						endPos += 1;
+						if(!visited[new_position]) {
+							floodQueue[endPos] = new_position;
+							visited[new_position] = true;
+							endPos += 1;
+						}
 					}
 				}
 			}

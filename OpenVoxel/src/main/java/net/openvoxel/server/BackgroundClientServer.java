@@ -17,13 +17,13 @@ public class BackgroundClientServer extends ClientServer {
 	public BackgroundClientServer() {
 		thePlayer = new EntityPlayerSP();
 		thePlayer.currentWorld = new ClientWorld(new DebugWorldGenerator());
-		thePlayer.xPos = 100;
+		thePlayer.xPos = 115;
 		thePlayer.yPos = 105;
-		thePlayer.zPos = 100;
+		thePlayer.zPos = 115;
 		thePlayer.setPitch(0);
-		thePlayer.setYaw(0);
-		for(int x = 7; x < 10; x++) {
-			for(int z = 7; z < 10; z++) {
+		thePlayer.setYaw((float)Math.toRadians(-30));
+		for(int x = 6; x < 11; x++) {
+			for(int z = 6; z < 11; z++) {
 				thePlayer.currentWorld.requestChunk(x,z,true);
 			}
 		}

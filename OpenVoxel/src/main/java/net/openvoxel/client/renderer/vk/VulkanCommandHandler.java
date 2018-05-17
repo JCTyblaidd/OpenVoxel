@@ -10,7 +10,6 @@ import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
 import net.openvoxel.statistics.SystemStatistics;
 import org.lwjgl.PointerBuffer;
-import org.lwjgl.system.CallbackI;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
@@ -536,7 +535,7 @@ public final class VulkanCommandHandler {
 			int result = vkCreateQueryPool(device.logicalDevice,queryPoolCreate,null,pReturn);
 			if(result == VK_SUCCESS) {
 				queryPool = pReturn.get(0);
-				queryGetDelay = swapSize;
+				queryGetDelay = swapSize + 1;
 				lastTimestampGraphics = 0;
 			}else{
 				//NO Memory
