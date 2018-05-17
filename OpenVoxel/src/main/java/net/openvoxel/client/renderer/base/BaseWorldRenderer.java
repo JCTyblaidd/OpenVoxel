@@ -108,8 +108,9 @@ public abstract class BaseWorldRenderer {
 			for (int xOff = 0; xOff < 16; xOff++) {
 				for (int yOff = 0; yOff < 16; yOff++) {
 					for (int zOff = 0; zOff < 16; zOff++) {
-						Block block = chunkSection.blockAt(xOff, yOff, zOff);
 						blockAccess.bindSectionOffset(xOff, yOff, zOff);
+						Block block = blockAccess.getBlock();
+						//Block block = chunkSection.blockAt(xOff, yOff, zOff);
 						block.getRenderHandler().storeBlockData(this, blockAccess, true);
 					}
 				}

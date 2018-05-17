@@ -5,6 +5,8 @@ import net.openvoxel.common.block.Block;
 import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.util.AABB;
 import net.openvoxel.common.util.BlockFace;
+import net.openvoxel.vanilla.VanillaBlocks;
+import net.openvoxel.vanilla.block.BlockBricks;
 
 /**
  * Created by James on 28/08/2016.
@@ -19,13 +21,14 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 	@Override
 	public void storeBlockData(IBlockRenderer renderer, IBlockAccess stateAccess, boolean opaqueDraw) {
 		Block block = stateAccess.getBlock();
+
 		//Skip Draw if not applicable//
 		if(block.isCompleteOpaque() != opaqueDraw) return;
+
 		AABB bounds = block.getBlockBounds();
-		//TODO: CHANGE BACK!!!
-		//if(block.isOpaque(BlockFace.UP) && !stateAccess.getOffsetBlockData(BlockFace.UP).getBlock().isOpaque(BlockFace.DOWN)) {
+		if(block.isOpaque(BlockFace.UP) && !stateAccess.getOffsetBlockData(BlockFace.UP).getBlock().isOpaque(BlockFace.DOWN)) {
 			renderUp(block,renderer,stateAccess,bounds);
-		//}
+		}
 		if(block.isOpaque(BlockFace.DOWN) && !stateAccess.getOffsetBlockData(BlockFace.DOWN).getBlock().isOpaque(BlockFace.UP)) {
 			renderDown(block,renderer,stateAccess,bounds);
 		}
