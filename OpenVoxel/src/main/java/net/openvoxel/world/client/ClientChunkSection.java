@@ -159,6 +159,10 @@ public class ClientChunkSection extends ChunkSection {
 					int min_val = Math.min(new_x,Math.min(new_y,new_z));
 					if(min_val < 0 || max_val >= 16) {
 						intSet.add(face.faceID);
+					}else{
+						int new_position = new_x * 256 + new_y * 16 + new_z;
+						floodQueue[endPos] = new_position;
+						endPos += 1;
 					}
 				}
 			}

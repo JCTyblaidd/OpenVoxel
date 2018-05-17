@@ -50,7 +50,7 @@ public class WorldCullManager {
 
 		//Breath First Search
 		while(!sectionQueue.isEmpty()) {
-			CullSection section = sectionQueue.getFirst();
+			CullSection section = sectionQueue.removeFirst();
 
 			//Find Client Chunk Section if Applicable...
 			if(section.offsetPosY >= 0 && section.offsetPosY < 16) {
@@ -108,7 +108,7 @@ public class WorldCullManager {
 				if(dirY != 0 && section.sectionRef != null) {
 					cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
 				}
-				sectionQueue.add(cullSection);
+				sectionQueue.addLast(cullSection);
 			}
 		}
 	}

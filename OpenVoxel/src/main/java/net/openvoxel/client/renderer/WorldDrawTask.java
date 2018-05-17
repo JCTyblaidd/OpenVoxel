@@ -105,6 +105,13 @@ public class WorldDrawTask implements Runnable {
 
 		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
 
+		culler.runFrustumCuller(section -> {
+			if(section.isDrawDirty()) {
+				handler.AsyncGenerate(section);
+			}
+			handler.AsyncDraw(section);
+		});
+/*
 		ClientChunk _chunk = theWorld.requestChunk(8,8,false);
 		if(_chunk == null) throw new RuntimeException("Failed miserably!");
 		for(int y = 0; y < 16; y++) {
@@ -115,7 +122,7 @@ public class WorldDrawTask implements Runnable {
 			//System.out.println("DATA["+y+"] -> "+section.Renderer_Size_Opaque);
 			handler.AsyncDraw(section);
 		}
-
+*/
 		for(int i = 0; i < generateTasks.size(); i++) {
 			worldRenderer.getWorldHandlerFor(i).Finish();
 		}
