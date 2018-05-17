@@ -140,7 +140,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 			beginInfo.pInheritanceInfo(null);
 			vkBeginCommandBuffer(mainBuffer,beginInfo);
-			commandHandler.CmdResetTimstamps(mainBuffer);
+			commandHandler.CmdResetTimestamps(mainBuffer);
 			commandHandler.CmdWriteTimestamp(mainBuffer,0,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
 			//Transfer & Update World Uniforms

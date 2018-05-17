@@ -140,7 +140,25 @@ public final class VulkanState {
 			}
 			CrashReport crashReport = new CrashReport("Failed to find valid Vulkan Image Format");
 			for (int format : all_formats) {
-				crashReport.invalidState("Format: #" + Integer.toHexString(format) + " = Failure");
+				crashReport.invalidState("Format: " + VulkanUtility.getFormatAsString(format) + " = Failure");
+			}
+			OpenVoxel.reportCrash(crashReport);
+			return 0;
+		}
+	}
+
+	public int findSupportedBufferFormat(int features,int... all_formats) {
+		try(MemoryStack stack = stackPush()) {
+			VkFormatProperties props = VkFormatProperties.mallocStack(stack);
+			for(int format : all_formats) {
+				vkGetPhysicalDeviceFormatProperties(VulkanDevice.physicalDevice,format, props);
+				if((props.bufferFeatures() & features) == features) {
+					return format;
+				}
+			}
+			CrashReport crashReport = new CrashReport("Failed to find valid Vulkan Buffer Format");
+			for (int format : all_formats) {
+				crashReport.invalidState("Format: " + VulkanUtility.getFormatAsString(format) + " = Failure");
 			}
 			OpenVoxel.reportCrash(crashReport);
 			return 0;

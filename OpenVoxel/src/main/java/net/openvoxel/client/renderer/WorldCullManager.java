@@ -1,15 +1,18 @@
 package net.openvoxel.client.renderer;
 
+import gnu.trove.set.TLongSet;
+import gnu.trove.set.hash.TLongHashSet;
 import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
-public class WorldCullManager {
-
+class WorldCullManager {
 
 	private final WorldDrawTask drawTask;
 
@@ -31,8 +34,19 @@ public class WorldCullManager {
 		);
 	}
 
-	public void runFrustumCuller(Consumer<ClientChunkSection> consumer) {
+	/*
+	 * Pack (x,y,z) in range [-view,view] into 1 long
+	 */
+	private long packOffsets(int x, int y, int z) {
+		long shiftedX = x + drawTask.viewDistance;
+		long shiftedZ = z + drawTask.viewDistance;
+		long doubleDist = drawTask.viewDistance * 2 + 1;
+		return (long)y + 16 * (shiftedX + doubleDist * shiftedZ);
+	}
+
+	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
 		Deque<CullSection> sectionQueue = new ArrayDeque<>();
+		TLongSet visitedOffsets = new TLongHashSet();
 
 		//Find Starting Chunk offset Position
 		int startOffsetX = (int)Math.floor(drawTask.thePlayer.xPos / 16.0);
@@ -56,8 +70,9 @@ public class WorldCullManager {
 			if(section.offsetPosY >= 0 && section.offsetPosY < 16) {
 				if(section.sectionRef == null) {
 					ClientChunk clientChunk = drawTask.theWorld.requestChunk(
-							section.offsetPosX,
-							section.offsetPosZ,false
+							drawTask.chunkOriginX + section.offsetPosX,
+							drawTask.chunkOriginZ + section.offsetPosZ,
+							false
 					);
 					if(clientChunk != null) section.sectionRef = clientChunk.getSectionAt(section.offsetPosY);
 				}
@@ -80,6 +95,9 @@ public class WorldCullManager {
 				//Check not backwards
 				float dotProduct = drawTask.cameraVector.dot(dirX,dirY,dirZ);
 				if(dotProduct > 0.0F) {
+					//System.out.println("INVALIDATE DOT PRODUCT! {"+
+					//		                   drawTask.cameraVector.x+","+drawTask.cameraVector.y+","+drawTask.cameraVector.z+
+					//		                   "|"+dirX+","+dirY+","+dirZ+"}");
 					continue;
 				}
 
@@ -88,18 +106,26 @@ public class WorldCullManager {
 				int newY = section.offsetPosY + dirY;
 				int newZ = section.offsetPosZ + dirZ;
 				if(Math.abs(newX) > drawTask.viewDistance || Math.abs(newZ) > drawTask.viewDistance) {
+					//System.out.println("Invalidate View Distance");
 					continue;
 				}
 
 				//Check Visibility Test
 				if(section.previousFace != -1 && section.sectionRef != null) {
 					if(!section.sectionRef.isVisible(section.previousFace,direction)) {
+						//System.out.println("Invalidate Invisibility");
 						continue;
 					}
 				}
 
+				//Check not already visited
+				if(visitedOffsets.contains(packOffsets(newX,newY,newZ))) {
+					continue;
+				}
+
 				//Check Frustum Culling
 				if(!cullChunkFrustum(newX * 1.6F, newY * 16.F, newZ * 16.F)) {
+					//System.out.println("Invalidate Frustum");
 					continue;
 				}
 
@@ -110,6 +136,9 @@ public class WorldCullManager {
 				}
 				sectionQueue.addLast(cullSection);
 			}
+
+			//Finished - add to set
+			visitedOffsets.add(packOffsets(section.offsetPosX,section.offsetPosY,section.offsetPosZ));
 		}
 	}
 

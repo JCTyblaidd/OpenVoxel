@@ -26,7 +26,7 @@ public class SystemStatistics {
 	private static int threadCount = 0;
 	private static double processorUsage = 0.0F;
 
-	private static int updateCountdown = 0;
+	private static long lastUpdate = 0;
 
 	public static double[] processor_history = new double[32];
 	public static double[] graphics_history = new double[32];
@@ -37,9 +37,10 @@ public class SystemStatistics {
 
 
 	public static void requestUpdate() {
-		updateCountdown++;
-		if(updateCountdown > 100) {
-			updateCountdown = 0;
+		long newUpdate = System.currentTimeMillis();
+		long deltaUpdate = newUpdate - lastUpdate;
+		if(deltaUpdate > 1000) {
+			lastUpdate = newUpdate;
 			update();
 		}
 	}

@@ -9,7 +9,6 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncQueue;
 import net.openvoxel.utility.async.AsyncTaskPool;
-import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
 import org.joml.*;
@@ -82,6 +81,7 @@ public class WorldDrawTask implements Runnable {
 		viewDistance = 16;//TODO: UPDATE THESE CONSTANTS
 		float FoV = 90.F;
 		float aspectRatio = (float)width / (float)height;
+
 		normalMatrix.identity().rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
 		cameraVector.set(0,0,1).rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
@@ -105,12 +105,15 @@ public class WorldDrawTask implements Runnable {
 
 		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
 
-		culler.runFrustumCuller(section -> {
+		//System.out.println("START OF DRAW");
+		culler.runFrustumCull(section -> {
+			System.out.println("DRAW @ (" + section.getChunkX()+","+section.getChunkY()+","+section.getChunkZ()+")");
 			if(section.isDrawDirty()) {
 				handler.AsyncGenerate(section);
 			}
 			handler.AsyncDraw(section);
 		});
+		//System.out.println("END OF DRAW");
 /*
 		ClientChunk _chunk = theWorld.requestChunk(8,8,false);
 		if(_chunk == null) throw new RuntimeException("Failed miserably!");

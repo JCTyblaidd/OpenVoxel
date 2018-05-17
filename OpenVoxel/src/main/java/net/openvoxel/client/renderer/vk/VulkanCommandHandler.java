@@ -548,7 +548,7 @@ public final class VulkanCommandHandler {
 		vkDestroyQueryPool(device.logicalDevice,queryPool,null);
 	}
 
-	void CmdResetTimstamps(VkCommandBuffer buffer) {
+	void CmdResetTimestamps(VkCommandBuffer buffer) {
 		vkCmdResetQueryPool(
 				buffer,
 				queryPool,

@@ -101,11 +101,37 @@ public class VulkanRenderPass {
 			),
 			VK_FORMAT_R8_UNORM
 		);
-		//
+		//Log Chosen Image Formats...
 		LogFormat(" - Swap Present",formatPresent);
 		LogFormat(" - Simple Depth",formatSimpleDepth);
 		LogFormat(" - Simple Sampled",formatSimpleReadImage);
 		LogFormat(" - Single Sampled",formatSingleChannelReadImage);
+
+		//Ensure Formats Exist {TODO: ASSIGN AND MAYBE RUN WITH FALLBACKS?!?!?}
+		state.findSupportedBufferFormat(
+			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT,
+			VK_FORMAT_R32G32B32_SFLOAT
+		);
+		state.findSupportedBufferFormat(
+			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT,
+			VK_FORMAT_R32G32_SFLOAT
+		);
+		state.findSupportedBufferFormat(
+			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT,
+			VK_FORMAT_R16G16_UNORM
+		);
+		state.findSupportedBufferFormat(
+			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT,
+			VK_FORMAT_R8G8B8A8_UNORM
+		);
+		state.findSupportedBufferFormat(
+			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT,
+			VK_FORMAT_R8G8B8_UNORM
+		);//THIS IS NOT AS SUPPORTED?!?! {MIGHT NEED FALLBACK} TODO: FALLBACK (CAN ASSUME REST ARE PRESENT!)
+		state.findSupportedBufferFormat(
+			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT,
+			VK_FORMAT_R8G8_UNORM
+		);
 	}
 
 	private static void LogFormat(String id,int format) {
