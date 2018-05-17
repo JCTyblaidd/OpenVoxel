@@ -172,9 +172,9 @@ public abstract class BaseWorldRenderer {
 				ExpandChunkMemory(this,isOpaqueDraw);
 			}
 
-			memoryMap.putFloat(write_offset, X);
-			memoryMap.putFloat(write_offset + 4, Y);
-			memoryMap.putFloat(write_offset + 8, Z);
+			memoryMap.putFloat(write_offset, (X + blockAccess.getX()));
+			memoryMap.putFloat(write_offset + 4, (Y + blockAccess.getY()));
+			memoryMap.putFloat(write_offset + 8, (Z + blockAccess.getZ()));
 
 
 			float u_value = (U * (currentIcon.U1 - currentIcon.U0)) + currentIcon.U0;
