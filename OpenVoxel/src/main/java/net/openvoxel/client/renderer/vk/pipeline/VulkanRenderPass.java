@@ -70,6 +70,7 @@ public class VulkanRenderPass {
 	public static int formatPresent;
 	public static int formatSimpleDepth;
 	public static int formatSimpleReadImage;
+	public static int formatSingleChannelReadImage;
 
 	public static void LoadFormats(VulkanState state) {
 		VulkanUtility.LogInfo("Choosing Image Formats");
@@ -84,17 +85,27 @@ public class VulkanRenderPass {
 		);
 		formatSimpleReadImage = state.findSupportedFormat(
 			VK_IMAGE_TILING_OPTIMAL,
-				(
-						VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
-						VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
-						VK_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR
-				),
-				VK_FORMAT_R8G8B8A8_UNORM
+			(
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+					VK_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR
+			),
+			VK_FORMAT_R8G8B8A8_UNORM
+		);
+		formatSingleChannelReadImage = state.findSupportedFormat(
+			VK_IMAGE_TILING_OPTIMAL,
+			(
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+					VK_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR
+			),
+			VK_FORMAT_R8_UNORM
 		);
 		//
 		LogFormat(" - Swap Present",formatPresent);
 		LogFormat(" - Simple Depth",formatSimpleDepth);
 		LogFormat(" - Simple Sampled",formatSimpleReadImage);
+		LogFormat(" - Single Sampled",formatSingleChannelReadImage);
 	}
 
 	private static void LogFormat(String id,int format) {

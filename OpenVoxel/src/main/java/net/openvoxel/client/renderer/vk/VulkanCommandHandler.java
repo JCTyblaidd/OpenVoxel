@@ -709,10 +709,18 @@ public final class VulkanCommandHandler {
 	}
 
 	public void SingleUseImagePopulate(long Image, STBITexture texture) {
-		SingleUseImagePopulate(Image,texture.pixels,texture.width,texture.height,0,0);
+		SingleUseImagePopulate(Image,texture,false);
+	}
+
+	public void SingleUseImagePopulate(long Image, STBITexture texture,boolean alphaOnly) {
+		SingleUseImagePopulate(Image,texture.pixels,texture.width,texture.height,0,0,alphaOnly);
 	}
 
 	public void SingleUseImagePopulate(long Image, ByteBuffer pixels, int width, int height,int baseArrayLayer, int mipLevel) {
+		SingleUseImagePopulate(Image,pixels,width,height,baseArrayLayer,mipLevel,false);
+	}
+
+	public void SingleUseImagePopulate(long Image, ByteBuffer pixels, int width, int height,int baseArrayLayer, int mipLevel,boolean alphaOnly) {
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBuffer command = GetSingleUseCommandBuffer();
 
@@ -748,7 +756,15 @@ public final class VulkanCommandHandler {
 			VulkanUtility.ValidateSuccess("Failed to map staging buffer",vkResult);
 
 			ByteBuffer data = pMapping.getByteBuffer((int)VulkanMemory.MEMORY_PAGE_SIZE);
-			data.put(pixels);
+			if(alphaOnly) {
+				//Only store alpha channel
+				for(int i = 0; i < width*height; i++) {
+					byte val = pixels.get(4*i+3);
+					data.put(i,val);
+				}
+			}else {
+				data.put(pixels);
+			}
 			vkUnmapMemory(device.logicalDevice,StagingBufferMemory);
 
 			VkBufferImageCopy.Buffer regions = VkBufferImageCopy.mallocStack(1,stack);

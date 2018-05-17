@@ -33,7 +33,7 @@ class VulkanTextRenderer extends BaseTextRenderer {
 	}
 
 	void load() {
-		int format = VulkanRenderPass.formatSimpleReadImage;
+		int format = VulkanRenderPass.formatSingleChannelReadImage;
 		STBITexture texture = new STBITexture(handle);
 		try(MemoryStack stack = stackPush()) {
 			VkImageCreateInfo imageCreate = VkImageCreateInfo.mallocStack(stack);
@@ -73,10 +73,10 @@ class VulkanTextRenderer extends BaseTextRenderer {
 			imageViewCreate.viewType(VK_IMAGE_VIEW_TYPE_2D);
 			imageViewCreate.format(format);
 			imageViewCreate.components().set(
-					VK_COMPONENT_SWIZZLE_IDENTITY,
-					VK_COMPONENT_SWIZZLE_IDENTITY,
-					VK_COMPONENT_SWIZZLE_IDENTITY,
-					VK_COMPONENT_SWIZZLE_IDENTITY
+					VK_COMPONENT_SWIZZLE_R,
+					VK_COMPONENT_SWIZZLE_R,
+					VK_COMPONENT_SWIZZLE_R,
+					VK_COMPONENT_SWIZZLE_R
 			);
 			imageViewCreate.subresourceRange().set(
 					VK_IMAGE_ASPECT_COLOR_BIT,
@@ -115,7 +115,7 @@ class VulkanTextRenderer extends BaseTextRenderer {
 			ImageSampler = pReturn.get(0);
 
 			//Push Memory to Image
-			commandHandler.SingleUseImagePopulate(Image,texture);
+			commandHandler.SingleUseImagePopulate(Image,texture,true);
 		}finally {
 			texture.Free();
 		}
