@@ -18,7 +18,7 @@ public class ScreenEscMenu extends Screen{
 	public GUIButton quitGame;
 
 	public ScreenEscMenu(boolean serverSide) {
-		title = new GUIText("Game Menu");
+		title = new GUIText("Game Menu",1.0F);
 		backToGame = new GUIButton("Return To Game");
 		options = new GUIButton("Options");
 		achievements = new GUIButton("Achievements");

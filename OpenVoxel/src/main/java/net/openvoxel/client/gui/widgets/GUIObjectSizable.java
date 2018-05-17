@@ -85,13 +85,33 @@ public abstract class GUIObjectSizable extends GUIObject {
 		if(text != null) {
 			float TXT_RATIO = drawHandle.GetTextWidthRatio(text);
 			float TXT_W = TXT_RATIO * H;
+			//int col2 = 0xFF0F0FFF;
 			if (TXT_W < W * widthLimit) {
 				float X = X1 + (W / 2) - (TXT_W / 2);
+				/*
+				drawHandle.Begin(null);
+				drawHandle.VertexWithColUV(X+TXT_W, Y2, 1, 1, col2);
+				drawHandle.VertexWithColUV(X, Y2, 0, 1, col2);
+				drawHandle.VertexWithColUV(X, Y1, 0, 0, col2);
+				drawHandle.VertexWithColUV(X+TXT_W, Y1, 1, 0, col2);
+				drawHandle.VertexWithColUV(X+TXT_W, Y2, 1, 1, col2);
+				drawHandle.VertexWithColUV(X, Y1, 0, 0, col2);
+				*/
 				drawHandle.DrawText(X, Y2, H, text);
 			} else {
 				float X = X1 + W * (1 - widthLimit) / 2;
 				float TXT_H = W / TXT_RATIO * widthLimit;
 				float Y = Y1 + TXT_H + (H - TXT_H) / 2;
+				/*
+				float NEW_TXT_W = TXT_RATIO * TXT_H;
+				drawHandle.Begin(null);
+				drawHandle.VertexWithColUV(X+NEW_TXT_W, Y, 1, 1, col2);
+				drawHandle.VertexWithColUV(X, Y, 0, 1, col2);
+				drawHandle.VertexWithColUV(X, Y-TXT_H, 0, 0, col2);
+				drawHandle.VertexWithColUV(X+NEW_TXT_W, Y-TXT_H, 1, 0, col2);
+				drawHandle.VertexWithColUV(X+NEW_TXT_W, Y, 1, 1, col2);
+				drawHandle.VertexWithColUV(X, Y-TXT_H, 0, 0, col2);
+				*/
 				drawHandle.DrawText(X, Y, TXT_H, text);
 			}
 		}

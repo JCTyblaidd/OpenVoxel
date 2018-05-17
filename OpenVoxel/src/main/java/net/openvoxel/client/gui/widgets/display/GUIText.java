@@ -11,9 +11,11 @@ import net.openvoxel.client.renderer.common.IGuiRenderer;
 public class GUIText extends GUIObjectSizable {
 
 	private String text;
+	private float widthLim = 1.0F;
 
-	public GUIText(String str) {
+	public GUIText(String str,float widthLim) {
 		text = str;
+		this.widthLim = widthLim;
 	}
 
 	public void updateText(String text) {
@@ -22,16 +24,7 @@ public class GUIText extends GUIObjectSizable {
 
 	@Override
 	public void Draw(IGuiRenderer drawHandle) {
-
-		//float X = getPosX(drawHandle.getScreenWidth());
-		//float Y = getPosY(drawHandle.getScreenHeight());
-		//float H = getHeight(drawHandle.getScreenHeight());
-		//float diff = drawHandle.GetTextWidthRatio(text);
-		//Y -= (H / 2);
-		//X -= (H * diff / 2);
-		//DrawSquare(drawHandle,null,0xFF00FFFF);
-		//drawHandle.DrawText(X,Y,H,text);
-		DrawSquareWithText(drawHandle,null,0,text,1.0F);
+		DrawSquareWithText(drawHandle,null,0,text,widthLim);
 	}
 
 }

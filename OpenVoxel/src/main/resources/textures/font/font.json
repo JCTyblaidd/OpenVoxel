@@ -1,4 +1,5 @@
 {
+  "type" : "grid",
   "num_cells_horizontal" : 16,
   "num_cells_vertical" : 16,
   "pixels_per_cell" : 32,

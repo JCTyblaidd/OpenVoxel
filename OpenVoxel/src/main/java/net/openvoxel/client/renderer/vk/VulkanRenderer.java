@@ -46,7 +46,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		commandHandler.init(poolSize);
 
 		//Draw Handlers
-		textRenderer = new VulkanTextRenderer("font/font",commandHandler,state.VulkanMemory);
+		textRenderer = new VulkanTextRenderer("font/font_extended",commandHandler,state.VulkanMemory);
 		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory,textRenderer);
 		worldRenderer = new VulkanWorldRenderer(commandHandler,cachedLayout,state.VulkanDevice,state.VulkanMemory);
 	}

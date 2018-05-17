@@ -28,7 +28,7 @@ public class ScreenMainMenu extends Screen {
 		GUIButton buttonListMods = new GUIButton("Mods");
 		GUIButton buttonReloadMods = new GUIButton("Reload");
 		GUIButton buttonQuit = new GUIButton("Quit");
-		GUIText mainText = new GUIText("OpenVoxel");
+		GUIText mainText = new GUIText("OpenVoxel",0.95F);
 
 		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
 		background.setPosition(0.25F,0.4F,-130,-135);

@@ -25,8 +25,8 @@ public class ScreenLoading extends Screen {
 		progressArea = new GUIColour(0xFF2e335e);
 		sectionProgress = new GUIProgressBar(false);
 		totalProgress = new GUIProgressBar(false);
-		currentTask = new GUIText("--initial--");
-		currentMod = new GUIText("unknown");
+		currentTask = new GUIText("--initial--",1.0F);
+		currentMod = new GUIText("unknown",1.0F);
 		sectionProgress.setMaxVal(modCount);
 		totalProgress.setMaxVal(sectionCount);
 
