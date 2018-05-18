@@ -63,14 +63,21 @@ public class ScreenGraphicsSettings extends Screen {
 		section.setSize(0.3f,0.6f,150,200);
 		guiObjects.add(section);
 
-		GUISlider targetFPS = new GUISlider(10,145,getCurrentTargetFPS(),(e) -> {
-			if(e == 145) return "FPS: Unlimited";
-			return "FPS: " + e;
+		GUISlider targetFPS = new GUISlider(10,145,getCurrentTargetFPS(),(builder,val) -> {
+			if(val == 145) {
+				builder.append("FPS: Unlimited");
+			}else{
+				builder.append("FPS: ");
+				builder.append(val);
+			}
 		});
 		targetFPS.setUpdateFunc(this::setTargetFPS);
 		setupConfig(targetFPS);
 
-		GUISlider chunkRadius = new GUISlider(4,64,getCurrentChunkRadius(),e -> "Chunk Radius: "+e);
+		GUISlider chunkRadius = new GUISlider(4,64,getCurrentChunkRadius(),(builder,val) -> {
+			builder.append("Chunk Radius: ");
+			builder.append(val);
+		});
 		chunkRadius.setUpdateFunc(this::setChunkRadius);
 		setupConfig(chunkRadius);
 

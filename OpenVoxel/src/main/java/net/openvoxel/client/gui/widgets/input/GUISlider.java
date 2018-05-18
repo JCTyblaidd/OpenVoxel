@@ -7,7 +7,6 @@ import net.openvoxel.common.resources.ResourceManager;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Created by James on 10/09/2016.
@@ -16,23 +15,30 @@ import java.util.function.Function;
  */
 public class GUISlider extends GUIObjectSizable {
 
+	private static ResourceHandle texBackground = ResourceManager.getImage("gui/scrollbg0");
+	private static ResourceHandle texBar = ResourceManager.getImage("gui/scrollbar0");
+
+	private boolean sliderSelected = false;
+	private float scrollbarSizePercent = 10.0F;
+	private boolean drawDirtyFlag = false;
+
 	private int minVal;
 	private int maxVal;
 	private int currentVal;
-	private boolean sliderSelected = false;
-	private Function<Integer,String> txtFunc;
-	private static ResourceHandle texBackground = ResourceManager.getImage("gui/scrollbg0");
-	private static ResourceHandle texBar = ResourceManager.getImage("gui/scrollbar0");
-	private float scrollbarSizePerc = 10.0F;
-	private boolean drawDirtyFlag = false;
+	private StringBuilder txt_builder = new StringBuilder();
 
+	private TextUpdateFunctor txtFunc;
 	private BiConsumer<GUISlider,Integer> updateSliderFunc;
+
+	public interface TextUpdateFunctor {
+		void generate(StringBuilder builder, int percent);
+	}
 
 	public int getValue() {
 		return currentVal;
 	}
 
-	public GUISlider(int min, int max, int current,Function<Integer,String> getText) {
+	public GUISlider(int min, int max, int current,TextUpdateFunctor getText) {
 		minVal = min;
 		maxVal = max;
 		currentVal = current >= minVal ? current <= maxVal ? current : maxVal : minVal;
@@ -60,8 +66,9 @@ public class GUISlider extends GUIObjectSizable {
 
 		//Draw Text//
 		if(txtFunc != null) {
-			String val = txtFunc.apply(currentVal);
-			DrawSquareWithText(drawHandle,null,0,val,0.95F);
+			txt_builder.delete(0,txt_builder.length());
+			txtFunc.generate(txt_builder,currentVal);
+			DrawSquareWithText(drawHandle,null,0,txt_builder,0.95F);
 			//TODO: MAKE TEXT SIZE MORE STABLE!!!
 		}
 	}
@@ -70,12 +77,12 @@ public class GUISlider extends GUIObjectSizable {
 		float percent = (float)(currentVal - minVal) / (float)(maxVal - minVal);
 		float x = getPosX(width);
 		float w = getWidth(width);
-		float scrollbarWidth = w / scrollbarSizePerc;
+		float scrollbarWidth = w / scrollbarSizePercent;
 		float offset = percent * (w - scrollbarWidth);
 		return x + offset;
 	}
 	private float getScrollbarWidth(float width) {
-		return getWidth(width) / scrollbarSizePerc;
+		return getWidth(width) / scrollbarSizePercent;
 	}
 
 	private void DrawBar(IGuiRenderer drawHandle, int col) {

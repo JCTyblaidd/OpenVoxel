@@ -31,7 +31,10 @@ public class ScreenSettings extends Screen {
 		this.renderer = renderer;
 
 		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
-		GUISlider setting_foV = new GUISlider(10, 160, 110, (fov) -> "FOV: " + fov);
+		GUISlider setting_foV = new GUISlider(10, 160, 110, (builder,fov) -> {
+			builder.append("FOV: ");
+			builder.append(fov);
+		});
 		GUIButton settings_audio = new GUIButton("Audio Settings");
 		GUIButton settings_input = new GUIButton("Input Settings");
 		GUIButton settings_renderer = new GUIButton("Graphics Settings");

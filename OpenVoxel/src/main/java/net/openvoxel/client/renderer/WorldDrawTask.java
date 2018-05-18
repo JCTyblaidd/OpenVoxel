@@ -36,9 +36,8 @@ public class WorldDrawTask implements Runnable {
 	//Dispatch barriers...
 	private AsyncBarrier barrierUpdates = new AsyncBarrier();
 	private AsyncBarrier barrierGenerate = new AsyncBarrier();
-	private AsyncQueue<ClientChunkSection> updateCalls = new AsyncQueue<>(2048,true);
-	private AsyncQueue<ClientChunkSection> drawOnlyCalls = new AsyncQueue<>(2048,true);
 	private AtomicInteger numUpdates = new AtomicInteger(0);
+	private ArrayList<ClientChunkSection> queuedUpdates = new ArrayList<>();
 
 	//Draw Target State...
 	private List<GenerateTask> generateTasks = new ArrayList<>();
@@ -109,7 +108,31 @@ public class WorldDrawTask implements Runnable {
 	@Override
 	public void run() {
 
-		//TODO: MOVE AWAY FROM SYNCHRONOUS TESTING CODE!!!
+		//Reset
+	/*
+		barrierGenerate.reset(generateTasks.size());
+		numUpdates.set(0);
+		queuedUpdates.clear();
+
+		//Generate Tasks
+		culler.runFrustumCull(queuedUpdates::add);
+
+		//Dispatch Tasks
+		int LIM = queuedUpdates.size() / generateTasks.size();
+		int genLimit = generateTasks.size() - 1;
+		int start = 0;
+		for(int i = 0; i < genLimit; i++) {
+			int end = start + LIM;
+			generateTasks.get(i).setup(start,end);
+			start = end;
+		}
+		generateTasks.get(genLimit).setup(start,queuedUpdates.size());
+
+		generateTasks.forEach(pool::addWork);
+
+		barrierGenerate.awaitCompletion();
+*/
+
 
 		for(int i = 0; i < generateTasks.size(); i++) {
 			worldRenderer.getWorldHandlerFor(i).Start();
@@ -117,17 +140,6 @@ public class WorldDrawTask implements Runnable {
 
 		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
 
-		//System.out.println("START OF DRAW");
-/*
-		culler.runFrustumCull(section -> {
-			System.out.println("DRAW @ (" + section.getChunkX()+","+section.getChunkY()+","+section.getChunkZ()+")");
-			if(section.isDrawDirty()) {
-				handler.AsyncGenerate(section);
-			}
-			handler.AsyncDraw(section);
-		});
-
-*/
 
 		AtomicInteger limit = new AtomicInteger(0);
 		culler.runFrustumCull(section -> {
@@ -139,28 +151,13 @@ public class WorldDrawTask implements Runnable {
 			}
 		});
 
-		//System.out.println("END OF DRAW");
-/*
-		int limit = 0;
-		for(int x = 7; x < 10; x++) {
-			for(int z = 7; z < 10; z++) {
-				ClientChunk _chunk = theWorld.requestChunk(x, z, false);
-				if (_chunk == null) throw new RuntimeException("Failed miserably!");
-				for (int y = 0; y < 16; y++) {
-					ClientChunkSection section = _chunk.getSectionAt(y);
-					if (section.isDrawDirty() && limit < MAX_TRANSFER_CALLS_PER_FRAME) {
-						handler.AsyncGenerate(section);
-						limit++;
-					}
-					handler.AsyncDraw(section);
-				}
-			}
-		}*/
 
 
 		for(int i = 0; i < generateTasks.size(); i++) {
 			worldRenderer.getWorldHandlerFor(i).Finish();
 		}
+
+
 
 		barrier.completeTask();
 
@@ -192,14 +189,41 @@ public class WorldDrawTask implements Runnable {
 		Logger.INSTANCE.Info("Invalidating Chunk Data is Not Yet Implemented");
 	}
 
+
 	private class GenerateTask implements Runnable {
 
 		private final int AsyncID;
+		private BaseWorldRenderer.AsyncWorldHandler handler;
+		private int begin;
+		private int end;
 
 		private GenerateTask(int id) {
 			AsyncID = id;
 		}
 
+		private void setup(int begin, int end) {
+			handler = worldRenderer.getWorldHandlerFor(AsyncID);
+			this.begin = begin;
+			this.end = end;
+		}
+
+		@Override
+		public void run() {
+			handler.Start();
+			/*
+			for(int I = begin; I < end; I++) {
+				ClientChunkSection section = queuedUpdates.get(I);
+				if(section.isDrawDirty() && numUpdates.getAndIncrement() < MAX_TRANSFER_CALLS_PER_FRAME) {
+					handler.AsyncGenerate(section);
+					handler.AsyncDraw(section);
+				}else if(!section.isDrawDirty()) {
+					handler.AsyncDraw(section);
+				}
+			}*/
+			handler.Finish();
+			barrierGenerate.completeTask();
+		}
+		/*
 		@Override
 		public void run() {
 			BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(AsyncID);
@@ -224,5 +248,6 @@ public class WorldDrawTask implements Runnable {
 			handler.Finish();
 			barrierGenerate.completeTask();
 		}
+		*/
 	}
 }
