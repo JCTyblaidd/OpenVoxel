@@ -194,10 +194,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			vkEndCommandBuffer(mainBuffer);
 			commandHandler.SubmitCommandGraphics(mainBuffer);
 		}
-		boolean success = commandHandler.PresentImage();
-		//TODO: REMOVE TEMPORARY HANDLE
-		vkDeviceWaitIdle(state.getLogicalDevice());
-		return success;
+		return commandHandler.PresentImage();
 	}
 
 	@Override
