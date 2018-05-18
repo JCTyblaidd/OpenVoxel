@@ -172,6 +172,17 @@ public final class VulkanDevice {
 		ScreenDebugInfo.RendererDriver = properties.deviceNameString() + " " + driverVersion + " ";
 	}
 
+	////////////////////
+	/// Utility Code ///
+	////////////////////
+
+	private boolean supportsVertexBufferType(@NotNull VkPhysicalDevice device, int format) {
+		try(MemoryStack stack = stackPush()) {
+			VkFormatProperties props = VkFormatProperties.mallocStack(stack);
+			vkGetPhysicalDeviceFormatProperties(device,format,props);
+			return (props.bufferFeatures() & VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT) == VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT;
+		}
+	}
 
 	///////////////////////////
 	/// Initialization Code ///
@@ -196,6 +207,23 @@ public final class VulkanDevice {
 			VkPhysicalDeviceFeatures tmpFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
 			vkGetPhysicalDeviceFeatures(device, tmpFeatures);
 			//TODO: replace with better validity check
+
+			//Float Buffer Formats [1,2,3,4]
+			if(!supportsVertexBufferType(device,VK_FORMAT_R32G32B32A32_SFLOAT)) return false;
+			if(!supportsVertexBufferType(device,VK_FORMAT_R32G32B32_SFLOAT)) return false;
+			if(!supportsVertexBufferType(device,VK_FORMAT_R32G32_SFLOAT)) return false;
+			if(!supportsVertexBufferType(device,VK_FORMAT_R32_SFLOAT)) return false;
+
+			//Normalised Short Formats [1,2,4]
+			if(!supportsVertexBufferType(device,VK_FORMAT_R16G16B16A16_UNORM)) return false;
+			if(!supportsVertexBufferType(device,VK_FORMAT_R16G16_UNORM)) return false;
+			if(!supportsVertexBufferType(device,VK_FORMAT_R16_UNORM)) return false;
+
+			//Normalised Byte Formats [1,2,4]
+			if(!supportsVertexBufferType(device,VK_FORMAT_R8G8B8A8_UNORM)) return false;
+			if(!supportsVertexBufferType(device,VK_FORMAT_R8G8_UNORM)) return false;
+			if(!supportsVertexBufferType(device,VK_FORMAT_R8_UNORM)) return false;
+
 			return tmpFeatures.geometryShader();
 		}
 	}
@@ -212,7 +240,7 @@ public final class VulkanDevice {
 			for(int i = 0; i < sizeRef.get(0); i++) {
 				VkPhysicalDevice device = new VkPhysicalDevice(physicalDeviceList.get(i),instance);
 				double score = scoreDevice(stack,device,surface);
-				if(score > bestScore) {
+				if(score > bestScore && isDeviceValid(device)) {
 					bestScore = score;
 					bestDevice = device;
 				}
