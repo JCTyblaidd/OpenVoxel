@@ -1,7 +1,10 @@
 package net.openvoxel.client.gui.util;
 
-import net.openvoxel.client.gui.widgets.display.*;
 import net.openvoxel.client.gui.framework.Screen;
+import net.openvoxel.client.gui.widgets.display.GUIColour;
+import net.openvoxel.client.gui.widgets.display.GUIProgressBar;
+import net.openvoxel.client.gui.widgets.display.GUIText;
+import net.openvoxel.client.gui.widgets.display.GuiGearBG;
 
 /**
  * Created by James on 14/09/2016.

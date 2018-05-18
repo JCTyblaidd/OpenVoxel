@@ -2,8 +2,6 @@ package net.openvoxel.server;
 
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
-import net.openvoxel.networking.ClientNetworkHandler;
-import net.openvoxel.world.World;
 import net.openvoxel.world.client.ClientWorld;
 import net.openvoxel.world.generation.DebugWorldGenerator;
 

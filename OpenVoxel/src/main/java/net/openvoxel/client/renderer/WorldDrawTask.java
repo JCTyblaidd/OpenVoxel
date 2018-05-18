@@ -9,7 +9,6 @@ import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncQueue;
 import net.openvoxel.utility.async.AsyncTaskPool;
-import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
 import org.joml.*;

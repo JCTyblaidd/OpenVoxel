@@ -3,8 +3,6 @@ package net.openvoxel.networking;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import net.openvoxel.OpenVoxel;
-import net.openvoxel.networking.protocol.PacketChannelInitializer;
 import net.openvoxel.server.DedicatedServer;
 
 import java.io.IOException;

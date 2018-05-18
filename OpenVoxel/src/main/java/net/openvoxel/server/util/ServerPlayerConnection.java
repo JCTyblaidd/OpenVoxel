@@ -2,15 +2,6 @@ package net.openvoxel.server.util;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.logger.Logger;
-import net.openvoxel.api.login.UserData;
-import net.openvoxel.common.entity.living.player.EntityPlayerMP;
-import net.openvoxel.networking.packet.protocol.HandshakePacket;
-import net.openvoxel.networking.packet.protocol.JoinGamePacket;
-import net.openvoxel.networking.packet.protocol.RequestPacketSync;
-import net.openvoxel.networking.packet.sync.RequestServerSyncPacket;
-import net.openvoxel.networking.packet.sync.SyncRegistryPacket;
 import net.openvoxel.networking.protocol.AbstractPacket;
 
 /**

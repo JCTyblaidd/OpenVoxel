@@ -7,7 +7,6 @@ import net.openvoxel.client.renderer.common.IGuiRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by James on 08/04/2017.

@@ -1,6 +1,5 @@
 package net.openvoxel.common.util;
 
-import net.openvoxel.common.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 /**

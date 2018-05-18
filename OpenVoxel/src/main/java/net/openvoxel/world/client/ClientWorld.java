@@ -19,15 +19,16 @@ public class ClientWorld extends World {
 
 	@Override
 	public ClientChunk requestChunk(long x, long z,boolean generate) {
-		ClientChunk res = (ClientChunk)chunkMap.get((int)x,(int)z);
+		ClientChunk res = (ClientChunk)chunkMap.get(x,z);
 		if(res == null && generate) {
-			res = (ClientChunk) generator.generateChunk((int)x,(int)z);
-			chunkMap.set((int)x,(int)z,res);
-		}//TODO: improve
+			res = (ClientChunk)generator.generateChunk((int)x,(int)z);
+			chunkMap.put(x,z,res);
+		}
 		return res;
 	}
 
-	@Override
+	//TODO: OVERRIDE RELASE CHUNK DATA & UNLOADING !!!
+	/*@Override
 	public void releaseAllChunkData() {
 		chunkMap.forEachChunk(e -> {
 			//Renderer.renderer.getWorldRenderer().onChunkUnloaded((ClientChunk)e);
@@ -35,6 +36,6 @@ public class ClientWorld extends World {
 			return true;
 		});
 		chunkMap.emptyAll();
-	}
+	}*/
 
 }

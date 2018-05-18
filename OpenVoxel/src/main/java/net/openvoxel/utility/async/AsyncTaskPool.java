@@ -1,10 +1,7 @@
 package net.openvoxel.utility.async;
 
-import com.lmax.disruptor.TimeoutException;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.PublicAPI;
-
-import java.util.concurrent.TimeUnit;
 
 public interface AsyncTaskPool {
 

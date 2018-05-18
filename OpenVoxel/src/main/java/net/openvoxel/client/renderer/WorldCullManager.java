@@ -1,7 +1,5 @@
 package net.openvoxel.client.renderer;
 
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
 import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.utility.collection.trove_extended.TVec3LHashSet;
 import net.openvoxel.world.client.ClientChunk;
@@ -9,8 +7,6 @@ import net.openvoxel.world.client.ClientChunkSection;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
 
 class WorldCullManager {
@@ -72,7 +68,7 @@ class WorldCullManager {
 			}
 
 			//Update & Queue Draw
-			if(section.sectionRef != null) {
+			if(section.sectionRef != null && !visitedOffsets.contains(section.offsetPosX,section.offsetPosY,section.offsetPosZ)) {
 				if(section.sectionRef.visibilityNeedsRegen()) {
 					section.sectionRef.generateVisibilityMap();
 				}
@@ -119,6 +115,7 @@ class WorldCullManager {
 					continue;
 				}
 
+
 				//Check Frustum Culling
 				if(!cullChunkFrustum(newX * 1.6F, newY * 16.F, newZ * 16.F)) {
 					//System.out.println("Invalidate Frustum");
@@ -151,6 +148,29 @@ class WorldCullManager {
 			this.offsetPosY = offsetPosY;
 			this.offsetPosZ = offsetPosZ;
 			this.previousFace = previousFace;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if(obj instanceof CullSection) {
+				CullSection other = (CullSection)obj;
+				return other.offsetPosX == offsetPosX &&
+						       other.offsetPosY == offsetPosY &&
+						       other.offsetPosZ == offsetPosZ
+						;
+			}else{
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + offsetPosX;
+			result = prime * result + offsetPosY;
+			result = prime * result + offsetPosZ;
+			return result;
 		}
 	}
 }

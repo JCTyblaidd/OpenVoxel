@@ -14,13 +14,10 @@ import net.openvoxel.common.resources.ResourceType;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
-import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
 
-import static org.lwjgl.system.MemoryStack.create;
 import static org.lwjgl.system.MemoryStack.stackPush;
-import static org.lwjgl.vulkan.KHRMaintenance1.VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT_KHR;
 import static org.lwjgl.vulkan.VK10.*;
 
 /**

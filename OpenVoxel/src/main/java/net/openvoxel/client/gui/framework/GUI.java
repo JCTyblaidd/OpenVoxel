@@ -2,7 +2,6 @@ package net.openvoxel.client.gui.framework;
 
 import net.openvoxel.api.PublicAPI;
 import net.openvoxel.api.logger.Logger;
-import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.debug.Validate;
 
 import java.util.ArrayDeque;

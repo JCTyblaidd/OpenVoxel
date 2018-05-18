@@ -1,7 +1,7 @@
 package net.openvoxel.world;
 
 import net.openvoxel.common.entity.Entity;
-import net.openvoxel.utility.collection.ChunkMap;
+import net.openvoxel.utility.collection.trove_extended.TVec2LObjectHashMap;
 import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.world.generation.IWorldGenerator;
 
@@ -12,11 +12,12 @@ import net.openvoxel.world.generation.IWorldGenerator;
  */
 public class World {
 
-	public final ChunkMap<Chunk> chunkMap;
-	public final IWorldGenerator generator;
+	//public final ChunkMap<Chunk> chunkMap;
+	protected final TVec2LObjectHashMap<Chunk> chunkMap;
+	protected final IWorldGenerator generator;
 
 	public World(IWorldGenerator generator) {
-		chunkMap = new ChunkMap<>();
+		chunkMap = new TVec2LObjectHashMap<>();
 		this.generator = generator;
 	}
 
@@ -28,11 +29,11 @@ public class World {
 		}
 	}
 	public Chunk requestChunk(long x, long z,boolean generate) {
-		Chunk res = chunkMap.get((int)x,(int)z);//TODO: IMPLEMENT PROPERLY
+		Chunk res = chunkMap.get(x,z);
 		if(res == null && generate) {
 			res = generator.generateChunk((int)x,(int)z);
-			chunkMap.set((int)x,(int)z,res);
-		}//TODO: improve
+			chunkMap.put(x,z,res);
+		}
 		return res;
 	}
 
@@ -41,11 +42,11 @@ public class World {
 	 * Unload The Entire World : Release All Chunk Data
 	 */
 	public void releaseAllChunkData() {
-		chunkMap.forEachChunk(e -> {
+		chunkMap.forEachValue(e -> {
 			e.releaseData();
 			return true;
 		});
-		chunkMap.emptyAll();
+		chunkMap.clear();
 	}
 
 	/**

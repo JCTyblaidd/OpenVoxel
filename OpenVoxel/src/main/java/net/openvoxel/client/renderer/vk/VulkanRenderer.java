@@ -15,7 +15,10 @@ import net.openvoxel.utility.async.AsyncTaskPool;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.*;
+import org.lwjgl.vulkan.VkClearValue;
+import org.lwjgl.vulkan.VkCommandBuffer;
+import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
+import org.lwjgl.vulkan.VkRenderPassBeginInfo;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.system.MemoryStack.stackPush;

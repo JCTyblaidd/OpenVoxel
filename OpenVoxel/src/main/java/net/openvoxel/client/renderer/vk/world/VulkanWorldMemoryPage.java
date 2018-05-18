@@ -14,7 +14,6 @@ import net.openvoxel.utility.debug.Validate;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkBufferCreateInfo;
-import org.lwjgl.vulkan.VkMemoryRequirements;
 
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;

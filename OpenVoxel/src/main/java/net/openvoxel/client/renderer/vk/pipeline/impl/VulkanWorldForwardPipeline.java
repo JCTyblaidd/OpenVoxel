@@ -6,8 +6,6 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
 import static org.lwjgl.vulkan.VK10.*;
-import static org.lwjgl.vulkan.VK10.VK_COLOR_COMPONENT_A_BIT;
-import static org.lwjgl.vulkan.VK10.VK_COLOR_COMPONENT_B_BIT;
 
 /*
  * Inputs:

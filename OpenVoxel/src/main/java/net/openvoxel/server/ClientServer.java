@@ -2,7 +2,6 @@ package net.openvoxel.server;
 
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.networking.protocol.AbstractPacket;
-import net.openvoxel.world.World;
 import net.openvoxel.world.client.ClientWorld;
 
 import java.util.function.Consumer;

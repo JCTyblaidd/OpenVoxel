@@ -2,9 +2,9 @@ package net.openvoxel.client.gui.menu.settings;
 
 import net.openvoxel.client.gui.framework.GUI;
 import net.openvoxel.client.gui.framework.Screen;
-import net.openvoxel.client.gui.widgets.input.GUIButton;
 import net.openvoxel.client.gui.widgets.display.GUIColour;
 import net.openvoxel.client.gui.widgets.display.GUIObjectImage;
+import net.openvoxel.client.gui.widgets.input.GUIButton;
 
 /**
  * Created by James on 20/09/2016.

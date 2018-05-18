@@ -1,23 +1,18 @@
 package net.openvoxel.world.client;
 
 import gnu.trove.iterator.TIntIterator;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
-import net.openvoxel.client.utility.IRenderDataCache;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.util.BlockFace;
-import net.openvoxel.world.chunk.Chunk;
 import net.openvoxel.world.chunk.ChunkSection;
 
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by James on 09/04/2017.

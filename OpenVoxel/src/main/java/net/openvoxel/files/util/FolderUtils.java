@@ -6,7 +6,6 @@ import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.files.world.GameSave;
 import net.openvoxel.utility.CrashReport;
 import org.lwjgl.stb.STBIWriteCallback;
-import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;

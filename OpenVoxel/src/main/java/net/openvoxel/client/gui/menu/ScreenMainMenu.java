@@ -4,10 +4,9 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui.framework.GUI;
 import net.openvoxel.client.gui.framework.Screen;
 import net.openvoxel.client.gui.menu.settings.ScreenSettings;
-import net.openvoxel.client.gui.widgets.display.GUIGears;
-import net.openvoxel.client.gui.widgets.input.GUIButton;
 import net.openvoxel.client.gui.widgets.display.GUIColour;
 import net.openvoxel.client.gui.widgets.display.GUIText;
+import net.openvoxel.client.gui.widgets.input.GUIButton;
 import net.openvoxel.client.renderer.Renderer;
 
 /**

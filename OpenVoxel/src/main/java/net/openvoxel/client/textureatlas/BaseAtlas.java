@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.lwjgl.stb.STBImageResize.*;
 import static org.lwjgl.stb.STBRectPack.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 

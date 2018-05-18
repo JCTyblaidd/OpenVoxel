@@ -5,8 +5,6 @@ import net.openvoxel.common.block.Block;
 import net.openvoxel.common.block.IBlockAccess;
 import net.openvoxel.common.util.AABB;
 import net.openvoxel.common.util.BlockFace;
-import net.openvoxel.vanilla.VanillaBlocks;
-import net.openvoxel.vanilla.block.BlockBricks;
 
 /**
  * Created by James on 28/08/2016.
