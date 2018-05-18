@@ -43,10 +43,14 @@ public abstract class BaseWorldRenderer {
 	public AsyncWorldHandler getWorldHandlerFor(int asyncID) {
 		AsyncWorldHandler handler = objectMap.get(asyncID);
 		if(handler == null) {
-			handler = new AsyncWorldHandler(asyncID);
+			handler = CreateAsyncHandler(asyncID);
 			objectMap.put(asyncID,handler);
 		}
 		return handler;
+	}
+
+	protected AsyncWorldHandler CreateAsyncHandler(int asyncID) {
+		return new AsyncWorldHandler(asyncID);
 	}
 
 	///////////////////////////
@@ -72,13 +76,13 @@ public abstract class BaseWorldRenderer {
 	/// Asynchronous Generation Code ///
 	////////////////////////////////////
 
-	public final class AsyncWorldHandler implements IBlockRenderer {
+	public class AsyncWorldHandler implements IBlockRenderer {
 
 		private BaseBlockAccess blockAccess = new BaseBlockAccess();
 		private int asyncID;
 		private boolean isOpaqueDraw;
 
-		private AsyncWorldHandler(int asyncID) {
+		protected AsyncWorldHandler(int asyncID) {
 			this.asyncID = asyncID;
 		}
 
@@ -142,7 +146,6 @@ public abstract class BaseWorldRenderer {
 		public ByteBuffer memoryMap = null;
 		public int start_offset;
 		public int end_offset;
-		public int memory_id;
 		public int write_offset;
 
 

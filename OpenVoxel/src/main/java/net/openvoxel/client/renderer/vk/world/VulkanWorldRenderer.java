@@ -404,20 +404,25 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 
 	@Override
-	protected void AsyncDraw(AsyncWorldHandler handle, ClientChunkSection chunkSection, int asyncID) {
+	protected void AsyncDraw(AsyncWorldHandler handle_in, ClientChunkSection chunkSection, int asyncID) {
+		VulkanAsyncWorldHandler handle = (VulkanAsyncWorldHandler)handle_in;
+
 		float chunkOffsetX = 16.F * (chunkSection.getChunkX() - originX);
 		float chunkOffsetY = 16.F * (chunkSection.getChunkY());
 		float chunkOffsetZ = 16.F * (chunkSection.getChunkZ() - originZ);
+
 		try(MemoryStack stack = stackPush()) {
 			if(chunkSection.Renderer_Size_Opaque != -1) {
 				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
+				long opaqueBuffer = memory.GetDeviceBuffer(chunkSection.Renderer_Info_Opaque);
+				long opaqueOffset = memory.GetDeviceOffset(chunkSection.Renderer_Info_Opaque);
+
 				vkCmdBindVertexBuffers(
 						graphics,
 						0,
-						stack.longs(memory.GetDeviceBuffer(chunkSection.Renderer_Info_Opaque)),
-						stack.longs(memory.GetDeviceOffset(chunkSection.Renderer_Info_Opaque))
+						stack.longs(opaqueBuffer),
+						stack.longs(opaqueOffset)
 				);
-
 				vkCmdPushConstants(
 						graphics,
 						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
@@ -433,15 +438,17 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 						0
 				);
 			}
-			if(chunkSection.Renderer_Size_Transparent != -1) {
+			if(chunkSection.Renderer_Size_Transparent != -1) {//TODO: SPLIT TRANSPARENT & OPAQUE
 				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
+				long transparentBuffer = memory.GetDeviceBuffer(chunkSection.Renderer_Info_Transparent);
+				long transparentOffset = memory.GetDeviceOffset(chunkSection.Renderer_Info_Transparent);
+
 				vkCmdBindVertexBuffers(
 						graphics,
 						0,
-						stack.longs(memory.GetDeviceBuffer(chunkSection.Renderer_Info_Transparent)),
-						stack.longs(memory.GetDeviceOffset(chunkSection.Renderer_Info_Transparent))
+						stack.longs(transparentBuffer),
+						stack.longs(transparentOffset)
 				);
-
 				vkCmdPushConstants(
 						graphics,
 						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
@@ -476,7 +483,9 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 
 	@Override
-	protected void AllocateChunkMemory(AsyncWorldHandler handle, boolean isOpaque) {
+	protected void AllocateChunkMemory(AsyncWorldHandler handle_in, boolean isOpaque) {
+		VulkanAsyncWorldHandler handle = (VulkanAsyncWorldHandler)handle_in;
+
 		handle.memory_id = memory.allocHostMemory(DEFAULT_MEMORY_SIZE);
 		handle.memoryMap = memory.mapHostMemory(handle.memory_id);
 		handle.start_offset = (int)memory.getOffsetForHost(handle.memory_id);
@@ -485,7 +494,9 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	}
 
 	@Override
-	protected void ExpandChunkMemory(AsyncWorldHandler handle, boolean isOpaque) {
+	protected void ExpandChunkMemory(AsyncWorldHandler handle_in, boolean isOpaque) {
+		VulkanAsyncWorldHandler handle = (VulkanAsyncWorldHandler)handle_in;
+
 		int current_size = handle.write_offset - handle.start_offset;
 		int new_size = current_size  + DEFAULT_MEMORY_SIZE;
 
@@ -514,9 +525,12 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	}
 
 	@Override
-	protected void FinalizeChunkMemory(AsyncWorldHandler handle,int asyncID,ClientChunkSection section, boolean isOpaque) {
+	protected void FinalizeChunkMemory(AsyncWorldHandler handle_in,int asyncID,ClientChunkSection section, boolean isOpaque) {
+		VulkanAsyncWorldHandler handle = (VulkanAsyncWorldHandler)handle_in;
+
 		int actual_size = handle.write_offset - handle.start_offset;
 		int invalidate_countdown = command.getSwapSize()+1;
+
 		//Free Old Data
 		if(isOpaque) {
 			if (section.Renderer_Size_Opaque != -1) {
@@ -564,5 +578,39 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	}
 
 
+	////////////////////////////////////
+	//// Vulkan Async World Handler ////
+	////////////////////////////////////
+
+
+	@Override
+	protected AsyncWorldHandler CreateAsyncHandler(int asyncID) {
+		return new VulkanAsyncWorldHandler(asyncID);
+	}
+
+	private class VulkanAsyncWorldHandler extends AsyncWorldHandler {
+
+		private long lastBoundVulkanBuffer;
+		private int memory_id;
+
+		private VulkanAsyncWorldHandler(int asyncID) {
+			super(asyncID);
+			lastBoundVulkanBuffer = VK_NULL_HANDLE;
+		}
+
+		@Override
+		public void Start() {
+			super.Start();
+			memory_id = 0;
+			lastBoundVulkanBuffer = VK_NULL_HANDLE;
+		}
+
+		@Override
+		public void Finish() {
+			super.Finish();
+			memory_id = 0;
+			lastBoundVulkanBuffer = VK_NULL_HANDLE;
+		}
+	}
 
 }
