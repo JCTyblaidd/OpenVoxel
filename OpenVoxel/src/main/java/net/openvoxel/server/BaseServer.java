@@ -2,6 +2,7 @@ package net.openvoxel.server;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.common.entity.living.player.EntityPlayer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.world.World;
@@ -21,6 +22,11 @@ public abstract class BaseServer {
 
 	protected List<EntityPlayer> connectedPlayers;
 
+	protected PerSecondTimer tickRateTimer = new PerSecondTimer();
+
+	private long lastTickTime = System.currentTimeMillis();
+	private static final int TICK_MILLIS = 50;
+
 	public World loadDimension(int index) {
 		World world = dimensionMap.get(index);
 		if(world == null) {
@@ -37,6 +43,10 @@ public abstract class BaseServer {
 			//TODO: UNLOAD WORLD
 		}
 		dimensionMap.remove(index);
+	}
+
+	public float getTickRate() {
+		return tickRateTimer.getPerSecond();
 	}
 
 	///////////////
@@ -59,8 +69,20 @@ public abstract class BaseServer {
 		});
 	}
 
-	public void serverTick(AsyncBarrier barrier) {
 
+	protected void executeServerTick(AsyncBarrier barrier) {
+		tickRateTimer.notifyEvent();
+	}
+
+	public final void serverTick(AsyncBarrier barrier) {
+		long currentTick = System.currentTimeMillis();
+		int deltaTick = (int)(currentTick-lastTickTime);
+		if(deltaTick > TICK_MILLIS) {
+			lastTickTime = currentTick;
+			executeServerTick(barrier);
+		}else{
+			barrier.reset(0);
+		}
 	}
 
 	public void sendUpdates() {

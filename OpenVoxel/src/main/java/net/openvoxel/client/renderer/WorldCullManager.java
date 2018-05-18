@@ -128,7 +128,7 @@ class WorldCullManager {
 
 				//Add to the queue
 				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction]);
-				if(dirY != 0 && section.sectionRef != null) {
+				if(dirY != 0 && section.sectionRef != null && newY >= 0 && newY < 16) {
 					cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
 				}
 				sectionQueue.addLast(cullSection);

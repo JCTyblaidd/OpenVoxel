@@ -2,6 +2,7 @@ package net.openvoxel.server;
 
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.world.client.ClientWorld;
 import net.openvoxel.world.generation.DebugWorldGenerator;
 
@@ -12,20 +13,30 @@ import net.openvoxel.world.generation.DebugWorldGenerator;
  */
 public class BackgroundClientServer extends ClientServer {
 
+	private static final float ADVANCE_RATE = (float)Math.toRadians(0.3F);
+
 	public BackgroundClientServer() {
 		thePlayer = new EntityPlayerSP();
 		thePlayer.currentWorld = new ClientWorld(new DebugWorldGenerator());
 		thePlayer.xPos = 115;
 		thePlayer.yPos = 105;
 		thePlayer.zPos = 115;
-		thePlayer.setPitch(0);
-		thePlayer.setYaw((float)Math.toRadians(-30));
+		thePlayer.setPitch(0.F);
+		thePlayer.setYaw(0.F);
 		for(int x = -8; x < 24; x++) {
 			for(int z = -8; z < 24; z++) {
 				thePlayer.currentWorld.requestChunk(x,z,true);
 			}
 		}
 		dimensionMap.put(0,thePlayer.currentWorld);
+	}
+
+
+	@Override
+	protected void executeServerTick(AsyncBarrier barrier) {
+		super.executeServerTick(barrier);
+		float newPitch = thePlayer.getYaw() + ADVANCE_RATE;
+		thePlayer.setYaw(newPitch % 360.F);
 	}
 
 	private void debug_tick() {

@@ -42,7 +42,7 @@ void main() {
     //Calculate Animated UV
     int animLimit = int(i_animation.x) * 255;
     int animTick = (worldData.animationTick % animLimit);
-    f_uv = i_uv_coord + vec2(0,animTick * i_animation.y);
+    f_uv = i_uv_coord;// + vec2(0,animTick * i_animation.y);
 
     //Forward Colour
     f_col = i_colour.rgb;

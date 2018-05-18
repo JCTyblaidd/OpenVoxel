@@ -89,14 +89,15 @@ public class WorldDrawTask implements Runnable {
 		//Player ProjectionView Data
 		float FoV = (float)Math.toRadians(100.F);
 		float aspectRatio = (float)width / (float)height;
-		float xRotate = (float)Math.toRadians(-160.0F);//TODO: USE PLAYER YAW / PITCH VALUES
-		float yRotate = (float)Math.toRadians(0.0F);
+		float xRotate = (float)Math.toRadians(thePlayer.getPitch());
+		float yRotate = (float)Math.toRadians(thePlayer.getYaw());
+		float zRotate = (float)Math.toRadians(180);
 
 		//Setup Linear Algebra
-		normalMatrix.identity().rotateX(xRotate).rotateY(yRotate);
-		cameraVector.set(0,0,1).rotateX(xRotate).rotateY(yRotate);
+		normalMatrix.identity().rotateZ(zRotate).rotateX(xRotate).rotateY(yRotate);
+		cameraVector.set(0,0,1).rotateZ(zRotate).rotateX(xRotate).rotateY(yRotate);
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
-		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,true);
+		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,false);//TODO: YES/NO??
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
 		frustumIntersect.set(frustumMatrix);
 	}
