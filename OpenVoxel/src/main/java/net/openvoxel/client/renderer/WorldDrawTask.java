@@ -80,13 +80,14 @@ public class WorldDrawTask implements Runnable {
 		chunkOriginZ = (long)Math.floor(thePlayer.zPos / 16.0);
 		worldRenderer.Setup(chunkOriginX,chunkOriginZ,theWorld);
 		playerX = (float)(thePlayer.xPos - 16.0 * chunkOriginX);
-		playerY = (float)thePlayer.yPos;//TODO: ADD CAMERA OFFSET
+		playerY = (float)thePlayer.yPos + 10.F;//TODO: ADD CAMERA OFFSET
 		playerZ = (float)(thePlayer.zPos - 16.0 * chunkOriginZ);
 		viewDistance = 16;//TODO: UPDATE THESE CONSTANTS
-		float FoV = 90.F;
+		float FoV = (float)Math.toRadians(100.F);
 		float aspectRatio = (float)width / (float)height;
 
-		normalMatrix.identity().rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
+		normalMatrix.identity().rotateX((float)Math.toRadians(-160.0));
+		//normalMatrix.identity().rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
 		cameraVector.set(0,0,1).rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
 		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,true);

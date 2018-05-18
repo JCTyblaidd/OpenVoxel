@@ -406,7 +406,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 	@Override
 	protected void AsyncDraw(AsyncWorldHandler handle, ClientChunkSection chunkSection, int asyncID) {
-		float chunkOffsetX = 1.6F * (chunkSection.getChunkX() - originX);
+		float chunkOffsetX = 16.F * (chunkSection.getChunkX() - originX);
 		float chunkOffsetY = 16.F * (chunkSection.getChunkY());
 		float chunkOffsetZ = 16.F * (chunkSection.getChunkZ() - originZ);
 		try(MemoryStack stack = stackPush()) {

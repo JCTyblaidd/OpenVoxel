@@ -54,6 +54,17 @@ public class BaseBlockAccess implements IBlockAccess {
 	/// API Methods ///
 	///////////////////
 
+	public int getOffsetX() {
+		return originAccess.offsetX;
+	}
+
+	public int getOffsetY() {
+		return originAccess.offsetY;
+	}
+
+	public int getOffsetZ() {
+		return originAccess.offsetZ;
+	}
 
 	@Override
 	public int getBlockID() {
@@ -144,17 +155,17 @@ public class BaseBlockAccess implements IBlockAccess {
 
 		@Override
 		public long getX() {
-			return chunkX + offsetX;
+			return chunkX * 16L + offsetX;
 		}
 
 		@Override
 		public long getY() {
-			return chunkY + offsetY;
+			return chunkY * 16L + offsetY;
 		}
 
 		@Override
 		public long getZ() {
-			return chunkZ + offsetZ;
+			return chunkZ * 16L + offsetZ;
 		}
 
 		@Override
