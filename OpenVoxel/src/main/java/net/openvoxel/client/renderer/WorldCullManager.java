@@ -36,9 +36,15 @@ class WorldCullManager {
 
 	//TODO: cull for generate voxel data
 
+	//Convert to private variables
+	private Deque<CullSection> sectionQueue = new ArrayDeque<>();
+	private TVec3LHashSet visitedOffsets = new TVec3LHashSet();
+
 	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
-		Deque<CullSection> sectionQueue = new ArrayDeque<>();
-		TVec3LHashSet visitedOffsets = new TVec3LHashSet();
+		//Deque<CullSection> sectionQueue = new ArrayDeque<>();
+		//TVec3LHashSet visitedOffsets = new TVec3LHashSet();
+		sectionQueue.clear();
+		visitedOffsets.clear();
 
 		//Find Starting Chunk offset Position
 		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.0);
@@ -118,9 +124,9 @@ class WorldCullManager {
 				}
 
 				//Mark as visited
-				visitedOffsets.add(section.offsetPosX,section.offsetPosY,section.offsetPosZ);
+				visitedOffsets.add(newX,newY,newZ);
 
-				//Queue for visitation
+				//Add to the queue
 				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction]);
 				if(dirY != 0 && section.sectionRef != null) {
 					cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
