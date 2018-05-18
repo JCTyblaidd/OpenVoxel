@@ -132,5 +132,24 @@ public class VulkanWorldForwardPipeline extends VulkanGraphicsPipeline {
 		return blendState;
 	}
 
+	@Override
+	protected VkPipelineRasterizationStateCreateInfo getRasterizationState(MemoryStack stack) {
+		VkPipelineRasterizationStateCreateInfo rasterState = VkPipelineRasterizationStateCreateInfo.mallocStack(stack);
+		rasterState.sType(VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO);
+		rasterState.pNext(VK_NULL_HANDLE);
+		rasterState.flags(0);
+		rasterState.depthClampEnable(false);       //was false -> true??
+		rasterState.rasterizerDiscardEnable(false);//was true -> false???
+		rasterState.polygonMode(VK_POLYGON_MODE_FILL);
+		rasterState.cullMode(VK_CULL_MODE_BACK_BIT);
+		rasterState.frontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE);
+		rasterState.depthBiasEnable(false);
+		rasterState.depthBiasConstantFactor(0.0F);
+		rasterState.depthBiasClamp(0.0F);
+		rasterState.depthBiasSlopeFactor(0.0F);
+		rasterState.lineWidth(1.0F);
+		return rasterState;
+	}
+
 
 }

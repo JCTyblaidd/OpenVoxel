@@ -29,7 +29,7 @@ public class WorldDrawTask implements Runnable {
 	private int height;
 
 	//Configuration
-	public static final int MAX_TRANSFER_CALLS_PER_FRAME = 64;
+	public static final int MAX_TRANSFER_CALLS_PER_FRAME = 8;
 
 	//Utility Classes....
 	private final WorldCullManager culler;
@@ -76,19 +76,27 @@ public class WorldDrawTask implements Runnable {
 		height = ClientInput.currentWindowFrameSize.y;
 		thePlayer = server.getThePlayer();
 		theWorld = server.getTheWorld();
+
+		//World Data
 		chunkOriginX = (long)Math.floor(thePlayer.xPos / 16.0);
 		chunkOriginZ = (long)Math.floor(thePlayer.zPos / 16.0);
 		worldRenderer.Setup(chunkOriginX,chunkOriginZ,theWorld);
+
+		//Player Draw Data
 		playerX = (float)(thePlayer.xPos - 16.0 * chunkOriginX);
 		playerY = (float)thePlayer.yPos + 10.F;//TODO: ADD CAMERA OFFSET
 		playerZ = (float)(thePlayer.zPos - 16.0 * chunkOriginZ);
-		viewDistance = 16;//TODO: UPDATE THESE CONSTANTS
+		viewDistance = 4;//TODO: UPDATE THESE CONSTANTS
+
+		//Player ProjectionView Data
 		float FoV = (float)Math.toRadians(100.F);
 		float aspectRatio = (float)width / (float)height;
+		float xRotate = (float)Math.toRadians(-160.0F);//TODO: USE PLAYER YAW / PITCH VALUES
+		float yRotate = (float)Math.toRadians(0.0F);
 
-		normalMatrix.identity().rotateX((float)Math.toRadians(-160.0));
-		//normalMatrix.identity().rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
-		cameraVector.set(0,0,1).rotateX(thePlayer.getPitch()).rotateY(thePlayer.getYaw());
+		//Setup Linear Algebra
+		normalMatrix.identity().rotateX(xRotate).rotateY(yRotate);
+		cameraVector.set(0,0,1).rotateX(xRotate).rotateY(yRotate);
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
 		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,true);
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
@@ -119,25 +127,37 @@ public class WorldDrawTask implements Runnable {
 			}
 			handler.AsyncDraw(section);
 		});
+
 */
-		//System.out.println("END OF DRAW");
-		//boolean _DELAY = false;
-		ClientChunk _chunk = theWorld.requestChunk(8,8,false);
-		if(_chunk == null) throw new RuntimeException("Failed miserably!");
-		for(int y = 0; y < 16; y++) {
-			ClientChunkSection section = _chunk.getSectionAt(y);
-			if(section.isDrawDirty()) {
+
+		AtomicInteger limit = new AtomicInteger(0);
+		culler.runFrustumCull(section -> {
+			if(section.isDrawDirty() && limit.getAndIncrement() < MAX_TRANSFER_CALLS_PER_FRAME) {
 				handler.AsyncGenerate(section);
-			//	_DELAY = true;
+				handler.AsyncDraw(section);
+			}else if(!section.isDrawDirty()) {
+				handler.AsyncDraw(section);
 			}
-			//System.out.println("DATA["+y+"] -> "+section.Renderer_Size_Opaque);
-			handler.AsyncDraw(section);
-		}
-		//if(_DELAY) {
-		//	try{
-		//		System.in.read();//TODO: REMOVE {DEBUG WAIT!!}
-		//	}catch(Exception ignore){}
-		//}
+		});
+
+		//System.out.println("END OF DRAW");
+/*
+		int limit = 0;
+		for(int x = 7; x < 10; x++) {
+			for(int z = 7; z < 10; z++) {
+				ClientChunk _chunk = theWorld.requestChunk(x, z, false);
+				if (_chunk == null) throw new RuntimeException("Failed miserably!");
+				for (int y = 0; y < 16; y++) {
+					ClientChunkSection section = _chunk.getSectionAt(y);
+					if (section.isDrawDirty() && limit < MAX_TRANSFER_CALLS_PER_FRAME) {
+						handler.AsyncGenerate(section);
+						limit++;
+					}
+					handler.AsyncDraw(section);
+				}
+			}
+		}*/
+
 
 		for(int i = 0; i < generateTasks.size(); i++) {
 			worldRenderer.getWorldHandlerFor(i).Finish();

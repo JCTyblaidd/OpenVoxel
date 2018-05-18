@@ -41,7 +41,7 @@ class WorldCullManager {
 		long shiftedX = x + drawTask.viewDistance;
 		long shiftedZ = z + drawTask.viewDistance;
 		long doubleDist = drawTask.viewDistance * 2 + 1;
-		return (long)y + 16 * (shiftedX + doubleDist * shiftedZ);
+		return ((long)y) + 16L * (shiftedX + doubleDist * shiftedZ);
 	}
 
 	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
@@ -49,12 +49,13 @@ class WorldCullManager {
 		TLongSet visitedOffsets = new TLongHashSet();
 
 		//Find Starting Chunk offset Position
-		int startOffsetX = (int)Math.floor(drawTask.thePlayer.xPos / 16.0);
-		int startOffsetY = (int)Math.floor(drawTask.thePlayer.yPos / 16.0);//TODO: ADD CAMERA OFFSET!!!!!!!!
-		int startOffsetZ = (int)Math.floor(drawTask.thePlayer.zPos / 16.0);
+		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.0);
+		int startOffsetY = (int)Math.floor(drawTask.playerY / 16.0);//TODO: ADD CAMERA OFFSET!!!!!!!!
+		int startOffsetZ = (int)Math.floor(drawTask.playerZ / 16.0);
 
 		//Add Starting Chunk
 		sectionQueue.add(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
+		//System.out.println(startOffsetX+","+startOffsetY+","+startOffsetZ);
 
 		//Constants
 		final int[] xOffsets = BlockFace.array_xOffsets;
@@ -64,6 +65,7 @@ class WorldCullManager {
 
 		//Breath First Search
 		while(!sectionQueue.isEmpty()) {
+			//System.out.println("FROM SIZE="+sectionQueue.size());
 			CullSection section = sectionQueue.removeFirst();
 
 			//Find Client Chunk Section if Applicable...
@@ -95,6 +97,7 @@ class WorldCullManager {
 				//Check not backwards
 				float dotProduct = drawTask.cameraVector.dot(dirX,dirY,dirZ);
 				if(dotProduct > 0.0F) {
+					//System.out.println("Invalidate Dot Product");
 					//System.out.println("INVALIDATE DOT PRODUCT! {"+
 					//		                   drawTask.cameraVector.x+","+drawTask.cameraVector.y+","+drawTask.cameraVector.z+
 					//		                   "|"+dirX+","+dirY+","+dirZ+"}");
@@ -106,7 +109,7 @@ class WorldCullManager {
 				int newY = section.offsetPosY + dirY;
 				int newZ = section.offsetPosZ + dirZ;
 				if(Math.abs(newX) > drawTask.viewDistance || Math.abs(newZ) > drawTask.viewDistance) {
-					//System.out.println("Invalidate View Distance");
+					//System.out.println("Invalidate View Distance {"+newX+","+newZ+"}");
 					continue;
 				}
 
@@ -120,6 +123,7 @@ class WorldCullManager {
 
 				//Check not already visited
 				if(visitedOffsets.contains(packOffsets(newX,newY,newZ))) {
+					//System.out.println("Invalidate Visited");
 					continue;
 				}
 
@@ -128,6 +132,8 @@ class WorldCullManager {
 					//System.out.println("Invalidate Frustum");
 					continue;
 				}
+
+				//System.out.println("Validated!");
 
 				//Queue for visitation
 				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction]);
