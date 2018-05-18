@@ -13,7 +13,7 @@ import net.openvoxel.world.generation.DebugWorldGenerator;
  */
 public class BackgroundClientServer extends ClientServer {
 
-	private static final float ADVANCE_RATE = (float)Math.toRadians(0.3F);
+	private static final float ADVANCE_RATE = (float)Math.toRadians(10F);
 
 	public BackgroundClientServer() {
 		thePlayer = new EntityPlayerSP();

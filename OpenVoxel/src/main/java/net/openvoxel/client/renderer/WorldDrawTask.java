@@ -95,7 +95,7 @@ public class WorldDrawTask implements Runnable {
 
 		//Setup Linear Algebra
 		normalMatrix.identity().rotateZ(zRotate).rotateX(xRotate).rotateY(yRotate);
-		cameraVector.set(0,0,1).rotateZ(zRotate).rotateX(xRotate).rotateY(yRotate);
+		cameraVector.set(0,-1,0).mul(normalMatrix);
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
 		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,false);//TODO: YES/NO??
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
