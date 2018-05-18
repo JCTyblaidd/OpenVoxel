@@ -47,7 +47,6 @@ class WorldCullManager {
 
 		//Add Starting Chunk
 		sectionQueue.add(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
-		//System.out.println(startOffsetX+","+startOffsetY+","+startOffsetZ);
 
 		//Constants
 		final int[] xOffsets = BlockFace.array_xOffsets;
@@ -100,7 +99,8 @@ class WorldCullManager {
 				int newX = section.offsetPosX + dirX;
 				int newY = section.offsetPosY + dirY;
 				int newZ = section.offsetPosZ + dirZ;
-				if(Math.abs(newX) > drawTask.viewDistance||Math.abs(newZ) > drawTask.viewDistance||Math.abs(newY) > drawTask.viewDistance) {
+				if(Math.abs(newX) > drawTask.viewDistance||Math.abs(newZ) > drawTask.viewDistance
+				   ||Math.abs(newY-startOffsetY) > drawTask.viewDistance) {
 					//System.out.println("Invalidate View Distance {"+newX+","+newZ+"}");
 					continue;
 				}
