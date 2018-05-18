@@ -51,9 +51,12 @@ public class ClientChunkSection extends ChunkSection {
 	}
 
 	public Block blockAt(int x, int y, int z) {
-		int reqIndex = x * 256 + y * 16 + z;
-		int val = blockInformation.get(reqIndex);
-		return OpenVoxel.getInstance().blockRegistry.getBlockFromID(val >> 8);
+		return blockAt(OpenVoxel.getInstance().blockRegistry,x,y,z);
+	}
+
+	public Block blockAt(RegistryBlocks registry, int x, int y, int z) {
+		int val = RawDataAt(x,y,z);
+		return registry.getBlockFromID(val >> 8);
 	}
 
 	public final IntBuffer getBlocks() {
@@ -81,7 +84,7 @@ public class ClientChunkSection extends ChunkSection {
 		return isVisibilityDirty;
 	}
 
-	public void generateVisibilityMap() {
+	public void generateVisibilityMap(RegistryBlocks registry) {
 		//Reset
 		visibilityMetadata = 0L;
 
@@ -92,6 +95,7 @@ public class ClientChunkSection extends ChunkSection {
 			return;
 		}
 
+		//Run Flood fill through the chunk section
 		TIntSet connectSet = new TIntHashSet();
 		final int block_count = 16 * 16 * 16;
 		int[] floodQueue = new int[block_count];
@@ -99,7 +103,7 @@ public class ClientChunkSection extends ChunkSection {
 		for(int i = 0; i < block_count; i++) {
 			if(!hasVisited[i]) {
 				connectSet.clear();
-				floodFill(hasVisited,connectSet,i,floodQueue);
+				floodFill(registry,hasVisited,connectSet,i,floodQueue);
 				TIntIterator iterator_a = connectSet.iterator();
 				while(iterator_a.hasNext()) {
 					int A = iterator_a.next();
@@ -117,13 +121,11 @@ public class ClientChunkSection extends ChunkSection {
 	}
 
 	//TODO: ADD LIGHTING CALCULATION AS WELL???
-	private void floodFill(boolean[] visited,TIntSet intSet,int start,int[] floodQueue) {
+	private void floodFill(RegistryBlocks registry,boolean[] visited,TIntSet intSet,int start,int[] floodQueue) {
 		int startPos = 0;
 		int endPos = 1;
 		floodQueue[startPos] = start;
-
-		//Constant References
-		RegistryBlocks registry = OpenVoxel.getInstance().blockRegistry;
+		visited[start] = true;
 
 		//While values exist
 		while(startPos < endPos) {
@@ -131,8 +133,7 @@ public class ClientChunkSection extends ChunkSection {
 			int position = floodQueue[startPos];
 			startPos += 1;
 
-			//Mark as Visited
-			visited[position] = true;
+			//Calculate Location
 			int pos_z = position % 16;
 			int pos_y = (position / 16) % 16;
 			int pos_x = (position / 256);
@@ -142,9 +143,12 @@ public class ClientChunkSection extends ChunkSection {
 			Block block = registry.getBlockFromID(blockInfo >> 8);
 			//byte meta = (byte)(blockInfo & 0xFF);
 
+			//Skip all calculation
+			if(block.isCompleteOpaque()) continue;
+
 			//TODO: USE METADATA!!!
 			for(BlockFace face : BlockFace.values()) {
-				if(block.isOpaque(face)) {
+				if(!block.isOpaque(face)) {
 					int new_z = face.zOffset + pos_z;
 					int new_y = face.yOffset + pos_y;
 					int new_x = face.xOffset + pos_x;
@@ -156,11 +160,18 @@ public class ClientChunkSection extends ChunkSection {
 						intSet.add(face.faceID);
 					}else{
 						int new_position = new_x * 256 + new_y * 16 + new_z;
-						if(!visited[new_position]) {
+
+						//TODO: IS THIS NEEDED?
+						//Check direction in both ways
+						//int new_block_info = blockInformation.get(new_position);
+						//Block new_block = registry.getBlockFromID(new_block_info >> 8);
+						//if(!new_block.isOpaque(BlockFace.getOppositeFace(face))) {
+						if (!visited[new_position]) {
 							floodQueue[endPos] = new_position;
 							visited[new_position] = true;
 							endPos += 1;
 						}
+						//}
 					}
 				}
 			}
@@ -169,13 +180,13 @@ public class ClientChunkSection extends ChunkSection {
 
 
 	public boolean isVisible(int face1, int face2) {
-		int mask = 1 << (face1 * 6 + face2);
+		long mask = 1L << (face1 * 6 + face2);
 		return (visibilityMetadata & mask) != 0;
 	}
 
 	private void setVisible(int face1, int face2) {
-		int mask_a = 1 << (face1 * 6 + face2);
-		int mask_b = 1 << (face2 * 6 + face1);
+		long mask_a = 1L << (face1 * 6 + face2);
+		long mask_b = 1L << (face2 * 6 + face1);
 		visibilityMetadata |= (mask_a | mask_b);
 	}
 }

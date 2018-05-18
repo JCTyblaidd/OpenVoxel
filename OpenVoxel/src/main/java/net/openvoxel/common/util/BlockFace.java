@@ -45,14 +45,17 @@ public enum BlockFace {
 	public static final int[] array_yOffsets;
 	public static final int[] array_zOffsets;
 	public static final int[] array_opposite;
+	public static final BlockFace[] array_faces;
 	public static final int face_count = 6;
 	static {
 		array_xOffsets = new int[6];
 		array_yOffsets = new int[6];
 		array_zOffsets = new int[6];
 		array_opposite = new int[6];
+		array_faces = new BlockFace[6];
 		for(BlockFace face : BlockFace.values()) {
 			int id = face.faceID;
+			array_faces[id] = face;
 			array_xOffsets[id] = face.xOffset;
 			array_yOffsets[id] = face.yOffset;
 			array_zOffsets[id] = face.zOffset;

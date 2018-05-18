@@ -3,10 +3,12 @@ package net.openvoxel.world.chunk;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.entity.Entity;
+import net.openvoxel.common.registry.RegistryBlocks;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
+import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,13 +93,23 @@ public class Chunk {
 		return chunkSection.blockInformation.get(x * 256 + ySub * 16 + z);
 	}
 
-	public void setBlock(int x, int y, int z, Block block, byte meta) {
+	public void setBlock(int x,int y,int z, Block block, byte meta) {
+		RegistryBlocks blockRegistry = OpenVoxel.getInstance().blockRegistry;
+		int newID = blockRegistry.getIDFromBlock(block) << 8 | meta;
+		setBlockRaw(blockRegistry,x,y,z,block,newID);
+	}
+
+	public void setBlock(RegistryBlocks blockRegistry,int x, int y, int z, Block block, byte meta) {
+		int newID = blockRegistry.getIDFromBlock(block) << 8 | meta;
+		setBlockRaw(blockRegistry,x,y,z,block, newID);
+	}
+
+	public void setBlockRaw(RegistryBlocks blockRegistry,int x, int y, int z, Block block, int newID) {
 		ChunkSection chunkSection = chunkSections[y / 16];
 		int ySub = y % 16;
 		int reqIndex = x * 256 + ySub * 16 + z;
 		int oldID =  chunkSection.blockInformation.get(reqIndex);
-		int newID = OpenVoxel.getInstance().blockRegistry.getIDFromBlock(block) << 8 | meta;
-		Block oldBlock = OpenVoxel.getInstance().blockRegistry.getBlockFromID(oldID >> 8);
+		Block oldBlock = blockRegistry.getBlockFromID(oldID >> 8);
 		chunkSection.blockInformation.put(reqIndex,newID);
 		//Mark Update Flags//
 		chunkSection.lightCalculationDirty |= !(oldBlock.isCompleteOpaque() & block.isCompleteOpaque());

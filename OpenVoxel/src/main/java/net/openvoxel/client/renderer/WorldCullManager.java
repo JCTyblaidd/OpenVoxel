@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer;
 
+import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.utility.collection.trove_extended.TVec3LHashSet;
 import net.openvoxel.world.client.ClientChunk;
@@ -31,6 +32,9 @@ class WorldCullManager {
 		);
 	}
 
+	//TODO: cull for shadowMap
+
+	//TODO: cull for generate voxel data
 
 	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
 		Deque<CullSection> sectionQueue = new ArrayDeque<>();
@@ -70,7 +74,7 @@ class WorldCullManager {
 			//Update & Queue Draw
 			if(section.sectionRef != null) {
 				if(section.sectionRef.visibilityNeedsRegen()) {
-					section.sectionRef.generateVisibilityMap();
+					section.sectionRef.generateVisibilityMap(OpenVoxel.getInstance().blockRegistry);
 				}
 				consumer.accept(section.sectionRef);
 			}
