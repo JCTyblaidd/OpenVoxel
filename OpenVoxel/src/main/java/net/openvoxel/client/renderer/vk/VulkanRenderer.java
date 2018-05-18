@@ -163,7 +163,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			clearValues.color().float32(1,0.72549f);
 			clearValues.color().float32(2,1.0f);
 			clearValues.color().float32(3,1.0f);
-			clearValues.get(1).depthStencil().depth(0.0f);
+			clearValues.get(1).depthStencil().depth(1.0f);
 			VkRenderPassBeginInfo renderPassBegin = VkRenderPassBeginInfo.mallocStack(stack);
 			renderPassBegin.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
 			renderPassBegin.pNext(VK_NULL_HANDLE);

@@ -248,9 +248,9 @@ public class VulkanCache {
 			int mip_offset = 0;
 			int atlas_size = baseAtlas.AtlasWidth;
 			for (int mip = 0; mip < baseAtlas.AtlasMipLevels; mip++) {
-				baseAtlas.DataDiff.position(mip_offset);
-				baseAtlas.DataNorm.position(mip_offset);
-				baseAtlas.DataPBR.position(mip_offset);
+				baseAtlas.DataDiff.position(mip_offset * 4);
+				baseAtlas.DataNorm.position(mip_offset * 4);
+				baseAtlas.DataPBR.position(mip_offset * 4);
 
 				command.SingleUseImagePopulate(
 						IMAGE_BLOCK_ATLAS_ARRAY,baseAtlas.DataDiff,

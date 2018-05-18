@@ -176,21 +176,20 @@ public abstract class BaseWorldRenderer {
 			memoryMap.putFloat(write_offset + 4, (Y + blockAccess.getOffsetY()));
 			memoryMap.putFloat(write_offset + 8, (Z + blockAccess.getOffsetZ()));
 
-
 			float u_value = (U * (currentIcon.U1 - currentIcon.U0)) + currentIcon.U0;
 			float delta_v = currentIcon.V1 - currentIcon.V0;
 			float v_value = (V * delta_v) + currentIcon.V0;
 
-			memoryMap.putShort(write_offset + 12, (short) (u_value / 65535.F));
-			memoryMap.putShort(write_offset + 14, (short) (v_value / 65535.F));
+			memoryMap.putShort(write_offset + 12, (short) (u_value * 65535.F));
+			memoryMap.putShort(write_offset + 14, (short) (v_value * 65535.F));
 
-			memoryMap.put(write_offset + 16, (byte) (xNorm / 255.F));
-			memoryMap.put(write_offset + 17, (byte) (yNorm / 255.F));
-			memoryMap.put(write_offset + 18, (byte) (zNorm / 255.F));
+			memoryMap.put(write_offset + 16, (byte) (xNorm * 255.F));
+			memoryMap.put(write_offset + 17, (byte) (yNorm * 255.F));
+			memoryMap.put(write_offset + 18, (byte) (zNorm * 255.F));
 
-			memoryMap.put(write_offset + 19, (byte) (xTangent / 255.F));
-			memoryMap.put(write_offset + 20, (byte) (yTangent / 255.F));
-			memoryMap.put(write_offset + 21, (byte) (zTangent / 255.F));
+			memoryMap.put(write_offset + 19, (byte) (xTangent * 255.F));
+			memoryMap.put(write_offset + 20, (byte) (yTangent * 255.F));
+			memoryMap.put(write_offset + 21, (byte) (zTangent * 255.F));
 
 			memoryMap.putInt(write_offset + 22, Colour);
 

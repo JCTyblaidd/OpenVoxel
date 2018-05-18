@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.lwjgl.stb.STBImageResize.*;
 import static org.lwjgl.stb.STBRectPack.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
@@ -69,6 +70,54 @@ public class BaseAtlas implements IconAtlas {
 	@Override
 	public void performStitch() {
 		stitchAndGenerateAtlas("block");
+	}
+
+
+/*	private void resize(long ptr_input,int old_mip_size,long ptr_output,int mip_size) {
+		/*STBImageResize.nstbir_resize_uint8(
+				ptr_input, old_mip_size, old_mip_size, 0,
+				ptr_output, mip_size, mip_size, 0,
+				4
+		);*/
+		/*nstbir_resize_uint8_generic(
+				ptr_input, old_mip_size, old_mip_size, 0,
+				ptr_output, mip_size, mip_size, 0,
+				4,
+				STBIR_ALPHA_CHANNEL_NONE,
+				0,
+				STBIR_EDGE_CLAMP,
+				STBIR_FILTER_TRIANGLE,   //CHANGED FROM DEFAULT
+				STBIR_COLORSPACE_LINEAR,
+				0L
+		);
+	}*/
+	private void resize(ByteBuffer buffer, int offset_input, int old_mip_size, int offset_output, int mip_size) {
+		long ptr_input = MemoryUtil.memAddress(buffer,offset_input);
+		long ptr_output = MemoryUtil.memAddress(buffer,offset_output);
+		STBImageResize.nstbir_resize_uint8(
+				ptr_input, old_mip_size, old_mip_size, 0,
+				ptr_output, mip_size, mip_size, 0,
+				4
+		);
+		/*
+		for(int x = 0; x < mip_size; x++) {
+			for(int y = 0; y < mip_size; y++) {
+				int offset_out = offset_output + 4 * (x + y * mip_size);
+				int offset_in1 = offset_input  + 8 * (x + y * old_mip_size);
+				int offset_in2 = offset_in1 + 4;
+				int offset_in3 = offset_in1 + 4 * old_mip_size;
+				int offset_in4 = offset_in3 + 4;
+				for(int byte_off = 0; byte_off < 4; byte_off++) {
+					int VAL1 = buffer.get(offset_in1+byte_off) & 0xFF;
+					int VAL2 = buffer.get(offset_in2+byte_off) & 0xFF;
+					int VAL3 = buffer.get(offset_in3+byte_off) & 0xFF;
+					int VAL4 = buffer.get(offset_in4+byte_off) & 0xFF;
+					int RES = (VAL1 + VAL2 + VAL3 + VAL4 + 2) / 4;//ROUNDED
+					buffer.put(offset_out+byte_off,(byte)RES);
+				}
+			}
+		}
+		*/
 	}
 
 	public void stitchAndGenerateAtlas(String id) {
@@ -204,28 +253,24 @@ public class BaseAtlas implements IconAtlas {
 		int mip_offset = AtlasHeight * AtlasWidth;
 		int mip_size = AtlasWidth / 2;
 		while(mip_size > 0) {
+			/*
 			long ptr_input = MemoryUtil.memAddress(DataDiff,4 * old_mip_offset);
 			long ptr_output = MemoryUtil.memAddress(DataDiff, 4 * mip_offset);
-			STBImageResize.nstbir_resize_uint8(
-					ptr_input, old_mip_size, old_mip_size, 0,
-					ptr_output, mip_size, mip_size, 0,
-					4
-			);
+			resize(ptr_input,old_mip_size,ptr_output,mip_size);
 			if(!isSingleTexture) {
 				ptr_input = MemoryUtil.memAddress(DataNorm, 4 * old_mip_offset);
 				ptr_output = MemoryUtil.memAddress(DataNorm, 4 * mip_offset);
-				STBImageResize.nstbir_resize_uint8(
-						ptr_input, old_mip_size, old_mip_size, 0,
-						ptr_output, mip_size, mip_size, 0,
-						4
-				);
+				resize(ptr_input,old_mip_size,ptr_output,mip_size);
 				ptr_input = MemoryUtil.memAddress(DataPBR, 4 * old_mip_offset);
 				ptr_output = MemoryUtil.memAddress(DataPBR, 4 * mip_offset);
-				STBImageResize.nstbir_resize_uint8(
-						ptr_input, old_mip_size, old_mip_size, 0,
-						ptr_output, mip_size, mip_size, 0,
-						4
-				);
+				resize(ptr_input,old_mip_size,ptr_output,mip_size);
+			}*/
+			int old_byte_offset = 4 * old_mip_offset;
+			int new_byte_offset = 4 * mip_offset;
+			resize(DataDiff,old_byte_offset,old_mip_size,new_byte_offset,mip_size);
+			if(!isSingleTexture) {
+				resize(DataNorm,old_byte_offset,old_mip_size,new_byte_offset,mip_size);
+				resize(DataPBR,old_byte_offset,old_mip_size,new_byte_offset,mip_size);
 			}
 
 			//Next Mip
