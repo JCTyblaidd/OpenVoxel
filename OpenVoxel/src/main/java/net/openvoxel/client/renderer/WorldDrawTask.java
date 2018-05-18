@@ -85,7 +85,7 @@ public class WorldDrawTask implements Runnable {
 		playerX = (float)(thePlayer.xPos - 16.0 * chunkOriginX);
 		playerY = (float)thePlayer.yPos + 10.F;//TODO: ADD CAMERA OFFSET
 		playerZ = (float)(thePlayer.zPos - 16.0 * chunkOriginZ);
-		viewDistance = 5;//TODO: UPDATE THESE CONSTANTS
+		viewDistance = 16;//TODO: UPDATE THESE CONSTANTS
 
 		//Player ProjectionView Data
 		float FoV = (float)Math.toRadians(100.F);

@@ -119,7 +119,7 @@ class WorldCullManager {
 				}
 
 				//Check Frustum Culling
-				if(!cullChunkFrustum(newX * 1.6F, newY * 16.F, newZ * 16.F)) {
+				if(!cullChunkFrustum(newX * 16.0F, newY * 16.F, newZ * 16.F)) {
 					continue;
 				}
 

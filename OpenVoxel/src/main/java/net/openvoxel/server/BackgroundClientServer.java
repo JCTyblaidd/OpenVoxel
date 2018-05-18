@@ -20,8 +20,8 @@ public class BackgroundClientServer extends ClientServer {
 		thePlayer.zPos = 115;
 		thePlayer.setPitch(0);
 		thePlayer.setYaw((float)Math.toRadians(-30));
-		for(int x = 0; x < 16; x++) {
-			for(int z = 0; z < 16; z++) {
+		for(int x = -8; x < 24; x++) {
+			for(int z = -8; z < 24; z++) {
 				thePlayer.currentWorld.requestChunk(x,z,true);
 			}
 		}
