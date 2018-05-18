@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import net.openvoxel.common.util.BlockFace;
+import net.openvoxel.utility.collection.trove_extended.TVec3LHashSet;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 
@@ -34,19 +35,10 @@ class WorldCullManager {
 		);
 	}
 
-	/*
-	 * Pack (x,y,z) in range [-view,view] into 1 long
-	 */
-	private long packOffsets(int x, int y, int z) {
-		long shiftedX = x + drawTask.viewDistance;
-		long shiftedZ = z + drawTask.viewDistance;
-		long doubleDist = drawTask.viewDistance * 2 + 1;
-		return ((long)y) + 16L * (shiftedX + doubleDist * shiftedZ);
-	}
 
 	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
 		Deque<CullSection> sectionQueue = new ArrayDeque<>();
-		TLongSet visitedOffsets = new TLongHashSet();
+		TVec3LHashSet visitedOffsets = new TVec3LHashSet();
 
 		//Find Starting Chunk offset Position
 		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.0);
@@ -108,7 +100,7 @@ class WorldCullManager {
 				int newX = section.offsetPosX + dirX;
 				int newY = section.offsetPosY + dirY;
 				int newZ = section.offsetPosZ + dirZ;
-				if(Math.abs(newX) > drawTask.viewDistance || Math.abs(newZ) > drawTask.viewDistance) {
+				if(Math.abs(newX) > drawTask.viewDistance||Math.abs(newZ) > drawTask.viewDistance||Math.abs(newY) > drawTask.viewDistance) {
 					//System.out.println("Invalidate View Distance {"+newX+","+newZ+"}");
 					continue;
 				}
@@ -122,7 +114,7 @@ class WorldCullManager {
 				}
 
 				//Check not already visited
-				if(visitedOffsets.contains(packOffsets(newX,newY,newZ))) {
+				if(visitedOffsets.contains(newX,newY,newZ)) {
 					//System.out.println("Invalidate Visited");
 					continue;
 				}
@@ -144,7 +136,7 @@ class WorldCullManager {
 			}
 
 			//Finished - add to set
-			visitedOffsets.add(packOffsets(section.offsetPosX,section.offsetPosY,section.offsetPosZ));
+			visitedOffsets.add(section.offsetPosX,section.offsetPosY,section.offsetPosZ);
 		}
 	}
 
