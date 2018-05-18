@@ -344,7 +344,6 @@ public final class VulkanCommandHandler {
 
 			for(int pool = 0; pool < asyncPoolSize; pool++) {
 				commandAllocateInfo.commandPool(commandPoolsAsync.get(pool));
-				System.out.println("GRAPHICS{pool="+pool+"}");
 				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
 				if(vkResult == VK_SUCCESS) {
 					for (int i = 0; i < swapSize; i++) {
@@ -356,7 +355,6 @@ public final class VulkanCommandHandler {
 				}
 
 				commandAllocateInfo.commandPool(commandPoolsTransferAsync.get(pool));
-				System.out.println("TRANSFER{pool="+pool+"}");
 				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
 				if(vkResult == VK_SUCCESS) {
 					for(int i = 0; i < swapSize; i++) {

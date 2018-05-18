@@ -101,7 +101,7 @@ class CommonLauncher {
 		}catch(Exception e) {
 			if(e instanceof ClassNotFoundException) {
 				ClassNotFoundException noClass = (ClassNotFoundException) e;
-				System.out.println(noClass.getMessage());
+				Logger.INSTANCE.Severe(noClass.getMessage());
 				if(OpenVoxelClass.equals(noClass.getMessage())) {
 					Logger.INSTANCE.Severe("Launch Error: Failed To ClassLoad Main Entry Point");
 					System.exit(-1);
