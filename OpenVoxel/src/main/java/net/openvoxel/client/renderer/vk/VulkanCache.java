@@ -423,9 +423,11 @@ public class VulkanCache {
 			imageSampler.addressModeW(VK_SAMPLER_ADDRESS_MODE_REPEAT);
 			imageSampler.mipLodBias(0.0f);
 			if(device.features.samplerAnisotropy()) {
+				VulkanUtility.LogInfo("Block Atlas Anisotropy: Enabled");
 				imageSampler.anisotropyEnable(true);
 				imageSampler.maxAnisotropy(device.properties.limits().maxSamplerAnisotropy());
 			}else {
+				VulkanUtility.LogInfo("Block Atlas Anisotropy: Unavailable");
 				imageSampler.anisotropyEnable(false);
 				imageSampler.maxAnisotropy(1.0f);
 			}

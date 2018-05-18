@@ -204,6 +204,11 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 			//Submit Graphics Command Buffer
 			commandHandler.SubmitCommandGraphics(mainBuffer);
+
+			//TODO: REMOVE {SILLY FIX FOR RENDER-DOC}
+			if(VulkanState.flag_vulkanRenderDoc) {
+				vkDeviceWaitIdle(state.VulkanDevice.logicalDevice);
+			}
 		}
 		return commandHandler.PresentImage();
 	}

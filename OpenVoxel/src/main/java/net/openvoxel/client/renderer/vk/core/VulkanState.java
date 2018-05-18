@@ -35,7 +35,7 @@ public final class VulkanState {
 	private static boolean flag_vulkanDetailLog = OpenVoxel.getLaunchParameters().hasFlag("vkDebugDetailed");
 	private static boolean flag_vulkanDumpAPI = OpenVoxel.getLaunchParameters().hasFlag("vkDumpAPI");
 	static boolean flag_vulkanDebug = OpenVoxel.getLaunchParameters().hasFlag("vkDebug") || flag_vulkanDetailLog;
-	static boolean flag_vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
+	public static boolean flag_vulkanRenderDoc = OpenVoxel.getLaunchParameters().hasFlag("vkRenderDoc");
 
 	///State
 	public final long GLFWWindow;

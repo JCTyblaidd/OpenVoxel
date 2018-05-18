@@ -91,6 +91,7 @@ public class BaseAtlas implements IconAtlas {
 		);
 	}*/
 	private void resize(ByteBuffer buffer, int offset_input, int old_mip_size, int offset_output, int mip_size) {
+		/*
 		long ptr_input = MemoryUtil.memAddress(buffer,offset_input);
 		long ptr_output = MemoryUtil.memAddress(buffer,offset_output);
 		STBImageResize.nstbir_resize_uint8(
@@ -98,7 +99,8 @@ public class BaseAtlas implements IconAtlas {
 				ptr_output, mip_size, mip_size, 0,
 				4
 		);
-		/*
+		*/
+
 		for(int x = 0; x < mip_size; x++) {
 			for(int y = 0; y < mip_size; y++) {
 				int offset_out = offset_output + 4 * (x + y * mip_size);
@@ -116,7 +118,7 @@ public class BaseAtlas implements IconAtlas {
 				}
 			}
 		}
-		*/
+
 	}
 
 	public void stitchAndGenerateAtlas(String id) {
