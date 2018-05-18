@@ -43,6 +43,7 @@ class WorldCullManager {
 
 		//Add Starting Chunk
 		sectionQueue.add(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
+		visitedOffsets.add(startOffsetX,startOffsetY,startOffsetZ);
 
 		//Constants
 		final int[] xOffsets = BlockFace.array_xOffsets;
@@ -52,7 +53,6 @@ class WorldCullManager {
 
 		//Breath First Search
 		while(!sectionQueue.isEmpty()) {
-			//System.out.println("FROM SIZE="+sectionQueue.size());
 			CullSection section = sectionQueue.removeFirst();
 
 			//Find Client Chunk Section if Applicable...
@@ -68,7 +68,7 @@ class WorldCullManager {
 			}
 
 			//Update & Queue Draw
-			if(section.sectionRef != null && !visitedOffsets.contains(section.offsetPosX,section.offsetPosY,section.offsetPosZ)) {
+			if(section.sectionRef != null) {
 				if(section.sectionRef.visibilityNeedsRegen()) {
 					section.sectionRef.generateVisibilityMap();
 				}
@@ -84,10 +84,6 @@ class WorldCullManager {
 				//Check not backwards
 				float dotProduct = drawTask.cameraVector.dot(dirX,dirY,dirZ);
 				if(dotProduct > 0.0F) {
-					//System.out.println("Invalidate Dot Product");
-					//System.out.println("INVALIDATE DOT PRODUCT! {"+
-					//		                   drawTask.cameraVector.x+","+drawTask.cameraVector.y+","+drawTask.cameraVector.z+
-					//		                   "|"+dirX+","+dirY+","+dirZ+"}");
 					continue;
 				}
 
@@ -97,32 +93,28 @@ class WorldCullManager {
 				int newZ = section.offsetPosZ + dirZ;
 				if(Math.abs(newX) > drawTask.viewDistance||Math.abs(newZ) > drawTask.viewDistance
 				   ||Math.abs(newY-startOffsetY) > drawTask.viewDistance) {
-					//System.out.println("Invalidate View Distance {"+newX+","+newZ+"}");
 					continue;
 				}
 
 				//Check Visibility Test
 				if(section.previousFace != -1 && section.sectionRef != null) {
 					if(!section.sectionRef.isVisible(section.previousFace,direction)) {
-						//System.out.println("Invalidate Invisibility");
 						continue;
 					}
 				}
 
 				//Check not already visited
 				if(visitedOffsets.contains(newX,newY,newZ)) {
-					//System.out.println("Invalidate Visited");
 					continue;
 				}
-
 
 				//Check Frustum Culling
 				if(!cullChunkFrustum(newX * 1.6F, newY * 16.F, newZ * 16.F)) {
-					//System.out.println("Invalidate Frustum");
 					continue;
 				}
 
-				//System.out.println("Validated!");
+				//Mark as visited
+				visitedOffsets.add(section.offsetPosX,section.offsetPosY,section.offsetPosZ);
 
 				//Queue for visitation
 				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction]);
@@ -131,9 +123,6 @@ class WorldCullManager {
 				}
 				sectionQueue.addLast(cullSection);
 			}
-
-			//Finished - add to set
-			visitedOffsets.add(section.offsetPosX,section.offsetPosY,section.offsetPosZ);
 		}
 	}
 
@@ -148,29 +137,6 @@ class WorldCullManager {
 			this.offsetPosY = offsetPosY;
 			this.offsetPosZ = offsetPosZ;
 			this.previousFace = previousFace;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if(obj instanceof CullSection) {
-				CullSection other = (CullSection)obj;
-				return other.offsetPosX == offsetPosX &&
-						       other.offsetPosY == offsetPosY &&
-						       other.offsetPosZ == offsetPosZ
-						;
-			}else{
-				return false;
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + offsetPosX;
-			result = prime * result + offsetPosY;
-			result = prime * result + offsetPosZ;
-			return result;
 		}
 	}
 }
