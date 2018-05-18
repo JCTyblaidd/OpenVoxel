@@ -31,6 +31,7 @@ public final class VulkanCommandHandler {
 
 	//Current Frame Index:
 	private int currentFrameIndex = 0;
+	private int lastFrameIndex = -1;
 
 	//Query Pool N x [start_graphics,start_gui,end_gui], -> 3N
 	private long queryPool;
@@ -343,7 +344,7 @@ public final class VulkanCommandHandler {
 
 			for(int pool = 0; pool < asyncPoolSize; pool++) {
 				commandAllocateInfo.commandPool(commandPoolsAsync.get(pool));
-
+				System.out.println("GRAPHICS{pool="+pool+"}");
 				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
 				if(vkResult == VK_SUCCESS) {
 					for (int i = 0; i < swapSize; i++) {
@@ -355,7 +356,7 @@ public final class VulkanCommandHandler {
 				}
 
 				commandAllocateInfo.commandPool(commandPoolsTransferAsync.get(pool));
-
+				System.out.println("TRANSFER{pool="+pool+"}");
 				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
 				if(vkResult == VK_SUCCESS) {
 					for(int i = 0; i < swapSize; i++) {
@@ -798,82 +799,44 @@ public final class VulkanCommandHandler {
 		}
 	}
 
-	private void WaitForFence(long fence,long timeout) {
-		/*
-		//TODO: REMOVE DEBUG TIMEOUT
-		long _time1 = System.currentTimeMillis();
-		int result = vkWaitForFences(device.logicalDevice, fence, true, timeout);
-		long _time2 = System.currentTimeMillis();
-		long _delta = _time2 - _time1;
-		if(_delta > timeout / 2 || result == VK_TIMEOUT) {
-			if (fence == MainThreadAcquireFence) {
-				VulkanUtility.LogDebug("Acquire Fence: " + _delta);
-			} else if (MainThreadFenceList.contains(fence)) {
-				VulkanUtility.LogDebug("Main Fence: " + _delta);
-			} else {
-				VulkanUtility.LogDebug("Transfer Fence: " + _delta);
-			}
-		}
-		if (result == VK_TIMEOUT) {
-			//Fallback Fence Timeout...
-			VulkanUtility.LogWarn("Fence Timed-out!!!");
+	private void WaitForFence(long fence,long timeout,boolean reset) {
+		int result = vkWaitForFences(device.logicalDevice,fence,true,timeout);
+		if(result == VK_TIMEOUT){
+			VulkanUtility.LogWarn("Fence timed-out: Wait for Idle");
 			vkDeviceWaitIdle(device.logicalDevice);
-			result = vkWaitForFences(device.logicalDevice,fence,true,100);
-			if(result  != VK_SUCCESS) {
-				VulkanUtility.CrashOnBadResult("Fence still in use after vkDeviceWaitIdle(...)",result);
-			}
-		} else if (result != VK_SUCCESS) {
-			//No Memory
-			VulkanUtility.CrashOnBadResult("Failed to wait for fence",result);
+		}else if(result != VK_SUCCESS) {
+			VulkanUtility.CrashOnBadResult("Bad vkWaitForFences",result);
+			return;
 		}
-		result = vkResetFences(device.logicalDevice, fence);
-		if(result != VK_SUCCESS) {
-			//No Memory
-			VulkanUtility.CrashOnBadResult("Failed to reset fence",result);
+		if(reset) {
+			vkResetFences(device.logicalDevice, fence);
 		}
-		*/
-		//HAXXY TODO: RETURN TO PROPER IMPLEMENTATION
-		vkDeviceWaitIdle(device.logicalDevice);
-		vkResetFences(device.logicalDevice,fence);
 	}
 
 	/*
 	 * Wait till This Frames Graphics Queue is Valid
 	 */
 	void AwaitGraphicsFence(long timeout) {
-		WaitForFence(MainThreadFenceList.get(currentFrameIndex), timeout);
+		WaitForFence(MainThreadFenceList.get(currentFrameIndex), timeout,true);
 	}
 
 	/*
 	 * Wait till This Frames Transfer Queue is Valid
 	 */
 	void AwaitTransferFence(long timeout) {
-		WaitForFence(TransferFenceList.get(currentFrameIndex),timeout);
+		WaitForFence(TransferFenceList.get(currentFrameIndex),timeout,true);
 	}
 
-/*
-	TODO: REMOVE IF UNEEDED - DOESNT SEEM TO FIX THE ISSUE
-	void TESTING_0(long timeout) {
-		WaitForFence(MainThreadAcquireFence,timeout);
-	}
-
-	void TESTING_1() {
-		vkDestroyFence(device.logicalDevice,MainThreadAcquireFence,null);
-		MainThreadAcquireFence = VK_NULL_HANDLE;
-		try(MemoryStack stack = stackPush()) {
-			VkFenceCreateInfo fenceCreate = VkFenceCreateInfo.mallocStack(stack);
-			fenceCreate.sType(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO);
-			fenceCreate.pNext(VK_NULL_HANDLE);
-			fenceCreate.flags(VK_FENCE_CREATE_SIGNALED_BIT);
-			LongBuffer pReturn = stack.mallocLong(1);
-			int vk_result = vkCreateFence(device.logicalDevice,fenceCreate,null,pReturn);
-			MainThreadAcquireFence = pReturn.get(0);
-			if(vk_result != VK_SUCCESS) {
-				VulkanUtility.CrashOnBadResult("Failed to recreate acquire fence",vk_result);
-			}
+	/*
+	 * Ensure that the last graphics submission has been completed
+	 *  - therefore the next graphics submission can be submitted
+	 *  - resetting the fence is handled by the other Await
+	 */
+	void AwaitGraphicsSubmit(long timeout) {
+		if(lastFrameIndex != -1) {
+			WaitForFence(MainThreadFenceList.get(lastFrameIndex),timeout,false);
 		}
 	}
-*/
 
 
 	/**
@@ -893,6 +856,7 @@ public final class VulkanCommandHandler {
 					pImageIndex
 			);
 			currentFrameIndex = pImageIndex.get(0);
+			lastFrameIndex = -1;
 			if (vkResult != VK_SUCCESS) {
 				if (vkResult == VK_SUBOPTIMAL_KHR) {
 					VulkanUtility.LogWarn("Sub-Optimal Swap-Chain");
@@ -970,6 +934,9 @@ public final class VulkanCommandHandler {
 					MainThreadPresentSemaphores.get(currentFrameIndex)
 			));
 			vkQueueSubmit(device.allQueue,submitInfo,MainThreadFenceList.get(currentFrameIndex));
+
+			//The fence that must be waited on for the gpu to be usable
+			lastFrameIndex = currentFrameIndex;
 		}
 	}
 
@@ -1022,7 +989,7 @@ public final class VulkanCommandHandler {
 	/**
 	 * @return The command buffer for the async GUI Draw call
 	 */
-	public VkCommandBuffer getGuiDrawCommandBuffer(boolean isTransfer) {
+	VkCommandBuffer getGuiDrawCommandBuffer(boolean isTransfer) {
 		int offset = isTransfer ? 0 : state.VulkanSwapChainSize;
 		return commandBuffersGuiAsync.get(currentFrameIndex + offset);
 	}
@@ -1035,13 +1002,16 @@ public final class VulkanCommandHandler {
 	}
 
 	/**
-	 * @return The command buffer for the poolID'th Async Task
+	 * @return The command buffer for the poolID'th Async Graphics Task
 	 */
 	public VkCommandBuffer getAsyncMainCommandBuffer(int poolID) {
 		int idx = (poolID * state.VulkanSwapChainSize) + currentFrameIndex;
 		return commandBuffersAsync.get(idx);
 	}
 
+	/*
+	 * @return The command buffer for the poolID'th Async Transfer Task
+	 */
 	public VkCommandBuffer getAsyncTransferCommandBuffer(int poolID) {
 		int idx = (poolID * state.VulkanSwapChainSize) + currentFrameIndex;
 		return commandBuffersTransferAsync.get(idx);

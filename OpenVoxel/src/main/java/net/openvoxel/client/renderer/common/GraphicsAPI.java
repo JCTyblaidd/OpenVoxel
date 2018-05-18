@@ -17,7 +17,6 @@ public interface GraphicsAPI {
 	////////////////////////////
 
 	boolean acquireNextFrame();
-	void prepareForSubmit();
 	boolean submitNextFrame(AsyncTaskPool pool, AsyncBarrier barrier, WorldDrawTask task);
 	void close();
 

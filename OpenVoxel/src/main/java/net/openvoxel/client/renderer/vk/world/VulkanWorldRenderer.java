@@ -316,7 +316,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT |
 					                VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
-			//TODO: IMPLEMENT PROPERLY
+			//TODO: IMPLEMENT PROPERLY {Correct Render Pass Dispatch!}
 			beginInfo.flags(
 					VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT |
 					VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT

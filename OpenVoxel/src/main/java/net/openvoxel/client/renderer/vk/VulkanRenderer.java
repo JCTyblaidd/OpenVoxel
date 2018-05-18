@@ -13,6 +13,7 @@ import net.openvoxel.common.event.EventListener;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
 import org.joml.Vector2i;
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VkClearValue;
@@ -99,15 +100,12 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		state.VulkanMemory.updateSystemStatistics();
 		boolean success = commandHandler.AcquireNextImage(TIME_OUT_LENGTH);
 		if(success) {
+			//Free up the command buffers for write access in this frame
 			commandHandler.AwaitTransferFence(TIME_OUT_LENGTH);
+			commandHandler.AwaitGraphicsFence(TIME_OUT_LENGTH);
 		}
 		worldRenderer.ResetForFrame();
 		return success;
-	}
-
-	@Override
-	public void prepareForSubmit() {
-		commandHandler.AwaitGraphicsFence(TIME_OUT_LENGTH);
 	}
 
 	@Override
@@ -115,8 +113,10 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		VkCommandBuffer guiTransfer = commandHandler.getGuiDrawCommandBuffer(true);
 		VkCommandBuffer guiDrawing = commandHandler.getGuiDrawCommandBuffer(false);
 
+		//Load and update Timestamp Information
 		commandHandler.UpdateTimestamp();
 
+		//Build & Submit Transfer Command Buffer
 		VkCommandBuffer transferBuffer = commandHandler.getTransferCommandBuffer();
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
@@ -127,15 +127,21 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			vkBeginCommandBuffer(transferBuffer,beginInfo);
 
 			if(worldRenderer.hasWorld()) {
+				PointerBuffer executeBuffer = stack.mallocPointer(poolSize);
 				for(int i = 0; i < poolSize; i++) {
 					VkCommandBuffer buffer = commandHandler.getAsyncTransferCommandBuffer(i);
-					vkCmdExecuteCommands(transferBuffer,buffer);
+					executeBuffer.put(i,buffer);
 				}
+
+				//Batched into one execution call
+				vkCmdExecuteCommands(transferBuffer,executeBuffer);
 			}
 
 			vkEndCommandBuffer(transferBuffer);
 			commandHandler.SubmitCommandTransfer(transferBuffer);
 		}
+
+
 		VkCommandBuffer mainBuffer = commandHandler.getMainDrawCommandBuffer();
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.mallocStack(stack);
@@ -192,6 +198,11 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			//Finish Main Command Buffer
 			commandHandler.CmdWriteTimestamp(mainBuffer,2,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
 			vkEndCommandBuffer(mainBuffer);
+
+			//Wait on GPU for required structures to be free
+			commandHandler.AwaitGraphicsSubmit(TIME_OUT_LENGTH);
+
+			//Submit Graphics Command Buffer
 			commandHandler.SubmitCommandGraphics(mainBuffer);
 		}
 		return commandHandler.PresentImage();

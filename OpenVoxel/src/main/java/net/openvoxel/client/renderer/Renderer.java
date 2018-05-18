@@ -346,7 +346,6 @@ public final class Renderer implements EventListener {
 		ScreenDebugInfo.instance.setFrameRate(frameRateTimer.getPerSecond());
 
 		//Submit the Async Task
-		api.prepareForSubmit();
 		renderTaskPool.addWork(guiDrawTask);
 	}
 
