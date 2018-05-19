@@ -19,24 +19,19 @@ class AsyncTaskPoolTest {
 		runAsyncCalcTestOn(new AsyncExecutorPool("Debug",8));
 	}
 
-	@RepeatedTest(8)
-	@DisplayName("Calc : AsyncRunnable")
-	void testAsyncRunnableCalc() {
-		runAsyncCalcTestOn(new AsyncRunnablePool("Debug",8));
-	}
-
 	@TestOnly
 	private void runAsyncCalcTestOn(AsyncTaskPool pool) {
 		AsyncBarrier barrier = new AsyncBarrier();
 		AtomicInteger calc = new AtomicInteger(0);
 		AtomicInteger calc2 = new AtomicInteger(0);
-		barrier.reset(100);
+		final int TASK_SIZE = 3000;
+		barrier.reset(TASK_SIZE);
 
 		assertEquals(pool.getWorkerCount(),8);
 		assertEquals(0,calc.get());
 		pool.start();
 
-		for(int i = 0; i < 100; i++) {
+		for(int i = 0; i < TASK_SIZE; i++) {
 			final int I = i;
 			pool.addWork((ignore) -> {
 				calc.addAndGet(I);
@@ -45,7 +40,7 @@ class AsyncTaskPoolTest {
 			});
 		}
 
-		final int expect = (100 * 99) / 2;
+		final int expect = (TASK_SIZE * (TASK_SIZE - 1)) / 2;
 		assertTimeoutPreemptively(ofSeconds(1), barrier::awaitCompletion);
 		assertEquals(expect,calc.get());
 		assertEquals(0,calc2.get());
