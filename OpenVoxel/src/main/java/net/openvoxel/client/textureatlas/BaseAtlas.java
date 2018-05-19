@@ -121,6 +121,7 @@ public class BaseAtlas implements IconAtlas {
 
 	}
 
+
 	public void stitchAndGenerateAtlas(String id) {
 		long totalArea = 0;
 		Map<BaseIcon,STBITexture> texDiff = new HashMap<>();
@@ -208,7 +209,7 @@ public class BaseAtlas implements IconAtlas {
 			Logger logAtlas = Logger.getLogger("Atlas Stitching");
 			logAtlas.Info("Creating with size (",AtlasWidth,",",AtlasHeight,")");
 
-			float scale_factor = 1.0f / startingPower;
+			float scale_factor = 1.F / startingPower;
 			for(int key = 0; key < idx; key++){
 				rect_list.position(key);
 				BaseIcon icon = idMap.get(key);
@@ -218,8 +219,8 @@ public class BaseAtlas implements IconAtlas {
 				//Update Icon
 				icon.U0 = rect_list.x() * scale_factor;
 				icon.V0 = rect_list.y() * scale_factor;
-				icon.U1 = icon.U0 + (rect_list.w() * scale_factor);
-				icon.V1 = icon.V0 + (rect_list.h() * scale_factor);
+				icon.U1 = (rect_list.x() + rect_list.w()) * scale_factor;
+				icon.V1 = (rect_list.y() + rect_list.h()) * scale_factor;
 				icon.animationCount = Math.floorDiv(rect_list.h(),rect_list.w());
 
 				//Store Image Source

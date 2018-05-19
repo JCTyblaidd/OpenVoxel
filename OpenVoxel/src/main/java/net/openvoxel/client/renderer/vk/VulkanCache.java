@@ -11,6 +11,7 @@ import net.openvoxel.client.renderer.vk.pipeline.impl.VulkanWorldForwardPipeline
 import net.openvoxel.client.textureatlas.BaseAtlas;
 import net.openvoxel.common.resources.ResourceManager;
 import net.openvoxel.common.resources.ResourceType;
+import net.openvoxel.utility.MathUtilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
@@ -25,6 +26,11 @@ import static org.lwjgl.vulkan.VK10.*;
  *  that could be used by vulkan
  */
 public class VulkanCache {
+
+	//Configuration [TODO: IMPLEMENT!]
+	private int config_atlasMipLimit = 6;
+	//TODO: REWRITE Texture Manager! {
+	private float config_anisotropy_limit = 0.F;//DISABLED [CAUSES BLEEDING]
 
 	//Immutable Images...
 	public long IMAGE_BLOCK_ATLAS_ARRAY;
@@ -74,7 +80,7 @@ public class VulkanCache {
 		long pipelineCache = VK_NULL_HANDLE;
 		try(MemoryStack stack = stackPush()) {
 			//Immutable Samplers...
-			SAMPLER_BLOCK_ATLAS = CreateImmutableSampler(device_handle,stack,6);//TODO: CHANGE??
+			SAMPLER_BLOCK_ATLAS = CreateImmutableSampler(device_handle,stack,config_atlasMipLimit,config_anisotropy_limit);
 
 			//Immutable Descriptor Pool...
 			DESCRIPTOR_POOL_ATLAS = CreateDescriptorPool(device,stack);
@@ -409,7 +415,7 @@ public class VulkanCache {
 		}
 	}
 
-	private long CreateImmutableSampler(VulkanDevice device,MemoryStack old_stack,int mip_levels) {
+	private long CreateImmutableSampler(VulkanDevice device,MemoryStack old_stack,int mip_levels,float anisotropy) {
 		try(MemoryStack stack = old_stack.push()) {
 			VkSamplerCreateInfo imageSampler = VkSamplerCreateInfo.mallocStack(stack);
 			imageSampler.sType(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO);
@@ -417,15 +423,17 @@ public class VulkanCache {
 			imageSampler.flags(0);
 			imageSampler.magFilter(VK_FILTER_NEAREST);//TODO: CHOOSE PROPERLY
 			imageSampler.minFilter(VK_FILTER_NEAREST);
-			imageSampler.mipmapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
-			imageSampler.addressModeU(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-			imageSampler.addressModeV(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-			imageSampler.addressModeW(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+			imageSampler.mipmapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);//TODO: NEAREST REQUIRED??
+			imageSampler.addressModeU(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+			imageSampler.addressModeV(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+			imageSampler.addressModeW(VK_SAMPLER_ADDRESS_MODE_REPEAT);
 			imageSampler.mipLodBias(0.0f);
-			if(device.features.samplerAnisotropy()) {
-				VulkanUtility.LogInfo("Block Atlas Anisotropy: Enabled");
+			if(device.features.samplerAnisotropy() && anisotropy > 0.0f) {
+				float deviceAnisotropy = device.properties.limits().maxSamplerAnisotropy();
+				float chosenAnisotropy = MathUtilities.clamp(deviceAnisotropy,1.0f,anisotropy);
+				VulkanUtility.LogInfo("Block Atlas Anisotropy: Enabled ["+chosenAnisotropy+"]");
 				imageSampler.anisotropyEnable(true);
-				imageSampler.maxAnisotropy(device.properties.limits().maxSamplerAnisotropy());
+				imageSampler.maxAnisotropy(chosenAnisotropy);
 			}else {
 				VulkanUtility.LogInfo("Block Atlas Anisotropy: Unavailable");
 				imageSampler.anisotropyEnable(false);
