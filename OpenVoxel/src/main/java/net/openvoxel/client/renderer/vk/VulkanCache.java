@@ -74,7 +74,7 @@ public class VulkanCache {
 		long pipelineCache = VK_NULL_HANDLE;
 		try(MemoryStack stack = stackPush()) {
 			//Immutable Samplers...
-			SAMPLER_BLOCK_ATLAS = CreateImmutableSampler(device_handle,stack,8);
+			SAMPLER_BLOCK_ATLAS = CreateImmutableSampler(device_handle,stack,6);//TODO: CHANGE??
 
 			//Immutable Descriptor Pool...
 			DESCRIPTOR_POOL_ATLAS = CreateDescriptorPool(device,stack);
@@ -381,7 +381,7 @@ public class VulkanCache {
 					bindings.descriptorType(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 					bindings.descriptorCount(1);
 					bindings.stageFlags(VK_SHADER_STAGE_ALL_GRAPHICS);
-					bindings.pImmutableSamplers(stack.longs(SAMPLER_BLOCK_ATLAS));
+					bindings.pImmutableSamplers(stack.longs(SAMPLER_BLOCK_ATLAS)); //TODO: CHANGE BACK
 				}
 			}else if(layoutID == 2) {
 				VkDescriptorSetLayoutBinding.Buffer bindings = VkDescriptorSetLayoutBinding.mallocStack(1, stack);
@@ -415,12 +415,12 @@ public class VulkanCache {
 			imageSampler.sType(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO);
 			imageSampler.pNext(VK_NULL_HANDLE);
 			imageSampler.flags(0);
-			imageSampler.magFilter(VK_FILTER_LINEAR);
-			imageSampler.minFilter(VK_FILTER_LINEAR);
-			imageSampler.mipmapMode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
-			imageSampler.addressModeU(VK_SAMPLER_ADDRESS_MODE_REPEAT);
-			imageSampler.addressModeV(VK_SAMPLER_ADDRESS_MODE_REPEAT);
-			imageSampler.addressModeW(VK_SAMPLER_ADDRESS_MODE_REPEAT);
+			imageSampler.magFilter(VK_FILTER_NEAREST);//TODO: CHOOSE PROPERLY
+			imageSampler.minFilter(VK_FILTER_NEAREST);
+			imageSampler.mipmapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+			imageSampler.addressModeU(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+			imageSampler.addressModeV(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+			imageSampler.addressModeW(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
 			imageSampler.mipLodBias(0.0f);
 			if(device.features.samplerAnisotropy()) {
 				VulkanUtility.LogInfo("Block Atlas Anisotropy: Enabled");

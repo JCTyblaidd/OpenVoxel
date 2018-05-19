@@ -59,6 +59,9 @@ public class WorldDrawTask implements Runnable {
 	public Matrix4f frustumMatrix = new Matrix4f().identity();
 	public FrustumIntersection frustumIntersect = new FrustumIntersection();
 
+	//World Shadow State..
+	public Vector3f skyLightVector = new Vector3f(0,-1,0);
+
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {
 		culler = new WorldCullManager(this);
 		for(int i = 0; i < asyncCount; i++) {

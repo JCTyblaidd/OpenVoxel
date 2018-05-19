@@ -5,6 +5,11 @@ import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.utility.collection.trove_extended.TVec3LHashSet;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.joml.FrustumIntersection;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -13,43 +18,103 @@ import java.util.function.Consumer;
 class WorldCullManager {
 
 	private final WorldDrawTask drawTask;
+	private final Vector3f zeroVector = new Vector3f(0,0,0);
 
 	WorldCullManager(WorldDrawTask drawTask) {
 		this.drawTask = drawTask;
 	}
 
-	/*
-	 * Return if the chunk is in the view frustum
-	 */
-	private boolean cullChunkFrustum(float sectionX, float sectionY, float sectionZ) {
-		return drawTask.frustumIntersect.testAab(
-				sectionX,
-				sectionY,
-				sectionZ,
-				sectionX + 16.F,
-				sectionY + 16.F,
-				sectionZ + 16.F
-		);
-	}
 
-	//TODO: cull for shadowMap
-
-	//TODO: cull for generate voxel data
-
-	//Convert to private variables
-	private Deque<CullSection> sectionQueue = new ArrayDeque<>();
-	private TVec3LHashSet visitedOffsets = new TVec3LHashSet();
-
-	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
-		//Deque<CullSection> sectionQueue = new ArrayDeque<>();
-		//TVec3LHashSet visitedOffsets = new TVec3LHashSet();
-		sectionQueue.clear();
-		visitedOffsets.clear();
+	private static ArrayDeque<CullSection> voxel_dequeue = new ArrayDeque<>();
+	private static TVec3LHashSet voxel_hash = new TVec3LHashSet();
+	void runVoxelCull(int sizeLimit,Consumer<ClientChunkSection> consumer) {
 
 		//Find Starting Chunk offset Position
 		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.0);
 		int startOffsetY = (int)Math.floor(drawTask.playerY / 16.0);//TODO: ADD CAMERA OFFSET!!!!!!!!
 		int startOffsetZ = (int)Math.floor(drawTask.playerZ / 16.0);
+
+		internal_runFrustumCull(
+				voxel_dequeue,
+				voxel_hash,
+				zeroVector,
+				null,
+				sizeLimit,
+				startOffsetX,
+				startOffsetY,
+				startOffsetZ,
+				consumer
+				);
+	}
+
+
+	private static ArrayDeque<CullSection> frustum_dequeue = new ArrayDeque<>();
+	private static TVec3LHashSet frustum_hash = new TVec3LHashSet();
+	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
+
+		//Find Starting Chunk offset Position
+		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.0);
+		int startOffsetY = (int)Math.floor(drawTask.playerY / 16.0);//TODO: ADD CAMERA OFFSET!!!!!!!!
+		int startOffsetZ = (int)Math.floor(drawTask.playerZ / 16.0);
+
+		//Call Culling Code
+		internal_runFrustumCull(
+				frustum_dequeue,
+				frustum_hash,
+				drawTask.cameraVector,
+				drawTask.frustumIntersect,
+				drawTask.viewDistance,
+				startOffsetX,
+				startOffsetY,
+				startOffsetZ,
+				consumer
+		);
+	}
+
+	//TODO: STORE CONSTANT ARRAY SOMEWHERE!!
+	void runShadowCull(int shadow_index,FrustumIntersection intersection, Consumer<ClientChunkSection> consumer) {
+
+		//Find Starting Chunk Offset Position
+		int startOffsetX = 0;
+		int startOffsetY = 0;
+		int startOffsetZ = 0;
+
+		internal_runFrustumCull(
+				new ArrayDeque<>(),
+				new TVec3LHashSet(),
+				drawTask.skyLightVector,
+				intersection,
+				drawTask.viewDistance,
+				startOffsetX,
+				startOffsetY,
+				startOffsetZ,
+				consumer
+		);
+	}
+
+	/**
+	 * Perform Culling for a Frustum
+	 *
+	 * Based on: https://tomcc.github.io/2014/08/31/visibility-2.html
+	 *
+	 * @param sectionQueue must be empty() {will be returned empty}
+	 * @param visitedOffsets must be empty() {will be returned empty}
+	 * @param viewDirection the direction the search will progress
+	 * @param startOffsetX the starting chunk X in offset coordinates
+	 * @param startOffsetY the starting chunk Y in offset coordinates
+	 * @param startOffsetZ the starting chunk Z in offset coordinates
+	 * @param consumer the function to be called when a valid chunk is found
+	 */
+	private void internal_runFrustumCull(
+			@NotNull Deque<CullSection> sectionQueue,
+			@NotNull TVec3LHashSet visitedOffsets,
+			@NotNull Vector3f viewDirection,
+			@Nullable FrustumIntersection frustum,
+			int viewDistance,
+			int startOffsetX,
+			int startOffsetY,
+			int startOffsetZ,
+			@NotNull Consumer<ClientChunkSection> consumer) {
 
 		//Add Starting Chunk
 		sectionQueue.add(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
@@ -92,7 +157,7 @@ class WorldCullManager {
 				int dirZ = zOffsets[direction];
 
 				//Check not backwards
-				float dotProduct = drawTask.cameraVector.dot(dirX,dirY,dirZ);
+				float dotProduct = viewDirection.dot(dirX,dirY,dirZ);
 				if(dotProduct > 0.0F) {
 					continue;
 				}
@@ -101,8 +166,9 @@ class WorldCullManager {
 				int newX = section.offsetPosX + dirX;
 				int newY = section.offsetPosY + dirY;
 				int newZ = section.offsetPosZ + dirZ;
-				if(Math.abs(newX) > drawTask.viewDistance||Math.abs(newZ) > drawTask.viewDistance
-				   ||Math.abs(newY-startOffsetY) > drawTask.viewDistance) {
+				if(Math.abs(newX) > viewDistance||
+				   Math.abs(newZ) > viewDistance||
+				   Math.abs(newY-startOffsetY) > viewDistance) {
 					continue;
 				}
 
@@ -119,8 +185,20 @@ class WorldCullManager {
 				}
 
 				//Check Frustum Culling
-				if(!cullChunkFrustum(newX * 16.0F, newY * 16.F, newZ * 16.F)) {
-					continue;
+				if(frustum != null) {
+					float frustumX = newX * 16.0F;
+					float frustumY = newY * 16.0F;
+					float frustumZ = newZ * 16.0F;
+					if(!frustum.testAab(
+							frustumX,
+							frustumY,
+							frustumZ,
+							frustumX + 16.0F,
+							frustumY + 16.0F,
+							frustumZ + 16.0F
+					)) {
+						continue;
+					}
 				}
 
 				//Mark as visited
@@ -134,6 +212,10 @@ class WorldCullManager {
 				sectionQueue.addLast(cullSection);
 			}
 		}
+
+		//Finish
+		sectionQueue.clear();
+		visitedOffsets.clear();
 	}
 
 	private static class CullSection {
