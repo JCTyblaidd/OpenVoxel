@@ -53,11 +53,47 @@ public abstract class BaseWorldRenderer {
 		return new AsyncWorldHandler(asyncID);
 	}
 
-	///////////////////////////
-	/// Async Generator API ///
-	///////////////////////////
+	////////////////////////
+	/// Public Async API ///
+	////////////////////////
+
+	public int getNearbyCullSize() {
+		return 0;//TODO: IMPLEMENT
+	}
+
+	public int getShadowFrustumCount() {
+		return 0;//TODO: IMPLEMENT
+	}
+
+	public void SetupAsync(int asyncID) {
+		getWorldHandlerFor(asyncID).Start();
+	}
+
+	public void FinishAsync(int asyncID) {
+		getWorldHandlerFor(asyncID).Finish();
+	}
+
+	public void GenerateChunkSection(ClientChunkSection section,int asyncID) {
+		getWorldHandlerFor(asyncID).AsyncGenerate(section);
+	}
+
+	public void DrawWorldChunkSection(ClientChunkSection section,int asyncID) {
+		getWorldHandlerFor(asyncID).AsyncDraw(section);
+	}
+
+	public void DrawShadowChunkSection(ClientChunkSection section,int asyncID) {
+		//TODO: IMPLEMENT
+	}
+
+	public void DrawNearbyChunkSection(ClientChunkSection section,int asyncID) {
+		//TODO: IMPLEMENT
+	}
 
 	public abstract void InvalidateChunkSection(ClientChunkSection section);
+
+	//////////////////////////////////
+	/// Implemented By Super Class ///
+	//////////////////////////////////
 
 	protected abstract void AsyncDraw(AsyncWorldHandler handle, ClientChunkSection chunkSection,int asyncID);
 
@@ -91,7 +127,7 @@ public abstract class BaseWorldRenderer {
 			StartAsyncGenerate(this,asyncID);
 		}
 
-		public void AsyncDraw(ClientChunkSection section) {
+		void AsyncDraw(ClientChunkSection section) {
 			BaseWorldRenderer.this.AsyncDraw(this,section,asyncID);
 		}
 
@@ -104,7 +140,7 @@ public abstract class BaseWorldRenderer {
 		 *  NB: This function may be called asynchronously
 		 *
 		 */
-		public void AsyncGenerate(ClientChunkSection chunkSection) {
+		void AsyncGenerate(ClientChunkSection chunkSection) {
 			blockAccess.bindChunkSection(chunkSection);
 			AllocateChunkMemory(this,true);
 			write_offset = start_offset;
@@ -132,7 +168,6 @@ public abstract class BaseWorldRenderer {
 				}
 			}
 			FinalizeChunkMemory(this,asyncID,chunkSection,false);
-			chunkSection.markDrawUpdated();
 		}
 
 		///////////////////////////////

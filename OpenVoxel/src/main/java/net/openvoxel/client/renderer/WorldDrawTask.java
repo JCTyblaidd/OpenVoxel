@@ -46,24 +46,34 @@ public class WorldDrawTask implements Runnable {
 	public float playerZ = 0;
 	public int viewDistance = 16;
 
-	//World State..
+	//World State
 	public ClientWorld theWorld;
 	public EntityPlayerSP thePlayer;
-	public Vector3f cameraVector = new Vector3f();
-	public Vector2f zLimitVector = new Vector2f(0.1F,1000.0F);
-	public Matrix3f normalMatrix = new Matrix3f().identity();
-	public Matrix4f cameraMatrix = new Matrix4f().identity();
-	public Matrix4f perspectiveMatrix = new Matrix4f().identity();
-	public Matrix4f frustumMatrix = new Matrix4f().identity();
-	public FrustumIntersection frustumIntersect = new FrustumIntersection();
 
-	//World Shadow State..
-	public Vector3f skyLightVector = new Vector3f(0,-1,0);
+	//World Linear Algebra State
+	public final Vector3f cameraVector = new Vector3f();
+	public final Vector2f zLimitVector = new Vector2f(0.1F,1000.0F);
+	public final Matrix3f normalMatrix = new Matrix3f().identity();
+	public final Matrix4f cameraMatrix = new Matrix4f().identity();
+	public final Matrix4f perspectiveMatrix = new Matrix4f().identity();
+	public final Matrix4f frustumMatrix = new Matrix4f().identity();
+	public final FrustumIntersection frustumIntersect = new FrustumIntersection();
+
+	//World Shadow State
+	public final Vector3f skyLightVector = new Vector3f(0,-1,0);
+	public final Matrix4f[] shadowMatrixList = new Matrix4f[4];
+	public final FrustumIntersection[] shadowIntersectList = new FrustumIntersection[4];
+	public final Matrix4f totalShadowMatrix = new Matrix4f().identity();
+	public final FrustumIntersection totalShadowIntersect = new FrustumIntersection();
 
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {
 		this.asyncCount = asyncCount;
 		culler = new WorldCullManager(this);
 		worldRenderer = api.getWorldRenderer();
+		for(int i = 0; i < 4; i++) {
+			shadowMatrixList[i] = new Matrix4f().identity();
+			shadowIntersectList[i] = new FrustumIntersection();
+		}
 	}
 
 	void update(AsyncTaskPool pool,ClientServer server, AsyncBarrier barrier) {
@@ -99,6 +109,8 @@ public class WorldDrawTask implements Runnable {
 		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,false);//TODO: YES/NO??
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
 		frustumIntersect.set(frustumMatrix);
+
+		//Calculate Shadow Linear Algebra
 	}
 
 	void ignore() {
@@ -108,105 +120,135 @@ public class WorldDrawTask implements Runnable {
 	@Override
 	public void run() {
 
-		//Reset
-	/*
-		barrierGenerate.reset(generateTasks.size());
-		numUpdates.set(0);
-		queuedUpdates.clear();
-
-		//Generate Tasks
-		culler.runFrustumCull(queuedUpdates::add);
-
-		//Dispatch Tasks
-		int LIM = queuedUpdates.size() / generateTasks.size();
-		int genLimit = generateTasks.size() - 1;
-		int start = 0;
-		for(int i = 0; i < genLimit; i++) {
-			int end = start + LIM;
-			generateTasks.get(i).setup(start,end);
-			start = end;
-		}
-		generateTasks.get(genLimit).setup(start,queuedUpdates.size());
-
-		generateTasks.forEach(pool::addWork);
-
-		barrierGenerate.awaitCompletion();
-*/
-
-
+		//Initialize Work Handlers
 		for(int i = 0; i < asyncCount; i++) {
-			worldRenderer.getWorldHandlerFor(i).Start();
+			worldRenderer.SetupAsync(i);
 		}
 
-
+		//Run Standard World Culling
 		updateCount = 0;
 		barrierUpdates.reset(1);
 		culler.runFrustumCull(section -> {
-			if(section.isDrawDirty()) {
-				if(updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
-					barrierUpdates.addNewTasks(1);
-					pool.addWork(asyncID -> {
-						BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(asyncID);
-						handler.AsyncGenerate(section);
-						handler.AsyncDraw(section);
-						barrierUpdates.completeTask();
-					});
-				}
+			if(section.isDrawDirty() && updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
+				barrierUpdates.addNewTasks(1);
 				updateCount += 1;
+
+				//Mark Section Updating as Handled
+				section.markDrawUpdated();
+				section.Renderer_Generation.reset(1);
+
+				//Generate And Draw World
+				pool.addWork(asyncID -> {
+
+					//Generate Section
+					worldRenderer.GenerateChunkSection(section,asyncID);
+					section.Renderer_Generation.completeTask();
+
+					//Draw World
+					worldRenderer.DrawWorldChunkSection(section,asyncID);
+					barrierUpdates.completeTask();
+				});
 			}else{
 				barrierUpdates.addNewTasks(1);
 				pool.addWork(asyncID -> {
-					worldRenderer.getWorldHandlerFor(asyncID).AsyncDraw(section);
+
+					//Draw World
+					worldRenderer.DrawWorldChunkSection(section,asyncID);
 					barrierUpdates.completeTask();
 				});
 			}
 		});
-		barrierUpdates.completeTask();
-		barrierUpdates.awaitCompletion();
 
+		//Run Shadow Map World Culling
+		if(worldRenderer.getShadowFrustumCount() > 0) {
+			culler.runShadowCull(section -> {
+				if(section.isDrawDirty() && updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
+					barrierUpdates.addNewTasks(1);
+					updateCount += 1;
 
-/*
-		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
+					//Mark Section Updating as Handled
+					section.markDrawUpdated();
+					section.Renderer_Generation.reset(1);
 
-		AtomicInteger limit = new AtomicInteger(0);
-		culler.runFrustumCull(section -> {
-			if(section.isDrawDirty() && limit.getAndIncrement() < MAX_TRANSFER_CALLS_PER_FRAME) {
-				handler.AsyncGenerate(section);
-				handler.AsyncDraw(section);
-			}else if(!section.isDrawDirty()) {
-				handler.AsyncDraw(section);
-			}
-		});
-*/
+					//Generate And Draw Shadow
+					pool.addWork(asyncID -> {
 
-		for(int i = 0; i < asyncCount; i++) {
-			worldRenderer.getWorldHandlerFor(i).Finish();
+						//Generate Section
+						worldRenderer.GenerateChunkSection(section,asyncID);
+						section.Renderer_Generation.completeTask();
+
+						//Draw Shadow
+						worldRenderer.DrawShadowChunkSection(section,asyncID);
+						barrierUpdates.completeTask();
+					});
+				}else{
+					barrierUpdates.addNewTasks(1);
+					pool.addWork(asyncID -> {
+
+						//Wait for Generation
+						section.Renderer_Generation.awaitCompletion();
+
+						//Draw Shadow
+						worldRenderer.DrawShadowChunkSection(section,asyncID);
+						barrierUpdates.completeTask();
+					});
+				}
+			});
 		}
 
-		barrier.completeTask();
+		int nearDistance = Math.min(viewDistance,worldRenderer.getNearbyCullSize());
 
-		/*
-		//Reset all the barriers to initial state
-		barrierGenerate.reset(generateTasks.size());
-		barrierUpdates.reset(1);
-		numUpdates.set(0);
+		//Run Nearby Map World Culling
+		if(nearDistance > 0) {
+			culler.runVoxelCull(nearDistance,section -> {
+				if(section.isDrawDirty() && updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
+					barrierUpdates.addNewTasks(1);
+					updateCount += 1;
 
-		//Start all of the tasks...
-		generateTasks.forEach(pool::addWork);
+					//Mark Section Updating as Handled
+					section.markDrawUpdated();
+					section.Renderer_Generation.reset(1);
 
-		//Asynchronously wait till completion...
+					//Generate and Draw Nearby
+					pool.addWork(asyncID -> {
+						//Generate Section
+						worldRenderer.GenerateChunkSection(section,asyncID);
+						section.Renderer_Generation.completeTask();
+
+						//Draw Nearby
+						worldRenderer.DrawNearbyChunkSection(section,asyncID);
+						barrierUpdates.completeTask();
+					});
+				}else {
+					barrierUpdates.addNewTasks(1);
+					pool.addWork(asyncID -> {
+
+						//Wait for Generation
+						section.Renderer_Generation.awaitCompletion();
+
+						//Draw Nearby
+						section.Renderer_Generation.awaitCompletion();
+						worldRenderer.DrawNearbyChunkSection(section, asyncID);
+					});
+				}
+			});
+		}
+
+		//Queue Wait for Completion
 		pool.addWork(() -> {
 
-			//Wait for cull then draw to finish
+			//Wait for all updates to be handled
 			barrierUpdates.completeTask();
 			barrierUpdates.awaitCompletion();
-			//Wait for generation to finish...
-			barrierGenerate.awaitCompletion();
 
-			//Finish Self
+			//Finish all asynchronous calls
+			for (int i = 0; i < asyncCount; i++) {
+				worldRenderer.FinishAsync(i);
+			}
+
+			//Mark World Draw as Completed
 			barrier.completeTask();
 		});
-		*/
 	}
 
 	void freeAllData() {

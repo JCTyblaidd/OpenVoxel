@@ -72,7 +72,7 @@ class WorldCullManager {
 	}
 
 	//TODO: STORE CONSTANT ARRAY SOMEWHERE!!
-	void runShadowCull(int shadow_index,FrustumIntersection intersection, Consumer<ClientChunkSection> consumer) {
+	void runShadowCull(Consumer<ClientChunkSection> consumer) {
 
 		//Find Starting Chunk Offset Position
 		int startOffsetX = 0;
@@ -83,7 +83,7 @@ class WorldCullManager {
 				new ArrayDeque<>(),
 				new TVec3LHashSet(),
 				drawTask.skyLightVector,
-				intersection,
+				drawTask.totalShadowIntersect,
 				drawTask.viewDistance,
 				startOffsetX,
 				startOffsetY,

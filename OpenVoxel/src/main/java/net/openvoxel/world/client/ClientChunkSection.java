@@ -9,6 +9,7 @@ import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.util.BlockFace;
+import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.world.chunk.ChunkSection;
 
 import java.nio.IntBuffer;
@@ -31,6 +32,7 @@ public class ClientChunkSection extends ChunkSection {
 	public int Renderer_Size_Opaque = -1;
 	public int Renderer_Info_Transparent = 0;
 	public int Renderer_Size_Transparent = -1;
+	public AsyncBarrier Renderer_Generation = new AsyncBarrier();
 
 	///
 	/// Culling Information
