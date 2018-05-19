@@ -54,12 +54,14 @@ public class GUIGears extends GUIObjectSizable {
 	}
 
 	private void generateFace(Vector2f a, Vector2f b, Vector2f c) {
-		gearList.add(a.x / 2.F);
-		gearList.add(a.y / 2.F);
-		gearList.add(b.x / 2.F);
-		gearList.add(b.y / 2.F);
 		gearList.add(c.x / 2.F);
 		gearList.add(c.y / 2.F);
+
+		gearList.add(b.x / 2.F);
+		gearList.add(b.y / 2.F);
+
+		gearList.add(a.x / 2.F);
+		gearList.add(a.y / 2.F);
 	}
 
 	private void generate() {
