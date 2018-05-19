@@ -139,7 +139,7 @@ public class VulkanGuiPipeline extends VulkanGraphicsPipeline {
 		rasterState.rasterizerDiscardEnable(false);
 		rasterState.polygonMode(VK_POLYGON_MODE_FILL);
 		rasterState.cullMode(VK_CULL_MODE_BACK_BIT);
-		rasterState.frontFace(VK_FRONT_FACE_CLOCKWISE); //TODO: CONVERT TO COUNTER_CLOCKWISE
+		rasterState.frontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE); //TODO: CONVERT TO COUNTER_CLOCKWISE
 		rasterState.depthBiasEnable(false);
 		rasterState.depthBiasConstantFactor(0.0F);
 		rasterState.depthBiasClamp(0.0F);

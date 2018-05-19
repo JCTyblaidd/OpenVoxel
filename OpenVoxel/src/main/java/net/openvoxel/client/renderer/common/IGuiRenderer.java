@@ -111,13 +111,13 @@ public abstract class IGuiRenderer {
 			float V0, float V1,
 			int  C00, int  C01,
 			int  C10, int  C11) {
-		VertexWithColUV(X2,Y2,U1,V1,C00);
+		VertexWithColUV(X1,Y1,U0,V0,C11);
 		VertexWithColUV(X1,Y2,U0,V1,C10);
-		VertexWithColUV(X1,Y1,U0,V0,C11);
-
-		VertexWithColUV(X2,Y1,U1,V0,C01);
 		VertexWithColUV(X2,Y2,U1,V1,C00);
+
 		VertexWithColUV(X1,Y1,U0,V0,C11);
+		VertexWithColUV(X2,Y2,U1,V1,C00);
+		VertexWithColUV(X2,Y1,U1,V0,C01);
 	}
 
 	@PublicAPI

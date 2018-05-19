@@ -68,11 +68,6 @@ public class GUILoadingCircle extends GUIObjectSizable {
 		System.out.println("S:" + Math.sqrt((x_v *x_v)+(y_v * y_v)));
 		drawHandle.SetMatrix(mat);
 		drawHandle.SetTexture(Image);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
-		drawHandle.VertexWithColUV(X1,Y2,0,1,col);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
-		drawHandle.VertexWithColUV(X2,Y1,1,0,col);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,col);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,col);
+		drawHandle.VertexRect(X1,X2,Y1,Y2,col);
 	}
 }

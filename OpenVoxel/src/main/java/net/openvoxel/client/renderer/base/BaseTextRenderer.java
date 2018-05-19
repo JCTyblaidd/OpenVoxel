@@ -243,13 +243,16 @@ public abstract class BaseTextRenderer {
 		float maxY = Y + glyphYOffset - Height;
 		float minY = maxY + glyphHeight;
 
-		renderer.VertexWithColUV(minX,minY,glyph.U0,glyph.V0,col);
-		renderer.VertexWithColUV(minX,maxY,glyph.U0,glyph.V1,col);
-		renderer.VertexWithColUV(maxX,maxY,glyph.U1,glyph.V1,col);
+		renderer.VertexRect(maxX,minX,minY,maxY,glyph.U1,glyph.U0,glyph.V0,glyph.V1,col);
 
-		renderer.VertexWithColUV(minX,minY,glyph.U0,glyph.V0,col);
-		renderer.VertexWithColUV(maxX,maxY,glyph.U1,glyph.V1,col);
-		renderer.VertexWithColUV(maxX,minY,glyph.U1,glyph.V0,col);
+
+//		renderer.VertexWithColUV(maxX,maxY,glyph.U1,glyph.V1,col);
+//		renderer.VertexWithColUV(minX,maxY,glyph.U0,glyph.V1,col);
+//		renderer.VertexWithColUV(minX,minY,glyph.U0,glyph.V0,col);
+//
+//		renderer.VertexWithColUV(maxX,minY,glyph.U1,glyph.V0,col);
+//		renderer.VertexWithColUV(maxX,maxY,glyph.U1,glyph.V1,col);
+//		renderer.VertexWithColUV(minX,minY,glyph.U0,glyph.V0,col);
 
 		return advanceWidth + kerningOffset;
 	}
