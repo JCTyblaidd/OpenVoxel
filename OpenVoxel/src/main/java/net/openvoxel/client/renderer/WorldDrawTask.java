@@ -138,7 +138,7 @@ public class WorldDrawTask implements Runnable {
 			worldRenderer.getWorldHandlerFor(i).Start();
 		}
 
-		/*
+
 		updateCount = 0;
 		barrierUpdates.reset(1);
 		culler.runFrustumCull(section -> {
@@ -162,9 +162,10 @@ public class WorldDrawTask implements Runnable {
 			}
 		});
 		barrierUpdates.completeTask();
-		*/
+		barrierUpdates.awaitCompletion();
 
 
+/*
 		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
 
 		AtomicInteger limit = new AtomicInteger(0);
@@ -176,7 +177,7 @@ public class WorldDrawTask implements Runnable {
 				handler.AsyncDraw(section);
 			}
 		});
-
+*/
 
 		for(int i = 0; i < asyncCount; i++) {
 			worldRenderer.getWorldHandlerFor(i).Finish();

@@ -49,7 +49,7 @@ public class AsyncExecutorPool implements AsyncTaskPool{
 	private final WorkerPool<TaskEvent> workerPool;
 	private final TaskHandler[] workHandlerList;
 
-	public AsyncExecutorPool(String name, int threadCount) {
+	AsyncExecutorPool(String name, int threadCount, int bufferSize) {
 		publishEvent = (event,sequence,task) -> event.task = task;
 		NamedThreadFactory threadFactory = new NamedThreadFactory(name);
 		executorService = Executors.newFixedThreadPool(
@@ -58,10 +58,10 @@ public class AsyncExecutorPool implements AsyncTaskPool{
 		);
 		ringBuffer = RingBuffer.createSingleProducer(
 			TaskEvent::new,
-			1024,
+			bufferSize,
 			new PhasedBackoffWaitStrategy(
+				1,
 				10,
-				100,
 				TimeUnit.NANOSECONDS,
 				new BlockingWaitStrategy()
 			)

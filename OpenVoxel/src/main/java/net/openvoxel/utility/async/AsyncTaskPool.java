@@ -2,6 +2,7 @@ package net.openvoxel.utility.async;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.api.PublicAPI;
+import net.openvoxel.api.logger.Logger;
 
 public interface AsyncTaskPool {
 
@@ -10,11 +11,21 @@ public interface AsyncTaskPool {
 	}
 
 	@PublicAPI
-	static int getWorkerCount(String ID,int fallback,int minCount) {
+	static int getClampedParameter(String ID, int fallback, int minCount) {
+		int result = fallback;
 		if(OpenVoxel.getLaunchParameters().hasFlag(ID)) {
-			return Math.max(OpenVoxel.getLaunchParameters().getIntegerMap(ID),Math.max(1,minCount));
-		}else {
-			return fallback;
+			result =  Math.max(OpenVoxel.getLaunchParameters().getIntegerMap(ID),Math.max(1,minCount));
+		}
+		Logger.getLogger("AsyncTaskPool").Info(ID+" = "+result);
+		return result;
+	}
+
+	@PublicAPI
+	static AsyncTaskPool createTaskPool(String name,int workerCount, int bufferSize) {
+		if(workerCount <= 0) {
+			return new SyncExecutorPool();
+		}else{
+			return new AsyncExecutorPool(name,workerCount,bufferSize);
 		}
 	}
 

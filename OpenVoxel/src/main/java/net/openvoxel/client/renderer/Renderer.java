@@ -16,7 +16,6 @@ import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.async.AsyncBarrier;
-import net.openvoxel.utility.async.AsyncExecutorPool;
 import net.openvoxel.utility.async.AsyncTaskPool;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -52,12 +51,17 @@ public final class Renderer implements EventListener {
 	public Renderer() {
 		logger = Logger.getLogger("Renderer");
 		frameRateTimer = new PerSecondTimer(64);
-		renderTaskPool = new AsyncExecutorPool(
+		renderTaskPool = AsyncTaskPool.createTaskPool(
 				"Render Pool",
-				AsyncTaskPool.getWorkerCount(
+				AsyncTaskPool.getClampedParameter(
 						"renderWorkerCount",
 						Runtime.getRuntime().availableProcessors(),
-						2
+						0
+				),
+				AsyncTaskPool.getClampedParameter(
+						"renderWorkerBufferSize",
+						4096,
+						1024
 				)
 		);
 		renderTaskPool.start();
