@@ -153,47 +153,28 @@ public class ScreenDebugInfo extends Screen {
 		final int CPU_COL = 0xEFD39539;// = 0xCFD39539
 		final int GPU_COL = 0xEF168206;// = 0xCF168206;
 		tess.Begin(null);
-		tess.VertexWithCol(x2,y2,COL);
-		tess.VertexWithCol(x1,y2,COL);
-		tess.VertexWithCol(x1,y1,COL);
-		tess.VertexWithCol(x2,y1,COL);
-		tess.VertexWithCol(x2,y2,COL);
-		tess.VertexWithCol(x1,y1,COL);
-		//Draw Histogram//
-		float diff = w / 30;
-		for(int i = 1; i < 31; i++) {
-			int j1 = (i + SystemStatistics.write_index) % 32;
-			int j2 = (i + 1 + SystemStatistics.write_index) % 32;
-			float y_val1 = (float)(SystemStatistics.processor_history[j1] * h);
-			float y_val2 = (float)(SystemStatistics.processor_history[j2] * h);
-			float y_pos1 = y2 - y_val1;
-			float y_pos2 = y2 - y_val2;
+		tess.VertexRect(x1,x2,y1,y2,COL);
+
+		float diff = w / 31;
+		for(int i = 1; i < 32; i++) {
+			int idx = (i + SystemStatistics.write_index) % 32;
+			float height_cpu = (float)(SystemStatistics.processor_history[idx] * h);
+			float height_gpu = (float)(SystemStatistics.graphics_history[idx] * h);
+
+			float min_height = height_cpu;
+			float max_height = height_gpu;
+			int min_col = CPU_COL;
+			int max_col = GPU_COL;
+			if(height_cpu >= height_gpu) {
+				min_height = height_gpu;
+				max_height = height_cpu;
+				min_col = GPU_COL;
+				max_col = CPU_COL;
+			}
 			float x_pos1 = x2 - (diff * i) + diff;
 			float x_pos2 = x_pos1 - diff;
-			tess.VertexWithCol(x_pos2,y2,CPU_COL);
-			tess.VertexWithCol(x_pos1,y_pos1,CPU_COL);
-			tess.VertexWithCol(x_pos1,y2,CPU_COL);
-
-			tess.VertexWithCol(x_pos2,y2,CPU_COL);
-			tess.VertexWithCol(x_pos2,y_pos2,CPU_COL);
-			tess.VertexWithCol(x_pos1,y_pos1,CPU_COL);
-		}
-		for(int i = 1; i < 31; i++) {
-			int j1 = (i + SystemStatistics.write_index) % 32;
-			int j2 = (i + 1 + SystemStatistics.write_index) % 32;
-			float y_val1 = (float)(SystemStatistics.graphics_history[j1] * h);
-			float y_val2 = (float)(SystemStatistics.graphics_history[j2] * h);
-			float y_pos1 = y2 - y_val1;
-			float y_pos2 = y2 - y_val2;
-			float x_pos1 = x2 - (diff * i) + diff;
-			float x_pos2 = x_pos1 - diff;
-			tess.VertexWithCol(x_pos2,y2,GPU_COL);
-			tess.VertexWithCol(x_pos1,y_pos1,GPU_COL);
-			tess.VertexWithCol(x_pos1,y2,GPU_COL);
-
-			tess.VertexWithCol(x_pos2,y2,GPU_COL);
-			tess.VertexWithCol(x_pos2,y_pos2,GPU_COL);
-			tess.VertexWithCol(x_pos1,y_pos1,GPU_COL);
+			tess.VertexRect(x_pos2,x_pos1,y2-min_height,y2,min_col);
+			tess.VertexRect(x_pos2,x_pos1,y2-max_height,y2-min_height,max_col);
 		}
 	}
 

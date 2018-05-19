@@ -40,7 +40,7 @@ public abstract class BaseWorldRenderer {
 
 	private TIntObjectMap<AsyncWorldHandler> objectMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>());
 
-	public AsyncWorldHandler getWorldHandlerFor(int asyncID) {
+	private AsyncWorldHandler getWorldHandlerFor(int asyncID) {
 		AsyncWorldHandler handler = objectMap.get(asyncID);
 		if(handler == null) {
 			handler = CreateAsyncHandler(asyncID);
@@ -78,7 +78,7 @@ public abstract class BaseWorldRenderer {
 	}
 
 	public void DrawWorldChunkSection(ClientChunkSection section,int asyncID) {
-		getWorldHandlerFor(asyncID).AsyncDraw(section);
+		AsyncDraw(getWorldHandlerFor(asyncID),section,asyncID);
 	}
 
 	public void DrawShadowChunkSection(ClientChunkSection section,int asyncID) {
@@ -125,10 +125,6 @@ public abstract class BaseWorldRenderer {
 		public void Start() {
 			blockAccess.bindWorld(theWorld);
 			StartAsyncGenerate(this,asyncID);
-		}
-
-		void AsyncDraw(ClientChunkSection section) {
-			BaseWorldRenderer.this.AsyncDraw(this,section,asyncID);
 		}
 
 		public void Finish() {

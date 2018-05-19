@@ -56,12 +56,7 @@ public abstract class GUIObjectSizable extends GUIObject {
 		final float X2 = X1 + getWidth(screenWidth) * ws;
 		final float Y2 = Y1 + getHeight(screenHeight) * hs;
 		drawHandle.Begin(Image);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,mm);
-		drawHandle.VertexWithColUV(X1,Y2,0,1,lm);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,ll);
-		drawHandle.VertexWithColUV(X2,Y1,1,0,ml);
-		drawHandle.VertexWithColUV(X2,Y2,1,1,mm);
-		drawHandle.VertexWithColUV(X1,Y1,0,0,ll);
+		drawHandle.VertexRect(X1,X2,Y1,Y2,mm,ml,lm,ll);
 	}
 
 	public void DrawSquareWithText(IGuiRenderer drawHandle, ResourceHandle Image, int col, CharSequence text,float widthLimit) {
@@ -75,12 +70,7 @@ public abstract class GUIObjectSizable extends GUIObject {
 		final float Y2 = Y1 + H;
 		if(col != 0x00000000) {
 			drawHandle.Begin(Image);
-			drawHandle.VertexWithColUV(X2, Y2, 1, 1, col);
-			drawHandle.VertexWithColUV(X1, Y2, 0, 1, col);
-			drawHandle.VertexWithColUV(X1, Y1, 0, 0, col);
-			drawHandle.VertexWithColUV(X2, Y1, 1, 0, col);
-			drawHandle.VertexWithColUV(X2, Y2, 1, 1, col);
-			drawHandle.VertexWithColUV(X1, Y1, 0, 0, col);
+			drawHandle.VertexRect(X1,X2,Y1,Y2,col);
 		}
 		if(text != null) {
 			float TXT_RATIO = drawHandle.GetTextWidthRatio(text);
@@ -90,12 +80,7 @@ public abstract class GUIObjectSizable extends GUIObject {
 				float X = X1 + (W / 2) - (TXT_W / 2);
 				/*
 				drawHandle.Begin(null);
-				drawHandle.VertexWithColUV(X+TXT_W, Y2, 1, 1, col2);
-				drawHandle.VertexWithColUV(X, Y2, 0, 1, col2);
-				drawHandle.VertexWithColUV(X, Y1, 0, 0, col2);
-				drawHandle.VertexWithColUV(X+TXT_W, Y1, 1, 0, col2);
-				drawHandle.VertexWithColUV(X+TXT_W, Y2, 1, 1, col2);
-				drawHandle.VertexWithColUV(X, Y1, 0, 0, col2);
+				drawHandle.VertexRect(X,X+TXT,W,Y1,Y2,col2);
 				*/
 				drawHandle.DrawText(X, Y2, H, text);
 			} else {
@@ -105,12 +90,7 @@ public abstract class GUIObjectSizable extends GUIObject {
 				/*
 				float NEW_TXT_W = TXT_RATIO * TXT_H;
 				drawHandle.Begin(null);
-				drawHandle.VertexWithColUV(X+NEW_TXT_W, Y, 1, 1, col2);
-				drawHandle.VertexWithColUV(X, Y, 0, 1, col2);
-				drawHandle.VertexWithColUV(X, Y-TXT_H, 0, 0, col2);
-				drawHandle.VertexWithColUV(X+NEW_TXT_W, Y-TXT_H, 1, 0, col2);
-				drawHandle.VertexWithColUV(X+NEW_TXT_W, Y, 1, 1, col2);
-				drawHandle.VertexWithColUV(X, Y-TXT_H, 0, 0, col2);
+				drawHandle.VertexRect(X,X+NEW_TXT,Y-TXT_H,Y,col2);
 				*/
 				drawHandle.DrawText(X, Y, TXT_H, text);
 			}

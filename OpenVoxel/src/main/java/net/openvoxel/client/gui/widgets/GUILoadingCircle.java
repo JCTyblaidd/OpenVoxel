@@ -9,6 +9,7 @@ import org.joml.Matrix4f;
 /**
  * Created by James on 14/09/2016.
  */
+@Deprecated
 public class GUILoadingCircle extends GUIObjectSizable {
 
 	public static ResourceHandle loadCircle = ResourceManager.getImage("gui/load_circle");
