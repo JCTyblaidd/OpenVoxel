@@ -16,7 +16,7 @@ import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.async.AsyncBarrier;
-import net.openvoxel.utility.async.AsyncRunnablePool;
+import net.openvoxel.utility.async.AsyncExecutorPool;
 import net.openvoxel.utility.async.AsyncTaskPool;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -52,7 +52,7 @@ public final class Renderer implements EventListener {
 	public Renderer() {
 		logger = Logger.getLogger("Renderer");
 		frameRateTimer = new PerSecondTimer(64);
-		renderTaskPool = new AsyncRunnablePool(
+		renderTaskPool = new AsyncExecutorPool(
 				"Render Pool",
 				AsyncTaskPool.getWorkerCount(
 						"renderWorkerCount",
@@ -101,7 +101,7 @@ public final class Renderer implements EventListener {
 		}
 		if(vulkan_supported && !flag_gl){
 			logger.Info("Loading: Vulkan Renderer");
-			api = new VulkanRenderer(renderTaskPool.getWorkerCount() / 2);
+			api = new VulkanRenderer(renderTaskPool.getWorkerCount());
 		}else {
 			logger.Info("Loading: OGL3 Renderer");
 			api = null;//TODO: IMPLEMENT OpenGL Renderer...
@@ -109,7 +109,7 @@ public final class Renderer implements EventListener {
 		}
 
 		guiDrawTask = new GuiDrawTask(api);
-		worldDrawTask = new WorldDrawTask(api,renderTaskPool.getWorkerCount() / 2);
+		worldDrawTask = new WorldDrawTask(api,renderTaskPool.getWorkerCount());
 	}
 
 	public void close() {

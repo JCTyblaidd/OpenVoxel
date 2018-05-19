@@ -5,6 +5,10 @@ import net.openvoxel.api.PublicAPI;
 
 public interface AsyncTaskPool {
 
+	interface Task {
+		void execute(int threadID);
+	}
+
 	@PublicAPI
 	static int getWorkerCount(String ID,int fallback,int minCount) {
 		if(OpenVoxel.getLaunchParameters().hasFlag(ID)) {
@@ -16,9 +20,18 @@ public interface AsyncTaskPool {
 
 	/**
 	 * Add some work to the executor thread
+	 *  that takes the thread ID for synchronisation
 	 */
 	@PublicAPI
-	void addWork(Runnable task) ;
+	void addWork(Task task);
+
+	/**
+	 * Add some work to the executor thread
+	 */
+	@PublicAPI
+	default void addWork(Runnable task) {
+		addWork((ignored) -> task.run());
+	}
 
 	/**
 	 * @return The number of worker threads

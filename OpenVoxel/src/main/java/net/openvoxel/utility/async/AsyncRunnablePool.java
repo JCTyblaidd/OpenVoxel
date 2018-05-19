@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Asynchronous Worker Pool, Only Callable From ONE THREAD
  */
+@Deprecated
 public class AsyncRunnablePool implements AsyncTaskPool{
 
 	/**
@@ -72,7 +73,11 @@ public class AsyncRunnablePool implements AsyncTaskPool{
 	@Override
 	public void addWork(Runnable runnable) {
 		ringBuffer.publishEvent(EVENT_TRANSLATOR,runnable);
+	}
 
+	@Override
+	public void addWork(Task task) {
+		addWork(() -> task.execute(-1));
 	}
 
 	@Override

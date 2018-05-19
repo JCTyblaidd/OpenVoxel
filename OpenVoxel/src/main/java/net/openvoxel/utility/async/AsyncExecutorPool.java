@@ -1,123 +1,64 @@
 package net.openvoxel.utility.async;
 
 import com.lmax.disruptor.*;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
-import net.openvoxel.OpenVoxel;
-import net.openvoxel.api.PublicAPI;
-import net.openvoxel.utility.CrashReport;
-import net.openvoxel.utility.debug.UsageAnalyses;
+import com.lmax.disruptor.util.DaemonThreadFactory;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-public class AsyncExecutorPool {
+public class AsyncExecutorPool implements AsyncTaskPool{
 
-	private class ExecutionEvent {
-		private Runnable target;
+	private static class TaskEvent {
+		AsyncTaskPool.Task task;
 	}
 
-	private final EventTranslatorOneArg<ExecutionEvent,Runnable> TRANSLATOR =
-			(executionEvent, sequence, runnable) -> executionEvent.target = runnable;
-
-	private final class ExecutionWorker implements WorkHandler<ExecutionEvent> { //, LifecycleAware {
-
+	private static class NamedThreadFactory implements ThreadFactory {
+		private int countdown = 0;
+		private String name;
+		private NamedThreadFactory(String name) {
+			this.name = name;
+		}
 		@Override
-		public void onEvent(ExecutionEvent event) {
-			event.target.run();
-		}
-
-		//@Override
-		public void onStart() {
-			UsageAnalyses.SetThreadName(Thread.currentThread().getName());
-		}
-
-		//@Override
-		public void onShutdown() {
-			//NO OP
-		}
-	}
-
-	private static final ExceptionHandler<ExecutionEvent> EXCEPTION_HANDLER = new ExceptionHandler<>() {
-		@Override
-		public void handleEventException(Throwable ex, long sequence, ExecutionEvent event) {
-			CrashReport crashReport = new CrashReport("Caught exception processing Runnable");
-			crashReport.caughtException(ex);
-			OpenVoxel.reportCrash(crashReport);
-		}
-
-		@Override
-		public void handleOnStartException(Throwable ex) {
-			CrashReport crashReport = new CrashReport("Caught exception starting AsyncExecutorPool");
-			crashReport.caughtException(ex);
-			OpenVoxel.reportCrash(crashReport);
-		}
-
-		@Override
-		public void handleOnShutdownException(Throwable ex) {
-			CrashReport crashReport = new CrashReport("Caught exception stopping AsyncExecutorPool");
-			crashReport.caughtException(ex);
-			OpenVoxel.reportCrash(crashReport);
-		}
-	};
-
-	///////////////////////////
-	/// Implementation Code ///
-	///////////////////////////
-
-	private final Disruptor<ExecutionEvent> disruptor;
-	private final ThreadGroup threadGroup;
-	private final int workerCount;
-
-	//Naming Counter
-	private int threadCount = 0;
-
-
-	///////////////////
-	/// API METHODS ///
-	///////////////////
-
-	@PublicAPI
-	public static int getWorkerCount(String ID,int fallback,int minCount) {
-		if(OpenVoxel.getLaunchParameters().hasFlag(ID)) {
-			return Math.max(OpenVoxel.getLaunchParameters().getIntegerMap(ID),Math.max(1,minCount));
-		}else {
-			return fallback;
-		}
-	}
-
-	@PublicAPI
-	public AsyncExecutorPool(String name,int workerCount) {
-		this(name,workerCount,1024);
-	}
-
-	@PublicAPI
-	public AsyncExecutorPool(String name,int workerCount,int ringBufferSize) {
-		this(name,workerCount,ringBufferSize,ProducerType.SINGLE);
-	}
-
-	@SuppressWarnings("unchecked")
-	@PublicAPI
-	public AsyncExecutorPool(String name,int workerCount,int ringBufferSize,ProducerType producerType) {
-		threadGroup = new ThreadGroup(name);
-		this.workerCount = workerCount;
-		ThreadFactory threadFactory = runnable -> {
-			String name1 = threadGroup.getName() + " #" + threadCount;
-			threadCount += 1;
-			Thread thread =  new Thread(
-					threadGroup,
-					runnable,
-					name1
-			);
+		public Thread newThread(@NotNull Runnable r) {
+			Thread thread = new Thread(r);
 			thread.setDaemon(true);
+			thread.setName(name + " #"+countdown);
+			countdown += 1;
 			return thread;
-		};
+		}
+	}
 
-		disruptor = new Disruptor<>(
-			ExecutionEvent::new,
-			ringBufferSize,
-			threadFactory,//,threadFactory,
-			producerType,
+	private static class TaskHandler implements WorkHandler<TaskEvent> {
+		private int threadID;
+		private TaskHandler(int ID) {
+			threadID = ID;
+		}
+		@Override
+		public void onEvent(TaskEvent event) {
+			event.task.execute(threadID);
+			event.task = null;
+		}
+	}
+
+	private final EventTranslatorOneArg<TaskEvent,Task> publishEvent;
+	private final ExecutorService executorService;
+	private final RingBuffer<TaskEvent> ringBuffer;
+	private final WorkerPool<TaskEvent> workerPool;
+	private final TaskHandler[] workHandlerList;
+
+	public AsyncExecutorPool(String name, int threadCount) {
+		publishEvent = (event,sequence,task) -> event.task = task;
+		NamedThreadFactory threadFactory = new NamedThreadFactory(name);
+		executorService = Executors.newFixedThreadPool(
+				threadCount,
+				threadFactory
+		);
+		ringBuffer = RingBuffer.createSingleProducer(
+			TaskEvent::new,
+			1024,
 			new PhasedBackoffWaitStrategy(
 				10,
 				100,
@@ -125,46 +66,36 @@ public class AsyncExecutorPool {
 				new BlockingWaitStrategy()
 			)
 		);
-		disruptor.setDefaultExceptionHandler(EXCEPTION_HANDLER);
-
-		ExecutionWorker[] handlerList = new ExecutionWorker[workerCount];
-		for(int i = 0; i < workerCount; i++) {
-			handlerList[i] = new ExecutionWorker();
+		workHandlerList = new TaskHandler[threadCount];
+		for(int i = 0; i < threadCount; i++) {
+			workHandlerList[i] = new TaskHandler(i);
 		}
-		disruptor.handleEventsWithWorkerPool(handlerList);
+		workerPool = new WorkerPool<>(
+			ringBuffer,
+			ringBuffer.newBarrier(),
+			new FatalExceptionHandler(),
+			workHandlerList
+		);
+		ringBuffer.addGatingSequences(workerPool.getWorkerSequences());
 	}
 
-
-	/**
-	 * Add some work to the executor thread
-	 */
-	@PublicAPI
-	public void addWork(Runnable runnable) {
-		disruptor.publishEvent(TRANSLATOR,runnable);
-	}
-
-	/**
-	 * @return The number of worker threads
-	 */
-	@PublicAPI
-	public int getWorkerCount() {
-		return workerCount;
-	}
-
-	/**
-	 * Start the thread pool, if already started does nothing
-	 */
-	@PublicAPI
+	@Override
 	public void start() {
-		disruptor.start();
+		workerPool.start(executorService);
 	}
 
-	/**
-	 * Stop the thread pool, if already stopped does nothing
-	 */
-	@PublicAPI
+	@Override
 	public void stop() {
-		disruptor.shutdown();
+		workerPool.halt();
 	}
 
+	@Override
+	public void addWork(Task task) {
+		ringBuffer.publishEvent(publishEvent,task);
+	}
+
+	@Override
+	public int getWorkerCount() {
+		return workHandlerList.length;
+	}
 }

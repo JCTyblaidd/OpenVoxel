@@ -29,18 +29,16 @@ public class WorldDrawTask implements Runnable {
 
 	//Configuration
 	public static final int MAX_TRANSFER_CALLS_PER_FRAME = 8;
+	private final int asyncCount;
 
 	//Utility Classes....
 	private final WorldCullManager culler;
 
 	//Dispatch barriers...
 	private AsyncBarrier barrierUpdates = new AsyncBarrier();
-	private AsyncBarrier barrierGenerate = new AsyncBarrier();
-	private AtomicInteger numUpdates = new AtomicInteger(0);
-	private ArrayList<ClientChunkSection> queuedUpdates = new ArrayList<>();
+	private int updateCount;
 
 	//Draw Target State...
-	private List<GenerateTask> generateTasks = new ArrayList<>();
 	long chunkOriginX = 0;
 	long chunkOriginZ = 0;
 	public float playerX = 0;
@@ -63,10 +61,8 @@ public class WorldDrawTask implements Runnable {
 	public Vector3f skyLightVector = new Vector3f(0,-1,0);
 
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {
+		this.asyncCount = asyncCount;
 		culler = new WorldCullManager(this);
-		for(int i = 0; i < asyncCount; i++) {
-			generateTasks.add(new GenerateTask(i));
-		}
 		worldRenderer = api.getWorldRenderer();
 	}
 
@@ -138,12 +134,38 @@ public class WorldDrawTask implements Runnable {
 */
 
 
-		for(int i = 0; i < generateTasks.size(); i++) {
+		for(int i = 0; i < asyncCount; i++) {
 			worldRenderer.getWorldHandlerFor(i).Start();
 		}
 
-		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
+		/*
+		updateCount = 0;
+		barrierUpdates.reset(1);
+		culler.runFrustumCull(section -> {
+			if(section.isDrawDirty()) {
+				if(updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
+					barrierUpdates.addNewTasks(1);
+					pool.addWork(asyncID -> {
+						BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(asyncID);
+						handler.AsyncGenerate(section);
+						handler.AsyncDraw(section);
+						barrierUpdates.completeTask();
+					});
+				}
+				updateCount += 1;
+			}else{
+				barrierUpdates.addNewTasks(1);
+				pool.addWork(asyncID -> {
+					worldRenderer.getWorldHandlerFor(asyncID).AsyncDraw(section);
+					barrierUpdates.completeTask();
+				});
+			}
+		});
+		barrierUpdates.completeTask();
+		*/
 
+
+		BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(0);
 
 		AtomicInteger limit = new AtomicInteger(0);
 		culler.runFrustumCull(section -> {
@@ -156,12 +178,9 @@ public class WorldDrawTask implements Runnable {
 		});
 
 
-
-		for(int i = 0; i < generateTasks.size(); i++) {
+		for(int i = 0; i < asyncCount; i++) {
 			worldRenderer.getWorldHandlerFor(i).Finish();
 		}
-
-
 
 		barrier.completeTask();
 
@@ -191,67 +210,5 @@ public class WorldDrawTask implements Runnable {
 
 	void freeAllData() {
 		Logger.INSTANCE.Info("Invalidating Chunk Data is Not Yet Implemented");
-	}
-
-
-	private class GenerateTask implements Runnable {
-
-		private final int AsyncID;
-		private BaseWorldRenderer.AsyncWorldHandler handler;
-		private int begin;
-		private int end;
-
-		private GenerateTask(int id) {
-			AsyncID = id;
-		}
-
-		private void setup(int begin, int end) {
-			handler = worldRenderer.getWorldHandlerFor(AsyncID);
-			this.begin = begin;
-			this.end = end;
-		}
-
-		@Override
-		public void run() {
-			handler.Start();
-			/*
-			for(int I = begin; I < end; I++) {
-				ClientChunkSection section = queuedUpdates.get(I);
-				if(section.isDrawDirty() && numUpdates.getAndIncrement() < MAX_TRANSFER_CALLS_PER_FRAME) {
-					handler.AsyncGenerate(section);
-					handler.AsyncDraw(section);
-				}else if(!section.isDrawDirty()) {
-					handler.AsyncDraw(section);
-				}
-			}*/
-			handler.Finish();
-			barrierGenerate.completeTask();
-		}
-		/*
-		@Override
-		public void run() {
-			BaseWorldRenderer.AsyncWorldHandler handler = worldRenderer.getWorldHandlerFor(AsyncID);
-			handler.Start();
-			ClientChunkSection section;
-			while(!barrierUpdates.isComplete()) {
-				section = updateCalls.attemptNext();
-				if(section != null) {
-					handler.AsyncGenerate(section);
-					handler.AsyncDraw(section);
-					barrierUpdates.completeTask();
-				}
-				section = drawOnlyCalls.attemptNext();
-				if(section != null) {
-					handler.AsyncDraw(section);
-					barrierUpdates.completeTask();
-				}
-				try{//TODO: FIND SYNC ISSUE (AsyncQueue Broken??!)
-					Thread.sleep(1);
-				}catch(Exception ignore) {}
-			}
-			handler.Finish();
-			barrierGenerate.completeTask();
-		}
-		*/
 	}
 }
