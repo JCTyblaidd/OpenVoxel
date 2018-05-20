@@ -32,6 +32,7 @@ public final class VulkanDevice {
 	//public boolean enabled_KHR_dedicated_allocation = false;
 	//public boolean enabled_KHR_get_memory_requirements2 = false;
 	//public boolean enabled_KHR_push_descriptor = false;
+	public boolean enabled_EXT_shader_viewport_index_layer = false;
 	public boolean enabled_NV_geometry_passthrough = false;
 	public boolean enabled_NV_glsl_shader = false;
 
@@ -457,6 +458,11 @@ public final class VulkanDevice {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: NV GLSL Shader");
 				enabled_NV_glsl_shader = true;
+			}
+			if(extName.equals("VK_EXT_shader_viewport_index_layer")) {
+				enabledExtensions.add(extensionList.extensionName());
+				VulkanUtility.LogInfo("Enabled Ext: EXT Shader Viewport Index Layer");
+				enabled_EXT_shader_viewport_index_layer = true;
 			}
 			//if(extName.equals("VK_EXT_blend_operation_advanced")) {
 			//	enabledExtensions.add(extensionList.extensionName());

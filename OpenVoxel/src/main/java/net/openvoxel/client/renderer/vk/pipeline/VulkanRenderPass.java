@@ -71,6 +71,9 @@ public class VulkanRenderPass {
 	public static int formatSimpleDepth;
 	public static int formatSimpleReadImage;
 	public static int formatSingleChannelReadImage;
+	public static int formatSimpleAttachmentSampled;
+	public static int formatHdrAttachmentSampled;
+	public static int formatSimpleDepthSampled;
 
 	public static void LoadFormats(VulkanState state) {
 		VulkanUtility.LogInfo("Choosing Image Formats");
@@ -101,11 +104,49 @@ public class VulkanRenderPass {
 			),
 			VK_FORMAT_R8_UNORM
 		);
+		formatSimpleAttachmentSampled = state.findSupportedFormat(
+			VK_IMAGE_TILING_OPTIMAL,
+			(
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+					VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT |
+					VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT
+			),
+			VK_FORMAT_R8G8B8A8_UNORM,
+			VK_FORMAT_B8G8R8A8_UNORM,
+			VK_FORMAT_R16G16B16A16_UNORM,
+			VK_FORMAT_R32G32B32A32_SFLOAT
+		);
+		formatHdrAttachmentSampled = state.findSupportedFormat(
+			VK_IMAGE_TILING_OPTIMAL,
+			(
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+					VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT |
+					VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT
+			),
+			VK_FORMAT_R16G16B16A16_UNORM,
+			VK_FORMAT_R32G32B32A32_SFLOAT
+		);
+		formatSimpleDepthSampled = state.findSupportedFormat(
+			VK_IMAGE_TILING_OPTIMAL,
+			(
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+					VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+					VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+			),
+			VK_FORMAT_D32_SFLOAT,
+			VK_FORMAT_D32_SFLOAT_S8_UINT,
+			VK_FORMAT_D24_UNORM_S8_UINT
+		);
 		//Log Chosen Image Formats...
 		LogFormat(" - Swap Present",formatPresent);
 		LogFormat(" - Simple Depth",formatSimpleDepth);
 		LogFormat(" - Simple Sampled",formatSimpleReadImage);
 		LogFormat(" - Single Sampled",formatSingleChannelReadImage);
+		LogFormat(" - Sampled Attachment",formatSimpleAttachmentSampled);
+		LogFormat(" - HDR Sampled Attachment",formatHdrAttachmentSampled);
+		LogFormat(" - Sampled Depth",formatSimpleDepthSampled);
 
 		//Ensure Formats Exist {TODO: ASSIGN AND MAYBE RUN WITH FALLBACKS?!?!?}
 		state.findSupportedBufferFormat(
