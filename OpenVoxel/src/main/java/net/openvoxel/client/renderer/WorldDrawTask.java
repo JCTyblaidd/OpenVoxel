@@ -115,7 +115,7 @@ public class WorldDrawTask implements Runnable {
 
 		//Setup Linear Algebra
 		normalMatrix.identity().rotateZ(zRotate).rotateX(xRotate).rotateY(yRotate);
-		cameraVector.set(0,-1,0).mul(normalMatrix);
+		cameraVector.set(0,1,0).mul(normalMatrix);
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
 
 		//Vulkan uses Depth [0...]
