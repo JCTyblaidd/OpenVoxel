@@ -15,6 +15,7 @@ import net.openvoxel.common.event.window.WindowCloseRequestedEvent;
 import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.CrashReport;
+import net.openvoxel.utility.MathUtilities;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
 
@@ -40,6 +41,10 @@ public final class Renderer implements EventListener {
 	//FrameRate Limiting
 	private int targetFrameRate;
 	private long previousFrameTimestamp;
+
+	//Display Configuration
+	private float fieldOfView = 100.F;
+	private int drawDistance = 16;
 
 	//State Changes
 	private boolean screenshotRequest;
@@ -171,6 +176,16 @@ public final class Renderer implements EventListener {
 			logger.Warning("Requested change to invalid ScreenType: " + type);
 		}
 	}
+
+	public float getFieldOfView() {
+		return fieldOfView;
+	}
+
+	public void setFieldOfView(float FoV) {
+		fieldOfView = MathUtilities.clamp(FoV,10.F,160.F);
+	}
+
+	//TODO: IMPLEMENT DRAW DISTANCE
 
 	public BaseAtlas getBlockAtlas() {
 		return blockAtlas;
@@ -317,7 +332,7 @@ public final class Renderer implements EventListener {
 	public void generateUpdatedChunks(ClientServer server, AsyncBarrier completeBarrier) {
 		if(server != null) {
 			completeBarrier.reset(1);
-			worldDrawTask.update(renderTaskPool,server,completeBarrier);
+			worldDrawTask.update(renderTaskPool,server,completeBarrier, fieldOfView,drawDistance);
 			worldDrawTask.run();
 		}else{
 			worldDrawTask.ignore();

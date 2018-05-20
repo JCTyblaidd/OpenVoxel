@@ -31,7 +31,7 @@ public class ScreenSettings extends Screen {
 		this.renderer = renderer;
 
 		GUIColour background = new GUIColour(0xFF000000, 0x00000000, false);
-		GUISlider setting_foV = new GUISlider(10, 160, 110, (builder,fov) -> {
+		GUISlider setting_foV = new GUISlider(10, 160, (int)renderer.getFieldOfView(), (builder,fov) -> {
 			builder.append("FOV: ");
 			builder.append(fov);
 		});
@@ -77,7 +77,7 @@ public class ScreenSettings extends Screen {
 	}
 
 	private void onFOVChange(GUISlider ignored, int value) {
-		//OpenVoxel.getClientServer().getThePlayer().setFoV(value):
+		renderer.setFieldOfView(value);
 	}
 
 	private void gotoAudioSettings() {

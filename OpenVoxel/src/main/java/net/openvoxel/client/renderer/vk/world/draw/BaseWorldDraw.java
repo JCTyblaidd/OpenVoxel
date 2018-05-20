@@ -168,7 +168,7 @@ public abstract class BaseWorldDraw implements IWorldDraw {
 	}
 
 
-	
+
 
 	///
 	/// Implementation Of Standard Draw Call Code

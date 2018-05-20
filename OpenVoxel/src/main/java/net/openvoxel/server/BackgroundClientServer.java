@@ -13,7 +13,7 @@ import net.openvoxel.world.generation.DebugWorldGenerator;
  */
 public class BackgroundClientServer extends ClientServer {
 
-	private static final float ADVANCE_RATE = (float)Math.toRadians(10F);
+	private static final float ADVANCE_RATE = 0.1F;
 
 	public BackgroundClientServer() {
 		thePlayer = new EntityPlayerSP();
@@ -40,19 +40,11 @@ public class BackgroundClientServer extends ClientServer {
 	}
 
 	private void debug_tick() {
-		//thePlayer.setYaw(thePlayer.getYaw() + 0.004F);
-		//thePlayer.xPos += 0.004F;
+		/*
 		float cos = (float)Math.cos(thePlayer.getYaw());
 		float sin = (float)Math.sin(thePlayer.getYaw());
 		float cosP = (float)Math.cos(thePlayer.getPitch());
 		float sinP = (float)Math.cos(thePlayer.getPitch());
-		//Terrible//
-		//if(!ClientInput.isKeyDown(GLFW.GLFW_KEY_ESCAPE)) {
-			//OGL3Renderer r = (OGL3Renderer)Renderer.renderer;
-			//OGL3DisplayHandle h = (OGL3DisplayHandle)r.getDisplayHandle();
-			//long w = h.getWindow();
-			//GLFW.glfwSetInputMode(w,GLFW.GLFW_CURSOR,GLFW.GLFW_CURSOR_DISABLED);
-		//}
 		if(EntityPlayerSP.keyForward.isDownRaw()) {
 			thePlayer.xPos += cosP * sin * 1.0F;
 			thePlayer.zPos += cosP * cos * 1.0F;
@@ -76,13 +68,12 @@ public class BackgroundClientServer extends ClientServer {
 		}
 		if(EntityPlayerSP.keyCrouch.isDownRaw()) {
 			thePlayer.yPos -= 0.5F;
-		}
+		}*/
 		float a = (float)ClientInput.unhandledMouseDelta.x;
 		float b = (float)ClientInput.unhandledMouseDelta.y;
-		ClientInput.unhandledMouseDelta.x = 0;
-		ClientInput.unhandledMouseDelta.y = 0;
-		a /= 300;
-		b /= 300;
+		ClientInput.resetMouseDelta();
+		a /= 10;
+		b /= 10;
 		thePlayer.setYaw(thePlayer.getYaw() + a);
 		thePlayer.setPitch(thePlayer.getPitch() + b);
 	}

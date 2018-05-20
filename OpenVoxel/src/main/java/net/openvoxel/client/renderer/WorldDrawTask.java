@@ -87,7 +87,7 @@ public class WorldDrawTask implements Runnable {
 	}
 
 
-	void update(AsyncTaskPool pool,ClientServer server, AsyncBarrier barrier) {
+	void update(AsyncTaskPool pool,ClientServer server, AsyncBarrier barrier,float fovDegree, int drawDist) {
 		this.pool = pool;
 		this.barrier = barrier;
 		width = ClientInput.currentWindowFrameSize.x;
@@ -102,14 +102,14 @@ public class WorldDrawTask implements Runnable {
 
 		//Player Draw Data
 		playerX = (float)(thePlayer.xPos - 16.0 * chunkOriginX);
-		playerY = (float)thePlayer.yPos + 10.F;//TODO: ADD CAMERA OFFSET
+		playerY = (float)(thePlayer.yPos + thePlayer.getEyeHeight());
 		playerZ = (float)(thePlayer.zPos - 16.0 * chunkOriginZ);
-		viewDistance = 16;//TODO: UPDATE THESE CONSTANTS
+		viewDistance = drawDist;
 
 		//Player ProjectionView Data
-		float FoV = (float)Math.toRadians(100.F);
+		float FoV = (float)Math.toRadians(fovDegree);
 		float aspectRatio = (float)width / (float)height;
-		float xRotate = (float)Math.toRadians(thePlayer.getPitch());
+		float xRotate = (float)Math.toRadians(-thePlayer.getPitch());
 		float yRotate = (float)Math.toRadians(thePlayer.getYaw());
 		float zRotate = (float)Math.toRadians(180);
 
