@@ -1,4 +1,4 @@
-package net.openvoxel.client.renderer.vk.world.draw.snips;
+package net.openvoxel.client.renderer.vk.world.draw;
 
 import gnu.trove.list.TLongList;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;

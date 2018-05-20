@@ -6,7 +6,6 @@ import net.openvoxel.client.renderer.vk.VulkanCache;
 import net.openvoxel.client.renderer.vk.VulkanCommandHandler;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.world.VulkanWorldRenderer;
-import net.openvoxel.client.renderer.vk.world.draw.snips.DrawUtility;
 import net.openvoxel.world.client.ClientChunkSection;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;

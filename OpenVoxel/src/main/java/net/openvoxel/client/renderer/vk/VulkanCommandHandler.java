@@ -60,7 +60,6 @@ public final class VulkanCommandHandler {
 	private long commandPoolMainThread = VK_NULL_HANDLE;
 	private long commandPoolGuiAsync = VK_NULL_HANDLE;
 	private long commandPoolTransfer = VK_NULL_HANDLE;
-	private TLongList commandPoolsAsync;
 	private TLongList commandPoolsTransferAsync;
 
 	//Command Buffers...
@@ -68,7 +67,6 @@ public final class VulkanCommandHandler {
 	private List<VkCommandBuffer> commandBuffersGuiAsync;
 	private List<VkCommandBuffer> commandBuffersTransfer;
 	//NB: idx = pool*swapSize + swapImage
-	private List<VkCommandBuffer> commandBuffersAsync;
 	private List<VkCommandBuffer> commandBuffersTransferAsync;
 
 	//Synchronisation
@@ -91,13 +89,12 @@ public final class VulkanCommandHandler {
 		}
 		FrameBuffers_ForwardOnly = new TLongArrayList();
 
-		commandPoolsAsync = new TLongArrayList();
+
 		commandPoolsTransferAsync = new TLongArrayList();
 
 		commandBuffersMainThread = new ArrayList<>();
 		commandBuffersGuiAsync = new ArrayList<>();
 		commandBuffersTransfer = new ArrayList<>();
-		commandBuffersAsync = new ArrayList<>();
 		commandBuffersTransferAsync = new ArrayList<>();
 
 		MainThreadFenceList = new TLongArrayList();
@@ -268,20 +265,6 @@ public final class VulkanCommandHandler {
 				VulkanUtility.CrashOnBadResult("Failed to create Command Pool[Transfer]",vkResult);
 			}
 
-			commandPoolCreate.queueFamilyIndex(device.familyQueue);
-
-			for(int pool = 0; pool < asyncPoolSize; pool++) {
-				vkResult = vkCreateCommandPool(device.logicalDevice,commandPoolCreate,null,pResult);
-				if(vkResult == VK_SUCCESS) {
-					commandPoolsAsync.add(pResult.get(0));
-				}else{
-					//No Memory
-					VulkanUtility.CrashOnBadResult("Failed to create Command Pool[Async-"+pool+"]",vkResult);
-				}
-			}
-
-			commandPoolCreate.queueFamilyIndex(device.familyTransfer);
-
 			for(int pool = 0; pool < asyncPoolSize; pool++) {
 				vkResult = vkCreateCommandPool(device.logicalDevice,commandPoolCreate,null,pResult);
 				if(vkResult == VK_SUCCESS) {
@@ -343,17 +326,6 @@ public final class VulkanCommandHandler {
 			commandAllocateInfo.level(VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 
 			for(int pool = 0; pool < asyncPoolSize; pool++) {
-				commandAllocateInfo.commandPool(commandPoolsAsync.get(pool));
-				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
-				if(vkResult == VK_SUCCESS) {
-					for (int i = 0; i < swapSize; i++) {
-						commandBuffersAsync.add(new VkCommandBuffer(bufferResult.get(i),device.logicalDevice));
-					}
-				}else{
-					//No Memory
-					VulkanUtility.CrashOnBadResult("Failed to allocate Command Buffers[Async..]",vkResult);
-				}
-
 				commandAllocateInfo.commandPool(commandPoolsTransferAsync.get(pool));
 				vkResult = vkAllocateCommandBuffers(device.logicalDevice,commandAllocateInfo,bufferResult);
 				if(vkResult == VK_SUCCESS) {
@@ -373,18 +345,15 @@ public final class VulkanCommandHandler {
 		vkDestroyCommandPool(device.logicalDevice,commandPoolMainThread,null);
 		vkDestroyCommandPool(device.logicalDevice,commandPoolTransfer,null);
 
-		for(int i = 0; i < commandPoolsAsync.size(); i++) {
-			vkDestroyCommandPool(device.logicalDevice,commandPoolsAsync.get(i),null);
+		for(int i = 0; i < commandPoolsTransferAsync.size(); i++) {
 			vkDestroyCommandPool(device.logicalDevice,commandPoolsTransferAsync.get(i),null);
 		}
-		commandPoolsAsync.clear();
 		commandPoolsTransferAsync.clear();
 
 		//Clear Command Buffers:
 		commandBuffersMainThread.clear();
 		commandBuffersGuiAsync.clear();
 		commandBuffersTransfer.clear();
-		commandBuffersAsync.clear();
 		commandBuffersTransferAsync.clear();
 	}
 
@@ -999,13 +968,6 @@ public final class VulkanCommandHandler {
 		return commandBuffersTransfer.get(currentFrameIndex);
 	}
 
-	/**
-	 * @return The command buffer for the poolID'th Async Graphics Task
-	 */
-	public VkCommandBuffer getAsyncMainCommandBuffer(int poolID) {
-		int idx = (poolID * state.VulkanSwapChainSize) + currentFrameIndex;
-		return commandBuffersAsync.get(idx);
-	}
 
 	/*
 	 * @return The command buffer for the poolID'th Async Transfer Task
