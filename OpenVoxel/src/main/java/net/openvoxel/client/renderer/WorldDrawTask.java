@@ -57,14 +57,20 @@ public class WorldDrawTask implements Runnable {
 	public final Matrix4f cameraMatrix = new Matrix4f().identity();
 	public final Matrix4f perspectiveMatrix = new Matrix4f().identity();
 	public final Matrix4f frustumMatrix = new Matrix4f().identity();
+	public final Matrix4f invFrustumMatrix = new Matrix4f().identity();
 	public final FrustumIntersection frustumIntersect = new FrustumIntersection();
 
 	//World Shadow State
 	public final Vector3f skyLightVector = new Vector3f(0,-1,0);
+	public final float[] shadowSplits = new float[4];
 	public final Matrix4f[] shadowMatrixList = new Matrix4f[4];
-	public final FrustumIntersection[] shadowIntersectList = new FrustumIntersection[4];
 	public final Matrix4f totalShadowMatrix = new Matrix4f().identity();
+	public final FrustumIntersection[] shadowIntersectList = new FrustumIntersection[4];
 	public final FrustumIntersection totalShadowIntersect = new FrustumIntersection();
+	private float cascadeSplitLambda = 0.95f;
+
+	//Calculation Data...
+	private final Vector3f[] frustumCorners = new Vector3f[8];
 
 	WorldDrawTask(GraphicsAPI api, int asyncCount) {
 		this.asyncCount = asyncCount;
@@ -74,7 +80,11 @@ public class WorldDrawTask implements Runnable {
 			shadowMatrixList[i] = new Matrix4f().identity();
 			shadowIntersectList[i] = new FrustumIntersection();
 		}
+		for(int i = 0; i < 8; i++) {
+			frustumCorners[i] = new Vector3f();
+		}
 	}
+
 
 	void update(AsyncTaskPool pool,ClientServer server, AsyncBarrier barrier) {
 		this.pool = pool;
@@ -108,9 +118,102 @@ public class WorldDrawTask implements Runnable {
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
 		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,false);//TODO: YES/NO??
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
+		frustumMatrix.invert(invFrustumMatrix);
 		frustumIntersect.set(frustumMatrix);
 
 		//Calculate Shadow Linear Algebra
+		// Based on https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
+		// Based on https://github.com/SaschaWillems/Vulkan/blob/master/examples/shadowmappingcascade/shadowmappingcascade.cpp
+		int cascadeCount = worldRenderer.getShadowFrustumCount();
+		float zDelta = zLimitVector.y - zLimitVector.x;
+		float zRatio = zLimitVector.y / zLimitVector.x;
+		for(int i = 0; i < cascadeCount; i++) {
+			float p = (i + 1) / ((float)cascadeCount);
+			float log = zLimitVector.x * (float)Math.pow(zRatio, p);
+			float uniform = zLimitVector.x + zDelta * p;
+			float d = cascadeSplitLambda * (log - uniform) + uniform;
+			shadowSplits[i] = (d - zLimitVector.x) / zDelta;
+		}
+
+		//Temporary Matrix Value
+		Matrix4f lightViewMatrix = new Matrix4f();
+
+		float lastSplitDist = 0;
+		for(int i = 0; i < cascadeCount; i++) {
+			float splitDist = shadowSplits[i];
+			frustumCorners[0].set(-1.F,  1.F, -1.F);
+			frustumCorners[1].set( 1.F,  1.F, -1.F);
+			frustumCorners[2].set( 1.F, -1.F, -1.F);
+			frustumCorners[3].set(-1.F, -1.F, -1.F);
+			frustumCorners[4].set(-1.F,  1.F,  1.F);
+			frustumCorners[5].set( 1.F,  1.F,  1.F);
+			frustumCorners[6].set( 1.F, -1.F,  1.F);
+			frustumCorners[7].set(-1.F, -1.F,  1.F);
+
+			//Project to world space
+			for(int j = 0; j < 8; j++) {
+				Vector3f vector = frustumCorners[j];
+				float invW = 1.F / vector.mulPositionW(invFrustumMatrix);
+				vector.mul(invW);
+			}
+
+			for (int j = 0; j < 4; j++) {
+				Vector3f cornerA = frustumCorners[j + 4];
+				Vector3f cornerB = frustumCorners[j];
+				float distX = cornerA.x - cornerB.x;
+				float distY = cornerA.y - cornerB.y;
+				float distZ = cornerA.z - cornerB.z;
+				cornerA.set(cornerB).add(distX*splitDist,distY*splitDist,distZ*splitDist);
+				cornerB.add(distX*lastSplitDist,distY*lastSplitDist,distZ*lastSplitDist);
+			}
+
+			//Update Last Split Distance
+			lastSplitDist = shadowSplits[i];
+
+			//Find frustum center
+			float centerX = 0.F;
+			float centerY = 0.F;
+			float centerZ = 0.F;
+			for (int j = 0; j < 8; j++) {
+				Vector3f corner = frustumCorners[j];
+				centerX += corner.x;
+				centerY += corner.y;
+				centerZ += corner.z;
+			}
+			centerX /= 8.0F;
+			centerY /= 8.0F;
+			centerZ /= 8.0F;
+
+			float radius = 0.0f;
+			for (int j = 0; j < 8; j++) {
+				float distance = frustumCorners[j].distance(centerX,centerY,centerZ);
+				radius = Math.max(radius, distance);
+			}
+			radius = (float)Math.ceil(radius * 16.0f) / 16.0f;
+
+			lightViewMatrix.lookAt(
+				centerX - (skyLightVector.x * radius),
+				centerY - (skyLightVector.y * radius),
+				centerZ - (skyLightVector.z * radius),
+				centerX,
+				centerY,
+				centerZ,
+				0.F,
+				1.0F,
+				0.F
+			);
+
+			//Update Values
+			shadowMatrixList[i].ortho(
+				-radius,
+				radius,
+				-radius,
+				radius,
+				0.f,
+				2 * radius
+			).mul(lightViewMatrix);
+			shadowSplits[i] = (zLimitVector.x + splitDist * zDelta) * -1.0f;
+		}
 	}
 
 	void ignore() {
