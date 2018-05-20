@@ -9,6 +9,7 @@ import net.openvoxel.client.renderer.vk.VulkanCommandHandler;
 import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
+import net.openvoxel.client.renderer.vk.world.draw.IWorldDraw;
 import net.openvoxel.utility.MathUtilities;
 import net.openvoxel.world.client.ClientChunkSection;
 import org.lwjgl.PointerBuffer;
@@ -26,30 +27,40 @@ import static org.lwjgl.vulkan.VK10.*;
 
 public class VulkanWorldRenderer extends BaseWorldRenderer {
 
+	//Bound Values
 	private VulkanCommandHandler command;
 	private VulkanWorldMemoryManager memory;
 	private VulkanMemory raw_memory;
 	private VulkanCache cache;
 
+	//World Uniform Descriptors
 	private long UniformDescriptorPool;
 	private TLongList UniformDescriptorSetList;
 
+	//World Uniform Buffer
 	private long UniformBuffer;
 	private long UniformBufferMemory;
 
+	//World Uniform Constants
 	private int UniformAlignedSize;
 
+	//World Uniform Staging Data
 	private long UniformStagingBuffer;
 	private long UniformStagingMemory;
 	private ByteBuffer UniformStagingMappedMemory;
 
+	//World Chunk Constants
 	private static final int WORLD_UNIFORM_BUFFER_SIZE = 176;
 	private static final int DEFAULT_MEMORY_SIZE = VulkanWorldMemoryPage.SUB_PAGE_SIZE;
 
+	//World Chunk Streaming Data
 	private final int MAX_TRANSFERS_PER_FRAME = WorldDrawTask.MAX_TRANSFER_CALLS_PER_FRAME;
 	private final VkBufferMemoryBarrier.Buffer BufferTransferBarriers = VkBufferMemoryBarrier.malloc(MAX_TRANSFERS_PER_FRAME);
 	private int bufferCopyCount = 0;
 	private Lock bufferCopyLock = new ReentrantLock();
+
+	//World Drawing Path
+	private IWorldDraw worldDraw;
 
 	public VulkanWorldRenderer(VulkanCommandHandler command,VulkanCache cache, VulkanDevice device, VulkanMemory memory) {
 		this.command = command;
@@ -588,28 +599,50 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		return new VulkanAsyncWorldHandler(asyncID);
 	}
 
-	private class VulkanAsyncWorldHandler extends AsyncWorldHandler {
+	public class VulkanAsyncWorldHandler extends AsyncWorldHandler {
 
-		private long lastBoundVulkanBuffer;
 		private int memory_id;
+
+		//Bound Draw Buffers
+		public VkCommandBuffer drawStandardOpaque;
+		public VkCommandBuffer drawStandardTransparent;
+		public VkCommandBuffer drawShadowOpaque;
+		public VkCommandBuffer drawShadowTransparent;
+		public VkCommandBuffer drawNearbyOpaque;
+		public VkCommandBuffer drawNearbyTransparent;
+
+		//Bound Pipeline Layouts
+		public long layoutStandardOpaque;
+		public long layoutStandardTransparent;
+		public long layoutShadowOpaque;
+		public long layoutShadowTransparent;
+		public long layoutNearbyOpaque;
+		public long layoutNearbyTransparent;
+
+		//TODO: LAST BOUND BUFFER!!
+
+		public long getDeviceBuffer(int memoryID) {
+			return memory.GetDeviceBuffer(memoryID);
+		}
+
+		public long getDeviceOffset(int memoryID) {
+			return memory.GetDeviceOffset(memoryID);
+		}
 
 		private VulkanAsyncWorldHandler(int asyncID) {
 			super(asyncID);
-			lastBoundVulkanBuffer = VK_NULL_HANDLE;
 		}
 
 		@Override
 		public void Start() {
 			super.Start();
 			memory_id = 0;
-			lastBoundVulkanBuffer = VK_NULL_HANDLE;
 		}
 
 		@Override
 		public void Finish() {
 			super.Finish();
 			memory_id = 0;
-			lastBoundVulkanBuffer = VK_NULL_HANDLE;
 		}
 	}
 

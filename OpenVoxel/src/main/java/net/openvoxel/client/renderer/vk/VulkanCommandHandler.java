@@ -965,7 +965,7 @@ public final class VulkanCommandHandler {
 		return device.logicalDevice;
 	}
 
-	VulkanDevice getDeviceManager() {
+	public VulkanDevice getDeviceManager() {
 		return device;
 	}
 

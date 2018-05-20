@@ -276,6 +276,8 @@ public final class Renderer implements EventListener {
 			reloadResourceRequest = false;
 		}
 
+		//TODO: changeGraphicsType (call invalidateAllChunks!!)
+
 		api.stopStateChange();
 	}
 

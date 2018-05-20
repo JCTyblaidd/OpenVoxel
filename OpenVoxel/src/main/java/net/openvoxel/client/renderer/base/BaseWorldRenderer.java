@@ -115,7 +115,7 @@ public abstract class BaseWorldRenderer {
 	public class AsyncWorldHandler implements IBlockRenderer {
 
 		private BaseBlockAccess blockAccess = new BaseBlockAccess();
-		private int asyncID;
+		public final int asyncID;
 		private boolean isOpaqueDraw;
 
 		protected AsyncWorldHandler(int asyncID) {
