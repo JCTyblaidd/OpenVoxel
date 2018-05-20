@@ -3,18 +3,25 @@ package net.openvoxel.client.renderer.vk.world.draw;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanRenderPass;
+import net.openvoxel.client.renderer.vk.world.VulkanWorldRenderer;
+import net.openvoxel.world.client.ClientChunkSection;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VkDevice;
-import org.lwjgl.vulkan.VkFramebufferCreateInfo;
-import org.lwjgl.vulkan.VkImageCreateInfo;
-import org.lwjgl.vulkan.VkImageViewCreateInfo;
+import org.lwjgl.vulkan.*;
 
 import java.nio.LongBuffer;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
+/**
+ *  World Draw with the implementation of draw call resource management
+ */
 public abstract class BaseWorldDraw implements IWorldDraw {
+
+	//
+	// Static Configuration
+	//
+	private static final boolean LAZY_BIND = true;
 
 	//
 	// Configuration
@@ -158,5 +165,103 @@ public abstract class BaseWorldDraw implements IWorldDraw {
 	@Override
 	public int getShadowCascadeCount() {
 		return ShadowCascadeCount;
+	}
+
+
+	
+
+	///
+	/// Implementation Of Standard Draw Call Code
+	///
+
+	@Override
+	public void asyncDrawStandard(VulkanWorldRenderer.VulkanAsyncWorldHandler handler,
+	                              ClientChunkSection section,
+	                              float offsetX, float offsetY, float offsetZ) {
+
+		try(MemoryStack stack = stackPush()) {
+			if(section.Renderer_Size_Opaque != -1) {
+				VkCommandBuffer buffer = handler.drawStandardOpaque;
+				long opaqueBuffer = handler.getDeviceBuffer(section.Renderer_Info_Opaque);
+				long opaqueOffset = handler.getDeviceOffset(section.Renderer_Info_Opaque);
+				int firstVertex;
+				int vertexCount = section.Renderer_Size_Opaque / 32;
+				if(LAZY_BIND) {
+					if(opaqueBuffer != handler.lastBoundBufferStandardOpaque) {
+						vkCmdBindVertexBuffers(
+								buffer,
+								0,
+								stack.longs(opaqueBuffer),
+								stack.longs(0L)
+						);
+						handler.lastBoundBufferStandardOpaque = opaqueBuffer;
+					}
+					firstVertex = (int)opaqueOffset / 32;
+				}else {
+					vkCmdBindVertexBuffers(
+							buffer,
+							0,
+							stack.longs(opaqueBuffer),
+							stack.longs(opaqueOffset)
+					);
+					firstVertex = 0;
+				}
+				vkCmdPushConstants(
+						buffer,
+						handler.layoutStandardOpaque,
+						VK_SHADER_STAGE_VERTEX_BIT,
+						0,
+						stack.floats(offsetX, offsetY, offsetZ)
+				);
+				vkCmdDraw(
+						buffer,
+						vertexCount,
+						1,
+						firstVertex,
+						0
+				);
+			}
+			if(section.Renderer_Size_Transparent != -1) {
+				VkCommandBuffer buffer = handler.drawStandardTransparent;
+				long transparentBuffer = handler.getDeviceBuffer(section.Renderer_Info_Transparent);
+				long transparentOffset = handler.getDeviceOffset(section.Renderer_Info_Transparent);
+				int firstVertex;
+				int vertexCount = section.Renderer_Size_Transparent / 32;
+				if(LAZY_BIND) {
+					if(transparentBuffer != handler.lastBoundBufferStandardTransparent) {
+						vkCmdBindVertexBuffers(
+								buffer,
+								0,
+								stack.longs(transparentBuffer),
+								stack.longs(0L)
+						);
+						handler.lastBoundBufferStandardTransparent = transparentBuffer;
+					}
+					firstVertex = (int)transparentOffset / 32;
+				}else {
+					vkCmdBindVertexBuffers(
+							buffer,
+							0,
+							stack.longs(transparentBuffer),
+							stack.longs(transparentOffset)
+					);
+					firstVertex = 0;
+				}
+				vkCmdPushConstants(
+						buffer,
+						handler.layoutStandardTransparent,
+						VK_SHADER_STAGE_VERTEX_BIT,
+						0,
+						stack.floats(offsetX, offsetY, offsetZ)
+				);
+				vkCmdDraw(
+						buffer,
+						vertexCount,
+						1,
+						firstVertex,
+						0
+				);
+			}
+		}
 	}
 }

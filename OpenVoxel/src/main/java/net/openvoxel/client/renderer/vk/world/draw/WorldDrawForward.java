@@ -18,12 +18,13 @@ import java.util.List;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
-public class WorldDrawForward implements IWorldDraw {
+public class WorldDrawForward extends BaseWorldDraw {
 
 	private TLongList pools;
 	private List<VkCommandBuffer> buffers;
 
 	private static final int DRAW_COUNT = 2;
+	private static final boolean LAZY_BIND = true;
 
 	public WorldDrawForward() {
 		pools = new TLongArrayList();
@@ -187,67 +188,6 @@ public class WorldDrawForward implements IWorldDraw {
 		VulkanUtility.ValidateSuccess("Failed to end command buffer",vkResult);
 		vkResult = vkEndCommandBuffer(asyncHandler.drawStandardTransparent);
 		VulkanUtility.ValidateSuccess("Failed to end command buffer",vkResult);
-	}
-
-	@Override
-	public void asyncDrawStandard(VulkanWorldRenderer.VulkanAsyncWorldHandler handler,
-	                              ClientChunkSection section,
-	                              float offsetX, float offsetY, float offsetZ) {
-
-		try(MemoryStack stack = stackPush()) {
-			if(section.Renderer_Size_Opaque != -1) {
-				VkCommandBuffer buffer = handler.drawStandardOpaque;
-				long opaqueBuffer = handler.getDeviceBuffer(section.Renderer_Info_Opaque);
-				long opaqueOffset = handler.getDeviceOffset(section.Renderer_Info_Opaque);
-
-				vkCmdBindVertexBuffers(
-						buffer,
-						0,
-						stack.longs(opaqueBuffer),
-						stack.longs(opaqueOffset)
-				);
-				vkCmdPushConstants(
-						buffer,
-						handler.layoutStandardOpaque,
-						VK_SHADER_STAGE_VERTEX_BIT,
-						0,
-						stack.floats(offsetX, offsetY, offsetZ)
-				);
-				vkCmdDraw(
-						buffer,
-						section.Renderer_Size_Opaque / 32,
-						1,
-						0,
-						0
-				);
-			}
-			if(section.Renderer_Size_Transparent != -1) {
-				VkCommandBuffer buffer = handler.drawStandardTransparent;
-				long transparentBuffer = handler.getDeviceBuffer(section.Renderer_Info_Transparent);
-				long transparentOffset = handler.getDeviceOffset(section.Renderer_Info_Transparent);
-
-				vkCmdBindVertexBuffers(
-						buffer,
-						0,
-						stack.longs(transparentBuffer),
-						stack.longs(transparentOffset)
-				);
-				vkCmdPushConstants(
-						buffer,
-						handler.layoutStandardTransparent,
-						VK_SHADER_STAGE_VERTEX_BIT,
-						0,
-						stack.floats(offsetX, offsetY, offsetZ)
-				);
-				vkCmdDraw(
-						buffer,
-						section.Renderer_Size_Transparent / 32,
-						1,
-						0,
-						0
-				);
-			}
-		}
 	}
 
 	@Override

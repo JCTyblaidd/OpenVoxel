@@ -558,7 +558,13 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		public long layoutNearbyOpaque;
 		public long layoutNearbyTransparent;
 
-		//TODO: LAST BOUND BUFFER!!
+		//Last Bound Buffer Information
+		public long lastBoundBufferStandardOpaque;
+		public long lastBoundBufferStandardTransparent;
+		public long lastBoundBufferShadowOpaque;
+		public long lastBoundBufferShadowTransparent;
+		public long lastBoundBufferNearbyOpaque;
+		public long lastBoundBufferNearbyTransparent;
 
 		public long getDeviceBuffer(int memoryID) {
 			return memory.GetDeviceBuffer(memoryID);
@@ -576,6 +582,12 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		public void Start() {
 			super.Start();
 			memory_id = 0;
+			lastBoundBufferStandardOpaque = VK_NULL_HANDLE;
+			lastBoundBufferStandardTransparent = VK_NULL_HANDLE;
+			lastBoundBufferShadowOpaque = VK_NULL_HANDLE;
+			lastBoundBufferShadowTransparent = VK_NULL_HANDLE;
+			lastBoundBufferNearbyOpaque = VK_NULL_HANDLE;
+			lastBoundBufferNearbyTransparent = VK_NULL_HANDLE;
 		}
 
 		@Override
