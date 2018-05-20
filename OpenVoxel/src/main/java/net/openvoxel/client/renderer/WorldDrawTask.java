@@ -117,7 +117,9 @@ public class WorldDrawTask implements Runnable {
 		normalMatrix.identity().rotateZ(zRotate).rotateX(xRotate).rotateY(yRotate);
 		cameraVector.set(0,-1,0).mul(normalMatrix);
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
-		perspectiveMatrix.identity().perspective(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,false);//TODO: YES/NO??
+
+		//Vulkan uses Depth [0...]
+		perspectiveMatrix.identity().perspectiveLH(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,true);
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
 		frustumMatrix.invert(invFrustumMatrix);
 		frustumIntersect.set(frustumMatrix);
@@ -199,7 +201,7 @@ public class WorldDrawTask implements Runnable {
 			}
 			radius = (float)Math.ceil(radius * 16.0f) / 16.0f;
 
-			lightViewMatrix.lookAt(
+			lightViewMatrix.lookAtLH(
 				centerX - (skyLightVector.x * radius),
 				centerY - (skyLightVector.y * radius),
 				centerZ - (skyLightVector.z * radius),
@@ -213,7 +215,7 @@ public class WorldDrawTask implements Runnable {
 
 			//Update Values
 			Matrix4f shadowMatrix = (i == cascadeCount) ? totalShadowMatrix : shadowMatrixList[i];
-			shadowMatrix.ortho(
+			shadowMatrix.orthoLH(
 					-radius,
 					radius,
 					-radius,
