@@ -40,7 +40,7 @@ public abstract class BaseWorldRenderer {
 
 	private TIntObjectMap<AsyncWorldHandler> objectMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>());
 
-	private AsyncWorldHandler getWorldHandlerFor(int asyncID) {
+	protected AsyncWorldHandler getWorldHandlerFor(int asyncID) {
 		AsyncWorldHandler handler = objectMap.get(asyncID);
 		if(handler == null) {
 			handler = CreateAsyncHandler(asyncID);

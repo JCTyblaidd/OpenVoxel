@@ -10,10 +10,9 @@ import net.openvoxel.client.renderer.vk.world.draw.snips.DrawUtility;
 import net.openvoxel.world.client.ClientChunkSection;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VkCommandBuffer;
-import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
-import org.lwjgl.vulkan.VkCommandBufferInheritanceInfo;
+import org.lwjgl.vulkan.*;
 
+import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +65,9 @@ public class WorldDrawForward implements IWorldDraw {
 	@Override
 	public void beginAsync(VulkanCommandHandler commandHandler,
 	                       VulkanCache cache,
-	                       VulkanWorldRenderer.VulkanAsyncWorldHandler asyncHandler) {
+	                       VulkanWorldRenderer.VulkanAsyncWorldHandler asyncHandler,
+	                       int screenWidth, int screenHeight,
+	                       LongBuffer descriptorSets) {
 		asyncHandler.drawStandardOpaque = DrawUtility.getCommandBuffer(
 				commandHandler.getSwapSize(),
 				DRAW_COUNT,
@@ -113,6 +114,70 @@ public class WorldDrawForward implements IWorldDraw {
 			VulkanUtility.ValidateSuccess("Failed to begin command buffer",vkResult);
 			vkResult = vkBeginCommandBuffer(asyncHandler.drawStandardTransparent,beginInfo);
 			VulkanUtility.ValidateSuccess("Failed to begin command buffer",vkResult);
+
+			//Bind Pipelines
+			vkCmdBindPipeline(
+					asyncHandler.drawStandardOpaque,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					cache.PIPELINE_FORWARD_WORLD.getPipeline()
+			);
+			vkCmdBindPipeline(
+					asyncHandler.drawStandardTransparent,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					cache.PIPELINE_FORWARD_WORLD.getPipeline()
+			);
+
+			//Bind Viewport
+			VkViewport.Buffer pViewport = VkViewport.mallocStack(1,stack);
+			pViewport.x(0);
+			pViewport.y(0);
+			pViewport.width(screenWidth);
+			pViewport.height(screenHeight);
+			pViewport.minDepth(0.0f);
+			pViewport.maxDepth(1.0f);
+			vkCmdSetViewport(
+					asyncHandler.drawStandardOpaque,
+					0,
+					pViewport
+			);
+			vkCmdSetViewport(
+					asyncHandler.drawStandardTransparent,
+					0,
+					pViewport
+			);
+
+			//Bind Scissor
+			VkRect2D.Buffer pScissor = VkRect2D.mallocStack(1,stack);
+			pScissor.offset().set(0,0);
+			pScissor.extent().set(screenWidth,screenHeight);
+			vkCmdSetScissor(
+					asyncHandler.drawStandardOpaque,
+					0,
+					pScissor
+			);
+			vkCmdSetScissor(
+					asyncHandler.drawStandardTransparent,
+					0,
+					pScissor
+			);
+
+			//Bind Descriptor Sets
+			vkCmdBindDescriptorSets(
+					asyncHandler.drawStandardOpaque,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
+					0,
+					descriptorSets,
+					null
+			);
+			vkCmdBindDescriptorSets(
+					asyncHandler.drawStandardOpaque,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
+					0,
+					descriptorSets,
+					null
+			);
 		}
 	}
 
@@ -128,7 +193,7 @@ public class WorldDrawForward implements IWorldDraw {
 	@Override
 	public void asyncDrawStandard(VulkanWorldRenderer.VulkanAsyncWorldHandler handler,
 	                              ClientChunkSection section,
-	                              int offsetX, int offsetY, int offsetZ) {
+	                              float offsetX, float offsetY, float offsetZ) {
 
 		try(MemoryStack stack = stackPush()) {
 			if(section.Renderer_Size_Opaque != -1) {
@@ -187,12 +252,12 @@ public class WorldDrawForward implements IWorldDraw {
 	}
 
 	@Override
-	public void asyncDrawShadows(VulkanWorldRenderer.VulkanAsyncWorldHandler handler, ClientChunkSection section, int offsetX, int offsetY, int offsetZ) {
+	public void asyncDrawShadows(VulkanWorldRenderer.VulkanAsyncWorldHandler handler, ClientChunkSection section, float offsetX, float offsetY, float offsetZ) {
 		//NO OP
 	}
 
 	@Override
-	public void asyncDrawNearby(VulkanWorldRenderer.VulkanAsyncWorldHandler handler, ClientChunkSection section, int offsetX, int offsetY, int offsetZ) {
+	public void asyncDrawNearby(VulkanWorldRenderer.VulkanAsyncWorldHandler handler, ClientChunkSection section, float offsetX, float offsetY, float offsetZ) {
 		//NO OP
 	}
 
@@ -209,11 +274,13 @@ public class WorldDrawForward implements IWorldDraw {
 			for(int i = 0; i < asyncList.size(); i++) {
 				pCommands.put(i,asyncList.get(i).drawStandardOpaque);
 			}
+			pCommands.position(0);
 			vkCmdExecuteCommands(buffer,pCommands);
-			for(int i = 0; i < asyncList.size(); i++) {
-				pCommands.put(i,asyncList.get(i).drawStandardTransparent);
-			}
-			vkCmdExecuteCommands(buffer,pCommands);
+			//for(int i = 0; i < asyncList.size(); i++) {
+			//	pCommands.put(i,asyncList.get(i).drawStandardTransparent);
+			//}
+			//pCommands.position(0);
+			//vkCmdExecuteCommands(buffer,pCommands);
 		}
 	}
 

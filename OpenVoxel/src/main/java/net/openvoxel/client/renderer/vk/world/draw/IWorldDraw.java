@@ -7,6 +7,7 @@ import net.openvoxel.world.client.ClientChunkSection;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VkCommandBuffer;
 
+import java.nio.LongBuffer;
 import java.util.List;
 
 /**
@@ -42,7 +43,9 @@ public interface IWorldDraw {
 	 */
 	void beginAsync(VulkanCommandHandler commandHandler,
 	                VulkanCache cache,
-	                VulkanWorldRenderer.VulkanAsyncWorldHandler asyncHandler);
+	                VulkanWorldRenderer.VulkanAsyncWorldHandler asyncHandler,
+	                int screenWidth, int screenHeight,
+	                LongBuffer descriptorSets);
 
 	/**
 	 */
@@ -51,15 +54,15 @@ public interface IWorldDraw {
 
 	void asyncDrawStandard(VulkanWorldRenderer.VulkanAsyncWorldHandler handler,
 	                       ClientChunkSection section,
-	                       int offsetX, int offsetY, int offsetZ);
+	                       float offsetX, float offsetY, float offsetZ);
 
 	void asyncDrawShadows(VulkanWorldRenderer.VulkanAsyncWorldHandler handler,
 	                      ClientChunkSection section,
-	                      int offsetX, int offsetY, int offsetZ);
+	                      float offsetX, float offsetY, float offsetZ);
 
 	void asyncDrawNearby(VulkanWorldRenderer.VulkanAsyncWorldHandler handler,
 	                     ClientChunkSection section,
-	                     int offsetX, int offsetY, int offsetZ);
+	                     float offsetX, float offsetY, float offsetZ);
 
 	/**
 	 * Called before the GUI is drawn:

@@ -52,7 +52,7 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 		//Draw Handlers
 		textRenderer = new VulkanTextRenderer("font/font_extended",commandHandler,state.VulkanMemory);
 		guiRenderer = new VulkanGuiRenderer(cachedLayout,commandHandler,state.VulkanMemory,textRenderer);
-		worldRenderer = new VulkanWorldRenderer(commandHandler,cachedLayout,state.VulkanDevice,state.VulkanMemory);
+		worldRenderer = new VulkanWorldRenderer(commandHandler,cachedLayout,state.VulkanDevice,state.VulkanMemory,poolSize);
 	}
 
 	@Override
@@ -161,7 +161,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			worldRenderer.CmdTransferDataBarrier(mainBuffer);
 
 			//Draw World
-			//TODO: IMPLEMENT PROPERLY!!!!
+			if(worldRenderer.hasWorld()) {
+				worldRenderer.CmdRunWorldRendering(mainBuffer,stack,poolSize);
+			}
 
 			commandHandler.CmdWriteTimestamp(mainBuffer,1,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 			vkCmdExecuteCommands(mainBuffer,stack.pointers(guiTransfer));
@@ -185,10 +187,11 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 
 			//TODO: IMPLEMENT PROPERLY [THIS IS DEBUG IMPLEMENTATION]
 			if(worldRenderer.hasWorld()) {
-				for (int i = 0; i < poolSize; i++) {
-					VkCommandBuffer cmdDrawWorld = commandHandler.getAsyncMainCommandBuffer(i);
-					vkCmdExecuteCommands(mainBuffer,cmdDrawWorld);
-				}
+				worldRenderer.CmdDrawWorldForward(mainBuffer,stack,poolSize);
+				//for (int i = 0; i < poolSize; i++) {
+				//	VkCommandBuffer cmdDrawWorld = commandHandler.getAsyncMainCommandBuffer(i);
+				//	vkCmdExecuteCommands(mainBuffer,cmdDrawWorld);
+				//}
 			}
 
 			//Execute GUI Draw

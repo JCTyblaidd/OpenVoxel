@@ -10,6 +10,7 @@ import net.openvoxel.client.renderer.vk.core.VulkanDevice;
 import net.openvoxel.client.renderer.vk.core.VulkanMemory;
 import net.openvoxel.client.renderer.vk.core.VulkanUtility;
 import net.openvoxel.client.renderer.vk.world.draw.IWorldDraw;
+import net.openvoxel.client.renderer.vk.world.draw.WorldDrawForward;
 import net.openvoxel.utility.MathUtilities;
 import net.openvoxel.world.client.ClientChunkSection;
 import org.lwjgl.PointerBuffer;
@@ -19,6 +20,8 @@ import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -60,9 +63,9 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	private Lock bufferCopyLock = new ReentrantLock();
 
 	//World Drawing Path
-	private IWorldDraw worldDraw;
+	private IWorldDraw worldDraw = new WorldDrawForward();
 
-	public VulkanWorldRenderer(VulkanCommandHandler command,VulkanCache cache, VulkanDevice device, VulkanMemory memory) {
+	public VulkanWorldRenderer(VulkanCommandHandler command,VulkanCache cache, VulkanDevice device, VulkanMemory memory, int asyncCount) {
 		this.command = command;
 		this.cache = cache;
 		this.raw_memory = memory;
@@ -173,6 +176,9 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			VulkanUtility.ValidateSuccess("Failed to map uniform staging memory",vkResult);
 			UniformStagingMappedMemory = pMap.getByteBuffer((int)uniformAllocSize);
 		}
+
+		//Load World Draw Path
+		worldDraw.load(command,asyncCount);
 	}
 
 	public void ResetForFrame() {
@@ -262,7 +268,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			BufferTransferBarriers.limit(BufferTransferBarriers.capacity());
 		}
 	}
-
+/*
 	public void CmdBindDescriptorSet(VkCommandBuffer buffer) {
 		try(MemoryStack stack = stackPush()){
 			vkCmdBindDescriptorSets(
@@ -278,12 +284,30 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			);
 		}
 	}
+*/
+	public void CmdRunWorldRendering(VkCommandBuffer buffer,MemoryStack stack, int asyncCount) {
+		List<VulkanAsyncWorldHandler> asyncList = new ArrayList<>(asyncCount);
+		for(int i = 0; i < asyncCount; i++) {
+			asyncList.add((VulkanAsyncWorldHandler)getWorldHandlerFor(i));
+		}
+		worldDraw.executeDrawCommands(buffer,stack,asyncList);
+	}
+
+	public void CmdDrawWorldForward(VkCommandBuffer buffer,MemoryStack stack, int asyncCount) {
+		List<VulkanAsyncWorldHandler> asyncList = new ArrayList<>(asyncCount);
+		for(int i = 0; i < asyncCount; i++) {
+			asyncList.add((VulkanAsyncWorldHandler)getWorldHandlerFor(i));
+		}
+		worldDraw.drawForwardRenderer(buffer,stack,asyncList);
+	}
 
 	public boolean hasWorld() {
 		return this.theWorld != null;
 	}
 
 	public void close() {
+		worldDraw.close(command);
+
 		vkUnmapMemory(command.getDevice(),UniformStagingMemory);
 
 		vkDestroyDescriptorPool(command.getDevice(),UniformDescriptorPool,null);
@@ -303,7 +327,6 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 	public void StartAsyncGenerate(AsyncWorldHandler handler,int asyncID) {
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBuffer transfer = command.getAsyncTransferCommandBuffer(asyncID);
-			VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
 
 			VkCommandBufferInheritanceInfo inheritanceInfo = VkCommandBufferInheritanceInfo.mallocStack(stack);
 			inheritanceInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO);
@@ -324,6 +347,18 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			int vkResult = vkBeginCommandBuffer(transfer,beginInfo);
 			VulkanUtility.ValidateSuccess("Failed to begin async transfer buffer",vkResult);
 
+			worldDraw.beginAsync(
+					command,
+					cache,
+					(VulkanAsyncWorldHandler)handler,
+					screenWidth,
+					screenHeight,
+					stack.longs(
+							UniformDescriptorSetList.get(command.getSwapIndex()),
+							cache.DESCRIPTOR_SET_ATLAS
+					)
+			);
+			/*
 			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT |
 					                VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
@@ -358,19 +393,34 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			vkCmdSetScissor(graphics,0,pScissor);
 
 			CmdBindDescriptorSet(graphics);
+			*/
 		}
 	}
 
 	@Override
 	public void StopAsyncGenerate(AsyncWorldHandler handler,int asyncID) {
-		VkCommandBuffer transfer = command.getAsyncTransferCommandBuffer(asyncID);
-		VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
+		worldDraw.endAsync(command,(VulkanAsyncWorldHandler)handler);
 
+		VkCommandBuffer transfer = command.getAsyncTransferCommandBuffer(asyncID);
 		int vkResult = vkEndCommandBuffer(transfer);
 		VulkanUtility.ValidateSuccess("Failed to end async transfer buffer",vkResult);
-		vkResult = vkEndCommandBuffer(graphics);
-		VulkanUtility.ValidateSuccess("Failed to end async graphics buffer",vkResult);
 	}
+
+
+	@Override
+	protected void AsyncDraw(AsyncWorldHandler handle_in, ClientChunkSection chunkSection, int asyncID) {
+		VulkanAsyncWorldHandler handle = (VulkanAsyncWorldHandler)handle_in;
+		float chunkOffsetX = 16.F * (chunkSection.getChunkX() - originX);
+		float chunkOffsetY = 16.F * (chunkSection.getChunkY());
+		float chunkOffsetZ = 16.F * (chunkSection.getChunkZ() - originZ);
+		worldDraw.asyncDrawStandard(handle,chunkSection,chunkOffsetX,chunkOffsetY,chunkOffsetZ);
+	}
+
+
+
+	////////////////////////////////////////////////////
+	/// Asynchronous Chunk Section Memory Management ///
+	////////////////////////////////////////////////////
 
 	private void CmdDeviceTransfer(int asyncID,int from, int to, int size) {
 		try(MemoryStack stack = stackPush()) {
@@ -410,71 +460,6 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 			bufferCopyCount++;
 			bufferCopyLock.unlock();
-		}
-	}
-
-
-	@Override
-	protected void AsyncDraw(AsyncWorldHandler handle_in, ClientChunkSection chunkSection, int asyncID) {
-		VulkanAsyncWorldHandler handle = (VulkanAsyncWorldHandler)handle_in;
-
-		float chunkOffsetX = 16.F * (chunkSection.getChunkX() - originX);
-		float chunkOffsetY = 16.F * (chunkSection.getChunkY());
-		float chunkOffsetZ = 16.F * (chunkSection.getChunkZ() - originZ);
-
-		try(MemoryStack stack = stackPush()) {
-			if(chunkSection.Renderer_Size_Opaque != -1) {
-				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
-				long opaqueBuffer = memory.GetDeviceBuffer(chunkSection.Renderer_Info_Opaque);
-				long opaqueOffset = memory.GetDeviceOffset(chunkSection.Renderer_Info_Opaque);
-
-				vkCmdBindVertexBuffers(
-						graphics,
-						0,
-						stack.longs(opaqueBuffer),
-						stack.longs(opaqueOffset)
-				);
-				vkCmdPushConstants(
-						graphics,
-						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
-						VK_SHADER_STAGE_VERTEX_BIT,
-						0,
-						stack.floats(chunkOffsetX,chunkOffsetY,chunkOffsetZ)
-				);
-				vkCmdDraw(
-						graphics,
-						chunkSection.Renderer_Size_Opaque / 32,
-						1,
-						0,
-						0
-				);
-			}
-			if(chunkSection.Renderer_Size_Transparent != -1) {//TODO: SPLIT TRANSPARENT & OPAQUE
-				VkCommandBuffer graphics = command.getAsyncMainCommandBuffer(asyncID);
-				long transparentBuffer = memory.GetDeviceBuffer(chunkSection.Renderer_Info_Transparent);
-				long transparentOffset = memory.GetDeviceOffset(chunkSection.Renderer_Info_Transparent);
-
-				vkCmdBindVertexBuffers(
-						graphics,
-						0,
-						stack.longs(transparentBuffer),
-						stack.longs(transparentOffset)
-				);
-				vkCmdPushConstants(
-						graphics,
-						cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
-						VK_SHADER_STAGE_VERTEX_BIT,
-						0,
-						stack.floats(chunkOffsetX,chunkOffsetY,chunkOffsetZ)
-				);
-				vkCmdDraw(
-						graphics,
-						chunkSection.Renderer_Size_Transparent / 32,
-						1,
-						0,
-						0
-				);
-			}
 		}
 	}
 
