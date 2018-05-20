@@ -185,13 +185,9 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 			renderPassBegin.pClearValues(clearValues);
 			vkCmdBeginRenderPass(mainBuffer,renderPassBegin,VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-			//TODO: IMPLEMENT PROPERLY [THIS IS DEBUG IMPLEMENTATION]
+			//Execute Final World Draw
 			if(worldRenderer.hasWorld()) {
 				worldRenderer.CmdDrawWorldForward(mainBuffer,stack,poolSize);
-				//for (int i = 0; i < poolSize; i++) {
-				//	VkCommandBuffer cmdDrawWorld = commandHandler.getAsyncMainCommandBuffer(i);
-				//	vkCmdExecuteCommands(mainBuffer,cmdDrawWorld);
-				//}
 			}
 
 			//Execute GUI Draw

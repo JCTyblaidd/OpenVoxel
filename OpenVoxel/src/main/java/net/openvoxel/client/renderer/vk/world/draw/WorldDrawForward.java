@@ -276,11 +276,11 @@ public class WorldDrawForward implements IWorldDraw {
 			}
 			pCommands.position(0);
 			vkCmdExecuteCommands(buffer,pCommands);
-			//for(int i = 0; i < asyncList.size(); i++) {
-			//	pCommands.put(i,asyncList.get(i).drawStandardTransparent);
-			//}
-			//pCommands.position(0);
-			//vkCmdExecuteCommands(buffer,pCommands);
+			for(int i = 0; i < asyncList.size(); i++) {
+				pCommands.put(i,asyncList.get(i).drawStandardTransparent);
+			}
+			pCommands.position(0);
+			vkCmdExecuteCommands(buffer,pCommands);
 		}
 	}
 

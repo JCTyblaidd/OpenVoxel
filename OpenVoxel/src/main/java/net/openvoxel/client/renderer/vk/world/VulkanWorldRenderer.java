@@ -181,6 +181,32 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		worldDraw.load(command,asyncCount);
 	}
 
+	public boolean hasWorld() {
+		return this.theWorld != null;
+	}
+
+	public void close() {
+		worldDraw.close(command);
+
+		vkUnmapMemory(command.getDevice(),UniformStagingMemory);
+
+		vkDestroyDescriptorPool(command.getDevice(),UniformDescriptorPool,null);
+
+		vkDestroyBuffer(command.getDevice(),UniformBuffer,null);
+		vkDestroyBuffer(command.getDevice(),UniformStagingBuffer,null);
+
+		raw_memory.freeDedicatedMemory(UniformBufferMemory);
+		raw_memory.freeDedicatedMemory(UniformStagingMemory);
+
+		memory.close();
+
+		BufferTransferBarriers.free();
+	}
+
+	//////////////////////////////////
+	/// World Renderer Access Code ///
+	//////////////////////////////////
+
 	public void ResetForFrame() {
 		bufferCopyCount = 0;
 		//TODO: MOVE ELSEWHERE {CAN RUN ASYNC AFTER MEMORY HAS BEEN MANAGED!}
@@ -268,23 +294,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 			BufferTransferBarriers.limit(BufferTransferBarriers.capacity());
 		}
 	}
-/*
-	public void CmdBindDescriptorSet(VkCommandBuffer buffer) {
-		try(MemoryStack stack = stackPush()){
-			vkCmdBindDescriptorSets(
-					buffer,
-					VK_PIPELINE_BIND_POINT_GRAPHICS,
-					cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
-					0,
-					stack.longs(
-							UniformDescriptorSetList.get(command.getSwapIndex()),
-							cache.DESCRIPTOR_SET_ATLAS
-					),
-					null
-			);
-		}
-	}
-*/
+
 	public void CmdRunWorldRendering(VkCommandBuffer buffer,MemoryStack stack, int asyncCount) {
 		List<VulkanAsyncWorldHandler> asyncList = new ArrayList<>(asyncCount);
 		for(int i = 0; i < asyncCount; i++) {
@@ -301,27 +311,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 		worldDraw.drawForwardRenderer(buffer,stack,asyncList);
 	}
 
-	public boolean hasWorld() {
-		return this.theWorld != null;
-	}
 
-	public void close() {
-		worldDraw.close(command);
-
-		vkUnmapMemory(command.getDevice(),UniformStagingMemory);
-
-		vkDestroyDescriptorPool(command.getDevice(),UniformDescriptorPool,null);
-
-		vkDestroyBuffer(command.getDevice(),UniformBuffer,null);
-		vkDestroyBuffer(command.getDevice(),UniformStagingBuffer,null);
-
-		raw_memory.freeDedicatedMemory(UniformBufferMemory);
-		raw_memory.freeDedicatedMemory(UniformStagingMemory);
-
-		memory.close();
-
-		BufferTransferBarriers.free();
-	}
 
 	@Override
 	public void StartAsyncGenerate(AsyncWorldHandler handler,int asyncID) {
@@ -358,42 +348,6 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 							cache.DESCRIPTOR_SET_ATLAS
 					)
 			);
-			/*
-			beginInfo.flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT |
-					                VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-
-			//TODO: IMPLEMENT PROPERLY {Correct Render Pass Dispatch!}
-			beginInfo.flags(
-					VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT |
-					VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
-			);
-			inheritanceInfo.renderPass(cache.RENDER_PASS_FORWARD_ONLY.RenderPass);
-			inheritanceInfo.subpass(0);
-			inheritanceInfo.framebuffer(command.getFrameBuffer_ForwardOnly());
-
-			vkResult = vkBeginCommandBuffer(graphics,beginInfo);
-			VulkanUtility.ValidateSuccess("Failed to begin async graphics buffer",vkResult);
-
-			vkCmdBindPipeline(graphics,VK_PIPELINE_BIND_POINT_GRAPHICS, cache.PIPELINE_FORWARD_WORLD.getPipeline());
-
-			VkViewport.Buffer pViewport = VkViewport.mallocStack(1,stack);
-			pViewport.x(0);
-			pViewport.y(0);
-			pViewport.width(screenWidth);
-			pViewport.height(screenHeight);
-			pViewport.minDepth(0.0f);
-			pViewport.maxDepth(1.0f);
-
-			vkCmdSetViewport(graphics,0,pViewport);
-
-			VkRect2D.Buffer pScissor = VkRect2D.mallocStack(1,stack);
-			pScissor.offset().set(0,0);
-			pScissor.extent().set(screenWidth,screenHeight);
-
-			vkCmdSetScissor(graphics,0,pScissor);
-
-			CmdBindDescriptorSet(graphics);
-			*/
 		}
 	}
 
