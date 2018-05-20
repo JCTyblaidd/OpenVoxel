@@ -65,9 +65,11 @@ public class WorldDrawTask implements Runnable {
 	public final float[] shadowSplits = new float[4];
 	public final Matrix4f[] shadowMatrixList = new Matrix4f[4];
 	public final Matrix4f totalShadowMatrix = new Matrix4f().identity();
-	public final FrustumIntersection[] shadowIntersectList = new FrustumIntersection[4];
 	public final FrustumIntersection totalShadowIntersect = new FrustumIntersection();
+
+	//Shadow calculation Constants
 	private float cascadeSplitLambda = 0.95f;
+
 
 	//Calculation Data...
 	private final Vector3f[] frustumCorners = new Vector3f[8];
@@ -78,7 +80,6 @@ public class WorldDrawTask implements Runnable {
 		worldRenderer = api.getWorldRenderer();
 		for(int i = 0; i < 4; i++) {
 			shadowMatrixList[i] = new Matrix4f().identity();
-			shadowIntersectList[i] = new FrustumIntersection();
 		}
 		for(int i = 0; i < 8; i++) {
 			frustumCorners[i] = new Vector3f();
@@ -139,8 +140,15 @@ public class WorldDrawTask implements Runnable {
 		Matrix4f lightViewMatrix = new Matrix4f();
 
 		float lastSplitDist = 0;
-		for(int i = 0; i < cascadeCount; i++) {
-			float splitDist = shadowSplits[i];
+		for(int i = 0; i <= cascadeCount; i++) {
+			float splitDist;
+			if(i == cascadeCount) {
+				lastSplitDist = 0.0f;
+				splitDist = 1.0f;
+			}else{
+				splitDist = shadowSplits[i];
+			}
+
 			frustumCorners[0].set(-1.F,  1.F, -1.F);
 			frustumCorners[1].set( 1.F,  1.F, -1.F);
 			frustumCorners[2].set( 1.F, -1.F, -1.F);
@@ -168,7 +176,7 @@ public class WorldDrawTask implements Runnable {
 			}
 
 			//Update Last Split Distance
-			lastSplitDist = shadowSplits[i];
+			lastSplitDist = splitDist;
 
 			//Find frustum center
 			float centerX = 0.F;
@@ -204,15 +212,20 @@ public class WorldDrawTask implements Runnable {
 			);
 
 			//Update Values
-			shadowMatrixList[i].ortho(
-				-radius,
-				radius,
-				-radius,
-				radius,
-				0.f,
-				2 * radius
+			Matrix4f shadowMatrix = (i == cascadeCount) ? totalShadowMatrix : shadowMatrixList[i];
+			shadowMatrix.ortho(
+					-radius,
+					radius,
+					-radius,
+					radius,
+					0.f,
+					2 * radius
 			).mul(lightViewMatrix);
-			shadowSplits[i] = (zLimitVector.x + splitDist * zDelta) * -1.0f;
+			if(i == cascadeCount) {
+				totalShadowIntersect.set(totalShadowMatrix);
+			}else{
+				shadowSplits[i] = (zLimitVector.x + splitDist * zDelta) * -1.0f;
+			}
 		}
 	}
 
