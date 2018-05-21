@@ -25,8 +25,20 @@ public class ScreenDebugInfo extends Screen {
 	private StringBuilder text_builder = new StringBuilder(128);
 	private String open_voxel_version_str = "Open Voxel " + OpenVoxel.currentVersion.getValString();
 
+	private int worldViewChunkRate;
+	private int worldShadowChunkRate;
+	private int worldNearbyChunkRate;
+	private int worldUpdateChunkRate;
+
 	public void setFrameRate(float frame_rate) {
 		this.frame_rate = frame_rate;
+	}
+
+	public void setDrawInfo(int view, int shadow, int near, int update) {
+		worldViewChunkRate = view;
+		worldShadowChunkRate = shadow;
+		worldNearbyChunkRate = near;
+		worldUpdateChunkRate = update;
 	}
 
 	private void clear_text() {
@@ -121,6 +133,17 @@ public class ScreenDebugInfo extends Screen {
 		return text_builder;
 	}
 
+	private StringBuilder _3int(String prefix, int x, int y, int z) {
+		clear_text();
+		text_builder.append(prefix);
+		text_builder.append(x);
+		text_builder.append('/');
+		text_builder.append(y);
+		text_builder.append('/');
+		text_builder.append(z);
+		return text_builder;
+	}
+
 	@Override
 	public void DrawScreen(IGuiRenderer tess) {
 		SystemStatistics.requestUpdate();
@@ -174,8 +197,8 @@ public class ScreenDebugInfo extends Screen {
 			draw_processor_histogram(tess,1.0F-((histogram_w+5)/screenWidth),y_pos2 + (height/4),
 					histogram_w/screenWidth,histogram_h/screenHeight);
 		}
-		if(debug > 1 && OpenVoxel.getClientServer() != null) {
-			ClientServer clientServer = OpenVoxel.getClientServer();
+		ClientServer clientServer;
+		if(debug > 1 && (clientServer = OpenVoxel.getClientServer()) != null) {
 			EntityPlayerSP thePlayer = clientServer.getThePlayer();
 			tess.DrawText(x_pos,y_pos,height,_simpleFloat("Player Yaw: ",thePlayer.getYaw()));
 			y_pos += height;
@@ -184,6 +207,11 @@ public class ScreenDebugInfo extends Screen {
 			tess.DrawText(x_pos,y_pos,height,_vec3f("Player Pos: ",
 					(float)thePlayer.xPos,(float)thePlayer.yPos,(float)thePlayer.zPos)
 			);
+			y_pos += height;
+			tess.DrawText(x_pos,y_pos,height,_count("Chunk Redraw Rate: ",worldUpdateChunkRate));
+			y_pos += height;
+			tess.DrawText(x_pos,y_pos,height,_3int("Chunk Draw Rate: ",
+					worldViewChunkRate,worldShadowChunkRate,worldNearbyChunkRate));
 		}
 	}
 

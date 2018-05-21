@@ -31,7 +31,10 @@ public class WorldDrawTask implements Runnable {
 
 	//Dispatch barriers...
 	private AsyncBarrier barrierUpdates = new AsyncBarrier();
-	private int updateCount;
+	int updateCount;
+	int drawViewCount;
+	int drawShadowCount;
+	int drawNearbyCount;
 
 	//Draw Target State...
 	long chunkOriginX = 0;
@@ -243,8 +246,12 @@ public class WorldDrawTask implements Runnable {
 
 		//Run Standard World Culling
 		updateCount = 0;
+		drawViewCount = 0;
+		drawShadowCount = 0;
+		drawNearbyCount = 0;
 		barrierUpdates.reset(1);
 		culler.runFrustumCull(section -> {
+			drawViewCount += 1;
 			if(section.isDrawDirty() && updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
 				barrierUpdates.addNewTasks(1);
 				updateCount += 1;
@@ -278,6 +285,7 @@ public class WorldDrawTask implements Runnable {
 		//Run Shadow Map World Culling
 		if(worldRenderer.getShadowFrustumCount() > 0) {
 			culler.runShadowCull(section -> {
+				drawShadowCount += 1;
 				if(section.isDrawDirty() && updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
 					barrierUpdates.addNewTasks(1);
 					updateCount += 1;
@@ -317,6 +325,7 @@ public class WorldDrawTask implements Runnable {
 		//Run Nearby Map World Culling
 		if(nearDistance > 0) {
 			culler.runVoxelCull(nearDistance,section -> {
+				drawNearbyCount += 1;
 				if(section.isDrawDirty() && updateCount < MAX_TRANSFER_CALLS_PER_FRAME) {
 					barrierUpdates.addNewTasks(1);
 					updateCount += 1;

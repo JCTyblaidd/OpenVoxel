@@ -19,6 +19,7 @@ import net.openvoxel.utility.MathUtilities;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
 import net.openvoxel.utility.debug.UsageAnalyses;
+import org.jetbrains.annotations.NotNull;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
@@ -338,7 +339,7 @@ public final class Renderer implements EventListener {
 	/**
 	 * Asynchronously generate updated chunk maps using the server data
 	 */
-	public void generateUpdatedChunks(ClientServer server, AsyncBarrier completeBarrier) {
+	public void generateUpdatedChunks(ClientServer server, @NotNull AsyncBarrier completeBarrier) {
 		if(server != null) {
 			completeBarrier.reset(1);
 			worldDrawTask.update(renderTaskPool,server,completeBarrier, fieldOfView,drawDistance);
@@ -369,11 +370,19 @@ public final class Renderer implements EventListener {
 	/**
 	 * Asynchronously Draw the GUI in another thread
 	 */
-	public void startAsyncGUIDraw(AsyncBarrier completeBarrier) {
+	public void startAsyncGUIDraw(@NotNull AsyncBarrier completeBarrier) {
 		//Prepare the Async Task
 		completeBarrier.reset(1);
 		guiDrawTask.update(completeBarrier);
+
+		//Update GUI Debug Information
 		ScreenDebugInfo.instance.setFrameRate(frameRateTimer.getPerSecond());
+		ScreenDebugInfo.instance.setDrawInfo(
+				worldDrawTask.drawViewCount,
+				worldDrawTask.drawShadowCount,
+				worldDrawTask.drawNearbyCount,
+				worldDrawTask.updateCount
+		);
 
 		//Submit the Async Task
 		renderTaskPool.addWork(guiDrawTask);
@@ -383,7 +392,7 @@ public final class Renderer implements EventListener {
 	 * Asynchronously generate command buffers
 	 *  & then submit the frames to the GPU to present
 	 */
-	public void submitFrame(AsyncBarrier barrier) {
+	public void submitFrame(@NotNull AsyncBarrier barrier) {
 		UsageAnalyses.StartCPUSample("API Submit",0);
 		boolean success = api.submitNextFrame(renderTaskPool,barrier,worldDrawTask);
 		UsageAnalyses.StopCPUSample();
