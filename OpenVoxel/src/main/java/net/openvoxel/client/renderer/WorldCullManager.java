@@ -4,7 +4,7 @@ import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.utility.collection.CullingHashSet;
-import net.openvoxel.utility.collection.IntDequeue;
+import net.openvoxel.utility.collection.IntArrayQueue;
 import net.openvoxel.utility.debug.UsageAnalyses;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
@@ -23,7 +23,7 @@ class WorldCullManager {
 	}
 
 
-	private static IntDequeue voxel_dequeue = new IntDequeue();
+	private static IntArrayQueue voxel_dequeue = new IntArrayQueue();
 	private static CullingHashSet voxel_hash = new CullingHashSet();
 	void runVoxelCull(int sizeLimit,Consumer<ClientChunkSection> consumer) {
 
@@ -45,16 +45,16 @@ class WorldCullManager {
 	}
 
 
-	private static IntDequeue frustum_dequeue = new IntDequeue();
+	private static IntArrayQueue frustum_dequeue = new IntArrayQueue();
 	private static CullingHashSet frustum_hash = new CullingHashSet();
 	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
 
 		UsageAnalyses.StartCPUSample("View Frustum Cull",0);
 
 		//Find Starting Chunk offset Position
-		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.0);
-		int startOffsetY = (int)Math.floor(drawTask.playerY / 16.0);//TODO: ADD CAMERA OFFSET!!!!!!!!
-		int startOffsetZ = (int)Math.floor(drawTask.playerZ / 16.0);
+		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.F);
+		int startOffsetY = (int)Math.floor(drawTask.playerY / 16.F);
+		int startOffsetZ = (int)Math.floor(drawTask.playerZ / 16.F);
 
 		//Call Culling Code
 		internal_runFrustumCull(
@@ -80,7 +80,7 @@ class WorldCullManager {
 		int startOffsetZ = 0;
 
 		internal_runFrustumCull(
-				new IntDequeue(),
+				new IntArrayQueue(),
 				new CullingHashSet(),
 				drawTask.totalShadowIntersect,
 				drawTask.viewDistance,
@@ -104,7 +104,7 @@ class WorldCullManager {
 	 * @param consumer the function to be called when a valid chunk is found
 	 */
 	private void internal_runFrustumCull(
-			@NotNull IntDequeue sectionQueue,
+			@NotNull IntArrayQueue sectionQueue,
 			@NotNull CullingHashSet visitedOffsets,
 			@Nullable FrustumIntersection frustum,
 			int viewDistance,
