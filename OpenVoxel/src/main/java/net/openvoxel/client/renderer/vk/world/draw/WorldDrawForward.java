@@ -171,7 +171,7 @@ public class WorldDrawForward extends BaseWorldDraw {
 					null
 			);
 			vkCmdBindDescriptorSets(
-					asyncHandler.drawStandardOpaque,
+					asyncHandler.drawStandardTransparent,
 					VK_PIPELINE_BIND_POINT_GRAPHICS,
 					cache.PIPELINE_LAYOUT_WORLD_STANDARD_INPUT,
 					0,

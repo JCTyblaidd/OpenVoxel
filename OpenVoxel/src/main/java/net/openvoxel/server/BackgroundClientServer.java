@@ -39,7 +39,7 @@ public class BackgroundClientServer extends ClientServer {
 		float newYaw = thePlayer.getYaw() + 5*ADVANCE_RATE;
 		float newPitch = (float)(  Math.sin(Math.toRadians(newYaw)));
 		thePlayer.setYaw(newYaw % 360.F);
-		thePlayer.setPitch(newPitch * 90.F);
+		thePlayer.setPitch(newPitch * 10.F);
 		//debug_tick();
 	}
 
