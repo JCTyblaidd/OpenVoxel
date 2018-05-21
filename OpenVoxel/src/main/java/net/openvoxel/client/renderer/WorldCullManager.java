@@ -114,7 +114,7 @@ class WorldCullManager {
 			@NotNull Consumer<ClientChunkSection> consumer) {
 
 		//Add Starting Chunk
-		sectionQueue.add(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
+		sectionQueue.addLast(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
 		visitedOffsets.add(startOffsetX,startOffsetY,startOffsetZ);
 
 		//Constants
@@ -183,16 +183,16 @@ class WorldCullManager {
 
 				//Check Frustum Culling
 				if(frustum != null) {
-					float frustumX = newX * 16.0F;
-					float frustumY = newY * 16.0F;
-					float frustumZ = newZ * 16.0F;
+					int frustumX = newX * 16;
+					int frustumY = newY * 16;
+					int frustumZ = newZ * 16;
 					if(!frustum.testAab(
 							frustumX,
 							frustumY,
 							frustumZ,
-							frustumX + 16.0F,
-							frustumY + 16.0F,
-							frustumZ + 16.0F
+							frustumX + 16,
+							frustumY + 16,
+							frustumZ + 16
 					)) {
 						continue;
 					}

@@ -66,7 +66,7 @@ public class AsyncExecutorPool implements AsyncTaskPool{
 				1,
 				10,
 				TimeUnit.NANOSECONDS,
-				new BlockingWaitStrategy()
+				new LiteBlockingWaitStrategy()
 			)
 		);
 		workHandlerList = new TaskHandler[threadCount];
