@@ -1,6 +1,7 @@
 package net.openvoxel.client.renderer;
 
 import net.openvoxel.OpenVoxel;
+import net.openvoxel.common.registry.RegistryBlocks;
 import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.utility.collection.CullingHashSet;
 import net.openvoxel.utility.collection.IntDequeue;
@@ -118,7 +119,6 @@ class WorldCullManager {
 		sectionQueue.add(startOffsetZ);
 		sectionQueue.add(-1);
 		sectionQueue.add(0);
-		//sectionQueue.addLast(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
 		visitedOffsets.add(startOffsetX,startOffsetY,startOffsetZ);
 
 		//Constants
@@ -126,36 +126,35 @@ class WorldCullManager {
 		final int[] yOffsets = BlockFace.array_yOffsets;
 		final int[] zOffsets = BlockFace.array_zOffsets;
 		final int[] opposite = BlockFace.array_opposite;
-		CullSection section = new CullSection(0,0,0,0);
+		RegistryBlocks blockRegistry = OpenVoxel.getInstance().blockRegistry;
 
 		//Breath First Search
 		while(!sectionQueue.isEmpty()) {
-			//CullSection section = sectionQueue.removeFirst();
-			section.offsetPosX = sectionQueue.remove();
-			section.offsetPosY = sectionQueue.remove();
-			section.offsetPosZ = sectionQueue.remove();
-			section.previousFace = sectionQueue.remove();
-			section.travelledDirectionMask = sectionQueue.remove();
-			section.sectionRef = null;
+
+			//Remove From Queue
+			int section_offsetPosX = sectionQueue.remove();
+			int section_offsetPosY = sectionQueue.remove();
+			int section_offsetPosZ = sectionQueue.remove();
+			int section_previousFace = sectionQueue.remove();
+			int section_travelledDirectionMask = sectionQueue.remove();
+			ClientChunkSection section_sectionRef = null;
 
 			//Find Client Chunk Section if Applicable...
-			if(section.offsetPosY >= 0 && section.offsetPosY < 16) {
-				if(section.sectionRef == null) {
-					ClientChunk clientChunk = drawTask.theWorld.requestChunk(
-							drawTask.chunkOriginX + section.offsetPosX,
-							drawTask.chunkOriginZ + section.offsetPosZ,
-							false
-					);
-					if(clientChunk != null) section.sectionRef = clientChunk.getSectionAt(section.offsetPosY);
-				}
+			if(section_offsetPosY >= 0 && section_offsetPosY < 16) {
+				ClientChunk clientChunk = drawTask.theWorld.requestChunk(
+						drawTask.chunkOriginX + section_offsetPosX,
+						drawTask.chunkOriginZ + section_offsetPosZ,
+						false
+				);
+				if(clientChunk != null) section_sectionRef = clientChunk.getSectionAt(section_offsetPosY);
 			}
 
 			//Update & Queue Draw
-			if(section.sectionRef != null) {
-				if(section.sectionRef.visibilityNeedsRegen()) {
-					section.sectionRef.generateVisibilityMap(OpenVoxel.getInstance().blockRegistry);
+			if(section_sectionRef != null) {
+				if(section_sectionRef.visibilityNeedsRegen()) {
+					section_sectionRef.generateVisibilityMap(blockRegistry);
 				}
-				consumer.accept(section.sectionRef);
+				consumer.accept(section_sectionRef);
 			}
 
 			//Search all of the nearby directions
@@ -166,14 +165,14 @@ class WorldCullManager {
 				int dirBack = opposite[direction];
 
 				//Check not backwards
-				if((section.travelledDirectionMask & (1 << dirBack)) != 0) {
+				if((section_travelledDirectionMask & (1 << dirBack)) != 0) {
 					continue;
 				}
 
 				//Check not out of bounds
-				int newX = section.offsetPosX + dirX;
-				int newY = section.offsetPosY + dirY;
-				int newZ = section.offsetPosZ + dirZ;
+				int newX = section_offsetPosX + dirX;
+				int newY = section_offsetPosY + dirY;
+				int newZ = section_offsetPosZ + dirZ;
 				if(Math.abs(newX) > viewDistance||
 				   Math.abs(newZ) > viewDistance||
 				   Math.abs(newY-startOffsetY) > viewDistance) {
@@ -181,8 +180,8 @@ class WorldCullManager {
 				}
 
 				//Check Visibility Test
-				if(section.previousFace != -1 && section.sectionRef != null) {
-					if(!section.sectionRef.isVisible(section.previousFace,direction)) {
+				if(section_previousFace != -1 && section_sectionRef != null) {
+					if(!section_sectionRef.isVisible(section_previousFace,direction)) {
 						continue;
 					}
 				}
@@ -213,45 +212,16 @@ class WorldCullManager {
 				visitedOffsets.add(newX,newY,newZ);
 
 				//Add to the queue
-				//CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction],section);
-				//cullSection.travelledDirectionMask &= (1 << direction);
-				//if(dirY != 0 && section.sectionRef != null && newY >= 0 && newY < 16) {
-				//	cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
-				//}
 				sectionQueue.add(newX);
 				sectionQueue.add(newY);
 				sectionQueue.add(newZ);
 				sectionQueue.add(opposite[direction]);
-				sectionQueue.add(section.travelledDirectionMask & (1 << direction));
-				//sectionQueue.addLast(cullSection);
+				sectionQueue.add(section_travelledDirectionMask & (1 << direction));
 			}
 		}
 
 		//Finish
 		sectionQueue.clear();
 		visitedOffsets.clear();
-	}
-
-	private static class CullSection {
-		private ClientChunkSection sectionRef;
-		private int offsetPosX;
-		private int offsetPosY;
-		private int offsetPosZ;
-		private int previousFace;
-		private int travelledDirectionMask;
-		private CullSection(int offsetPosX, int offsetPosY, int offsetPosZ, int previousFace) {
-			this.offsetPosX = offsetPosX;
-			this.offsetPosY = offsetPosY;
-			this.offsetPosZ = offsetPosZ;
-			this.previousFace = previousFace;
-			this.travelledDirectionMask = 0;
-		}
-		private CullSection(int offsetPosX, int offsetPosY, int offsetPosZ, int previousFace,CullSection oldValues) {
-			this.offsetPosX = offsetPosX;
-			this.offsetPosY = offsetPosY;
-			this.offsetPosZ = offsetPosZ;
-			this.previousFace = previousFace;
-			this.travelledDirectionMask = oldValues.travelledDirectionMask;
-		}
 	}
 }
