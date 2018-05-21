@@ -2,6 +2,7 @@ package net.openvoxel.server;
 
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.utility.MathUtilities;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.world.client.ClientWorld;
 import net.openvoxel.world.generation.DebugWorldGenerator;
@@ -35,8 +36,11 @@ public class BackgroundClientServer extends ClientServer {
 	@Override
 	protected void executeServerTick(AsyncBarrier barrier) {
 		super.executeServerTick(barrier);
-		float newPitch = thePlayer.getYaw() + ADVANCE_RATE;
-		thePlayer.setYaw(newPitch % 360.F);
+		float newYaw = thePlayer.getYaw() + 5*ADVANCE_RATE;
+		float newPitch = (float)(  Math.sin(Math.toRadians(newYaw)));
+		thePlayer.setYaw(newYaw % 360.F);
+		thePlayer.setPitch(newPitch * 90.F);
+		//debug_tick();
 	}
 
 	private void debug_tick() {
@@ -69,13 +73,13 @@ public class BackgroundClientServer extends ClientServer {
 		if(EntityPlayerSP.keyCrouch.isDownRaw()) {
 			thePlayer.yPos -= 0.5F;
 		}*/
-		float a = (float)ClientInput.unhandledMouseDelta.x;
-		float b = (float)ClientInput.unhandledMouseDelta.y;
+		float sf = 0.1F;
+		float dx = (float)ClientInput.unhandledMouseDelta.x * sf;
+		float dy = (float)ClientInput.unhandledMouseDelta.y * sf;
 		ClientInput.resetMouseDelta();
-		a /= 10;
-		b /= 10;
-		thePlayer.setYaw(thePlayer.getYaw() + a);
-		thePlayer.setPitch(thePlayer.getPitch() + b);
+
+		thePlayer.setYaw((thePlayer.getYaw() + dx + 360) % 360.F);
+		thePlayer.setPitch(MathUtilities.clamp(thePlayer.getPitch() + dy,-90,90));
 	}
 
 }

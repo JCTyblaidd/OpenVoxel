@@ -7,16 +7,11 @@ import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.async.AsyncBarrier;
-import net.openvoxel.utility.async.AsyncQueue;
 import net.openvoxel.utility.async.AsyncTaskPool;
-import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
 import org.joml.*;
 
 import java.lang.Math;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorldDrawTask implements Runnable {
 
@@ -109,16 +104,16 @@ public class WorldDrawTask implements Runnable {
 		//Player ProjectionView Data
 		float FoV = (float)Math.toRadians(fovDegree);
 		float aspectRatio = (float)width / (float)height;
-		float xRotate = (float)Math.toRadians(-thePlayer.getPitch());
+		float xRotate = (float)Math.toRadians(thePlayer.getPitch());
 		float yRotate = (float)Math.toRadians(thePlayer.getYaw());
 		float zRotate = (float)Math.toRadians(180);
 
 		//Setup Linear Algebra
 		normalMatrix.identity().rotateZ(zRotate).rotateX(xRotate).rotateY(yRotate);
-		cameraVector.set(0,1,0).mul(normalMatrix);
+		cameraVector.set(0,0,1).mul(normalMatrix);
 		cameraMatrix.set(normalMatrix).translate(-playerX,-playerY,-playerZ);
 
-		//Vulkan uses Depth [0...]
+		//Vulkan uses Depth [0..1]
 		perspectiveMatrix.identity().perspectiveLH(FoV,aspectRatio,zLimitVector.x,zLimitVector.y,true);
 		frustumMatrix.set(perspectiveMatrix).mul(cameraMatrix);
 		frustumMatrix.invert(invFrustumMatrix);

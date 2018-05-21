@@ -3,6 +3,8 @@ package net.openvoxel.client.gui.util;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.client.gui.framework.Screen;
 import net.openvoxel.client.renderer.common.IGuiRenderer;
+import net.openvoxel.common.entity.living.player.EntityPlayerSP;
+import net.openvoxel.server.ClientServer;
 import net.openvoxel.statistics.SystemStatistics;
 
 /**
@@ -92,6 +94,33 @@ public class ScreenDebugInfo extends Screen {
 		return text_builder;
 	}
 
+	private void _1dp(float val) {
+		text_builder.append((int)val);
+		text_builder.append('.');
+		final int decimal = Math.abs((int)(val * 10.F) % 10);
+		text_builder.append(decimal);
+	}
+
+	private StringBuilder _simpleFloat(String prefix, float val) {
+		clear_text();
+		text_builder.append(prefix);
+		_1dp(val);
+		return text_builder;
+	}
+
+	private StringBuilder _vec3f(String prefix, float x, float y, float z) {
+		clear_text();
+		text_builder.append(prefix);
+		text_builder.append('(');
+		_1dp(x);
+		text_builder.append(',');
+		_1dp(y);
+		text_builder.append(',');
+		_1dp(z);
+		text_builder.append(')');
+		return text_builder;
+	}
+
 	@Override
 	public void DrawScreen(IGuiRenderer tess) {
 		SystemStatistics.requestUpdate();
@@ -139,10 +168,22 @@ public class ScreenDebugInfo extends Screen {
 			tess.DrawText(x_pos,y_pos,height,_memory("GPU Memory Usage: ",SystemStatistics.getGraphicsGpuMemoryUsage()));
 			y_pos += height;
 			tess.DrawText(x_pos,y_pos,height,_memory("GPU-Shared Memory Usage: ",SystemStatistics.getGraphicsLocalMemoryUsage()));
+			y_pos += height;
 			final float histogram_w = 250.0F;
 			final float histogram_h = 150.0F;
 			draw_processor_histogram(tess,1.0F-((histogram_w+5)/screenWidth),y_pos2 + (height/4),
 					histogram_w/screenWidth,histogram_h/screenHeight);
+		}
+		if(debug > 1 && OpenVoxel.getClientServer() != null) {
+			ClientServer clientServer = OpenVoxel.getClientServer();
+			EntityPlayerSP thePlayer = clientServer.getThePlayer();
+			tess.DrawText(x_pos,y_pos,height,_simpleFloat("Player Yaw: ",thePlayer.getYaw()));
+			y_pos += height;
+			tess.DrawText(x_pos,y_pos,height,_simpleFloat("Player Pitch: ",thePlayer.getPitch()));
+			y_pos += height;
+			tess.DrawText(x_pos,y_pos,height,_vec3f("Player Pos: ",
+					(float)thePlayer.xPos,(float)thePlayer.yPos,(float)thePlayer.zPos)
+			);
 		}
 	}
 

@@ -31,6 +31,8 @@ public class DebugWorldGenerator implements IWorldGenerator{
 				chunk.setBlock(x,99,z,BlockAir.BLOCK_AIR,(byte)0);
 			}
 		}
+		chunk.setBlock(3,99,8,VanillaBlocks.BLOCK_DIRT,(byte)0);
+
 		for(int x = 9; x < 14; x++) {
 			for(int z = 4; z < 14; z++) {
 				chunk.setBlock(x,101,z,VanillaBlocks.BLOCK_DIRT,(byte)0);

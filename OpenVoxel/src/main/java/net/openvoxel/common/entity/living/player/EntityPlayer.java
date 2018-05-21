@@ -2,6 +2,7 @@ package net.openvoxel.common.entity.living.player;
 
 import net.openvoxel.common.entity.living.EntityLiving;
 import net.openvoxel.common.util.AABB;
+import net.openvoxel.utility.MathUtilities;
 
 /**
  * Created by James on 15/09/2016.
@@ -29,11 +30,13 @@ public abstract class EntityPlayer extends EntityLiving{
 	}
 
 	public void setYaw(float yaw) {
-		this.yaw = yaw;
+		//Set in range [0..360)
+		this.yaw = ((yaw % 360) + 360) % 360;
 	}
 
 	public void setPitch(float pitch) {
-		this.pitch = pitch;
+		//Set in range[-90..90]
+		this.pitch = MathUtilities.clamp(pitch,-90.F,90.F);
 	}
 
 	public float getPitch() {

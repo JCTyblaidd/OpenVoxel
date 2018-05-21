@@ -8,8 +8,6 @@ import net.openvoxel.world.client.ClientChunkSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.FrustumIntersection;
-import org.joml.Vector3f;
-import org.joml.Vector3i;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -18,7 +16,6 @@ import java.util.function.Consumer;
 class WorldCullManager {
 
 	private final WorldDrawTask drawTask;
-	private final Vector3f zeroVector = new Vector3f(0,0,0);
 
 	WorldCullManager(WorldDrawTask drawTask) {
 		this.drawTask = drawTask;
@@ -37,7 +34,6 @@ class WorldCullManager {
 		internal_runFrustumCull(
 				voxel_dequeue,
 				voxel_hash,
-				zeroVector,
 				null,
 				sizeLimit,
 				startOffsetX,
@@ -61,7 +57,6 @@ class WorldCullManager {
 		internal_runFrustumCull(
 				frustum_dequeue,
 				frustum_hash,
-				drawTask.cameraVector,
 				drawTask.frustumIntersect,
 				drawTask.viewDistance,
 				startOffsetX,
@@ -82,7 +77,6 @@ class WorldCullManager {
 		internal_runFrustumCull(
 				new ArrayDeque<>(),
 				new TVec3LHashSet(),
-				drawTask.skyLightVector,
 				drawTask.totalShadowIntersect,
 				drawTask.viewDistance,
 				startOffsetX,
@@ -99,7 +93,6 @@ class WorldCullManager {
 	 *
 	 * @param sectionQueue must be empty() {will be returned empty}
 	 * @param visitedOffsets must be empty() {will be returned empty}
-	 * @param viewDirection the direction the search will progress
 	 * @param startOffsetX the starting chunk X in offset coordinates
 	 * @param startOffsetY the starting chunk Y in offset coordinates
 	 * @param startOffsetZ the starting chunk Z in offset coordinates
@@ -108,7 +101,6 @@ class WorldCullManager {
 	private void internal_runFrustumCull(
 			@NotNull Deque<CullSection> sectionQueue,
 			@NotNull TVec3LHashSet visitedOffsets,
-			@NotNull Vector3f viewDirection,
 			@Nullable FrustumIntersection frustum,
 			int viewDistance,
 			int startOffsetX,
@@ -155,10 +147,10 @@ class WorldCullManager {
 				int dirX = xOffsets[direction];
 				int dirY = yOffsets[direction];
 				int dirZ = zOffsets[direction];
+				int dirBack = opposite[direction];
 
 				//Check not backwards
-				float dotProduct = viewDirection.dot(dirX,dirY,dirZ);
-				if(dotProduct > 0.0F) {
+				if((section.travelledDirectionMask & (1 << dirBack)) != 0) {
 					continue;
 				}
 
@@ -205,7 +197,8 @@ class WorldCullManager {
 				visitedOffsets.add(newX,newY,newZ);
 
 				//Add to the queue
-				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction]);
+				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction],section);
+				cullSection.travelledDirectionMask &= (1 << direction);
 				if(dirY != 0 && section.sectionRef != null && newY >= 0 && newY < 16) {
 					cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
 				}
@@ -224,11 +217,20 @@ class WorldCullManager {
 		private int offsetPosY;
 		private int offsetPosZ;
 		private int previousFace;
+		private int travelledDirectionMask;
 		private CullSection(int offsetPosX, int offsetPosY, int offsetPosZ, int previousFace) {
 			this.offsetPosX = offsetPosX;
 			this.offsetPosY = offsetPosY;
 			this.offsetPosZ = offsetPosZ;
 			this.previousFace = previousFace;
+			this.travelledDirectionMask = 0;
+		}
+		private CullSection(int offsetPosX, int offsetPosY, int offsetPosZ, int previousFace,CullSection oldValues) {
+			this.offsetPosX = offsetPosX;
+			this.offsetPosY = offsetPosY;
+			this.offsetPosZ = offsetPosZ;
+			this.previousFace = previousFace;
+			this.travelledDirectionMask = oldValues.travelledDirectionMask;
 		}
 	}
 }
