@@ -1,7 +1,7 @@
 package net.openvoxel.utility.async;
 
 import com.lmax.disruptor.*;
-import com.lmax.disruptor.util.DaemonThreadFactory;
+import net.openvoxel.utility.debug.UsageAnalyses;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ExecutorService;
@@ -23,7 +23,10 @@ public class AsyncExecutorPool implements AsyncTaskPool{
 		}
 		@Override
 		public Thread newThread(@NotNull Runnable r) {
-			Thread thread = new Thread(r);
+			Thread thread = new Thread(() -> {
+				UsageAnalyses.SetThreadName(Thread.currentThread().getName());
+				r.run();
+			});
 			thread.setDaemon(true);
 			thread.setName(name + " #"+countdown);
 			countdown += 1;

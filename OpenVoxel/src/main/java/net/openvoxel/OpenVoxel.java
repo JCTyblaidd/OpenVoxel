@@ -305,13 +305,9 @@ public class OpenVoxel implements EventListener{
 
 		//Run main code//
 		if(isClient) {
-			UsageAnalyses.StartCPUSample("clientMain()",0);
 			clientMain();
-			UsageAnalyses.StopCPUSample();
 		}else{
-			UsageAnalyses.StartCPUSample("serverMain()",0);
 			serverMain();
-			UsageAnalyses.StopCPUSample();
 		}
 
 		//Stop Usage Analysis
@@ -374,24 +370,24 @@ public class OpenVoxel implements EventListener{
 		AsyncBarrier drawCompletionBarrier = new AsyncBarrier();
 		try {
 			//Run Main Loop//
-			UsageAnalyses.StartCPUSample("while(isRunning)",0);
 			while (isRunning.get()) {
+				UsageAnalyses.StartCPUSample("Main Loop",0);
 				//Handle server changes
 				if(lastServer != currentServer) {
 					if(lastServer != null) {
 						{
-							UsageAnalyses.StartCPUSample("render_invalidate_chunks()", 0);
+							UsageAnalyses.StartCPUSample("Render Invalidate", 0);
 							renderer.invalidateAllChunks();
 							UsageAnalyses.StopCPUSample();
 						}
 						{
-							UsageAnalyses.StartCPUSample("server_shutdown()", 0);
+							UsageAnalyses.StartCPUSample("Server Stop", 0);
 							lastServer.shutdown();
 							UsageAnalyses.StopCPUSample();
 						}
 					}
 					if(currentServer != null) {
-						UsageAnalyses.StartCPUSample("server_startup()",0);
+						UsageAnalyses.StartCPUSample("Server Start",0);
 						currentServer.startup();
 						UsageAnalyses.StopCPUSample();
 					}
@@ -399,55 +395,56 @@ public class OpenVoxel implements EventListener{
 				}
 				//Main Loop//
 				if(lastServer != null) {
-					UsageAnalyses.StartCPUSample("server_tick_async_submit()",0);
+					UsageAnalyses.StartCPUSample("Server Tick",0);
 					lastServer.serverTick(updateServerBarrier);
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("renderer_poll_inputs()",0);
+					UsageAnalyses.StartCPUSample("Input Poll",0);
 					renderer.pollInputs();
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("server_update_barrier_wait()",0);
+					UsageAnalyses.StartCPUSample("Server Await",0);
 					updateServerBarrier.awaitCompletion();
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("renderer_prepare_frame()",0);
+					UsageAnalyses.StartCPUSample("Prepare Frame",0);
 					renderer.prepareFrame();
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("renderer_dispatch_gen_updated_chunks()",0);
+					UsageAnalyses.StartCPUSample("Render World",0);
 					renderer.generateUpdatedChunks(lastServer, drawnChunksBarrier);
 					UsageAnalyses.StopCPUSample();
 				}
 				if(lastServer != null) {
-					UsageAnalyses.StartCPUSample("server_send_io_updates()",0);
+					UsageAnalyses.StartCPUSample("Server IO",0);
 					lastServer.sendUpdates();
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("dispatch_async_gui_draw()",0);
+					UsageAnalyses.StartCPUSample("Render GUI",0);
 					renderer.startAsyncGUIDraw(drawnGuiBarrier);
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("await_drawn_chunks_barrier()",0);
+					UsageAnalyses.StartCPUSample("Await World",0);
 					drawnChunksBarrier.awaitCompletion();
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("await_drawn_gui_barrier()",0);
+					UsageAnalyses.StartCPUSample("Await GUI",0);
 					drawnGuiBarrier.awaitCompletion();
 					UsageAnalyses.StopCPUSample();
 				}
 				{
-					UsageAnalyses.StartCPUSample("renderer_submit_frame()",0);
+					UsageAnalyses.StartCPUSample("Submit Frame",0);
 					renderer.submitFrame(drawCompletionBarrier);
 					UsageAnalyses.StopCPUSample();
 				}
+				UsageAnalyses.StopCPUSample();
 			}
 		}catch(Exception ex) {
 			CrashReport report = new CrashReport("Error in Main Loop");
@@ -455,7 +452,6 @@ public class OpenVoxel implements EventListener{
 			report.getThrowable().printStackTrace();
 			shutdownIsCrash.set(true);
 		}finally {
-			UsageAnalyses.StopCPUSample();
 			if(lastServer != currentServer && lastServer != null) {
 				lastServer.shutdown();
 			}
@@ -489,17 +485,17 @@ public class OpenVoxel implements EventListener{
 		AsyncBarrier updateServerBarrier = new AsyncBarrier();
 		try{
 			//Main Loop
-			UsageAnalyses.StartCPUSample("while(isRunning)",0);
 			while(isRunning.get()) {
+				UsageAnalyses.StartCPUSample("Main Loop",0);
 				//Handle Server Changes
 				if (lastServer != currentServer) {
 					if (lastServer != null) {
-						UsageAnalyses.StartCPUSample("server_shutdown()",0);
+						UsageAnalyses.StartCPUSample("Server Stop",0);
 						lastServer.shutdown();
 						UsageAnalyses.StopCPUSample();
 					}
 					if (currentServer != null) {
-						UsageAnalyses.StartCPUSample("server_startup()",0);
+						UsageAnalyses.StartCPUSample("Server Start",0);
 						currentServer.startup();
 						UsageAnalyses.StopCPUSample();
 					}
@@ -508,17 +504,17 @@ public class OpenVoxel implements EventListener{
 				//Update Server
 				if (lastServer != null) {
 					{
-						UsageAnalyses.StartCPUSample("server_tick()",0);
+						UsageAnalyses.StartCPUSample("Server Tick",0);
 						lastServer.serverTick(updateServerBarrier);
 						UsageAnalyses.StopCPUSample();
 					}
 					{
-						UsageAnalyses.StartCPUSample("await_tick_complete()",0);
+						UsageAnalyses.StartCPUSample("Server Await",0);
 						updateServerBarrier.awaitCompletion();
 						UsageAnalyses.StopCPUSample();
 					}
 					{
-						UsageAnalyses.StartCPUSample("server_send_io_updates()",0);
+						UsageAnalyses.StartCPUSample("Server IO",0);
 						lastServer.sendUpdates();
 						UsageAnalyses.StopCPUSample();
 					}
@@ -526,13 +522,13 @@ public class OpenVoxel implements EventListener{
 					//Prevent spinning for non-server
 					Thread.sleep(100);
 				}
+				UsageAnalyses.StopCPUSample();
 			}
 		}catch(Exception ex) {
 			CrashReport report = new CrashReport("Error in main loop");
 			report.caughtException(ex);
 			shutdownIsCrash.set(true);
 		}finally {
-			UsageAnalyses.StopCPUSample();
 			if(lastServer != currentServer && lastServer != null) {
 				lastServer.shutdown();
 			}

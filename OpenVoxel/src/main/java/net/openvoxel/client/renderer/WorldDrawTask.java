@@ -8,6 +8,7 @@ import net.openvoxel.common.entity.living.player.EntityPlayerSP;
 import net.openvoxel.server.ClientServer;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
+import net.openvoxel.utility.async.BatchEventSubmitter;
 import net.openvoxel.world.client.ClientWorld;
 import org.joml.*;
 
@@ -233,6 +234,9 @@ public class WorldDrawTask implements Runnable {
 	@Override
 	public void run() {
 
+		//Batch submissions together
+		BatchEventSubmitter batch = new BatchEventSubmitter(pool,8);
+
 		//Initialize Work Handlers
 		for(int i = 0; i < asyncCount; i++) {
 			worldRenderer.SetupAsync(i);
@@ -251,7 +255,7 @@ public class WorldDrawTask implements Runnable {
 				section.Renderer_Generation.reset(1);
 
 				//Generate And Draw World
-				pool.addWork(asyncID -> {
+				batch.addWork(asyncID -> {
 
 					//Generate Section
 					worldRenderer.GenerateChunkSection(section,asyncID);
@@ -263,7 +267,7 @@ public class WorldDrawTask implements Runnable {
 				});
 			}else{
 				barrierUpdates.addNewTasks(1);
-				pool.addWork(asyncID -> {
+				batch.addWork(asyncID -> {
 
 					//Draw World
 					worldRenderer.DrawWorldChunkSection(section,asyncID);
@@ -284,7 +288,7 @@ public class WorldDrawTask implements Runnable {
 					section.Renderer_Generation.reset(1);
 
 					//Generate And Draw Shadow
-					pool.addWork(asyncID -> {
+					batch.addWork(asyncID -> {
 
 						//Generate Section
 						worldRenderer.GenerateChunkSection(section,asyncID);
@@ -296,7 +300,7 @@ public class WorldDrawTask implements Runnable {
 					});
 				}else{
 					barrierUpdates.addNewTasks(1);
-					pool.addWork(asyncID -> {
+					batch.addWork(asyncID -> {
 
 						//Wait for Generation
 						section.Renderer_Generation.awaitCompletion();
@@ -323,7 +327,7 @@ public class WorldDrawTask implements Runnable {
 					section.Renderer_Generation.reset(1);
 
 					//Generate and Draw Nearby
-					pool.addWork(asyncID -> {
+					batch.addWork(asyncID -> {
 						//Generate Section
 						worldRenderer.GenerateChunkSection(section,asyncID);
 						section.Renderer_Generation.completeTask();
@@ -334,7 +338,7 @@ public class WorldDrawTask implements Runnable {
 					});
 				}else {
 					barrierUpdates.addNewTasks(1);
-					pool.addWork(asyncID -> {
+					batch.addWork(asyncID -> {
 
 						//Wait for Generation
 						section.Renderer_Generation.awaitCompletion();
@@ -348,6 +352,7 @@ public class WorldDrawTask implements Runnable {
 		}
 
 		//Queue Wait for Completion
+		batch.flushWork();
 		pool.addWork(() -> {
 
 			//Wait for all updates to be handled

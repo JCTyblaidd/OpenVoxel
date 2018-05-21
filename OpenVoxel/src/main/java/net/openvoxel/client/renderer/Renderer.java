@@ -18,6 +18,7 @@ import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.MathUtilities;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
+import net.openvoxel.utility.debug.UsageAnalyses;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
@@ -303,17 +304,25 @@ public final class Renderer implements EventListener {
 	 * Present Image, vk
 	 */
 	public void prepareFrame() {
-		awaitFPSTarget();
+		{
+			UsageAnalyses.StartCPUSample("Await FPS", 0);
+			awaitFPSTarget();
+			UsageAnalyses.StopCPUSample();
+		}
 		//Handle Screenshots
 		if(screenshotRequest) {
+			UsageAnalyses.StartCPUSample("Screenshot",0);
 			takeScreenshot();
+			UsageAnalyses.StopCPUSample();
 		}
 		//Handle resize & vSync & window changes
 		if(changeStateRequest) {
 			logger.Info("Standard State Change");
 			handleStateChange();
 		}
+		UsageAnalyses.StartCPUSample("API Acquire",0);
 		boolean success = api.acquireNextFrame();
+		UsageAnalyses.StopCPUSample();
 		while (!success) {
 			handleStateChange();
 			logger.Info("Adv State Change");
@@ -375,7 +384,9 @@ public final class Renderer implements EventListener {
 	 *  & then submit the frames to the GPU to present
 	 */
 	public void submitFrame(AsyncBarrier barrier) {
+		UsageAnalyses.StartCPUSample("API Submit",0);
 		boolean success = api.submitNextFrame(renderTaskPool,barrier,worldDrawTask);
+		UsageAnalyses.StopCPUSample();
 		if(!success) {
 			changeStateRequest = true;
 		}

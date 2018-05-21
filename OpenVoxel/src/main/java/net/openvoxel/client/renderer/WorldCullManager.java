@@ -3,6 +3,7 @@ package net.openvoxel.client.renderer;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.util.BlockFace;
 import net.openvoxel.utility.collection.trove_extended.TVec3LHashSet;
+import net.openvoxel.utility.debug.UsageAnalyses;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +49,8 @@ class WorldCullManager {
 	private static TVec3LHashSet frustum_hash = new TVec3LHashSet();
 	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
 
+		UsageAnalyses.StartCPUSample("View Frustum Cull",0);
+
 		//Find Starting Chunk offset Position
 		int startOffsetX = (int)Math.floor(drawTask.playerX / 16.0);
 		int startOffsetY = (int)Math.floor(drawTask.playerY / 16.0);//TODO: ADD CAMERA OFFSET!!!!!!!!
@@ -64,6 +67,8 @@ class WorldCullManager {
 				startOffsetZ,
 				consumer
 		);
+
+		UsageAnalyses.StopCPUSample();
 	}
 
 	//TODO: STORE CONSTANT ARRAY SOMEWHERE!!
