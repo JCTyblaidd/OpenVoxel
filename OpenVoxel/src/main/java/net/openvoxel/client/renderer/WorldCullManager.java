@@ -2,7 +2,8 @@ package net.openvoxel.client.renderer;
 
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.common.util.BlockFace;
-import net.openvoxel.utility.collection.trove_extended.TVec3LHashSet;
+import net.openvoxel.utility.collection.CullingHashSet;
+import net.openvoxel.utility.collection.IntDequeue;
 import net.openvoxel.utility.debug.UsageAnalyses;
 import net.openvoxel.world.client.ClientChunk;
 import net.openvoxel.world.client.ClientChunkSection;
@@ -10,8 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.FrustumIntersection;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.function.Consumer;
 
 class WorldCullManager {
@@ -23,8 +22,8 @@ class WorldCullManager {
 	}
 
 
-	private static ArrayDeque<CullSection> voxel_dequeue = new ArrayDeque<>();
-	private static TVec3LHashSet voxel_hash = new TVec3LHashSet();
+	private static IntDequeue voxel_dequeue = new IntDequeue();
+	private static CullingHashSet voxel_hash = new CullingHashSet();
 	void runVoxelCull(int sizeLimit,Consumer<ClientChunkSection> consumer) {
 
 		//Find Starting Chunk offset Position
@@ -45,8 +44,8 @@ class WorldCullManager {
 	}
 
 
-	private static ArrayDeque<CullSection> frustum_dequeue = new ArrayDeque<>();
-	private static TVec3LHashSet frustum_hash = new TVec3LHashSet();
+	private static IntDequeue frustum_dequeue = new IntDequeue();
+	private static CullingHashSet frustum_hash = new CullingHashSet();
 	void runFrustumCull(Consumer<ClientChunkSection> consumer) {
 
 		UsageAnalyses.StartCPUSample("View Frustum Cull",0);
@@ -80,8 +79,8 @@ class WorldCullManager {
 		int startOffsetZ = 0;
 
 		internal_runFrustumCull(
-				new ArrayDeque<>(),
-				new TVec3LHashSet(),
+				new IntDequeue(),
+				new CullingHashSet(),
 				drawTask.totalShadowIntersect,
 				drawTask.viewDistance,
 				startOffsetX,
@@ -104,8 +103,8 @@ class WorldCullManager {
 	 * @param consumer the function to be called when a valid chunk is found
 	 */
 	private void internal_runFrustumCull(
-			@NotNull Deque<CullSection> sectionQueue,
-			@NotNull TVec3LHashSet visitedOffsets,
+			@NotNull IntDequeue sectionQueue,
+			@NotNull CullingHashSet visitedOffsets,
 			@Nullable FrustumIntersection frustum,
 			int viewDistance,
 			int startOffsetX,
@@ -114,7 +113,12 @@ class WorldCullManager {
 			@NotNull Consumer<ClientChunkSection> consumer) {
 
 		//Add Starting Chunk
-		sectionQueue.addLast(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
+		sectionQueue.add(startOffsetX);
+		sectionQueue.add(startOffsetY);
+		sectionQueue.add(startOffsetZ);
+		sectionQueue.add(-1);
+		sectionQueue.add(0);
+		//sectionQueue.addLast(new CullSection(startOffsetX,startOffsetY,startOffsetZ,-1));
 		visitedOffsets.add(startOffsetX,startOffsetY,startOffsetZ);
 
 		//Constants
@@ -122,10 +126,17 @@ class WorldCullManager {
 		final int[] yOffsets = BlockFace.array_yOffsets;
 		final int[] zOffsets = BlockFace.array_zOffsets;
 		final int[] opposite = BlockFace.array_opposite;
+		CullSection section = new CullSection(0,0,0,0);
 
 		//Breath First Search
 		while(!sectionQueue.isEmpty()) {
-			CullSection section = sectionQueue.removeFirst();
+			//CullSection section = sectionQueue.removeFirst();
+			section.offsetPosX = sectionQueue.remove();
+			section.offsetPosY = sectionQueue.remove();
+			section.offsetPosZ = sectionQueue.remove();
+			section.previousFace = sectionQueue.remove();
+			section.travelledDirectionMask = sectionQueue.remove();
+			section.sectionRef = null;
 
 			//Find Client Chunk Section if Applicable...
 			if(section.offsetPosY >= 0 && section.offsetPosY < 16) {
@@ -202,12 +213,17 @@ class WorldCullManager {
 				visitedOffsets.add(newX,newY,newZ);
 
 				//Add to the queue
-				CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction],section);
-				cullSection.travelledDirectionMask &= (1 << direction);
-				if(dirY != 0 && section.sectionRef != null && newY >= 0 && newY < 16) {
-					cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
-				}
-				sectionQueue.addLast(cullSection);
+				//CullSection cullSection = new CullSection(newX,newY,newZ,opposite[direction],section);
+				//cullSection.travelledDirectionMask &= (1 << direction);
+				//if(dirY != 0 && section.sectionRef != null && newY >= 0 && newY < 16) {
+				//	cullSection.sectionRef = section.sectionRef.getChunk().getSectionAt(newY);
+				//}
+				sectionQueue.add(newX);
+				sectionQueue.add(newY);
+				sectionQueue.add(newZ);
+				sectionQueue.add(opposite[direction]);
+				sectionQueue.add(section.travelledDirectionMask & (1 << direction));
+				//sectionQueue.addLast(cullSection);
 			}
 		}
 

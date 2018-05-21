@@ -30,6 +30,11 @@ public class IntDequeue {
 		return from.isEmpty() && to.isEmpty();
 	}
 
+	public void clear() {
+		from.clear();
+		to.clear();
+	}
+
 	private void forwardQueue() {
 		for(int i = from.size()-1; i >= 0; i--) {
 			to.add(from.get(i));
