@@ -9,7 +9,7 @@
 	<!--Dependency Versions-->
 	<properties>
 		<lwjgl.version>3.1.6</lwjgl.version>
-		<netty.version>4.1.15.Final</netty.version>
+		<netty.version>4.1.25.Final</netty.version>
 		<owasm.version>LATEST</owasm.version>
 		<joml.version>LATEST</joml.version>
 		<trove.version>LATEST</trove.version>

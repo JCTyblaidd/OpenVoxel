@@ -271,7 +271,7 @@ public class WorldDrawTask implements Runnable {
 					worldRenderer.DrawWorldChunkSection(section,asyncID);
 					barrierUpdates.completeTask();
 				});
-			}else{
+			}else if(!section.isChunkEmpty()){
 				barrierUpdates.addNewTasks(1);
 				pool.addWork(asyncID -> {
 
@@ -305,7 +305,7 @@ public class WorldDrawTask implements Runnable {
 						worldRenderer.DrawShadowChunkSection(section,asyncID);
 						barrierUpdates.completeTask();
 					});
-				}else{
+				}else if(!section.isChunkEmpty()){
 					barrierUpdates.addNewTasks(1);
 					pool.addWork(asyncID -> {
 
@@ -344,7 +344,7 @@ public class WorldDrawTask implements Runnable {
 						worldRenderer.DrawNearbyChunkSection(section,asyncID);
 						barrierUpdates.completeTask();
 					});
-				}else {
+				}else if(!section.isChunkEmpty()){
 					barrierUpdates.addNewTasks(1);
 					pool.addWork(asyncID -> {
 
@@ -352,8 +352,8 @@ public class WorldDrawTask implements Runnable {
 						section.Renderer_Generation.awaitCompletion();
 
 						//Draw Nearby
-						section.Renderer_Generation.awaitCompletion();
 						worldRenderer.DrawNearbyChunkSection(section, asyncID);
+						barrierUpdates.completeTask();
 					});
 				}
 			});

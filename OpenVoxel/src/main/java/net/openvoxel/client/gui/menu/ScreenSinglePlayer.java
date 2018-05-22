@@ -57,11 +57,17 @@ public class ScreenSinglePlayer extends Screen{
 		guiObjects.add(buttonNew);
 
 		buttonMainMenu.setAction(this::onMainMenu);
+		buttonNew.setAction(this::onNewGame);
 	}
 
 	private void onMainMenu(GUIButton guiButton) {
 		GUI.removeScreen(this);
 		GUI.addScreen(mainMenu);
+	}
+
+	private void onNewGame(GUIButton guiButton) {
+		//TODO: IMPLEMENT PROPERLY
+
 	}
 
 

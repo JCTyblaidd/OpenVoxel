@@ -4,7 +4,6 @@ import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.client.keybindings.KeyBinding;
 import net.openvoxel.client.keybindings.KeyManager;
-import net.openvoxel.networking.ClientNetworkHandler;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -51,16 +50,16 @@ public class EntityPlayerSP extends EntityPlayer{
 
 	public EntityPlayerSP() {
 		super();
-		clientConnection = null;
+		//clientConnection = null;
 	}
 
-	public EntityPlayerSP(ClientNetworkHandler networkHandler) {
-		this();
-		clientConnection = networkHandler;
-	}
+	//public EntityPlayerSP(ClientNetworkHandler networkHandler) {
+	//	this();
+	//	clientConnection = networkHandler;
+	//}
 
 	//Network Handler//
-	public ClientNetworkHandler clientConnection;
+	//public ClientNetworkHandler clientConnection;
 
 	@Override
 	public void tickClient() {
