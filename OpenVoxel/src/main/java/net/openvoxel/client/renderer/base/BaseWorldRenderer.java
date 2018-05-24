@@ -5,7 +5,7 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import net.openvoxel.client.ClientInput;
 import net.openvoxel.client.renderer.common.IBlockRenderer;
-import net.openvoxel.client.textureatlas.BaseIcon;
+import net.openvoxel.client.textureatlas.ArrayAtlas;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.world.client.ClientChunkSection;
@@ -184,8 +184,8 @@ public abstract class BaseWorldRenderer {
 		/// Renderer State
 		///
 
-		private BaseIcon nullIcon = new BaseIcon();
-		private BaseIcon currentIcon = nullIcon;
+		private ArrayAtlas.ArrayIcon nullIcon = new ArrayAtlas.ArrayIcon();
+		private ArrayAtlas.ArrayIcon currentIcon = nullIcon;
 
 		private static final int SIZE_OF_ENTRY = 32;
 
@@ -205,31 +205,31 @@ public abstract class BaseWorldRenderer {
 				ExpandChunkMemory(this,isOpaqueDraw);
 			}
 
+			//Store Position Information...
 			memoryMap.putFloat(write_offset, (X + blockAccess.getOffsetX()));
 			memoryMap.putFloat(write_offset + 4, (Y + blockAccess.getOffsetY()));
 			memoryMap.putFloat(write_offset + 8, (Z + blockAccess.getOffsetZ()));
 
-			float u_value = (U * (currentIcon.U1 - currentIcon.U0)) + currentIcon.U0;
-			float delta_v = currentIcon.V1 - currentIcon.V0;
-			float v_value = (V * delta_v) + currentIcon.V0;
+			//Store Quaternion Information TODO: ACTUALLY IMPLEMENT
+			memoryMap.put(write_offset + 12, (byte)(0));
+			memoryMap.put(write_offset + 13, (byte)(0));
+			memoryMap.put(write_offset + 14, (byte)(0));
+			memoryMap.put(write_offset + 15, (byte)(0));
 
-			memoryMap.putShort(write_offset + 12, (short) (u_value * 65535.F));
-			memoryMap.putShort(write_offset + 14, (short) (v_value * 65535.F));
+			//Store Colour Information
+			memoryMap.putInt(write_offset+16, Colour);
 
-			memoryMap.put(write_offset + 16, (byte) (xNorm * 255.F));
-			memoryMap.put(write_offset + 17, (byte) (yNorm * 255.F));
-			memoryMap.put(write_offset + 18, (byte) (zNorm * 255.F));
+			//Store Lighting Information TODO: ACTUALLY IMPLEMENT
+			memoryMap.putInt(write_offset+20,0xFFFFFFFF);
 
-			memoryMap.put(write_offset + 19, (byte) (xTangent * 255.F));
-			memoryMap.put(write_offset + 20, (byte) (yTangent * 255.F));
-			memoryMap.put(write_offset + 21, (byte) (zTangent * 255.F));
+			//Store UV Information
+			memoryMap.put(write_offset+24,(byte)(U * 255.F));
+			memoryMap.put(write_offset+25,(byte)(V * 255.F));
 
-			memoryMap.putInt(write_offset + 22, Colour);
-
-			memoryMap.putInt(write_offset + 26, 0xFFFFFFFF);//Lighting TODO: IMPLEMENT
-
-			memoryMap.put(write_offset + 30,(byte)(currentIcon.animationCount));
-			memoryMap.put(write_offset + 31,(byte)(delta_v / currentIcon.animationCount));
+			//Store Texture Information
+			memoryMap.putShort(write_offset+26,(short)currentIcon.arrayIdx);
+			memoryMap.putShort(write_offset+28,(short)currentIcon.textureIdx);
+			memoryMap.putShort(write_offset+30,(short)currentIcon.animationCount);
 
 			write_offset += SIZE_OF_ENTRY;
 		}
@@ -237,7 +237,7 @@ public abstract class BaseWorldRenderer {
 
 		@Override
 		public void setCurrentIcon(Icon icon) {
-			currentIcon = icon == null ? nullIcon : (BaseIcon)icon;
+			currentIcon = icon == null ? nullIcon : (ArrayAtlas.ArrayIcon)icon;
 		}
 	}
 }

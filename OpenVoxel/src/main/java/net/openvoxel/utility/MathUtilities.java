@@ -12,6 +12,10 @@ public class MathUtilities {
 		return x + 1;
 	}
 
+	public static int Log2Integer(int x) {
+		return 31 - Integer.numberOfLeadingZeros(x);
+	}
+
 	public static int padToAlign(int size, int align) {
 		int mod = size % align;
 		int pad = 0;

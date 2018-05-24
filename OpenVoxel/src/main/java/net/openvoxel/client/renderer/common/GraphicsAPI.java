@@ -3,7 +3,7 @@ package net.openvoxel.client.renderer.common;
 import net.openvoxel.client.renderer.WorldDrawTask;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.base.BaseWorldRenderer;
-import net.openvoxel.client.textureatlas.BaseAtlas;
+import net.openvoxel.client.textureatlas.ArrayAtlas;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
 import org.lwjgl.system.MemoryUtil;
@@ -23,7 +23,7 @@ public interface GraphicsAPI {
 	void startStateChange();
 	void stopStateChange();
 
-	void loadAtlas(BaseAtlas blockAtlas);
+	void loadAtlas(ArrayAtlas blockAtlas);
 	void freeAtlas();
 
 	/////////////////////////////

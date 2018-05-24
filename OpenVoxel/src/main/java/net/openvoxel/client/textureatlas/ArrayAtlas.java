@@ -9,6 +9,8 @@ import net.openvoxel.client.STBITexture;
 import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.MathUtilities;
+import org.lwjgl.stb.STBImageResize;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -18,10 +20,10 @@ import java.util.Map;
 
 public class ArrayAtlas implements IconAtlas {
 
-	private List<ArrayIcon> iconList;
-	private Map<ArrayIcon,ResourceHandle> refIconDiff;
-	private Map<ArrayIcon,ResourceHandle> refIconNorm;
-	private Map<ArrayIcon,ResourceHandle> refIconPBRD;
+	private List<ArrayIcon> iconList = new ArrayList<>();
+	private Map<ArrayIcon,ResourceHandle> refIconDiff = new HashMap<>();
+	private Map<ArrayIcon,ResourceHandle> refIconNorm = new HashMap<>();
+	private Map<ArrayIcon,ResourceHandle> refIconPBRD = new HashMap<>();
 
 	//Stitch State
 	private TIntIntMap sizeCountMap = new TIntIntHashMap();
@@ -113,43 +115,105 @@ public class ArrayAtlas implements IconAtlas {
 	}
 
 	public interface ArrayLayerCallback {
-		void createArray(int arrayIndex,int imgLayerCount, int imgSize);
-		void storeArray(int arrayIndex, int layerIndex, int imgSize,
+		void createArray(int arrayIndex,int imgLayerCount,int mipCount, int imgSize);
+		void storeArray(int arrayIndex, int layerIndex, int mipIndex, int imgSize,
 		                ByteBuffer diffuse, ByteBuffer normal, ByteBuffer pbr);
 	}
 
-	public void createImageArrays(ArrayLayerCallback callback) {
+	public void createImageArrays(ArrayLayerCallback callback, int maxMipLevel) {
 		final int arrayCount = arrayLayers.size();
+		int maxSize = 0;
 		for(int i = 0; i < arrayCount; i++) {
-			callback.createArray(i,arrayLayers.get(i),arraySizes.get(i));
+			int layerCount = arrayLayers.get(i);
+			int imageSize = arraySizes.get(i);
+			int mipCount = Math.min(maxMipLevel,MathUtilities.Log2Integer(imageSize));
+			maxSize = Math.max(maxSize,imageSize);
+			callback.createArray(i,layerCount,mipCount,imageSize);
 		}
+		ByteBuffer mipDiffBuffer = MemoryUtil.memAlloc(maxSize * maxSize * 4);
+		ByteBuffer mipNormBuffer = MemoryUtil.memAlloc(maxSize * maxSize * 4);
+		ByteBuffer mipPBRBuffer = MemoryUtil.memAlloc(maxSize * maxSize * 4);
 		for(int i = 0; i < arrayCount; i++) {
 			int layerIndex = 0;
 			int imageSize = arraySizes.get(i);
+			int mipCount = Math.min(maxMipLevel,MathUtilities.Log2Integer(imageSize));
 			int skipSize = imageSize * imageSize * 4;
 			for(ArrayIcon icon : arrayTexMap.get(i)) {
 				STBITexture texDiffuse = texDiff.get(icon);
 				STBITexture texNormal = texNorm.get(icon);
 				STBITexture texPBR = texPBRD.get(icon);
-				for(int j = 0; j < icon.animationCount; j++) {
+				for(int frame = 0; frame < icon.animationCount; frame++) {
 					//Set Image Data Offsets
-					texDiffuse.pixels.position(j * skipSize);
-					texNormal.pixels.position(j * skipSize);
-					texPBR.pixels.position(j * skipSize);
+					System.out.println(frame+","+skipSize+","+icon.animationCount);
+					texDiffuse.pixels.position(frame * skipSize);
+					texNormal.pixels.position(frame * skipSize);
+					texPBR.pixels.position(frame * skipSize);
 
 					//Store Image Data
 					callback.storeArray(
 							i,
 							layerIndex,
+							0,
 							imageSize,
 							texDiffuse.pixels,
 							texNormal.pixels,
 							texPBR.pixels
 					);
+
+					//Generate And Store Image Mip Map Data
+					int mipSize = imageSize;
+					for(int mip = 1; mip < mipCount; mip++) {
+						mipSize /= 2;
+						STBImageResize.stbir_resize_uint8(
+							texDiffuse.pixels,
+							imageSize,
+							imageSize,
+							0,
+							mipDiffBuffer,
+							mipSize,
+							mipSize,
+							0,
+							4
+						);
+						STBImageResize.stbir_resize_uint8(
+							texNormal.pixels,
+							imageSize,
+							imageSize,
+							0,
+							mipNormBuffer,
+							mipSize,
+							mipSize,
+							0,
+							4
+						);
+						STBImageResize.stbir_resize_uint8(
+							texPBR.pixels,
+							imageSize,
+							imageSize,
+							0,
+							mipNormBuffer,
+							mipSize,
+							mipSize,
+							0,
+							4
+						);
+						callback.storeArray(
+							i,
+							layerIndex,
+							mip,
+							mipSize,
+							mipDiffBuffer,
+							mipNormBuffer,
+							mipPBRBuffer
+						);
+					}
 					layerIndex++;
 				}
 			}
 		}
+		MemoryUtil.memFree(mipDiffBuffer);
+		MemoryUtil.memFree(mipNormBuffer);
+		MemoryUtil.memFree(mipPBRBuffer);
 	}
 
 
@@ -171,6 +235,14 @@ public class ArrayAtlas implements IconAtlas {
 	}
 
 	public static class ArrayIcon implements Icon {
+
+		public ArrayIcon() {
+			arrayIdx = 0;
+			textureIdx = 0;
+			animationCount = 1;
+			iconSize = 1;
+		}
+
 		public int arrayIdx;
 		public int textureIdx;
 		public int animationCount;

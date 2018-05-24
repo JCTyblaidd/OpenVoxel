@@ -3,7 +3,7 @@ package net.openvoxel.client.renderer;
 import net.openvoxel.client.renderer.base.BaseGuiRenderer;
 import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
-import net.openvoxel.client.textureatlas.BaseAtlas;
+import net.openvoxel.client.textureatlas.ArrayAtlas;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
 import org.jetbrains.annotations.TestOnly;
@@ -36,7 +36,7 @@ public class TestGraphicsAPI implements GraphicsAPI {
 	}
 
 	@Override
-	public void loadAtlas(BaseAtlas blockAtlas) {
+	public void loadAtlas(ArrayAtlas blockAtlas) {
 
 	}
 

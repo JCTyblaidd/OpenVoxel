@@ -1,23 +1,22 @@
 /**[VK::Vertex]**/
 
-layout(location = 0) in vec3 i_position;
-layout(location = 1) in vec2 i_uv_coord;
-//TODO: CHANGE BACK RENDERDOC SHODDY FIX
-layout(location = 2) in vec4 i_normals_ish;
-layout(location = 3) in vec2 i_tangents_ish;
-
-layout(location = 4) in vec4 i_colour;
-layout(location = 5) in vec4 i_lighting;
-layout(location = 6) in vec2 i_animation;
+layout(location = 0) in vec3  i_position;
+layout(location = 1) in vec4  i_tangents;
+layout(location = 2) in vec4  i_colour;
+layout(location = 3) in vec4  i_lighting;
+layout(location = 4) in vec2  i_uv;
+layout(location = 5) in ivec2 i_tex;
+layout(location = 6) in int   i_anim;
 
 out gl_PerVertex {
     vec4 gl_Position;
 };
 
-layout(location = 0) out vec2 f_uv;
-layout(location = 1) out vec3 f_col;
-layout(location = 2) out vec3 f_light;
-layout(location = 3) out mat3 f_normMat;
+layout(location = 0) out vec2  f_uv;
+layout(location = 1) out flat ivec2 f_tex;
+layout(location = 2) out vec3  f_col;
+layout(location = 3) out vec3  f_light;
+layout(location = 4) out mat3  f_normMat;
 
 
 layout(set = 0,binding = 0) uniform FrameConstants {
@@ -35,25 +34,31 @@ layout(push_constant) uniform SubChunkMetadata {
 
 
 void main() {
-    //TODO: REMOVE SHODDY FIX FOR RENDERDOC
-    vec3 i_normals = i_normals_ish.xyz;
-    vec3 i_tangents = vec3(i_normals_ish.w,i_tangents_ish.xy);
+    //Forward UV
+    f_uv = i_uv;
 
-    //Calculate Animated UV
-    int animLimit = int(i_animation.x) * 255;
-    int animTick = (worldData.animationTick % animLimit);
-    f_uv = i_uv_coord;// + vec2(0,animTick * i_animation.y);
+    //Calculate Texture Index
+    int animOffset = worldData.animationTick % i_anim;
+    f_tex = ivec2(i_tex.x,i_tex.y+animOffset);
 
     //Forward Colour
     f_col = i_colour.rgb;
 
-    //Caulculate Tangent -> World Matrix
-    vec3 bi_tangent = cross(i_normals,i_tangents);
-    f_normMat = mat3(normalize(i_normals), normalize(i_tangents), normalize(bi_tangent));
-
     //Caululate Light TODO: correct sky light dropoff?
     vec3 skyLighting = worldData.skyLightColour * i_lighting.a;
     f_light = i_lighting.rgb + skyLighting;
+
+    //Caulculate Quaternion -> Matrix
+    vec3 xmul = i_tangents.x * i_tangents.yzw * 2;  //2xy,2xz,2xw
+    vec3 rmul = i_tangents.zyy * i_tangents.wwz * 2;//2yz,2yw,2zw
+    vec3 smul = i_tangents.xyz * i_tangents.xyz * 2;//2xx,2yy,2zz
+    vec3 subs = xmul - rmul;                        //xy-zw,xz-yw,xw-yz
+    vec3 adds = xmul + rmul;                        //xy+zw.xz+yw,xw+yz
+    vec3 diag = vec3(1) - smul - smul.zxy;          //1-2xx-2zz,1-2yy-2xx,1-2zz-2yy
+    vec3 column1 = vec3(diag.z,adds.x,subs.y);
+    vec3 column2 = vec3(subs.x,diag.x,adds.z);
+    vec3 column3 = vec3(adds.y,-subs.z,diag.y);
+    f_normMat = mat3(column1,column2,column3);
 
     //Update Position
     vec4 relativePosition = worldData.viewMatrix * vec4(i_position + pushConsts.chunkOffset,1);
@@ -62,10 +67,11 @@ void main() {
 
 /**[VK::Fragment]**/
 
-layout(location = 0) in vec2 f_uv;
-layout(location = 1) in vec3 f_col;
-layout(location = 2) in vec3 f_light;
-layout(location = 3) in mat3 f_normMat;
+layout(location = 0) in vec2  f_uv;
+layout(location = 1) in flat ivec2 f_tex;
+layout(location = 2) in vec3  f_col;
+layout(location = 3) in vec3  f_light;
+layout(location = 4) in mat3  f_normMat;
 
 layout(set = 0,binding = 0) uniform FrameConstants {
     mat4 projMatrix;
@@ -76,20 +82,27 @@ layout(set = 0,binding = 0) uniform FrameConstants {
     int  animationTick;
 } worldData;
 
-//RGB=diffuse A=transparency
-//layout(set = 1,binding = 0) uniform sampler2D atlasDiffuse;
-//RGB=normal A=emissiveness
-//layout(set = 1,binding = 1) uniform sampler2D atlasNormal;
-//R=smooth, G=reflect, B=occlusion, A=height
-//layout(set = 1,binding = 2) uniform sampler2D atlasPBR;
 
-layout(set = 1, binding = 0) uniform sampler2DArray atlasBlock;
+layout (constant_id = 0) const int ARRAY_SIZE = 64;
+
+//RGB=diffuse A=transparency
+layout(set = 1, binding = 0) uniform texture2DArray atlasDiffuse[ARRAY_SIZE];
+//RGB=normal A=emissiveness
+layout(set = 1, binding = 1) uniform texture2DArray atlasNormals[ARRAY_SIZE];
+//R=smooth, G=reflect, B=occlusion, A=height
+layout(set = 1, binding = 2) uniform texture2DArray atlasPbrData[ARRAY_SIZE];
+//Sampler
+layout(set = 1, binding = 3) uniform sampler atlasSampler;
 
 layout(location = 0) out vec4 forward_colour;
 
+
+
 void main() {
+    vec3 atlas_uv = vec3(f_uv,f_tex.y);
+    vec4 sampleDiffuse = texture(sampler2DArray(atlasDiffuse[f_tex.x],atlasSampler),atlas_uv);
     //Sample Maps
-    vec4 sampleDiffuse = texture(atlasBlock,vec3(f_uv,0));
+    //vec4 sampleDiffuse = texture(atlasBlock,vec3(f_uv,0));
     //vec4 sampleNormal = texture(atlasNormal,f_uv);
     //vec4 samplePBR = texture(atlasPBR,f_uv);
 
@@ -113,7 +126,8 @@ void main() {
 
     //Final Colour.. TODO: IMPROVE{..} {use PBR}
     //forward_colour = vec4(reduced_scalar * (g_colour + simple_light),1.0);
-    forward_colour = vec4(sampleDiffuse.rgb,1.0);
+    //forward_colour = vec4(f_uv,0.5,1.0);
+    forward_colour = vec4(sampleDiffuse.xyz,1.0);
 }
 
 

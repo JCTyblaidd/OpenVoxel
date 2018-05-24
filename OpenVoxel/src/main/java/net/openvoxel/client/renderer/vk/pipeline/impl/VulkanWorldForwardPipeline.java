@@ -43,52 +43,52 @@ public class VulkanWorldForwardPipeline extends VulkanGraphicsPipeline {
 
 		VkVertexInputAttributeDescription.Buffer inputAttributes = VkVertexInputAttributeDescription.mallocStack(7,stack);
 		inputAttributes.position(0);
-		{
+		{   //Position {x,y,z}
 			inputAttributes.location(0);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R32G32B32_SFLOAT);
 			inputAttributes.offset(0);
 		}
 		inputAttributes.position(1);
-		{
+		{   //Tangent Quaternion {x,y,z,w}
 			inputAttributes.location(1);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R16G16_UNORM);
+			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
 			inputAttributes.offset(12);
 		}
 		inputAttributes.position(2);
-		{
-			inputAttributes.location(2);//TODO: CHANGE SHODDY RENDER_DOC FIX BACK AFTERWARDS
+		{   //Colour Mask {r,g,b,a}
+			inputAttributes.location(2);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);//VK_FORMAT_R8G8B8_UNORM);
+			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
 			inputAttributes.offset(16);
 		}
 		inputAttributes.position(3);
-		{
+		{   //Lighting mask {r,g,b,sky}
 			inputAttributes.location(3);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8_UNORM);//VK_FORMAT_R8G8B8_UNORM);
-			inputAttributes.offset(20);//19);
+			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
+			inputAttributes.offset(20);
 		}
 		inputAttributes.position(4);
-		{
+		{   //UV Values {u,v}
 			inputAttributes.location(4);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
-			inputAttributes.offset(22);
+			inputAttributes.format(VK_FORMAT_R8G8_UNORM);
+			inputAttributes.offset(24);
 		}
 		inputAttributes.position(5);
-		{
+		{   //image index {array,layer}
 			inputAttributes.location(5);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
+			inputAttributes.format(VK_FORMAT_R16G16_UINT);
 			inputAttributes.offset(26);
 		}
 		inputAttributes.position(6);
-		{
+		{   //Animation Count {anim}
 			inputAttributes.location(6);
 			inputAttributes.binding(0);
-			inputAttributes.format(VK_FORMAT_R8G8_UNORM);
+			inputAttributes.format(VK_FORMAT_R16_UINT);
 			inputAttributes.offset(30);
 		}
 		inputAttributes.position(0);

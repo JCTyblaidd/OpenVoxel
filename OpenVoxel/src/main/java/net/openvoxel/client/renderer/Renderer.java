@@ -6,7 +6,8 @@ import net.openvoxel.api.util.PerSecondTimer;
 import net.openvoxel.client.gui.util.ScreenDebugInfo;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.VulkanRenderer;
-import net.openvoxel.client.textureatlas.BaseAtlas;
+import net.openvoxel.client.textureatlas.ArrayAtlas;
+import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.common.event.SubscribeEvents;
 import net.openvoxel.common.event.input.KeyStateChangeEvent;
@@ -20,6 +21,7 @@ import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
 import net.openvoxel.utility.debug.UsageAnalyses;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFWVidMode;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported;
@@ -38,7 +40,7 @@ public final class Renderer implements EventListener {
 	private final AsyncTaskPool renderTaskPool;
 
 	//Texture Atlas
-	private BaseAtlas blockAtlas;
+	private ArrayAtlas blockAtlas;
 
 	//FrameRate Limiting
 	private int targetFrameRate;
@@ -73,9 +75,10 @@ public final class Renderer implements EventListener {
 		);
 		renderTaskPool.start();
 
-		blockAtlas = new BaseAtlas(false);
+		blockAtlas = new ArrayAtlas();
 
-		targetFrameRate = 60;//TODO: CHANGE BACK LATER: Integer.MAX_VALUE;
+		//Defaults
+		targetFrameRate = 60;
 		previousFrameTimestamp = 0L;
 
 		screenshotRequest = false;
@@ -89,12 +92,15 @@ public final class Renderer implements EventListener {
 		//Initialize Graphics
 		if(glfwInit()) {
 			logger.Info("Initialized GLFW");
+			GLFWVidMode vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+			if(vidMode != null) targetFrameRate = vidMode.refreshRate();
 		}else {
 			logger.Severe("Failed to initialize GLFW");
 			CrashReport crashReport = new CrashReport("Failed to Initialize Renderer");
 			crashReport.invalidState("glfwInit() == false");
 			OpenVoxel.reportCrash(crashReport);
 		}
+
 		//Choose Renderer
 		boolean flag_gl = OpenVoxel.getLaunchParameters().hasFlag("openGL");
 		boolean flag_vk = OpenVoxel.getLaunchParameters().hasFlag("vulkan");
@@ -102,6 +108,7 @@ public final class Renderer implements EventListener {
 			logger.Warning("Both OpenGL and Vulkan Requested - Choosing Vulkan");
 			flag_gl = false;
 		}
+
 		//Initialize Renderer
 		boolean vulkan_supported = glfwVulkanSupported();
 		if(flag_vk && !vulkan_supported) {
@@ -125,7 +132,7 @@ public final class Renderer implements EventListener {
 
 	public void close() {
 		api.freeAtlas();
-		blockAtlas.freeAtlas();
+		blockAtlas.freeAllTextures();
 		renderTaskPool.stop();
 		api.close();
 		OpenVoxel.unregisterAllEvents(this);
@@ -189,7 +196,7 @@ public final class Renderer implements EventListener {
 
 	//TODO: IMPLEMENT DRAW DISTANCE
 
-	public BaseAtlas getBlockAtlas() {
+	public IconAtlas getBlockAtlas() {
 		return blockAtlas;
 	}
 
@@ -363,7 +370,7 @@ public final class Renderer implements EventListener {
 	public void stitchAtlas() {
 		blockAtlas.performStitch();
 		api.loadAtlas(blockAtlas);
-		blockAtlas.freeAtlas();
+		blockAtlas.freeAllTextures();
 	}
 
 

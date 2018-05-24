@@ -8,7 +8,7 @@ import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.renderer.common.GraphicsAPI;
 import net.openvoxel.client.renderer.vk.core.VulkanState;
 import net.openvoxel.client.renderer.vk.world.VulkanWorldRenderer;
-import net.openvoxel.client.textureatlas.BaseAtlas;
+import net.openvoxel.client.textureatlas.ArrayAtlas;
 import net.openvoxel.common.event.EventListener;
 import net.openvoxel.utility.async.AsyncBarrier;
 import net.openvoxel.utility.async.AsyncTaskPool;
@@ -67,13 +67,21 @@ public class VulkanRenderer implements EventListener, GraphicsAPI {
 	}
 
 	@Override
-	public void loadAtlas(BaseAtlas blockAtlas) {
-		cachedLayout.LoadAtlas(state.getLogicalDevice(),state.VulkanMemory,blockAtlas,commandHandler);
+	public void loadAtlas(ArrayAtlas blockAtlas) {
+		cachedLayout.LoadAtlasArray(
+				state.VulkanDevice,
+				state.VulkanMemory,
+				blockAtlas,
+				commandHandler,
+				Integer.MAX_VALUE,
+				Integer.MAX_VALUE,
+				Float.MAX_VALUE
+		);
 	}
 
 	@Override
 	public void freeAtlas() {
-		cachedLayout.DestroyAtlas(state.getLogicalDevice(),state.VulkanMemory);
+		cachedLayout.DestroyAtlasArray(state.getLogicalDevice(),state.VulkanMemory);
 	}
 
 	//////////////////////////////////////

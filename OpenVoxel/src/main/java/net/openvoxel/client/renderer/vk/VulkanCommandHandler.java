@@ -688,6 +688,7 @@ public final class VulkanCommandHandler {
 	}
 
 	public void SingleUseImagePopulate(long Image, ByteBuffer pixels, int width, int height,int baseArrayLayer, int mipLevel,boolean alphaOnly) {
+		int initial_position = pixels.position();
 		try(MemoryStack stack = stackPush()) {
 			VkCommandBuffer command = GetSingleUseCommandBuffer();
 
@@ -763,6 +764,8 @@ public final class VulkanCommandHandler {
 					imgBarrier);
 
 			SubmitSingleUseCommandBuffer(command);
+		}finally {
+			pixels.position(initial_position);
 		}
 	}
 
