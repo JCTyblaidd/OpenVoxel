@@ -191,7 +191,7 @@ public class ArrayAtlas implements IconAtlas {
 							imageSize,
 							imageSize,
 							0,
-							mipNormBuffer,
+							mipPBRBuffer,
 							mipSize,
 							mipSize,
 							0,

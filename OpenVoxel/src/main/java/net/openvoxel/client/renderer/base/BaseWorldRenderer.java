@@ -10,6 +10,7 @@ import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.common.block.Block;
 import net.openvoxel.world.client.ClientChunkSection;
 import net.openvoxel.world.client.ClientWorld;
+import org.joml.Quaternionfc;
 
 import java.nio.ByteBuffer;
 
@@ -200,13 +201,24 @@ public abstract class BaseWorldRenderer {
 		/// Block Renderer Code ///
 		///////////////////////////
 
+
 		@Override
-		public void addVertex(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, float xTangent, float yTangent, float zTangent) {
-			addVertexWithCol(X, Y, Z, U, V, xNorm, yNorm, zNorm, xTangent, yTangent, zTangent, 0xFFFFFFFF);
+		public void addVertex(float X, float Y, float Z, float U, float V, Quaternionfc quaternion) {
+			addVertexWithCol(X,Y,Z,U,V,quaternion.x(),quaternion.y(),quaternion.z(),quaternion.w(),0xFFFFFFFF);
 		}
 
 		@Override
-		public void addVertexWithCol(float X, float Y, float Z, float U, float V, float xNorm, float yNorm, float zNorm, float xTangent, float yTangent, float zTangent, int Colour) {
+		public void addVertex(float X, float Y, float Z, float U, float V, float xQuaternion, float yQuaternion, float zQuaternion, float wQuaternion) {
+			addVertexWithCol(X,Y,Z,U,V,xQuaternion,yQuaternion,zQuaternion,wQuaternion,0xFFFFFFFF);
+		}
+
+		@Override
+		public void addVertexWithCol(float X, float Y, float Z, float U, float V, Quaternionfc quaternion, int Colour) {
+			addVertexWithCol(X,Y,Z,U,V,quaternion.x(),quaternion.y(),quaternion.z(),quaternion.w(),Colour);
+		}
+
+		@Override
+		public void addVertexWithCol(float X, float Y, float Z, float U, float V, float xQuaternion, float yQuaternion, float zQuaternion, float wQuaternion, int Colour) {
 			if(write_offset + SIZE_OF_ENTRY >= end_offset) {
 				ExpandChunkMemory(this,isOpaqueDraw);
 			}
@@ -216,11 +228,11 @@ public abstract class BaseWorldRenderer {
 			memoryMap.putFloat(write_offset + OFFSET_POSITION + 4, (Y + blockAccess.getOffsetY()));
 			memoryMap.putFloat(write_offset + OFFSET_POSITION + 8, (Z + blockAccess.getOffsetZ()));
 
-			//Store Quaternion Information TODO: ACTUALLY IMPLEMENT
-			memoryMap.put(write_offset + OFFSET_TANGENT    , (byte)(0));
-			memoryMap.put(write_offset + OFFSET_TANGENT + 1, (byte)(0));
-			memoryMap.put(write_offset + OFFSET_TANGENT + 2, (byte)(0));
-			memoryMap.put(write_offset + OFFSET_TANGENT + 3, (byte)(0));
+			//Store Quaternion Information
+			memoryMap.put(write_offset + OFFSET_TANGENT    , (byte)(xQuaternion * 255.F));
+			memoryMap.put(write_offset + OFFSET_TANGENT + 1, (byte)(yQuaternion * 255.F));
+			memoryMap.put(write_offset + OFFSET_TANGENT + 2, (byte)(zQuaternion * 255.F));
+			memoryMap.put(write_offset + OFFSET_TANGENT + 3, (byte)(wQuaternion * 255.F));
 
 			//Store Colour Information
 			memoryMap.putInt(write_offset + OFFSET_COLOUR, Colour);

@@ -1,5 +1,6 @@
 package net.openvoxel.client.textureatlas;
 
+@Deprecated
 public class BaseIcon implements Icon {
 
 	public float U0 = 0;

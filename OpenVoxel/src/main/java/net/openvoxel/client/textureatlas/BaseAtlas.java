@@ -9,7 +9,6 @@ import net.openvoxel.common.resources.ResourceHandle;
 import net.openvoxel.files.util.FolderUtils;
 import net.openvoxel.utility.CrashReport;
 import net.openvoxel.utility.MathUtilities;
-import org.lwjgl.stb.STBImageResize;
 import org.lwjgl.stb.STBRPContext;
 import org.lwjgl.stb.STBRPNode;
 import org.lwjgl.stb.STBRPRect;
@@ -25,6 +24,7 @@ import java.util.Map;
 import static org.lwjgl.stb.STBRectPack.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
+@Deprecated
 public class BaseAtlas implements IconAtlas {
 
 	private boolean isSingleTexture;

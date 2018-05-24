@@ -5,7 +5,6 @@ import net.openvoxel.utility.FrustumTest;
 import net.openvoxel.world.client.ClientWorld;
 import net.openvoxel.world.generation.DebugWorldGenerator;
 import org.joml.Matrix4f;
-import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -20,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class WorldCullManagerBench {
 
-	@Test
+	//@Test
 	void frustumIntersectBenchmark() {
 		Options opt = new OptionsBuilder()
 				.include(this.getClass().getName()+".*")
