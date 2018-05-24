@@ -187,8 +187,14 @@ public abstract class BaseWorldRenderer {
 		private ArrayAtlas.ArrayIcon nullIcon = new ArrayAtlas.ArrayIcon();
 		private ArrayAtlas.ArrayIcon currentIcon = nullIcon;
 
-		private static final int SIZE_OF_ENTRY = 32;
-
+		public static final int SIZE_OF_ENTRY = 32;
+		public static final int OFFSET_POSITION = 0;
+		public static final int OFFSET_TANGENT = 12;
+		public static final int OFFSET_COLOUR = 16;
+		public static final int OFFSET_LIGHTING = 20;
+		public static final int OFFSET_UV_COORD = 24;
+		public static final int OFFSET_TEX_COORD = 26;
+		public static final int OFFSET_ANIM_VAL = 30;
 
 		///////////////////////////
 		/// Block Renderer Code ///
@@ -206,30 +212,30 @@ public abstract class BaseWorldRenderer {
 			}
 
 			//Store Position Information...
-			memoryMap.putFloat(write_offset, (X + blockAccess.getOffsetX()));
-			memoryMap.putFloat(write_offset + 4, (Y + blockAccess.getOffsetY()));
-			memoryMap.putFloat(write_offset + 8, (Z + blockAccess.getOffsetZ()));
+			memoryMap.putFloat(write_offset + OFFSET_POSITION, (X + blockAccess.getOffsetX()));
+			memoryMap.putFloat(write_offset + OFFSET_POSITION + 4, (Y + blockAccess.getOffsetY()));
+			memoryMap.putFloat(write_offset + OFFSET_POSITION + 8, (Z + blockAccess.getOffsetZ()));
 
 			//Store Quaternion Information TODO: ACTUALLY IMPLEMENT
-			memoryMap.put(write_offset + 12, (byte)(0));
-			memoryMap.put(write_offset + 13, (byte)(0));
-			memoryMap.put(write_offset + 14, (byte)(0));
-			memoryMap.put(write_offset + 15, (byte)(0));
+			memoryMap.put(write_offset + OFFSET_TANGENT    , (byte)(0));
+			memoryMap.put(write_offset + OFFSET_TANGENT + 1, (byte)(0));
+			memoryMap.put(write_offset + OFFSET_TANGENT + 2, (byte)(0));
+			memoryMap.put(write_offset + OFFSET_TANGENT + 3, (byte)(0));
 
 			//Store Colour Information
-			memoryMap.putInt(write_offset+16, Colour);
+			memoryMap.putInt(write_offset + OFFSET_COLOUR, Colour);
 
 			//Store Lighting Information TODO: ACTUALLY IMPLEMENT
-			memoryMap.putInt(write_offset+20,0xFFFFFFFF);
+			memoryMap.putInt(write_offset + OFFSET_LIGHTING,0xFFFFFFFF);
 
 			//Store UV Information
-			memoryMap.put(write_offset+24,(byte)(U * 255.F));
-			memoryMap.put(write_offset+25,(byte)(V * 255.F));
+			memoryMap.put(write_offset + OFFSET_UV_COORD    ,(byte)(U * 255.F));
+			memoryMap.put(write_offset + OFFSET_UV_COORD + 1,(byte)(V * 255.F));
 
 			//Store Texture Information
-			memoryMap.putShort(write_offset+26,(short)currentIcon.arrayIdx);
-			memoryMap.putShort(write_offset+28,(short)currentIcon.textureIdx);
-			memoryMap.putShort(write_offset+30,(short)currentIcon.animationCount);
+			memoryMap.putShort(write_offset + OFFSET_TEX_COORD    ,(short)currentIcon.arrayIdx);
+			memoryMap.putShort(write_offset + OFFSET_TEX_COORD + 2,(short)currentIcon.textureIdx);
+			memoryMap.putShort(write_offset + OFFSET_ANIM_VAL     ,(short)currentIcon.animationCount);
 
 			write_offset += SIZE_OF_ENTRY;
 		}

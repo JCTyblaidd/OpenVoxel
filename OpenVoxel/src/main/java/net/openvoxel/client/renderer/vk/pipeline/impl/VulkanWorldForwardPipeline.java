@@ -1,5 +1,6 @@
 package net.openvoxel.client.renderer.vk.pipeline.impl;
 
+import net.openvoxel.client.renderer.base.BaseWorldRenderer;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanGraphicsPipeline;
 import net.openvoxel.client.renderer.vk.pipeline.VulkanShaderModule;
 import org.lwjgl.system.MemoryStack;
@@ -35,7 +36,7 @@ public class VulkanWorldForwardPipeline extends VulkanGraphicsPipeline {
 		inputBinding.position(0);
 		{
 			inputBinding.binding(0);
-			inputBinding.stride(32);
+			inputBinding.stride(BaseWorldRenderer.AsyncWorldHandler.SIZE_OF_ENTRY);
 			inputBinding.inputRate(VK_VERTEX_INPUT_RATE_VERTEX);
 		}
 		inputBinding.position(0);
@@ -47,49 +48,49 @@ public class VulkanWorldForwardPipeline extends VulkanGraphicsPipeline {
 			inputAttributes.location(0);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R32G32B32_SFLOAT);
-			inputAttributes.offset(0);
+			inputAttributes.offset(BaseWorldRenderer.AsyncWorldHandler.OFFSET_POSITION);
 		}
 		inputAttributes.position(1);
 		{   //Tangent Quaternion {x,y,z,w}
 			inputAttributes.location(1);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
-			inputAttributes.offset(12);
+			inputAttributes.offset(BaseWorldRenderer.AsyncWorldHandler.OFFSET_TANGENT);
 		}
 		inputAttributes.position(2);
 		{   //Colour Mask {r,g,b,a}
 			inputAttributes.location(2);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
-			inputAttributes.offset(16);
+			inputAttributes.offset(BaseWorldRenderer.AsyncWorldHandler.OFFSET_COLOUR);
 		}
 		inputAttributes.position(3);
 		{   //Lighting mask {r,g,b,sky}
 			inputAttributes.location(3);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R8G8B8A8_UNORM);
-			inputAttributes.offset(20);
+			inputAttributes.offset(BaseWorldRenderer.AsyncWorldHandler.OFFSET_LIGHTING);
 		}
 		inputAttributes.position(4);
 		{   //UV Values {u,v}
 			inputAttributes.location(4);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R8G8_UNORM);
-			inputAttributes.offset(24);
+			inputAttributes.offset(BaseWorldRenderer.AsyncWorldHandler.OFFSET_UV_COORD);
 		}
 		inputAttributes.position(5);
 		{   //image index {array,layer}
 			inputAttributes.location(5);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R16G16_UINT);
-			inputAttributes.offset(26);
+			inputAttributes.offset(BaseWorldRenderer.AsyncWorldHandler.OFFSET_TEX_COORD);
 		}
 		inputAttributes.position(6);
 		{   //Animation Count {anim}
 			inputAttributes.location(6);
 			inputAttributes.binding(0);
 			inputAttributes.format(VK_FORMAT_R16_UINT);
-			inputAttributes.offset(30);
+			inputAttributes.offset(BaseWorldRenderer.AsyncWorldHandler.OFFSET_ANIM_VAL);
 		}
 		inputAttributes.position(0);
 		vertexInputState.pVertexAttributeDescriptions(inputAttributes);
