@@ -180,9 +180,24 @@
 		    <version>${jetbrains.version}</version>
 	    </dependency>
 
+	    <!-- Testing & Benchmark Natives -->
+
 	    <dependency><!-- JUnit Test -->
 		    <groupId>org.junit.jupiter</groupId>
 		    <artifactId>junit-jupiter-api</artifactId>
+		    <version>RELEASE</version>
+		    <scope>test</scope>
+	    </dependency>
+
+	    <dependency>
+		    <groupId>org.openjdk.jmh</groupId>
+		    <artifactId>jmh-core</artifactId>
+		    <version>RELEASE</version>
+		    <scope>test</scope>
+	    </dependency>
+	    <dependency>
+		    <groupId>org.openjdk.jmh</groupId>
+		    <artifactId>jmh-generator-annprocess</artifactId>
 		    <version>RELEASE</version>
 		    <scope>test</scope>
 	    </dependency>
