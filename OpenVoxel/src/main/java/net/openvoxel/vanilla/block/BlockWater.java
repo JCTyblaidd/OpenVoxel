@@ -1,5 +1,6 @@
 package net.openvoxel.vanilla.block;
 
+import net.openvoxel.client.renderer.common.IBlockRenderHandler;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;
 import net.openvoxel.common.block.Block;
@@ -13,6 +14,11 @@ public class BlockWater extends Block {
 	@Override
 	public void loadTextureAtlasData(IconAtlas texAtlas) {
 		blockTex = texAtlas.register("block/water/water.diff","block/water/water.normals","block/water/water.pbr");
+	}
+
+	@Override
+	public IBlockRenderHandler getRenderHandler() {
+		return Block.transparentRenderHandler;
 	}
 
 	@Override

@@ -144,7 +144,6 @@ public class ArrayAtlas implements IconAtlas {
 				STBITexture texPBR = texPBRD.get(icon);
 				for(int frame = 0; frame < icon.animationCount; frame++) {
 					//Set Image Data Offsets
-					System.out.println(frame+","+skipSize+","+icon.animationCount);
 					texDiffuse.pixels.position(frame * skipSize);
 					texNormal.pixels.position(frame * skipSize);
 					texPBR.pixels.position(frame * skipSize);

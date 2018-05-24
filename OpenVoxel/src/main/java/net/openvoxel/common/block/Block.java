@@ -3,6 +3,7 @@ package net.openvoxel.common.block;
 import net.openvoxel.api.side.Side;
 import net.openvoxel.api.side.SideOnly;
 import net.openvoxel.client.renderer.common.DefaultBlockRenderer;
+import net.openvoxel.client.renderer.common.DefaultTransparentBlockRenderer;
 import net.openvoxel.client.renderer.common.IBlockRenderHandler;
 import net.openvoxel.client.textureatlas.Icon;
 import net.openvoxel.client.textureatlas.IconAtlas;
@@ -18,6 +19,7 @@ public abstract class Block {
 	public static AABB EMPTY_BLOCK_AABB = new AABB(0,0,0,0,0,0);
 
 	public static IBlockRenderHandler defaultRenderHandler = new DefaultBlockRenderer();
+	public static IBlockRenderHandler transparentRenderHandler = new DefaultTransparentBlockRenderer();
 	public static IBlockRenderHandler emptyRenderHandler = (renderer, stateAccess,isOpaque) -> {};//Draw Nothing//
 
 	protected float explosion_resistance = 1.0F;
@@ -56,7 +58,7 @@ public abstract class Block {
 	 * @return if this blocks chunk should be re-rendered if a block
 	 * next to it on the next chunk is re-rendered
 	 */
-	@SideOnly(side = Side.CLIENT)
+	@SideOnly(side = Side.CLIENT)//TODO: IMPROVE...
 	public boolean doesBlockReRenderOnNearbyUpdate() {
 		return false;
 	}

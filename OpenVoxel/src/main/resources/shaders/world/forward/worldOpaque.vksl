@@ -134,8 +134,8 @@ void main() {
     //Final Colour.. TODO: IMPROVE{..} {use PBR}
     //forward_colour = vec4(reduced_scalar * (g_colour + simple_light),1.0);
     //forward_colour = vec4(f_uv,0.5,1.0);
-    //forward_colour = vec4(sampleDiffuse.xyz,1.0);
-    forward_colour = vec4(world_normal,1.0);
+    forward_colour = vec4(sampleDiffuse.xyz,1.0);
+   // forward_colour = vec4(world_normal,1.0);
 }
 
 

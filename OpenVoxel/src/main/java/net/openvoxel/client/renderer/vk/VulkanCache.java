@@ -400,7 +400,6 @@ public class VulkanCache {
 						IMAGE_VIEW_ATLAS_PBR_LIST.set(arrayIndex,imgViewPBR);
 
 						//Update Descriptor Sets
-						System.out.println("WRITE TO: " + arrayIndex);
 						VkDescriptorImageInfo descriptor;
 						descriptor = descriptorDiffuse.get(arrayIndex);
 						descriptor.sampler(VK_NULL_HANDLE);

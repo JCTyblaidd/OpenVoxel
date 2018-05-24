@@ -15,7 +15,6 @@ import net.openvoxel.common.util.BlockFace;
  */
 public class DefaultBlockRenderer implements IBlockRenderHandler {
 
-
 	@Override
 	public void storeBlockData(IBlockRenderer renderer, IBlockAccess stateAccess, boolean opaqueDraw) {
 		Block block = stateAccess.getBlock();
@@ -44,7 +43,7 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		}
 	}
 
-	private void renderUp(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+	void renderUp(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.UP);
 		renderer.setCurrentIcon(icon);
 		float yVal = (float)bounds.maxY;
@@ -60,7 +59,7 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		renderer.addVertex(xMax,yVal,zMin,xMax,zMin,IBlockRenderer.Y_POSITIVE);
 		renderer.addVertex(xMin,yVal,zMin,xMin,zMin,IBlockRenderer.Y_POSITIVE);
 	}
-	private void renderDown(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+	void renderDown(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.DOWN);
 		renderer.setCurrentIcon(icon);
 		float yVal = (float)bounds.minY;
@@ -76,7 +75,7 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		renderer.addVertex(xMin,yVal,zMin,xMin,zMin,IBlockRenderer.Y_NEGATIVE);
 		renderer.addVertex(xMax,yVal,zMin,xMax,zMin,IBlockRenderer.Y_NEGATIVE);
 	}
-	private void renderWest(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+	void renderWest(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.WEST);
 		renderer.setCurrentIcon(icon);
 		float zVal = (float)bounds.maxZ;
@@ -92,7 +91,7 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		renderer.addVertex(xMin,yMin,zVal,xMin,yMin,IBlockRenderer.Z_POSITIVE);
 		renderer.addVertex(xMax,yMin,zVal,xMax,yMin,IBlockRenderer.Z_POSITIVE);
 	}
-	private void renderEast(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+	void renderEast(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.EAST);
 		renderer.setCurrentIcon(icon);
 		float zVal = (float)bounds.minZ;
@@ -108,7 +107,7 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		renderer.addVertex(xMax,yMin,zVal,xMax,yMin,IBlockRenderer.Z_NEGATIVE);
 		renderer.addVertex(xMin,yMin,zVal,xMin,yMin,IBlockRenderer.Z_NEGATIVE);
 	}
-	private void renderNorth(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+	void renderNorth(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess, BlockFace.NORTH);
 		renderer.setCurrentIcon(icon);
 		float xVal = (float)bounds.maxX;
@@ -124,7 +123,7 @@ public class DefaultBlockRenderer implements IBlockRenderHandler {
 		renderer.addVertex(xVal,yMin,zMin,yMin,zMin,IBlockRenderer.X_POSITIVE);
 		renderer.addVertex(xVal,yMax,zMin,yMin,zMax,IBlockRenderer.X_POSITIVE);
 	}
-	private void renderSouth(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
+	void renderSouth(Block block, IBlockRenderer renderer, IBlockAccess stateAccess,AABB bounds) {
 		Icon icon = block.getIconAtSide(stateAccess,BlockFace.SOUTH);
 		renderer.setCurrentIcon(icon);
 		float xVal = (float)bounds.minX;

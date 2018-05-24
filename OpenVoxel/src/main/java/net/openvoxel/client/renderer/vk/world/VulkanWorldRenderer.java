@@ -58,7 +58,7 @@ public class VulkanWorldRenderer extends BaseWorldRenderer {
 
 	//World Chunk Streaming Data
 	private final int MAX_TRANSFERS_PER_FRAME = WorldDrawTask.MAX_TRANSFER_CALLS_PER_FRAME;
-	private final VkBufferMemoryBarrier.Buffer BufferTransferBarriers = VkBufferMemoryBarrier.malloc(MAX_TRANSFERS_PER_FRAME);
+	private final VkBufferMemoryBarrier.Buffer BufferTransferBarriers = VkBufferMemoryBarrier.malloc(MAX_TRANSFERS_PER_FRAME*2);
 	private int bufferCopyCount = 0;
 	private Lock bufferCopyLock = new ReentrantLock();
 
