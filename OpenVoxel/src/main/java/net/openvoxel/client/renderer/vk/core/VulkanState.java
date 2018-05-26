@@ -250,13 +250,14 @@ public final class VulkanState {
 				VulkanUtility.LogDebug("Instance Extension: " + extensionList.extensionNameString());
 			}
 			if(flag_vulkanDebug) {
-				if(extensionList.extensionNameString().equals("VK_EXT_debug_report")) {
+				if(extensionList.extensionNameString().equals(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
 					enabledExtensions.add(extensionList.extensionName());
 					VulkanUtility.LogInfo("Enabled Ext: Debug Report");
 					//Enable Debug Report Flag
 					HasDebugReport = true;
 				}
 			}
+			/*
 			if(extensionList.extensionNameString().equals("VK_KHR_display")) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: KHR Display");
@@ -264,7 +265,7 @@ public final class VulkanState {
 			if(extensionList.extensionNameString().equals("VK_KHR_display_swapchain")) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: KHR Display SwapChain");
-			}
+			}*/
 		}
 		return VulkanUtility.toPointerBuffer(stack,enabledExtensions);
 	}

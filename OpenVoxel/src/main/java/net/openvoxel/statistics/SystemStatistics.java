@@ -1,5 +1,6 @@
 package net.openvoxel.statistics;
 
+import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -47,20 +48,23 @@ public class SystemStatistics {
 
 	private static final ObjectName OS_OBJECT_NAME;
 	private static final String CPU_LOAD_STR = "ProcessCpuLoad";
+	private static final MBeanServer M_BEAN_SERVER;
 	static {
 		ObjectName _name = null;
+		MBeanServer _server = null;
 		try{
 			_name = ObjectName.getInstance("java.lang:type=OperatingSystem");
+			_server = ManagementFactory.getPlatformMBeanServer();
 		}catch(Exception ignored) {}
 		OS_OBJECT_NAME = _name;
+		M_BEAN_SERVER = _server;
 	}
 	private static void update() {
 		processMemUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() + MemoryStatistics.getChunkMemory();
 		jvmMemUsage = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed();
 		threadCount = ManagementFactory.getThreadMXBean().getThreadCount();
 		try {
-			processorUsage = (Double)ManagementFactory.getPlatformMBeanServer().
-                           getAttribute(OS_OBJECT_NAME,CPU_LOAD_STR);
+			processorUsage = (Double)M_BEAN_SERVER.getAttribute(OS_OBJECT_NAME,CPU_LOAD_STR);
 		}catch (Exception ignored) {}
 
 		write_index = (write_index + 1) % 32;

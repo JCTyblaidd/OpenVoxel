@@ -221,6 +221,7 @@ public class ScreenDebugInfo extends Screen {
 		final int COL = 0x9B000000;    // = 0x5B000000;
 		final int CPU_COL = 0xEFD39539;// = 0xCFD39539
 		final int GPU_COL = 0xEF168206;// = 0xCF168206;
+		final int MIX_COL = 0xEF748c20;// blend(GPU_COL,CPU_COL)
 		tess.Begin(null);
 		tess.VertexRect(x1,x2,y1,y2,COL);
 
@@ -232,17 +233,15 @@ public class ScreenDebugInfo extends Screen {
 
 			float min_height = height_cpu;
 			float max_height = height_gpu;
-			int min_col = CPU_COL;
 			int max_col = GPU_COL;
 			if(height_cpu >= height_gpu) {
 				min_height = height_gpu;
 				max_height = height_cpu;
-				min_col = GPU_COL;
 				max_col = CPU_COL;
 			}
 			float x_pos1 = x2 - (diff * i) + diff;
 			float x_pos2 = x_pos1 - diff;
-			tess.VertexRect(x_pos2,x_pos1,y2-min_height,y2,min_col);
+			tess.VertexRect(x_pos2,x_pos1,y2-min_height,y2,MIX_COL);
 			tess.VertexRect(x_pos2,x_pos1,y2-max_height,y2-min_height,max_col);
 		}
 	}

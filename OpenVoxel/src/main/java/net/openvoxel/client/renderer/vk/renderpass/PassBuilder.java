@@ -6,566 +6,283 @@ import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import net.openvoxel.OpenVoxel;
 import net.openvoxel.utility.CrashReport;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VkAttachmentDescription;
-import org.lwjgl.vulkan.VkRenderPassCreateInfo;
-import org.lwjgl.vulkan.VkSubpassDependency;
-import org.lwjgl.vulkan.VkSubpassDescription;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.Closeable;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static org.lwjgl.system.MemoryStack.stackPush;
+import static net.openvoxel.client.renderer.vk.renderpass.PassEntry.FRAME_ID;
+import static net.openvoxel.client.renderer.vk.renderpass.PassResource.VIEWPORT_SIZE;
+import static org.lwjgl.vulkan.KHRSwapchain.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 import static org.lwjgl.vulkan.VK10.*;
 
-public class PassBuilder implements Closeable {
+public class PassBuilder {
 
-	//Constant to resize state to the size of the viewport
-	public static final int SIZE_VIEWPORT = -1;
-	private static final String FRAME_TARGET_ID = "frame_output";
+	List<PassEntry> entryList;
+	Map<String,PassEntry> resourceToCreatorPassMap;
+	TObjectIntMap<String> resourceToLastConsumerMap;
+	Map<String,PassEntry.OutputAttachment> resourceToAssignmentPassMap;
+	Map<String,PassResource> resourceMapping;
+	final PassResource FRAME_RESOURCE;
 
-	private enum AttachmentType {
-		VOXEL_ATTACHMENT,   //Voxel 3D Image Data
-		DEPTH_ATTACHMENT,   //Depth Attachment Data
-		COLOUR_ATTACHMENT,  //Colour Attachment Data
-		FRAME_TARGET,       //SwapChain Attachment Data
+	public PassBuilder() {
+		entryList = new ArrayList<>();
+		resourceToCreatorPassMap = new HashMap<>();
+		resourceToLastConsumerMap = new TObjectIntHashMap<>();
+		resourceToAssignmentPassMap = new HashMap<>();
+		resourceMapping = new HashMap<>();
+		FRAME_RESOURCE = new PassResource(
+				VIEWPORT_SIZE,
+				VIEWPORT_SIZE,
+				1,
+				1,
+				-1,
+				VK_SAMPLE_COUNT_1_BIT
+		);
 	}
 
-	private static class PassAttachment {
-		private String attachment_name; // the unique ID of this attachment
-		private IPass write_pass;       // pass in which this is generated
-		private AttachmentType type;    // type of attachment
-		private int size;               // size of attachment data [square YxY or Viewport]
-		private int attachment_id;      // id of colour attachment
-		private int format;             // format of attachment
-		private int layers;             // number of attachment layers
-		private int samples;            // number of attachment samples
-		private boolean can_read;       // if read access is needed while generating
-		private boolean clear_on_load;  // if the attachment should be cleared on load!
-		private String  load_data_from; // attachment from which to load data from
-	}
-	private static class PassDependency {
-		private String dependency;      // id of the dependency
-		private boolean isLocal;        // if the dependency is per pixel & layer only
-		private boolean attachment;     // if this dependency is an attachment
-	}
-	private static class RenderPassMetadata {
-		private int size;               // the size of all target attachments
-		private int start_idx;          // the starting index of passes handled
-		private int end_idx;            // the ending index of passes handled
+	public void register(PassEntry entry) {
+		entryList.add(entry);
 	}
 
-	///////////////////////
-	///Pass Builder Code///
-	///////////////////////
+	public void build() {
 
-	//Dependency Metadata
-	private Map<String,PassAttachment> attachmentMap = new HashMap<>();
-	private Map<IPass,List<PassAttachment>> writeAttachments = new HashMap<>();
-	private Map<IPass,List<PassDependency>> dependencyAttachments = new HashMap<>();
+		//Calculate Dependencies
+		build_dependency_graph();
+		flatten_dependency_graph();
 
-	//Pass Metadata
-	private IPass currentPass;
-	private Collection<IPass> passList = new ArrayList<>();
+		//Assign Images
+		assign_images();
+		resourceMapping.forEach((id,resource) -> resource.calculateLayouts(entryList.size()));
 
-	//////////////////////
-	/// Build Metadata ///
-	//////////////////////
+		//Split into RenderPasses [start..end)
+		TIntList startList = new TIntArrayList();
+		split_into_render_passes(startList);
 
-	private static class DependencyNode {
-		private IPass pass;
-		private List<DependencyNode> dependsOn = new ArrayList<>();
-		private DependencyNode(IPass pass) {
-			this.pass = pass;
+		//Generate RenderPasses
+		List<PassRender> renderList = new ArrayList<>();
+		int prev_index = startList.get(0);
+		for(int i = 1; i < startList.size(); i++) {
+			int next_index = startList.get(i);
+			renderList.add(new PassRender(this,prev_index,next_index));
+			prev_index = next_index;
+		}
+		renderList.add(new PassRender(this,prev_index,entryList.size()));
+	}
+
+	/////////////////////////////
+	/// Utility Building Code ///
+	/////////////////////////////
+
+	private void split_into_render_passes(@NotNull TIntList startList) {
+		Set<String> localUseOnlyResource = new HashSet<>();
+		int current_width = entryList.get(0).output_width;
+		int current_height = entryList.get(0).output_height;
+		int current_layers = entryList.get(0).output_layers;
+
+		//Skip External Dependency Node
+		startList.add(0);
+		for(int i = 1; i < entryList.size(); i++) {
+			boolean requireSplit = false;
+			PassEntry entry = entryList.get(i);
+
+			//Consider Write Attachments
+			for(PassEntry.OutputAttachment output : entry.outputAttachments) {
+				if(output.load_to_create != null) {
+					localUseOnlyResource.remove(output.load_to_create);
+				}
+				localUseOnlyResource.add(output.identifier);
+			}
+
+			//Consider Read Attachments
+			for(PassEntry.InputAttachment input : entry.inputAttachments) {
+				if(!input.local_dependency && localUseOnlyResource.contains(input.identifier)) {
+					requireSplit = true;
+				}
+			}
+
+			//Consider FrameBuffer Dimensions!!
+			if(current_width != entry.output_width) requireSplit = true;
+			if(current_height != entry.output_height) requireSplit = true;
+			if(current_layers != entry.output_layers) requireSplit = true;
+
+			//If non local dependency exists - split the passes
+			if(requireSplit) {
+				startList.add(i);
+				localUseOnlyResource.clear();
+			}
 		}
 	}
-	private List<DependencyNode> flattenedDependency = new ArrayList<>();
 
-	private static class ImageResource {
-
-		//Image Format Data
-		private int size;
-		private int format;
-		private int layers;
-		private int samples;
-		private AttachmentType type;
-
-		//Lifetime Markers [Begin->End] must preserve data
-		private List<Lifetime> lifetimes = new ArrayList<>();
-		private Lifetime lastLifetime = null;
-		private static class Lifetime {
-			private boolean clear_on_begin = false;
-			private TIntList attachment_usage = new TIntArrayList();
-			private TIntList sampled_usage = new TIntArrayList();
-			private int begin = Integer.MIN_VALUE;
-			private int end = Integer.MAX_VALUE;
-		}
-
-		//Vulkan Graphics State
-		private long vulkan_image;
-		private long vulkan_image_view;
-		private long vulkan_image_memory;
+	private boolean compatible_resource(@NotNull PassResource resource,@NotNull PassEntry.OutputAttachment output) {
+		if(PassEntry.AttachmentType.isFrame(output.type)) return false;
+		return resource.is_same_dimensions(output);
 	}
 
+	@NotNull
+	private PassResource create_resource(@NotNull PassEntry.OutputAttachment output) {
+		return new PassResource(output.width,output.height,output.depth,output.layers,output.format,output.samples);
+	}
 
-	private void flatten_dependency(Set<DependencyNode> visited,DependencyNode node) {
+	private void assign_last_consumer(String id,int index) {
+		int last = resourceToLastConsumerMap.get(id);
+		if(last == resourceToLastConsumerMap.getNoEntryValue()) {
+			resourceToLastConsumerMap.put(id,index);
+		}else if(index > last) {
+			resourceToLastConsumerMap.put(id,index);
+		}
+	}
+
+	private void assign_images() {
+
+		//Clear Frame Resource Usage
+		FRAME_RESOURCE.resetRequires();
+		FRAME_RESOURCE.setRequirePrevious(entryList.size(),true);
+		FRAME_RESOURCE.setRequiredLayout(entryList.size(),VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		resourceToLastConsumerMap.put(FRAME_ID,entryList.size());
+
+		//Set of all images that are free for aliased assignment
+		Set<PassResource> freeImages = new HashSet<>();
+
+		//Iterate through passes in reverse order
+		ListIterator<PassEntry> iterator = entryList.listIterator(entryList.size());
+		while(iterator.hasPrevious()) {
+			int pass_index = iterator.previousIndex();
+			PassEntry pass = iterator.previous();
+
+			//Consider Write Attachments
+			for(PassEntry.OutputAttachment write_target : pass.outputAttachments) {
+				PassResource resource = resourceMapping.get(write_target.identifier);
+
+				//Create New Resource if does not exist & is not frame output
+				if(resource == null){
+					if(PassEntry.AttachmentType.isFrame(write_target.type)) {
+						resource = FRAME_RESOURCE;
+					}else {
+						resource = create_resource(write_target);
+					}
+				}
+
+				//Assign last consumer
+				assign_last_consumer(write_target.identifier,pass_index);
+
+				//Bind resource to identifier
+				resourceMapping.putIfAbsent(write_target.identifier,resource);
+
+				//Mark image format
+				if (resource.is_depth_format() && !PassEntry.AttachmentType.isFrame(write_target.type)) {
+					resource.setRequiredLayout(pass_index, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+				} else {
+					resource.setRequiredLayout(pass_index, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+				}
+
+				//Assign information on earlier availability
+				if(write_target.load_to_create != null) {
+					if(resourceMapping.containsKey(write_target.load_to_create)) {
+						throw new RuntimeException("Loading from existing data");
+					}
+					assign_last_consumer(write_target.load_to_create,pass_index);
+					resource.setRequirePrevious(pass_index,true);
+					resourceMapping.put(write_target.load_to_create,resource);
+				}else{
+					if(write_target.clear_on_create) resource.markClearAt(pass_index);
+					resource.setRequirePrevious(pass_index,false);
+					freeImages.add(resource);
+				}
+			}
+
+			for(PassEntry.InputAttachment input_target : pass.inputAttachments) {
+				PassResource resource = resourceMapping.get(input_target.identifier);
+				PassEntry.OutputAttachment write_attachment = resourceToAssignmentPassMap.get(input_target.identifier);
+
+				//Find OR create image if not already assigned
+				if(resource == null) {
+					resource = freeImages.stream()
+                        .filter(x -> compatible_resource(x,write_attachment))
+						.findAny().orElseGet(() -> create_resource(write_attachment));
+					freeImages.remove(resource);
+				}
+
+				//Assign last consumer
+				assign_last_consumer(input_target.identifier,pass_index);
+
+				//Mark image format
+				if(resource.is_depth_format()) {
+					resource.setRequiredLayout(pass_index, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+				}else{
+					resource.setRequiredLayout(pass_index, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				}
+				resource.setRequirePrevious(pass_index,true);
+
+				//Mark resource metadata
+				if(input_target.local_dependency) resource.markUsesLocal();
+
+				//Bind image to dependency
+				resourceMapping.putIfAbsent(input_target.identifier,resource);
+			}
+		}
+	}
+
+	/**
+	 * Convert entryList into a sorted form that
+	 *  follows the dependency graph
+	 */
+	private void flatten_dependency_graph() {
+		//Initial Setup
+		Set<PassEntry> visited = new HashSet<>();
+		List<PassEntry> global_dependency = new ArrayList<>(entryList);
+		entryList.clear();
+
+		//Global Iteration
+		for(PassEntry entry : global_dependency) {
+			if(!entryList.contains(entry)) {
+				flatten_dependency(visited,entry);
+			}
+		}
+	}
+
+	/**
+	 * Recursively flatten the dependency graph
+	 * @param visited set of already visited passes
+	 * @param node the pass to visited
+	 */
+	private void flatten_dependency(Set<PassEntry> visited, PassEntry node) {
 		visited.add(node);
-		for(DependencyNode dependency : node.dependsOn) {
-			if(!flattenedDependency.contains(dependency)) {
+		for(PassEntry dependency : node.passDependencies) {
+			if(!entryList.contains(dependency)) {
 				if(visited.contains(dependency)) {
 					CrashReport crash = new CrashReport("Found Circular Dependency in Pass Builder");
-					crash.invalidState("Circular Dependency: "+node.pass.toString()+" -> "+dependency.pass.toString());
+					crash.invalidState("Circular Dependency: "+node.toString()+" -> "+dependency.toString());
 					OpenVoxel.reportCrash(crash);
 				}
 				flatten_dependency(visited, dependency);
 			}
 		}
-		flattenedDependency.add(node);
-	}
-
-	private boolean is_valid_image(ImageResource freeImage, PassAttachment target) {
-		boolean same_swap = freeImage.type == target.type;
-		boolean same_size = freeImage.size == target.size;
-		boolean same_layer = freeImage.layers == target.layers;
-		boolean same_samples = freeImage.samples == target.samples;
-		boolean same_format = freeImage.format == target.format;
-		return (same_swap && same_size && same_layer && same_samples && same_format);
-	}
-
-	private ImageResource create_image(PassAttachment target) {
-		ImageResource resource = new ImageResource();
-		resource.type = target.type;
-		resource.size = target.size;
-		resource.layers = target.layers;
-		resource.samples = target.samples;
-		resource.format = target.format;
-		return resource;
-	}
-
-	private void assign_images(Map<String,ImageResource> boundImages) {
-
-		//List of all images that have been freed to usage
-		Set<ImageResource> freeImages = new HashSet<>();
-
-		//Iterate through passes in reverse order
-		ListIterator<DependencyNode> iterator = flattenedDependency.listIterator(flattenedDependency.size());
-		while(iterator.hasPrevious()) {
-			int node_index = iterator.previousIndex();
-			DependencyNode node = iterator.previous();
-
-			//Consider Write Attachments
-			List<PassAttachment> write = writeAttachments.get(node.pass);
-			for(PassAttachment target : write) {
-				ImageResource resource = boundImages.get(target.attachment_name);
-
-				//Create new resource if not already assigned
-				if(resource == null) resource = create_image(target);
-
-				//Bind image to self
-				boundImages.putIfAbsent(target.attachment_name,resource);
-
-				//Assign earlier availability
-				resource.lastLifetime.attachment_usage.add(node_index);
-				if(target.load_data_from != null) {
-					if(boundImages.containsKey(target.load_data_from)) {
-						throw new RuntimeException("Loading data from target read from later");
-					}
-					boundImages.put(target.load_data_from,resource);
-				}else{
-					resource.lastLifetime.clear_on_begin = target.clear_on_load;
-					resource.lastLifetime.begin = node_index;
-					resource.lastLifetime = null;
-					freeImages.add(resource);
-				}
-			}
-
-			//Consider Dependency Attachments
-			List<PassDependency> read = dependencyAttachments.get(node.pass);
-			for(PassDependency target : read) {
-				ImageResource resource = boundImages.get(target.dependency);
-				PassAttachment attachment = attachmentMap.get(target.dependency);
-
-				//Find OR create new image if not already assigned
-				if(resource == null) {
-					resource = freeImages.stream()
-						           .filter(x -> is_valid_image(x, attachment))
-						           .findAny().orElseGet(() -> create_image(attachment));
-					ImageResource.Lifetime lifetime = new ImageResource.Lifetime();
-					lifetime.end = node_index;
-					resource.lifetimes.add(lifetime);
-					resource.lastLifetime = lifetime;
-					freeImages.remove(resource);
-				}
-
-				//Mark as sampled
-				resource.lastLifetime.sampled_usage.add(node_index);
-
-				//Bind image to dependency
-				boundImages.putIfAbsent(target.dependency,resource);
-			}
-		}
-	}
-
-	private void split_render_passes(TIntList startIndices) {
-
-		//List of dependencies that can only be read locally
-		Set<String> localUseOnlyImages = new HashSet<>();
-
-		//Skip External Dependency Node
-		startIndices.add(1);
-		for(int i = 1; i < flattenedDependency.size(); i++) {
-			DependencyNode node = flattenedDependency.get(i);
-			boolean requireSplit = false;
-
-			//Consider Write Attachments
-			List<PassAttachment> write = writeAttachments.get(node.pass);
-			for(PassAttachment target : write) {
-				if(target.load_data_from != null) {
-					localUseOnlyImages.remove(target.load_data_from);
-				}
-				localUseOnlyImages.add(target.attachment_name);
-			}
-
-			//Consider Read Attachments
-			List<PassDependency> read = dependencyAttachments.get(node.pass);
-			for(PassDependency target : read) {
-				if(!target.isLocal && localUseOnlyImages.contains(target.dependency)) {
-					requireSplit = true;
-				}
-			}
-
-			//If non local dependency exists - split the passes
-			if(requireSplit) {
-				startIndices.add(i);
-				localUseOnlyImages.clear();
-			}
-		}
-	}
-
-	private void get_referenced_attachments(int begin ,int end, Set<String> usedAttachments) {
-		for(int i = begin; i < end; i++) {
-			DependencyNode node = flattenedDependency.get(i);
-			//Consider Write Attachments
-			List<PassAttachment> write = writeAttachments.get(node.pass);
-			for(PassAttachment target : write) {
-				if(target.load_data_from != null) usedAttachments.add(target.load_data_from);
-				usedAttachments.add(target.attachment_name);
-			}
-
-			//Consider Read Attachments
-			List<PassDependency> read = dependencyAttachments.get(node.pass);
-			for(PassDependency target : read) {
-				usedAttachments.add(target.dependency);
-			}
-		}
-	}
-
-	private boolean is_depth_format(int format) {
-		if(format == VK_FORMAT_D32_SFLOAT) return true;
-		if(format == VK_FORMAT_D32_SFLOAT_S8_UINT) return true;
-		if(format == VK_FORMAT_D24_UNORM_S8_UINT) return true;
-		if(format == VK_FORMAT_D16_UNORM) return true;
-		if(format == VK_FORMAT_D16_UNORM_S8_UINT) return true;
-		return format == VK_FORMAT_X8_D24_UNORM_PACK32;
-	}
-
-	private void assign_attachments(int begin, int end,Set<ImageResource> used, TObjectIntMap<ImageResource> idMap, VkAttachmentDescription.Buffer attachments) {
-		int i = 0;
-		for(ImageResource resource : used) {
-
-			//Skip Voxel Attachments (..)
-			if(resource.type == AttachmentType.VOXEL_ATTACHMENT) continue;
-
-			//Assign Identifiers
-			VkAttachmentDescription description = attachments.get(i);
-			idMap.put(resource,i);
-
-			//Initial Resource Data
-			description.flags(0);
-			description.format(resource.format);
-			description.samples(resource.samples);
-			boolean is_depth_format = is_depth_format(resource.format);
-
-			//Find dependency between render passes
-			ImageResource.Lifetime beginLifetime = null;
-			ImageResource.Lifetime firstUseLifetime = null;
-			ImageResource.Lifetime endLifetime = null;
-			for(ImageResource.Lifetime lifetime : resource.lifetimes) {
-				if(lifetime.begin < begin && lifetime.end >= begin) beginLifetime = lifetime;
-				if(lifetime.end > end && lifetime.begin <= end) endLifetime = lifetime;
-				if(lifetime.begin >= begin && lifetime.begin <= end) {
-					if(firstUseLifetime == null) firstUseLifetime = lifetime;
-					else if(lifetime.begin < firstUseLifetime.begin) firstUseLifetime = lifetime;
-				}
-			}
-			boolean first_used_as_attachment = false;
-			boolean next_used_as_attachment = false;
-
-			//Set Shader Load State
-			if(beginLifetime == null) {
-				description.loadOp(firstUseLifetime.clear_on_begin ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
-				description.initialLayout(is_depth_format ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-			}else{
-				description.loadOp(VK_ATTACHMENT_LOAD_OP_LOAD);
-				if(is_depth_format) {
-					description.initialLayout(first_used_as_attachment ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-				}else{
-					description.initialLayout(first_used_as_attachment ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				}
-			}
-			if(endLifetime == null) {
-				description.storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE);
-				description.finalLayout(VK_IMAGE_LAYOUT_UNDEFINED);
-			}else{
-				description.storeOp(VK_ATTACHMENT_STORE_OP_STORE);
-				if(is_depth_format) {
-					description.finalLayout(next_used_as_attachment ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-				}else{
-					description.finalLayout(next_used_as_attachment ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				}
-			}
-			description.stencilLoadOp(description.loadOp());
-			description.stencilStoreOp(description.storeOp());
-			i += 1;
-		}
+		entryList.add(node);
 	}
 
 	/**
-	 *
-	 * @param begin inclusive starting render pass
-	 * @param end exclusive ending render pass
+	 * Build the dependency graph
+	 *  between frame information
 	 */
-	private void create_render_pass(int begin, int end, Map<String,ImageResource> boundImages) {
-		try(MemoryStack stack = stackPush()) {
-			VkRenderPassCreateInfo passCreate = VkRenderPassCreateInfo.mallocStack(stack);
-			passCreate.sType(VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO);
-			passCreate.pNext(VK_NULL_HANDLE);
-			passCreate.flags(0);
+	private void build_dependency_graph() {
 
-			//Get Metadata
-			Set<String> usedAttachments = new HashSet<>();
-			get_referenced_attachments(begin,end,usedAttachments);
-
-			//Assign Used Attachments
-			Set<ImageResource> usedResources = usedAttachments.stream().map(boundImages::get).collect(Collectors.toSet());
-			TObjectIntMap<ImageResource> attachmentIdMap = new TObjectIntHashMap<>();
-			VkAttachmentDescription.Buffer attachments = VkAttachmentDescription.mallocStack(usedResources.size(),stack);
-			assign_attachments(begin,end,usedResources,attachmentIdMap,attachments);
-
-			//Assign SubPass List
-			VkSubpassDescription.Buffer subPasses = VkSubpassDescription.mallocStack(begin-end,stack);
-			for(int i = begin; i < end; i++) {
-				VkSubpassDescription subPass = subPasses.get(i-begin);
-				subPass.flags(0);
-				subPass.pipelineBindPoint(VK_PIPELINE_BIND_POINT_GRAPHICS);
-				subPass.pInputAttachments();//TODO:
-				subPass.pColorAttachments();//TODO:
-				subPass.pResolveAttachments(null);//TODO: IMPLEMENT AND ALLOW RESOLVE ATTACHMENTS
-				subPass.pDepthStencilAttachment();//TODO:
-				subPass.pPreserveAttachments();//TODO:
+		//Map Creating Resources with
+		resourceToCreatorPassMap.clear();
+		for(PassEntry entry : entryList) {
+			for(String output : entry.outputIdList) {
+				resourceToCreatorPassMap.put(output,entry);
 			}
-
-			//Assign SubPass Dependency List
-			VkSubpassDependency dependencyList;
-			//dependencyList.set
-		}
-	}
-
-	/**
-	 * Call on pass create:
-	 *  - Generate the entire render pass dependency list
-	 *  - Create all render passes
-	 *  - Create all required images
-	 *  - Create all required frame buffers
-	 */
-	public void build() {
-		//Get all metadata
-		for(IPass pass : passList) {
-			currentPass = pass;
-			pass.configure(this);
-		}
-		currentPass = null;
-
-		//Calculate Dependencies
-		DependencyNode initDependency = new DependencyNode(null);
-		Map<IPass,DependencyNode> nodeMap = new HashMap<>();
-		for(IPass pass : passList) {
-			DependencyNode node = new DependencyNode(pass);
-
-			//All Depend on global
-			node.dependsOn.add(initDependency);
-			nodeMap.put(pass,node);
-		}
-		for(IPass pass : passList) {
-			DependencyNode node = nodeMap.get(pass);
-			for(PassDependency dependency : dependencyAttachments.computeIfAbsent(pass,k -> new ArrayList<>())) {
-				IPass dependPass = attachmentMap.get(dependency.dependency).write_pass;
-
-				//Add non global dependency
-				node.dependsOn.add(nodeMap.get(dependPass));
-				node.dependsOn.remove(initDependency);
+			for(PassEntry.OutputAttachment output : entry.outputAttachments) {
+				resourceToAssignmentPassMap.put(output.identifier,output);
 			}
 		}
 
-		//Flatten Dependencies
-		Set<DependencyNode> visitedNodes = new HashSet<>();
-		flatten_dependency(visitedNodes,initDependency);
-
-		//Assign semi-unique images to each attachment (duplication where applicable)
-		Map<String,ImageResource> boundImages = new HashMap<>();
-		assign_images(boundImages);
-
-		//Split into multiple render passes
-		TIntList startIndices = new TIntArrayList();
-		split_render_passes(startIndices);
-
-		//Create Render Passes
-		int prev_index = startIndices.get(0);
-		for(int i = 1; i < startIndices.size(); i++) {
-			int next_index = startIndices.get(i);
-			create_render_pass(prev_index,next_index,boundImages);
-			prev_index = next_index;
-		}
-		create_render_pass(prev_index,flattenedDependency.size(),boundImages);
-		//Create Image Resources
-
-		//Create Frame Buffers
-
-		//Create Descriptor Sets [For binding non attachment resources]
-	}
-
-	/**
-	 * Call on SwapChain Recreate:
-	 *  - Recreate applicable images
-	 *  - Recreate applicable frame buffers
-	 *  - Recreate applicable descriptor sets
-	 */
-	public void onSwapRecreate() {
-		//Teardown Frame Buffers
-
-		//Teardown Images
-
-		//Create Images
-
-		//Create Frame Buffers
-	}
-
-	/**
-	 * Call on Pass Teardown:
-	 *  - Release all available resources
-	 */
-	@Override
-	public void close() {
-
-
-		//Clean-up Stored Values
-		attachmentMap.clear();
-		writeAttachments.clear();
-		attachmentMap.clear();
-		passList.clear();
-		flattenedDependency.clear();
-	}
-
-	public void registerPass(IPass pass) {
-		passList.add(pass);
-	}
-
-	//////////////////////
-	///Pass Builder API///
-	//////////////////////
-
-	private void attachment_put(String id, PassAttachment attach) {
-		attach.attachment_name = id;
-		attach.write_pass = currentPass;
-		if(!attachmentMap.containsKey(id)) {
-			attachmentMap.put(id,attach);
-			List<PassAttachment> lists = writeAttachments.computeIfAbsent(currentPass, k -> new ArrayList<>());
-			lists.add(attach);
-		}else{
-			CrashReport crash = new CrashReport("Multiple dependencies with same name");
-			crash.invalidState(id);
-			OpenVoxel.reportCrash(crash);
-		}
-		if(attach.load_data_from != null) {
-			PassDependency dependency = new PassDependency();
-			dependency.dependency = attach.load_data_from;
-			dependency.isLocal = false;
-			dependency.attachment = true;
-			dependency_put(dependency);
+		//Create Dependency Listings
+		for(PassEntry entry : entryList) {
+			for(String input : entry.inputIdList) {
+				entry.passDependencies.add(resourceToCreatorPassMap.get(input));
+			}
 		}
 	}
 
-	private void dependency_put(PassDependency dependency) {
-		List<PassDependency> lists = dependencyAttachments.computeIfAbsent(currentPass, k -> new ArrayList<>());
-		lists.add(dependency);
-	}
-
-	public void setVoxelDependency(String name,int size, int format) {
-		PassAttachment attachment = new PassAttachment();
-		attachment.type = AttachmentType.VOXEL_ATTACHMENT;
-		attachment.size = size;
-		attachment.attachment_id = -1;
-		attachment.format = format;
-		attachment.layers = 1;
-		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		attachment.can_read = true;
-		attachment.clear_on_load = false;
-		attachment.load_data_from = null;
-		attachment_put(name,attachment);
-	}
-
-	public void setFrameTargetOutput(int attachment_id, boolean read, boolean clear) {
-		PassAttachment attachment = new PassAttachment();
-		attachment.type = AttachmentType.FRAME_TARGET;
-		attachment.size = SIZE_VIEWPORT;
-		attachment.attachment_id = attachment_id;
-		attachment.format = -1;
-		attachment.layers = 1;
-		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		attachment.can_read = read;
-		attachment.clear_on_load = clear;
-		attachment.load_data_from = null;
-		attachment_put(FRAME_TARGET_ID,attachment);
-	}
-
-	public void setColourAttachment(String name, int size, int attachment_id, int format, int layers, int samples, boolean read, boolean clear, String load) {
-		PassAttachment attachment = new PassAttachment();
-		attachment.type = AttachmentType.COLOUR_ATTACHMENT;
-		attachment.size = size;
-		attachment.attachment_id = attachment_id;
-		attachment.format = format;
-		attachment.layers = layers;
-		attachment.samples = samples;
-		attachment.can_read = read;
-		attachment.clear_on_load = clear;
-		attachment.load_data_from = load;
-		attachment_put(name,attachment);
-	}
-
-	public void setDepthAttachment(String name, int size, int format, int layers, int samples, boolean read, boolean clear, String load) {
-		PassAttachment attachment = new PassAttachment();
-		attachment.type = AttachmentType.DEPTH_ATTACHMENT;
-		attachment.size = size;
-		attachment.attachment_id = -1;
-		attachment.format = format;
-		attachment.layers = layers;
-		attachment.samples = samples;
-		attachment.can_read = read;
-		attachment.clear_on_load = clear;
-		attachment.load_data_from = load;
-		attachment_put(name,attachment);
-	}
-
-	public void addDependency(String id, boolean isLocal) {
-		PassDependency dependency = new PassDependency();
-		dependency.dependency = id;
-		dependency.isLocal = isLocal;
-		dependency.attachment = false;
-		dependency_put(dependency);
-	}
-
-	public interface IPass {
-		void configure(PassBuilder builder);
-	}
 }

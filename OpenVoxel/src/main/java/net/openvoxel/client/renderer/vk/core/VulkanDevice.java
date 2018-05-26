@@ -14,7 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.vulkan.EXTShaderViewportIndexLayer.VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME;
+import static org.lwjgl.vulkan.KHRMaintenance1.VK_KHR_MAINTENANCE1_EXTENSION_NAME;
+import static org.lwjgl.vulkan.KHRMaintenance2.VK_KHR_MAINTENANCE2_EXTENSION_NAME;
 import static org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR;
+import static org.lwjgl.vulkan.NVGLSLShader.VK_NV_GLSL_SHADER_EXTENSION_NAME;
+import static org.lwjgl.vulkan.NVGeometryShaderPassthrough.VK_NV_GEOMETRY_SHADER_PASSTHROUGH_EXTENSION_NAME;
 import static org.lwjgl.vulkan.VK10.*;
 
 //////////////////////////////////////
@@ -440,26 +445,26 @@ public final class VulkanDevice {
 			}
 			//Enable Standard Useful Extensions
 			String extName = extensionList.extensionNameString();
-			if(extName.equals("VK_KHR_maintenance1") || extName.equals("VK_KHR_maintenance2")) {
+			if(extName.equals(VK_KHR_MAINTENANCE1_EXTENSION_NAME) || extName.equals(VK_KHR_MAINTENANCE2_EXTENSION_NAME)) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: KHR Maintenance Extension: " + extName);
-				if(extName.equals("VK_KHR_maintenance1")) {
+				if(extName.equals(VK_KHR_MAINTENANCE1_EXTENSION_NAME)) {
 					enabled_KHR_maintenance1 = true;
 				}else{
 					enabled_KHR_maintenance2 = true;
 				}
 			}
-			if(extName.equals("VK_NV_geometry_shader_passthrough")) {
+			if(extName.equals(VK_NV_GEOMETRY_SHADER_PASSTHROUGH_EXTENSION_NAME)) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: NV Geometry Shader PassThrough");
 				enabled_NV_geometry_passthrough = true;
 			}
-			if(extName.equals("VK_NV_glsl_shader")) {
+			if(extName.equals(VK_NV_GLSL_SHADER_EXTENSION_NAME)) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: NV GLSL Shader");
 				enabled_NV_glsl_shader = true;
 			}
-			if(extName.equals("VK_EXT_shader_viewport_index_layer")) {
+			if(extName.equals(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME)) {
 				enabledExtensions.add(extensionList.extensionName());
 				VulkanUtility.LogInfo("Enabled Ext: EXT Shader Viewport Index Layer");
 				enabled_EXT_shader_viewport_index_layer = true;
