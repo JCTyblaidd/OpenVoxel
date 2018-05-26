@@ -21,7 +21,7 @@ public abstract class BaseWorldDraw implements IWorldDraw {
 	//
 	// Static Configuration
 	//
-	private static final boolean LAZY_BIND = true;
+	private static final boolean LAZY_BIND = false;
 
 	//
 	// Configuration

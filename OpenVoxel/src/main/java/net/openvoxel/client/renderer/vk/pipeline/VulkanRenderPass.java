@@ -298,7 +298,7 @@ public class VulkanRenderPass {
 				dependencyList.srcStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 				dependencyList.srcAccessMask(0);
 				dependencyList.dstStageMask(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-				dependencyList.dstAccessMask();
+				dependencyList.dstAccessMask(0);
 				dependencyList.dependencyFlags(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
 						                               VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
 				dependencyList.dependencyFlags(0);

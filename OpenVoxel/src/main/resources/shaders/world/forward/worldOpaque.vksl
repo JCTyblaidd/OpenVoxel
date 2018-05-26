@@ -33,6 +33,27 @@ layout(push_constant) uniform SubChunkMetadata {
 } pushConsts;
 
 
+mat3 quat_to_matrix(in vec4 quat) {
+    /*
+    vec3 xmul = i_tangents.x * i_tangents.yzw * 2;  //2xy,2xz,2xw
+    vec3 rmul = i_tangents.zyy * i_tangents.wwz * 2;//2yz,2yw,2zw
+    vec3 smul = i_tangents.xyz * i_tangents.xyz * 2;//2xx,2yy,2zz
+    vec3 subs = xmul - rmul;                        //xy-zw,xz-yw,xw-yz
+    vec3 adds = xmul + rmul;                        //xy+zw.xz+yw,xw+yz
+    vec3 diag = vec3(1) - smul - smul.zxy;          //1-2xx-2zz,1-2yy-2xx,1-2zz-2yy
+    vec3 column1 = vec3(diag.z,adds.x,subs.y);
+    vec3 column2 = vec3(subs.x,diag.x,adds.z);
+    vec3 column3 = vec3(adds.y,-subs.z,diag.y);
+    f_normMat = mat3(normalize(column1),normalize(column2),normalize(column3));
+    */
+    vec3 v = vec3(0,0,1);
+    vec3 normal = v + 2.0 * cross(quat.xyz, cross(quat.xyz, v) + quat.w * v);
+    vec3 w = vec3(1,0,0);
+    vec3 tangent = w + 2.0 * cross(quat.xyz, cross(quat.xyz, w) + quat.w * w);
+    vec3 bitangent = cross(normal,tangent);
+    return mat3(normalize(tangent),normalize(bitangent),normalize(normal));
+}
+
 void main() {
     //Forward UV
     f_uv = i_uv;
@@ -49,24 +70,8 @@ void main() {
     f_light = i_lighting.rgb + skyLighting;
 
     //Caulculate Quaternion -> Matrix
-    /*
-    vec3 xmul = i_tangents.x * i_tangents.yzw * 2;  //2xy,2xz,2xw
-    vec3 rmul = i_tangents.zyy * i_tangents.wwz * 2;//2yz,2yw,2zw
-    vec3 smul = i_tangents.xyz * i_tangents.xyz * 2;//2xx,2yy,2zz
-    vec3 subs = xmul - rmul;                        //xy-zw,xz-yw,xw-yz
-    vec3 adds = xmul + rmul;                        //xy+zw.xz+yw,xw+yz
-    vec3 diag = vec3(1) - smul - smul.zxy;          //1-2xx-2zz,1-2yy-2xx,1-2zz-2yy
-    vec3 column1 = vec3(diag.z,adds.x,subs.y);
-    vec3 column2 = vec3(subs.x,diag.x,adds.z);
-    vec3 column3 = vec3(adds.y,-subs.z,diag.y);
-    f_normMat = mat3(column1,column2,column3);
-    */
-    vec3 v = vec3(0,0,1);
-    vec3 normal = v + 2.0 * cross(i_tangents.xyz, cross(i_tangents.xyz, v) + i_tangents.w * v);
-    vec3 w = vec3(1,0,0);
-    vec3 tangent = w + 2.0 * cross(i_tangents.xyz, cross(i_tangents.xyz, w) + i_tangents.w * w);
-    vec3 bitangent = cross(normal,tangent);
-    f_normMat = mat3(normalize(tangent),normalize(bitangent),normalize(normal));
+    f_normMat = quat_to_matrix(i_tangents);
+
 
     //Update Position
     vec4 relativePosition = worldData.viewMatrix * vec4(i_position + pushConsts.chunkOffset,1);
@@ -114,28 +119,20 @@ void main() {
     vec4 samplePbrData = texture(sampler2DArray(atlasPbrData[f_tex.x],atlasSampler),atlas_uv);
 
     //Calculate Diffuse:
-    //vec3 g_colour = sampleDiffuse.rgb * f_col;
+    vec3 g_colour = sampleDiffuse.rgb * f_col;
 
     //Calculate Normal:
     vec3 world_normal = f_normMat * normalize(sampleNormals.xyz);
 
     //Calculate PBR:
-    //vec2 g_pbr = samplePBR.tg;
+    vec2 g_pbr = samplePbrData.rg;
 
     //Calculate Light:
-    //vec3 simple_light = samplePBR.b * (f_light + sampleNormal.a * g_colour);
+    vec3 simple_light = g_pbr.g * (f_light + sampleNormals.a * g_colour);
+    //TODO: USE LIGHTING
 
-    //vec3 dx = dFdxFine(f_light);
-    //vec3 dy = dFdyFine(f_light);
-
-    //float lighting_scalar = normalize(g_normal).y;
-    //float reduced_scalar = lighting_scalar / 2.0 + 0.5f;
-
-    //Final Colour.. TODO: IMPROVE{..} {use PBR}
-    //forward_colour = vec4(reduced_scalar * (g_colour + simple_light),1.0);
-    //forward_colour = vec4(f_uv,0.5,1.0);
-    forward_colour = vec4(sampleDiffuse.xyz,1.0);
-   // forward_colour = vec4(world_normal,1.0);
+    //forward_colour = vec4(g_colour,1.0);
+    forward_colour = vec4(world_normal,1.0);
 }
 
 
